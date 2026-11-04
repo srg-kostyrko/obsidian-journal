@@ -129,7 +129,8 @@ describe("paint order of highlight states around a decoration", () => {
 
   it("decoration marks stay above every state layer", async () => {
     await cell.$(".cell-marks").waitForExist({ timeoutMsg: "the decorated cell rendered no marks" });
-    expect(await px(cell, ".cell-marks", "z-index")).toBe("2");
+    expect(await px(cell, ".cell-marks", "z-index")).toBe("3");
+    expect(await px(cell, ".cell-decoration__content", "z-index")).toBe("2");
   });
 
   it("keeps the 2px focus-visible outline on a selected cell", async () => {

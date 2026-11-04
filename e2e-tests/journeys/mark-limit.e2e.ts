@@ -234,6 +234,38 @@ describe("decoration mark limit", () => {
     );
   });
 
+  // Whether the date label reaches the badge depends on font metrics, so the label is stretched over
+  // the whole cell to stage the overlap. The content follows the marks in the DOM, so the badge only
+  // wins the hit test if the marks sit above it in z-order.
+  it("keeps the badge above a date label that overlaps it", async () => {
+    await openSeededCalendarView();
+
+    const hit = await settled(
+      () =>
+        browser.execute((anchor: string) => {
+          const host = document.querySelector(`.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"]`);
+          const badge = host?.querySelector('.place-right_top [data-testid="mark-overflow"]');
+          const label = host?.querySelector<HTMLElement>(".cell-decoration__content");
+          if (badge == null || label == null) return null;
+          const box = badge.getBoundingClientRect();
+          if (box.width === 0) return null;
+          label.style.position = "absolute";
+          label.style.inset = "0";
+          try {
+            const found = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+            return { inBadge: found != null && badge.contains(found), label: label.contains(found) };
+          } finally {
+            label.style.removeProperty("position");
+            label.style.removeProperty("inset");
+          }
+        }, dayAnchor(DAY)),
+      "the overflow badge",
+    );
+
+    expect(hit.label).toBe(false);
+    expect(hit.inBadge).toBe(true);
+  });
+
   // Each cell isolates its own stacking context, so the popover's z-index is trapped inside its
   // cell and the cells after it would paint over the part hanging into the next row. The cell is
   // lifted while the popover is open; the DAY cell is never in the grid's last row.

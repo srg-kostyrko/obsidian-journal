@@ -100,24 +100,22 @@ const hover = useModifierHoverPreview();
 }
 /* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
    z-index in the shared decoration would leak into every other host's stacking context. The border
-   is left out on purpose: it is decoration, not content, so the selected ring paints above it. */
+   is left out on purpose: it is decoration, not content, so the selected ring paints above it.
+   Marks and corners sit above the label, as positioned marks sat above the static label before
+   layers existed: the content follows the marks in the DOM, so at an equal z-index the label would
+   take the pointer from an overflow badge it overlaps. */
 .notes-calendar-cell :deep(.cell-decoration__content) {
   position: relative;
   z-index: 2;
 }
 .notes-calendar-cell :deep(.cell-marks),
 .notes-calendar-cell :deep(.decoration-corner) {
-  z-index: 2;
+  z-index: 3;
 }
 /* The isolated cell traps the popover's z-index, so later sibling cells would paint over its
    overhang; lift the whole cell while the popover is open. */
 .notes-calendar-cell:has(.mark-overflow__popover) {
   z-index: var(--layer-popover);
-}
-/* The marks precede the label in the DOM, so at an equal z-index the label paints over a popover
-   that overhangs the badge and takes the pointer, firing the badge's mouseleave. */
-.notes-calendar-cell :deep(.cell-marks:has(.mark-overflow__popover)) {
-  z-index: 3;
 }
 .notes-calendar-cell__layer {
   position: absolute;
