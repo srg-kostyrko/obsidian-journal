@@ -1,0 +1,66 @@
+{
+  "version": 7,
+  "logging": { "level": "debug" },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "appearance": {
+    "today": {
+      "color": { "type": "custom", "color": "#00ff00" },
+      "background": { "type": "transparent" }
+    },
+    "active": {
+      "color": { "type": "theme", "name": "text-on-accent" },
+      "background": { "type": "theme", "name": "interactive-accent" }
+    },
+    "selectedRing": { "type": "custom", "color": "#00ff00" }
+  },
+  "views": {
+    "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c": {
+      "id": "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c",
+      "name": "Calendar",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "blocks": [
+        {
+          "id": "fa0d1e2b-0b1c-4d4e-8f5a-7b8c9d0e1f2a",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": false }
+        }
+      ]
+    },
+    "5a7e9c11-2b3d-4e5f-8a6b-7c8d9e0f1a2b": {
+      "id": "5a7e9c11-2b3d-4e5f-8a6b-7c8d9e0f1a2b",
+      "name": "Snippet target",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "blocks": [
+        {
+          "id": "6b8f0d22-3c4e-4f60-9b7c-8d9e0f1a2b3c",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": false }
+        }
+      ]
+    }
+  }
+}
