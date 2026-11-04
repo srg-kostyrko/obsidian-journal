@@ -11,7 +11,6 @@ import type { VaultPath } from "@/infrastructure/host";
 import { OpenDateFlow } from "@/journals";
 import { JournalsIndex } from "@/journals/journals-index";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
-import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
@@ -37,7 +36,6 @@ const props = defineProps<{
 }>();
 
 const context = useViewContext();
-const appearanceStyle = useCalendarAppearanceStyle();
 const flows = useService(Flows);
 const activeVM = useService(ActiveEntryViewModel);
 const workspace = useService(WorkspaceService);
@@ -108,7 +106,6 @@ function openPreview(badge: Badge, event: MouseEvent): void {
     v-for="badge of badges"
     :key="badge.key"
     flat
-    :style="appearanceStyle"
     :class="{ 'jv-period-inert': !badge.navigable }"
     :data-period="badge.key"
     :data-active="isActive(badge) || null"
@@ -131,10 +128,10 @@ function openPreview(badge: Badge, event: MouseEvent): void {
   opacity: 0.5;
 }
 /* Mirror the in-grid cell highlight: a period button whose note is the active one picks up
-   the configured active colors (bound as CSS vars on the button itself, see appearanceStyle).
+   the configured active colors (CSS vars set on each window root by AppearanceVariables).
    The button[data-active] specificity clears the flat clickable-icon background. */
 button[data-active] {
-  color: var(--journal-cell-active-color);
-  background-color: var(--journal-cell-active-bg);
+  color: var(--journal-cell-active-color, var(--text-on-accent));
+  background-color: var(--journal-cell-active-bg, var(--interactive-accent));
 }
 </style>

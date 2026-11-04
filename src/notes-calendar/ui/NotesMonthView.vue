@@ -12,7 +12,6 @@ import {
 } from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
-import { useCalendarAppearanceStyle } from "../appearance/use-appearance-style";
 import { accessibleFormatPattern } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
@@ -23,8 +22,6 @@ import {
   type CalendarGridItem,
   type CalendarGridRows,
 } from "./use-calendar-grid-navigation";
-
-const appearanceStyle = useCalendarAppearanceStyle();
 
 const props = withDefaults(
   defineProps<{
@@ -166,7 +163,7 @@ const isSelected = (period: Period): boolean =>
 </script>
 
 <template>
-  <div class="notes-month-view" :style="appearanceStyle">
+  <div class="notes-month-view">
     <div v-if="showHeader" class="notes-month-view__header" :data-flanked="flanked || null">
       <slot name="header-start" />
       <slot name="header">

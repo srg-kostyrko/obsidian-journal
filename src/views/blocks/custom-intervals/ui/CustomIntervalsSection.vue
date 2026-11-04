@@ -69,12 +69,12 @@ useCellDecorations({
   border-bottom: 0;
 }
 .journal-view-custom-intervals__entry[data-active] {
-  color: var(--journal-cell-active-color);
-  background-color: var(--journal-cell-active-bg);
+  color: var(--journal-cell-active-color, var(--text-on-accent));
+  background-color: var(--journal-cell-active-bg, var(--interactive-accent));
 }
 /* The nav rows set their own per-row color, so the active highlight forces its color on
    the nested content to win. */
 .journal-view-custom-intervals__entry[data-active] :deep(*) {
-  color: var(--journal-cell-active-color) !important;
+  color: var(--journal-cell-active-color, var(--text-on-accent)) !important;
 }
 </style>

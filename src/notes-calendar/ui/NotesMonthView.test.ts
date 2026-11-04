@@ -57,6 +57,13 @@ afterEach(() => {
 });
 
 describe("NotesMonthView", () => {
+  it("does not bind appearance variables inline", async () => {
+    const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+    const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+    expect(container.querySelector(".notes-month-view")?.getAttribute("style") ?? "").not.toContain("--journal-cell-");
+  });
+
   describe("accessible grid", () => {
     it("provides the grid, row, column-header, row-header, and grid-cell structure", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
