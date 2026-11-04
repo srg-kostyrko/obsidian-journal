@@ -328,20 +328,27 @@ describe("NotesCalendarCell state layers", () => {
     expect(layers(container)).toEqual([]);
   });
 
-  it("renders today and open-note layers for a cell that is both, before the decoration", () => {
+  it("renders only the open-note layer for a cell that is both today and open, before the decoration", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-05-25T12:00:00"));
     const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }) });
-    expect(layers(container)).toEqual(["today", "active"]);
+    expect(layers(container)).toEqual(["active"]);
     const decoration = container.querySelector('[data-testid="cell-decoration"]');
     const last = container.querySelector('[data-layer="active"]');
     expect(last?.compareDocumentPosition(decoration as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it("orders all three layers today, selected, active", () => {
+  it("renders the today layer for a cell that is today only", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
+    const { container } = mount({ period: may25, cell: stubApi() });
+    expect(layers(container)).toEqual(["today"]);
+  });
+
+  it("orders selected then active, with no today layer, when today is also selected and open", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-05-25T12:00:00"));
     const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
-    expect(layers(container)).toEqual(["today", "selected", "active"]);
+    expect(layers(container)).toEqual(["selected", "active"]);
   });
 });

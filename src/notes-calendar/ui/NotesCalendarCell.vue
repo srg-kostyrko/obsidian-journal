@@ -55,7 +55,8 @@ const hover = useModifierHoverPreview();
     @mouseenter="hover.enter($event, (event) => cell.openPreview(rawPeriod, event))"
     @mouseleave="hover.leave()"
   >
-    <span v-if="isToday" class="notes-calendar-cell__layer" data-layer="today" aria-hidden="true" />
+    <!-- The open note's fill replaces today's, as it did before layers existed. -->
+    <span v-if="isToday && !isActive" class="notes-calendar-cell__layer" data-layer="today" aria-hidden="true" />
     <span v-if="selected" class="notes-calendar-cell__layer" data-layer="selected" aria-hidden="true" />
     <span v-if="isActive" class="notes-calendar-cell__layer" data-layer="active" aria-hidden="true" />
     <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
