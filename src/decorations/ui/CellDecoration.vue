@@ -80,9 +80,12 @@ const limit = computed(() => markLimit?.value ?? UNLIMITED_MARKS);
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
+  z-index: 2;
 }
 
 .cell-decoration__content {
   display: inline-block;
+  position: relative;
+  z-index: 2;
 }
 </style>

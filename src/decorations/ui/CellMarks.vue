@@ -103,6 +103,7 @@ function capturePopover(element: Element | ComponentPublicInstance | null): void
   position: absolute;
   inset: v-bind(markInset);
   pointer-events: none;
+  z-index: 2;
   display: grid;
   /* minmax(0, 1fr), not 1fr: a grid item's automatic minimum size is its content, so a slot
      holding more than a third of the cell's width — two marks and a badge, in a sidebar — widens

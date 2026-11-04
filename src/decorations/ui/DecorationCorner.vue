@@ -19,6 +19,7 @@ const color = computed(() => colorToString(props.decoration.color));
   position: absolute;
   width: 0;
   height: 0;
+  z-index: 2;
   --size: 0.6em;
 }
 .top-left {
