@@ -6,6 +6,7 @@ import { testContainer, type TestHarness } from "@/testing";
 import { AppearanceVariables, appearanceVariables } from "./appearance-variables";
 import { calendarAppearanceCoreModule } from "./module";
 import { appearanceSlice } from "./slice";
+import { calendarAppearanceStartupModule } from "./startup-module";
 
 import type { AppearanceSliceState } from "./slice";
 
@@ -42,7 +43,7 @@ const rootStyle = (harness: TestHarness) => harness.host.windowFor("main").docum
 
 describe("AppearanceVariables", () => {
   it("sets the appearance variables on the main window body", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
     const slice = harness.settings.getSlice(appearanceSlice);
     slice.state = { ...slice.state, today: { ...slice.state.today, color: { type: "custom", color: "#123456" } } };
     await nextTick();
@@ -56,7 +57,7 @@ describe("AppearanceVariables", () => {
   });
 
   it("updates the variables when the slice changes", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
     const slice = harness.settings.getSlice(appearanceSlice);
 
     slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
@@ -66,7 +67,7 @@ describe("AppearanceVariables", () => {
   });
 
   it("removes a variable from the body when its color returns to the stock one", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
     const slice = harness.settings.getSlice(appearanceSlice);
 
     slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
@@ -78,7 +79,7 @@ describe("AppearanceVariables", () => {
   });
 
   it("removes its variables and stops watching on dispose", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
     const slice = harness.settings.getSlice(appearanceSlice);
     slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
     await nextTick();
