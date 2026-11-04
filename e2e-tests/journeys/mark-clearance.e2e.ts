@@ -21,7 +21,7 @@ describe("decoration mark clearance", () => {
   it("keeps every edge mark off the selected-date ring", async () => {
     await openSeededCalendarView();
 
-    // The ring's width is read off the cell rather than hardcoded: Obsidian's zoom scales authored
+    // The ring's width is read off the cell's selected layer rather than hardcoded: Obsidian's zoom scales authored
     // pixels, and both the shadow and the rects are measured in the same zoomed space.
     const found: (Intrusion[] | null)[] = [null];
     await browser.waitUntil(
@@ -31,7 +31,9 @@ describe("decoration mark clearance", () => {
           if (cell == null) return null;
           const places = [...cell.querySelectorAll(".cell-marks > .place")];
           if (places.length < 8) return null;
-          const spread = /([\d.]+)px inset/.exec(getComputedStyle(cell).boxShadow);
+          const ringLayer = cell.querySelector('[data-layer="selected"]');
+          if (ringLayer == null) return null;
+          const spread = /([\d.]+)px inset/.exec(getComputedStyle(ringLayer).boxShadow);
           const ring = Number(spread?.[1] ?? NaN);
           if (!(ring > 0)) return null;
           const box = cell.getBoundingClientRect();
