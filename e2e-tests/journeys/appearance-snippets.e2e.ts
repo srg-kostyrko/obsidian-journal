@@ -1,5 +1,7 @@
 import { $, browser, expect } from "@wdio/globals";
 
+import { readRawSettings, writeRawSettings } from "../support/plugin-data.js";
+import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { closePopoutWindows } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -15,6 +17,7 @@ const SNIPPET_TARGET_VIEW = "5a7e9c11-2b3d-4e5f-8a6b-7c8d9e0f1a2b";
 
 const SAVED_GREEN = "#00ff00";
 const SNIPPET_BLUE = "#0000ff";
+const LIVE_MAGENTA = "#ff00ff";
 
 const TODAY_CELL = ".notes-calendar-cell[data-today]";
 const SELECTED_CELL = ".notes-calendar-cell[data-selected]";
@@ -55,6 +58,25 @@ function rgbToHex(rgb: string): string | undefined {
   const match = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb);
   if (!match) return undefined;
   return `#${[match[1], match[2], match[3]].map((part) => Number(part).toString(16).padStart(2, "0")).join("")}`;
+}
+
+async function popoutTodayColor(): Promise<string> {
+  return (
+    (await browser.executeObsidian(({ app }) => {
+      const workspace = app.workspace as typeof app.workspace & {
+        iterateAllLeaves(callback: (leaf: { view: { containerEl: HTMLElement } }) => void): void;
+      };
+      const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+      let color: string | undefined;
+      workspace.iterateAllLeaves((leaf) => {
+        const win = leaf.view.containerEl.ownerDocument.defaultView;
+        if (!win || win === mainWindow) return;
+        const cell = leaf.view.containerEl.querySelector<HTMLElement>(".notes-calendar-cell[data-today]");
+        if (cell) color = win.getComputedStyle(cell).color;
+      });
+      return color ?? "";
+    })) ?? ""
+  );
 }
 
 describe("appearance variables and CSS snippets", () => {
@@ -107,23 +129,23 @@ describe("appearance variables and CSS snippets", () => {
 
     it("a popout opened after load gets the saved values", async () => {
       await waitForState(
-        () =>
-          browser.executeObsidian(({ app }) => {
-            const workspace = app.workspace as typeof app.workspace & {
-              iterateAllLeaves(callback: (leaf: { view: { containerEl: HTMLElement } }) => void): void;
-            };
-            const mainWindow = workspace.containerEl.ownerDocument.defaultView;
-            let color: string | undefined;
-            workspace.iterateAllLeaves((leaf) => {
-              const win = leaf.view.containerEl.ownerDocument.defaultView;
-              if (!win || win === mainWindow) return;
-              const cell = leaf.view.containerEl.querySelector<HTMLElement>(".notes-calendar-cell[data-today]");
-              if (cell) color = win.getComputedStyle(cell).color;
-            });
-            return color ?? "";
-          }),
+        popoutTodayColor,
         (rgb) => typeof rgb === "string" && rgbToHex(rgb) === SAVED_GREEN,
         "the popout's today cell did not take the saved #00ff00",
+      );
+    });
+
+    it("a saved color changed while the popout is open reaches it", async () => {
+      const settings = JSON.parse((await readRawSettings()) ?? "{}") as {
+        appearance: { today: { color: unknown } };
+      };
+      settings.appearance.today.color = { type: "custom", color: LIVE_MAGENTA };
+      await writeRawSettings(JSON.stringify(settings));
+      await triggerExternalSettingsChange();
+      await waitForState(
+        popoutTodayColor,
+        (rgb) => rgbToHex(rgb) === LIVE_MAGENTA,
+        "the open popout's today cell did not turn the changed #ff00ff",
       );
     });
   });
