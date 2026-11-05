@@ -35,28 +35,126 @@
   "day_notes_settings_property_description": "Свойство Frontmatter, используемое как дата создания. Для заметок без допустимого значения используется время создания файла.",
   "day_notes_settings_format_label": "Формат даты создания",
   "day_notes_settings_format_description": "Формат даты, используемый для разбора свойства даты создания.",
-  "calendar_appearance_selected_ring": "Выбранная дата — контур",
-  "calendar_appearance_selected_ring_description": "Цвет контура ячейки календаря, соответствующей выбранной дате представления.",
   "calendar_apply_globally_desc": "Если эта функция отключена, параметры настройки недели применяются только к датам внутри журналов и не влияют на даты, созданные другими плагинами или самой Obsidian.",
   "calendar_apply_globally_restart_hint": "Возможно, потребуется перезапустить Obsidian, чтобы изменения вступили в силу.",
   "calendar_apply_globally_title": "Применять конфигурацию недели ко всем датам в хранилище",
-  "calendar_appearance_active_background": "Активный — фон",
-  "calendar_appearance_active_text": "Активный — текст",
-  "calendar_appearance_section_title": "Подсветка в календаре",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "Отображение календаря",
+  "calendar_appearance_open": "Открыть",
+  "calendar_appearance_width_label": "Ширина",
+  "calendar_appearance_width": [
     {
-      "declarations": ["input layer", "input target"],
-      "selectors": ["layer", "target"],
+      "declarations": ["input width"],
+      "selectors": ["width"],
       "match": {
-        "layer=text,target=today": "Цвет текста ячейки календаря для сегодняшней даты.",
-        "layer=background,target=today": "Цвет фона ячейки календаря для сегодняшней даты.",
-        "layer=text,target=active": "Цвет текста ячейки календаря, заметка в которой в данный момент открыта.",
-        "layer=background,target=active": "Цвет фона ячейки календаря, заметка в которой в данный момент открыта."
+        "width=wide": "Широкий",
+        "width=narrow": "Узкий"
       }
     }
   ],
-  "calendar_appearance_today_background": "Сегодня — фон",
-  "calendar_appearance_today_text": "Сегодня — текст",
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Изменения применяются при любой ширине.",
+        "width=narrow": "Изменения применяются только к узким календарям и заменяют значение для всех ширин."
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "Элемент",
+  "calendar_appearance_part_placeholder": "Выберите элемент",
+  "calendar_appearance_part_hint": "Нажмите на любой элемент предпросмотра или выберите его из списка.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "Сегодня",
+        "part=selected": "Выбранная дата",
+        "part=active": "Открытая заметка",
+        "part=outside": "Дни вне месяца",
+        "part=heading": "Заголовок месяца",
+        "part=weekday": "Заголовок дней недели",
+        "part=weekNumber": "Номера недель",
+        "part=date": "Число дня",
+        "part=cell": "Ячейки"
+      }
+    }
+  ],
+  "calendar_appearance_parts_here": "Элементы в этом месте",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=text": "Текст",
+        "family=highlight": "Выделение",
+        "family=box": "Ячейка"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=highlight_style": "Стиль",
+        "control=highlight_color": "Цвет выделения",
+        "control=highlight_ring_width": "Толщина контура",
+        "control=highlight_strength": "Интенсивность",
+        "control=highlight_text_color": "Цвет текста",
+        "control=highlight_text_weight": "Насыщенность",
+        "control=highlight_text_italic": "Курсив",
+        "control=highlight_over": "Поверх оформления",
+        "control=text_size": "Размер",
+        "control=text_weight": "Насыщенность",
+        "control=text_italic": "Курсив",
+        "control=text_color": "Цвет",
+        "control=text_case": "Регистр",
+        "control=box_padding": "Внутренний отступ",
+        "control=box_radius": "Радиус углов",
+        "control=box_gap": "Промежуток между ячейками",
+        "control=box_min_height": "Высота ряда"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=style_ring": "Контур",
+        "option=style_background": "Фон",
+        "option=style_text": "Только текст",
+        "option=style_none": "Нет",
+        "option=weight_normal": "Обычный",
+        "option=weight_semibold": "Полужирный",
+        "option=weight_bold": "Жирный",
+        "option=italic_on": "Вкл.",
+        "option=italic_off": "Выкл.",
+        "option=over_over": "Да",
+        "option=over_under": "Нет",
+        "option=case_none": "Как написано",
+        "option=case_upper": "Прописные",
+        "option=case_lower": "Строчные",
+        "option=case_title": "С заглавной буквы"
+      }
+    }
+  ],
+  "calendar_appearance_default": "По умолчанию",
+  "calendar_appearance_unchanged": "Без изменений",
+  "calendar_appearance_narrow_only": "Только узкий",
+  "calendar_appearance_narrow_only_clear": "Использовать значение для всех ширин",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Сбросить к значениям по умолчанию",
+        "width=narrow": "Сбросить узкие значения"
+      }
+    }
+  ],
   "common_label_back": "Вернуться к списку",
   "common_label_calendar": "Календарь",
   "common_pick_a_date": "Выбрать дату",

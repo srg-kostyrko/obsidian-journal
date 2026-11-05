@@ -35,28 +35,126 @@
   "day_notes_settings_property_description": "作成日として使用するフロントマターのプロパティです。有効な値がないノートでは、ファイルの作成日時を使用します。",
   "day_notes_settings_format_label": "作成日の形式",
   "day_notes_settings_format_description": "作成日のプロパティを解析するために使用する日付形式です。",
-  "calendar_appearance_selected_ring": "選択した日付 — 枠線",
-  "calendar_appearance_selected_ring_description": "ビューで選択した日付に一致するカレンダーセルの枠線の色です。",
   "calendar_apply_globally_desc": "無効にした場合、週設定はジャーナル内の日付にのみ適用され、他のプラグインやObsidian自体によって作成された日付には影響しません。",
   "calendar_apply_globally_restart_hint": "変更を反映させるには、Obsidianを再起動する必要がある場合があります。",
   "calendar_apply_globally_title": "保管庫内のすべての日付に週の設定を適用",
-  "calendar_appearance_active_background": "アクティブ — 背景",
-  "calendar_appearance_active_text": "アクティブ — テキスト",
-  "calendar_appearance_section_title": "カレンダーのハイライト表示",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "カレンダーの外観",
+  "calendar_appearance_open": "開く",
+  "calendar_appearance_width_label": "幅",
+  "calendar_appearance_width": [
     {
-      "declarations": ["input target", "input layer"],
-      "selectors": ["target", "layer"],
+      "declarations": ["input width"],
+      "selectors": ["width"],
       "match": {
-        "target=today,layer=text": "今日の日付のカレンダーセルのテキストの色。",
-        "target=today,layer=background": "今日の日付のカレンダーセルの背景色。",
-        "target=active,layer=text": "現在ノートが開いているカレンダーセルのテキストの色。",
-        "target=active,layer=background": "現在ノートが開いているカレンダーセルの背景色。"
+        "width=wide": "広い",
+        "width=narrow": "狭い"
       }
     }
   ],
-  "calendar_appearance_today_background": "今日 — 背景",
-  "calendar_appearance_today_text": "今日 — テキスト",
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "変更はすべての幅に適用されます。",
+        "width=narrow": "変更は狭いカレンダーにのみ適用され、すべての幅に共通の値より優先されます。"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "パーツ",
+  "calendar_appearance_part_placeholder": "パーツを選択",
+  "calendar_appearance_part_hint": "プレビューのパーツをクリックするか、一覧から選択してください。",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "今日",
+        "part=selected": "選択した日付",
+        "part=active": "開いているノート",
+        "part=outside": "月外の日",
+        "part=heading": "月の見出し",
+        "part=weekday": "曜日の見出し",
+        "part=weekNumber": "週番号",
+        "part=date": "日付の数字",
+        "part=cell": "セル"
+      }
+    }
+  ],
+  "calendar_appearance_parts_here": "この位置のパーツ",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=text": "テキスト",
+        "family=highlight": "ハイライト",
+        "family=box": "ボックス"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=highlight_style": "スタイル",
+        "control=highlight_color": "ハイライトの色",
+        "control=highlight_ring_width": "枠線の幅",
+        "control=highlight_strength": "強さ",
+        "control=highlight_text_color": "テキストの色",
+        "control=highlight_text_weight": "太さ",
+        "control=highlight_text_italic": "イタリック",
+        "control=highlight_over": "装飾の上に表示",
+        "control=text_size": "サイズ",
+        "control=text_weight": "太さ",
+        "control=text_italic": "イタリック",
+        "control=text_color": "色",
+        "control=text_case": "大文字・小文字",
+        "control=box_padding": "内側の余白",
+        "control=box_radius": "角の半径",
+        "control=box_gap": "セルの間隔",
+        "control=box_min_height": "行の高さ"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=style_ring": "枠線",
+        "option=style_background": "背景",
+        "option=style_text": "テキストのみ",
+        "option=style_none": "なし",
+        "option=weight_normal": "標準",
+        "option=weight_semibold": "やや太字",
+        "option=weight_bold": "太字",
+        "option=italic_on": "オン",
+        "option=italic_off": "オフ",
+        "option=over_over": "はい",
+        "option=over_under": "いいえ",
+        "option=case_none": "そのまま",
+        "option=case_upper": "大文字",
+        "option=case_lower": "小文字",
+        "option=case_title": "単語の先頭を大文字"
+      }
+    }
+  ],
+  "calendar_appearance_default": "デフォルト",
+  "calendar_appearance_unchanged": "変更なし",
+  "calendar_appearance_narrow_only": "狭い幅のみ",
+  "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "デフォルトに戻す",
+        "width=narrow": "狭い幅の上書きをリセット"
+      }
+    }
+  ],
   "common_label_back": "リストに戻る",
   "common_label_calendar": "カレンダー",
   "common_pick_a_date": "日付を選択",
