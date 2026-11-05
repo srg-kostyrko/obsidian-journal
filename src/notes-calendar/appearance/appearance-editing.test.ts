@@ -1,10 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { isModified, sourceAt, valueAt, withNarrowCleared, withReset, withValue } from "./appearance-editing";
+import {
+  fromControlValue,
+  isModified,
+  sourceAt,
+  toControlValue,
+  valueAt,
+  withNarrowCleared,
+  withReset,
+  withValue,
+} from "./appearance-editing";
+import { PARTS, type Control } from "./appearance-parts";
 import { appearanceSlice } from "./slice";
 
 const fresh = () => structuredClone(appearanceSlice.defaults);
-const custom = (hex: string) => ({ type: "custom" as const, value: hex });
+const custom = (hex: string) => ({ type: "custom" as const, color: hex });
 const TEXT_COLOR = ["text", "color"];
 
 describe("valueAt", () => {
@@ -84,5 +94,58 @@ describe("sourceAt", () => {
     expect(sourceAt(user, "wide", "cell", ["padding"])).toBe("user");
     expect(sourceAt(user, "narrow", "cell", ["padding"])).toBe("user");
     expect(sourceAt(withValue(user, "narrow", "cell", ["padding"], 3), "narrow", "cell", ["padding"])).toBe("narrow");
+  });
+});
+
+describe("sourceAt with an absent narrow key", () => {
+  it("is not narrow", () => {
+    const state = fresh();
+    Reflect.deleteProperty(state.narrow.cell, "padding");
+    expect(sourceAt(state, "narrow", "cell", ["padding"])).toBe("stock");
+  });
+});
+
+const control = (part: keyof typeof PARTS, ...path: string[]): Control => {
+  const found = PARTS[part].controls.find((candidate) => candidate.path.join(".") === path.join("."));
+  if (!found) throw new Error(`no control ${path.join(".")}`);
+  return found;
+};
+
+describe("control values", () => {
+  it("maps italic and over to their option names", () => {
+    const italic = control("heading", "italic");
+    expect(toControlValue(italic, true)).toBe("on");
+    expect(toControlValue(italic, false)).toBe("off");
+    expect(fromControlValue(italic, "on")).toBe(true);
+    expect(fromControlValue(italic, "off")).toBe(false);
+    const over = control("selected", "over");
+    expect(toControlValue(over, true)).toBe("over");
+    expect(toControlValue(over, false)).toBe("under");
+    expect(fromControlValue(over, "over")).toBe(true);
+    expect(fromControlValue(over, "under")).toBe(false);
+  });
+
+  it("passes null and unchanged through, both ways", () => {
+    for (const c of [control("heading", "italic"), control("today", "text", "italic"), control("heading", "weight")]) {
+      expect(toControlValue(c, null)).toBeNull();
+      expect(fromControlValue(c, null)).toBeNull();
+    }
+    const highlightItalic = control("today", "text", "italic");
+    expect(toControlValue(highlightItalic, "unchanged")).toBe("unchanged");
+    expect(fromControlValue(highlightItalic, "unchanged")).toBe("unchanged");
+    expect(fromControlValue(highlightItalic, toControlValue(highlightItalic, true))).toBe(true);
+  });
+
+  it("passes other controls through", () => {
+    expect(toControlValue(control("heading", "weight"), "bold")).toBe("bold");
+    expect(fromControlValue(control("cell", "padding"), 4)).toBe(4);
+  });
+});
+
+describe("withValue validation", () => {
+  it("rejects a value that does not fit the leaf", () => {
+    expect(() => withValue(fresh(), "wide", "selected", ["over"], "over")).toThrow();
+    expect(() => withValue(fresh(), "narrow", "heading", ["italic"], "on")).toThrow();
+    expect(() => withValue(fresh(), "wide", "cell", ["padding"], "x")).toThrow();
   });
 });

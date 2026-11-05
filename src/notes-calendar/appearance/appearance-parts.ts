@@ -10,8 +10,8 @@ export type ControlKind = "color" | "slider" | "select";
 export interface Control {
   readonly path: readonly string[];
   readonly kind: ControlKind;
-  /** Catalog name of the variable the control feeds; a style feeds the ring width it switches on or off. */
-  readonly entry: string;
+  /** Catalog name of the variable the control feeds; absent for a style, which no single variable carries. */
+  readonly entry?: string;
   readonly role?: ThemeColorFieldRole;
   /** The select's neutral choice stores "unchanged" rather than null. */
   readonly unchanged?: boolean;
@@ -36,7 +36,7 @@ const WITH_TEXT: readonly HighlightStyle[] = ["text", "ring", "background"];
 function highlightControls(part: string): readonly Control[] {
   const entry = (value: string): string => `journal-cell-${part}-${value}`;
   return [
-    { path: ["style"], kind: "select", entry: entry("ring-width"), options: STYLES },
+    { path: ["style"], kind: "select", options: STYLES },
     { path: ["color"], kind: "color", entry: entry("color"), role: "background", shownFor: SHAPED },
     {
       path: ["ringWidth"],

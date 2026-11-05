@@ -1,9 +1,11 @@
+import * as v from "valibot";
+
 import { mergedPart } from "./appearance-variables";
-import { appearanceSlice, type AppearanceSliceState } from "./slice";
+import { appearanceSlice, appearanceSliceSchema, type AppearanceSliceState } from "./slice";
 
-import type { PartKey, Width } from "./appearance-parts";
+import type { Control, PartKey, Width } from "./appearance-parts";
 
-export { visibleControls, type Control } from "./appearance-parts";
+export { visibleControls } from "./appearance-parts";
 
 function read(root: unknown, path: readonly string[]): unknown {
   let current = root;
@@ -46,7 +48,7 @@ export function sourceAt(
   part: PartKey,
   path: readonly string[],
 ): "stock" | "user" | "narrow" {
-  if (width === "narrow" && read(state.narrow[part], path) !== null) return "narrow";
+  if (width === "narrow" && (read(state.narrow[part], path) ?? null) !== null) return "narrow";
   const stock = read(appearanceSlice.defaults.wide[part], path);
   return equal(read(state.wide[part], path), stock) ? "stock" : "user";
 }
@@ -58,7 +60,36 @@ export function withValue(
   path: readonly string[],
   value: unknown,
 ): AppearanceSliceState {
-  return { ...state, [width]: { ...state[width], [part]: setIn(state[width][part], path, value) } };
+  const next = { ...state, [width]: { ...state[width], [part]: setIn(state[width][part], path, value) } };
+  // The leaf's type lives in the slice schema, so the schema is the one judge of what fits.
+  if (!v.safeParse(appearanceSliceSchema, next).success) {
+    throw new TypeError(`${part}.${path.join(".")} does not accept ${JSON.stringify(value)}`);
+  }
+  return next;
+}
+
+// Booleans and "unchanged" share the leaf, so the select speaks option names and the model translates.
+const BOOLEAN_OPTIONS: Readonly<Record<string, readonly [string, string]>> = {
+  italic: ["on", "off"],
+  over: ["over", "under"],
+};
+
+function booleanOptions(control: Control): readonly [string, string] | undefined {
+  const key = control.path.at(-1);
+  return key === undefined ? undefined : BOOLEAN_OPTIONS[key];
+}
+
+export function toControlValue(control: Control, sliceValue: unknown): unknown {
+  const names = booleanOptions(control);
+  if (names === undefined || typeof sliceValue !== "boolean") return sliceValue;
+  return sliceValue ? names[0] : names[1];
+}
+
+export function fromControlValue(control: Control, controlValue: unknown): unknown {
+  const names = booleanOptions(control);
+  if (names === undefined) return controlValue;
+  if (controlValue === names[0]) return true;
+  return controlValue === names[1] ? false : controlValue;
 }
 
 export function isModified(state: AppearanceSliceState, width: Width, part: PartKey): boolean {

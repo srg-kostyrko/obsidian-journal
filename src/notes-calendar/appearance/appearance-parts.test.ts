@@ -12,11 +12,16 @@ describe("PARTS", () => {
     const reached = new Set<string>();
     for (const { controls } of Object.values(PARTS)) {
       for (const control of controls) {
+        if (control.entry === undefined) continue;
         expect(written.has(control.entry)).toBe(true);
         reached.add(control.entry);
       }
     }
     expect([...reached].toSorted()).toEqual([...written].toSorted());
+  });
+
+  it("gives the style select no variable name", () => {
+    expect(PARTS.today.controls.find((control) => control.path[0] === "style")?.entry).toBeUndefined();
   });
 
   it("orders every part once, most specific first", () => {
