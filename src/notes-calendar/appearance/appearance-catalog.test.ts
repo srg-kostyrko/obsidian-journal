@@ -64,8 +64,8 @@ describe("appearanceCatalog", () => {
     }
   });
 
-  it("strength probes read background-color and ring-width probes read box-shadow", () => {
-    expect(new Set(propertyOf("-strength"))).toEqual(new Set(["background-color"]));
+  it("strength probes read opacity and ring-width probes read box-shadow", () => {
+    expect(new Set(propertyOf("-strength"))).toEqual(new Set(["opacity"]));
     expect(new Set(propertyOf("-ring-width"))).toEqual(new Set(["box-shadow"]));
   });
 });

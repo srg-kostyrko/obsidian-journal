@@ -499,8 +499,11 @@ const hover = useModifierHoverPreview();
   --_ring-width: var(--_v-active-ring-width);
   z-index: var(--_v-active-layer);
 }
+/* Opacity rather than color-mix: a WebView without color-mix drops the whole declaration, and the
+   open note's fill would vanish under its on-accent text. The layer holds only this background. */
 .notes-calendar-cell__layer[data-layer$="-fill"] {
-  background-color: color-mix(in srgb, var(--_color) var(--_strength), transparent);
+  background-color: var(--_color);
+  opacity: var(--_strength);
 }
 /* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear the stock selected
    ring; widening it means widening that too. */

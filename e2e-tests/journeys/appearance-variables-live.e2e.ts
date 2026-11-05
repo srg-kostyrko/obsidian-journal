@@ -87,10 +87,19 @@ async function readProbes(root: string, probes: readonly Probe[], options: ReadO
         if (block !== null) block.style.width = width;
       }
       const context = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+      // A token the canvas cannot parse leaves fillStyle as it was, so a preset would pass for that
+      // preset's color. Two different presets both surviving means the token was rejected, and the
+      // raw token goes back unnormalized so no expectation can match it.
+      const parses = (color: string): boolean =>
+        ["#010203", "#040506"].some((preset) => {
+          if (context === null) return false;
+          context.fillStyle = preset;
+          context.fillStyle = color;
+          return context.fillStyle !== preset;
+        });
       const rgba = (color: string): string => {
-        if (context === null) return color;
+        if (context === null || !parses(color)) return color;
         context.clearRect(0, 0, 1, 1);
-        context.fillStyle = "#000000";
         context.fillStyle = color;
         context.fillRect(0, 0, 1, 1);
         const [r = 0, g = 0, b = 0, a = 0] = context.getImageData(0, 0, 1, 1).data;
@@ -331,6 +340,7 @@ describe("calendar highlight colors saved at settings v7", () => {
 
   it("today's fill keeps the saved background, at full strength", async () => {
     await checkV7(`${today} [data-layer="today-fill"]`, "background-color", "#4d5e6f", ["data-today"]);
+    await checkV7(`${today} [data-layer="today-fill"]`, "opacity", "1", ["data-today"]);
   });
 
   it("the open note's fill keeps the saved background", async () => {

@@ -60,7 +60,16 @@ async function labelHex(anchor: string): Promise<string | undefined> {
     );
     const context = document.createElement("canvas").getContext("2d");
     if (label === null || context === null) return null;
-    context.fillStyle = getComputedStyle(label).color;
+    const color = getComputedStyle(label).color;
+    // A color the canvas rejects leaves fillStyle on its preset; two presets both surviving means
+    // the read failed, and the raw value goes back so it can never equal a hex.
+    const rejected = ["#010203", "#040506"].every((preset) => {
+      context.fillStyle = preset;
+      context.fillStyle = color;
+      return context.fillStyle === preset;
+    });
+    if (rejected) return color;
+    context.fillStyle = color;
     context.fillRect(0, 0, 1, 1);
     const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
     return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
@@ -81,8 +90,15 @@ async function themeHex(anchor: string, variable: string): Promise<string | unde
       const probe = document.createElement("span");
       probe.style.color = `var(${name})`;
       host.append(probe);
-      context.fillStyle = getComputedStyle(probe).color;
+      const color = getComputedStyle(probe).color;
       probe.remove();
+      const rejected = ["#010203", "#040506"].every((preset) => {
+        context.fillStyle = preset;
+        context.fillStyle = color;
+        return context.fillStyle === preset;
+      });
+      if (rejected) return `unparsed theme color ${color}`;
+      context.fillStyle = color;
       context.fillRect(0, 0, 1, 1);
       const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
       return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;

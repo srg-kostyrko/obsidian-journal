@@ -95,10 +95,10 @@ function highlightEntries(): CatalogEntry[] {
         stock: strength,
         probe: {
           selector: layer(state, "fill"),
-          property: "background-color",
+          property: "opacity",
           sample: "50%",
           with: red,
-          expect: "rgba(255, 0, 0, 0.5)",
+          expect: "0.5",
         },
       },
       {
