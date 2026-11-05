@@ -228,12 +228,14 @@ describe("paint order of highlight states around a decoration", () => {
     expect(await px(cell, ".cell-decoration__content", "z-index")).toBe("2");
   });
 
-  it("selected text over a decoration takes the selected color", async () => {
+  // The cell is also the open note, whose stock text sits under the decoration. Precedence picks the
+  // open note, and only the winner's layer counts, so the selected over-text does not show.
+  it("a selected over-text loses to the open note's under-text on a decorated day", async () => {
     expect(await decorationTextHex(cell)).toBe(DECORATED_TEXT);
     await waitForState(
       () => labelHex(dayAnchor(DAY)),
-      (hex) => hex === SELECTED_TEXT,
-      `the selected label over the decoration did not take ${SELECTED_TEXT}`,
+      (hex) => hex === DECORATED_TEXT,
+      `the label did not keep the decoration's ${DECORATED_TEXT} under the open note (not the selected ${SELECTED_TEXT})`,
     );
   });
 
