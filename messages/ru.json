@@ -1176,7 +1176,8 @@
       "match": {
         "kind=transparent": "Прозрачный",
         "kind=theme": "Переменная темы",
-        "kind=custom": "Свой"
+        "kind=custom": "Свой",
+        "kind=unchanged": "Без изменений"
       }
     }
   ],

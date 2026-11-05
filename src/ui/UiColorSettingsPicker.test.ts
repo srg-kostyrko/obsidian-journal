@@ -22,6 +22,10 @@ function themeDropdown(): HTMLSelectElement {
   return screen.getByRole<HTMLSelectElement>("combobox", { name: m.ui_color_theme_variable_label() });
 }
 
+function mountUnchanged(initial: ColorSettings | "unchanged", unchanged = true) {
+  return render(UiColorSettingsPicker, { props: { modelValue: initial, role: "text", unchanged } });
+}
+
 describe("UiColorSettingsPicker", () => {
   describe("kind selection", () => {
     it("emits a transparent value when switched to transparent", async () => {
@@ -112,6 +116,36 @@ describe("UiColorSettingsPicker", () => {
       input.value = "#abcdef";
       input.dispatchEvent(new Event("input", { bubbles: true }));
       expect(lastEmitted(emitted)).toEqual({ type: "custom", color: "#abcdef" });
+    });
+  });
+
+  describe("unchanged choice", () => {
+    it("offers Unchanged only when asked", () => {
+      const label = m.ui_color_kind_label({ kind: "unchanged" });
+      const { unmount } = mountUnchanged({ type: "transparent" });
+      expect(screen.getByRole("option", { name: label })).toBeTruthy();
+      unmount();
+      mountUnchanged({ type: "transparent" }, false);
+      expect(screen.queryByRole("option", { name: label })).toBeNull();
+    });
+
+    it("emits the literal when Unchanged is chosen", async () => {
+      const { emitted } = mountUnchanged({ type: "custom", color: "#ff0000" });
+      await userEvent.selectOptions(screen.getByRole("combobox"), "unchanged");
+      expect(emitted<[unknown]>("update:modelValue").at(-1)?.[0]).toBe("unchanged");
+    });
+
+    it("emits an empty theme value when Theme is chosen from Unchanged", async () => {
+      const { emitted } = mountUnchanged("unchanged");
+      await userEvent.selectOptions(screen.getByRole("combobox"), "theme");
+      expect(emitted<[unknown]>("update:modelValue").at(-1)?.[0]).toEqual({ type: "theme", name: "" });
+    });
+
+    it("shows no swatch and no theme select for an Unchanged model", () => {
+      mountUnchanged("unchanged");
+      expect(screen.getAllByRole("combobox")).toHaveLength(1);
+      expect(document.querySelector(".ui-color-settings-picker__swatch")).toBeNull();
+      expect(document.querySelector('input[type="color"]')).toBeNull();
     });
   });
 });

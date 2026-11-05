@@ -1025,7 +1025,8 @@
       "match": {
         "kind=transparent": "透明",
         "kind=theme": "テーマ変数",
-        "kind=custom": "カスタム"
+        "kind=custom": "カスタム",
+        "kind=unchanged": "変更なし"
       }
     }
   ],

@@ -1025,7 +1025,8 @@
       "match": {
         "kind=transparent": "透明",
         "kind=theme": "主题变量",
-        "kind=custom": "自定义"
+        "kind=custom": "自定义",
+        "kind=unchanged": "不变"
       }
     }
   ],

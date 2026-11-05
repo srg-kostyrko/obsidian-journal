@@ -1170,7 +1170,8 @@
       "match": {
         "kind=transparent": "투명",
         "kind=theme": "테마 변수",
-        "kind=custom": "사용자 지정"
+        "kind=custom": "사용자 지정",
+        "kind=unchanged": "변경 없음"
       }
     }
   ],

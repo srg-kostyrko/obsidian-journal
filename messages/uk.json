@@ -1029,7 +1029,8 @@
       "match": {
         "kind=transparent": "Прозорий",
         "kind=theme": "Змінна теми",
-        "kind=custom": "Користувацька"
+        "kind=custom": "Користувацька",
+        "kind=unchanged": "Без змін"
       }
     }
   ],

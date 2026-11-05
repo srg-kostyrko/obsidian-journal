@@ -1170,7 +1170,8 @@
       "match": {
         "kind=transparent": "Transparente",
         "kind=theme": "Variável de tema",
-        "kind=custom": "Personalizado"
+        "kind=custom": "Personalizado",
+        "kind=unchanged": "Inalterado"
       }
     }
   ],
