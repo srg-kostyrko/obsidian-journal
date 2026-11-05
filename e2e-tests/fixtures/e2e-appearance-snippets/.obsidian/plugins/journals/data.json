@@ -76,6 +76,40 @@
           "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": false }
         }
       ]
+    },
+    "f761ecd9-f604-49c3-a157-f1a1e8b7b2fe": {
+      "id": "f761ecd9-f604-49c3-a157-f1a1e8b7b2fe",
+      "name": "Appearance gate",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "b1c69658-1d69-45a2-a3b2-bae42a0504d5",
+          "key": "toolbar",
+          "config": {
+            "items": [
+              {
+                "id": "90c7ff05-8f2d-4548-bbc8-9cd549f922dd",
+                "key": "button",
+                "config": {
+                  "action": { "type": "navigate-step", "direction": "next", "unit": "month", "amount": 1 },
+                  "icon": "chevron-right",
+                  "tooltip": "Gate next month"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "8ec5cb9a-a80c-43fd-82b9-565fab6f9b02",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": true }
+        }
+      ]
     }
   }
 }
