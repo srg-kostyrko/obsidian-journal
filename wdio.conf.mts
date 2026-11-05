@@ -127,23 +127,46 @@ async function readPageState(): Promise<PageState> {
   });
 }
 
+// Each browser call in a failure capture waits at most this long. A wedged renderer otherwise holds
+// every call until WebDriver's own timeout, and a wedge that fails several hooks pays that per call
+// per hook; five capped calls bound one capture at about 20 s.
+const CAPTURE_STEP_MS = 4000;
+
+class CaptureTimeoutError extends Error {
+  override name = "CaptureTimeoutError";
+}
+
+async function within<T>(pending: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const limit = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      reject(new CaptureTimeoutError(`no answer within ${CAPTURE_STEP_MS} ms`));
+    }, CAPTURE_STEP_MS);
+  });
+  try {
+    return await Promise.race([pending, limit]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function captureFailure(fullTitle: string, title: string): Promise<void> {
   // Before the screenshot, which forces the very frame this probe is looking for.
   let frameState: FrameState | null = null;
   try {
-    frameState = await readFrameState();
+    frameState = await within(readFrameState());
   } catch {
     // A wedged renderer cannot answer; the null says so.
   }
   let pageState: PageState | null = null;
   try {
-    pageState = await readPageState();
+    pageState = await within(readPageState());
   } catch {
     // Same as above.
   }
   const name = fullTitle.replaceAll(/[^\w]+/g, "-").toLowerCase();
   try {
-    const screenshot = await browser.takeScreenshot();
+    const screenshot = await within(browser.takeScreenshot());
     await mkdir(SCREENSHOT_DIR, { recursive: true });
     await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
   } catch {
@@ -157,13 +180,13 @@ async function captureFailure(fullTitle: string, title: string): Promise<void> {
   let records: PluginLogRecord[] = [];
   let consoleEntries: unknown[] = [];
   try {
-    records = await readPluginLog();
+    records = await within(readPluginLog());
   } catch {
     // A wedged renderer loses the session before the hook runs, and a page without the service's
     // helper fails here; whatever was collected still ships.
   }
   try {
-    consoleEntries = await browser.getLogs("browser");
+    consoleEntries = await within(browser.getLogs("browser"));
   } catch {
     // Same as above.
   }
