@@ -86,7 +86,9 @@ const hover = useModifierHoverPreview();
       :data-layer="`${state}-ring`"
       aria-hidden="true"
     />
-    <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
+    <span class="notes-calendar-cell__text">
+      <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
+    </span>
   </span>
 </template>
 
@@ -389,11 +391,13 @@ const hover = useModifierHoverPreview();
   outline: 2px solid var(--background-modifier-border-focus);
   outline-offset: -1px;
 }
-/* Text precedence, highest first: open note, selected, today, outside, then the part's own color
-   (`--_part-color`, set by the grid on week numbers and dates). Each applicable state sets its private
-   value with no fallback, so an unset value is guaranteed-invalid and the chain falls through to the
-   next. A state whose value is currentColor still wins: that is how "unchanged" and "none" cancel a
-   stock color, at the cost of blocking lower states. */
+/* Text precedence, highest first: open note, selected, today, outside, then the part's own value
+   (`--_part-color`, and the weight and italic the grid sets on week numbers and dates). Each applicable
+   state sets its private value with no fallback, so an unset value is guaranteed-invalid and the chains
+   fall through to the next state. "Unchanged" is the token `unchanged` in the value itself: a style
+   query on the text span sets the private value to `initial` there, so it falls through like an unset
+   one instead of blocking the lower states. The layer never decides who wins, only whether the winner
+   paints over a decoration's text or under it. */
 .notes-calendar-cell[data-outside] {
   --_text-outside: var(--_v-outside-text-color);
   --_weight-outside: var(--_v-outside-text-weight);
@@ -418,7 +422,80 @@ const hover = useModifierHoverPreview();
   --_italic-active: var(--_v-active-text-italic);
   --_over-active: calc(clamp(0, var(--_v-active-layer), 1) * 100%);
 }
+/* A style query is answered by the parent, so these clear the private values on the span, whose
+   parent (the cell) holds the resolved `--_v-*` at either width. On the cell itself they would be
+   answered by the grid, which has none, so the text span exists for them. */
+@container style(--_v-outside-text-color: unchanged) {
+  .notes-calendar-cell[data-outside] > .notes-calendar-cell__text {
+    --_text-outside: initial;
+  }
+}
+@container style(--_v-outside-text-weight: unchanged) {
+  .notes-calendar-cell[data-outside] > .notes-calendar-cell__text {
+    --_weight-outside: initial;
+  }
+}
+@container style(--_v-outside-text-italic: unchanged) {
+  .notes-calendar-cell[data-outside] > .notes-calendar-cell__text {
+    --_italic-outside: initial;
+  }
+}
+@container style(--_v-today-text-color: unchanged) {
+  .notes-calendar-cell[data-today] > .notes-calendar-cell__text {
+    --_text-today: initial;
+  }
+}
+@container style(--_v-today-text-weight: unchanged) {
+  .notes-calendar-cell[data-today] > .notes-calendar-cell__text {
+    --_weight-today: initial;
+  }
+}
+@container style(--_v-today-text-italic: unchanged) {
+  .notes-calendar-cell[data-today] > .notes-calendar-cell__text {
+    --_italic-today: initial;
+  }
+}
+@container style(--_v-selected-text-color: unchanged) {
+  .notes-calendar-cell[data-selected] > .notes-calendar-cell__text {
+    --_text-selected: initial;
+  }
+}
+@container style(--_v-selected-text-weight: unchanged) {
+  .notes-calendar-cell[data-selected] > .notes-calendar-cell__text {
+    --_weight-selected: initial;
+  }
+}
+@container style(--_v-selected-text-italic: unchanged) {
+  .notes-calendar-cell[data-selected] > .notes-calendar-cell__text {
+    --_italic-selected: initial;
+  }
+}
+@container style(--_v-active-text-color: unchanged) {
+  .notes-calendar-cell[data-active] > .notes-calendar-cell__text {
+    --_text-active: initial;
+  }
+}
+@container style(--_v-active-text-weight: unchanged) {
+  .notes-calendar-cell[data-active] > .notes-calendar-cell__text {
+    --_weight-active: initial;
+  }
+}
+@container style(--_v-active-text-italic: unchanged) {
+  .notes-calendar-cell[data-active] > .notes-calendar-cell__text {
+    --_italic-active: initial;
+  }
+}
+/* Style queries need iOS 18 and Android WebView 111. Below that `unchanged` reaches the span's
+   `color` itself, which is invalid and inherits this: the part's own color, never the stock accent
+   (a lower state's color is skipped there). Weight and italic degrade the same way. */
 .notes-calendar-cell {
+  color: var(--_part-color);
+}
+/* Not positioned, so the layers, the content and the marks still stack in the cell's own context. */
+.notes-calendar-cell__text {
+  display: flex;
+  flex: 1;
+  border-radius: inherit;
   color: var(--_text-active, var(--_text-selected, var(--_text-today, var(--_text-outside, var(--_part-color)))));
 }
 /* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
@@ -434,29 +511,17 @@ const hover = useModifierHoverPreview();
   padding: var(--_v-cell-padding);
 }
 /* A decoration paints its text color with !important on the element around the label, which beats
-   the cell's color, so a state set over decorations (its layer above 0) re-paints the label itself.
-   The layer clamps to a 0%/100% weight: under, the mix passes the inherited decoration color through;
-   over, it takes the state's text. States nest in text precedence, the highest outermost, and a state
-   with no text color passes the lower states' result through rather than blocking it. Weight and
-   italic are set here rather than on the cell, where an unset chain would unset the week number's
-   bold; here it only inherits. */
+   the span's color, so the label re-resolves the winner itself. Each state's candidate is its text
+   mixed by its layer, clamped to a 0%/100% weight: over, the state's text; under, the inherited
+   decoration color. A state with no text is invalid and falls through, so the highest state that has
+   text wins and only its layer counts. Weight and italic are set here rather than on the cell, where
+   an unset chain would unset the week number's bold; here it only inherits. */
 .notes-calendar-cell:is([data-outside], [data-today], [data-selected], [data-active]) :deep(.cell-decoration__content) {
-  --_over-outside-text: color-mix(in srgb, var(--_text-outside, currentColor) var(--_over-outside, 0%), currentColor);
-  --_over-today-text: color-mix(
-    in srgb,
-    var(--_text-today, var(--_over-outside-text)) var(--_over-today, 0%),
-    var(--_over-outside-text)
-  );
-  --_over-selected-text: color-mix(
-    in srgb,
-    var(--_text-selected, var(--_over-today-text)) var(--_over-selected, 0%),
-    var(--_over-today-text)
-  );
-  color: color-mix(
-    in srgb,
-    var(--_text-active, var(--_over-selected-text)) var(--_over-active, 0%),
-    var(--_over-selected-text)
-  );
+  --_r-outside: color-mix(in srgb, var(--_text-outside) var(--_over-outside), currentColor);
+  --_r-today: color-mix(in srgb, var(--_text-today) var(--_over-today), currentColor);
+  --_r-selected: color-mix(in srgb, var(--_text-selected) var(--_over-selected), currentColor);
+  --_r-active: color-mix(in srgb, var(--_text-active) var(--_over-active), currentColor);
+  color: var(--_r-active, var(--_r-selected, var(--_r-today, var(--_r-outside, currentColor))));
   font-weight: var(--_weight-active, var(--_weight-selected, var(--_weight-today, var(--_weight-outside))));
   font-style: var(--_italic-active, var(--_italic-selected, var(--_italic-today, var(--_italic-outside))));
 }

@@ -12,7 +12,7 @@ import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { appearanceSlice, type HighlightValues } from "../slice";
+import { appearanceSlice, UNCHANGED, type HighlightValues } from "../slice";
 
 const settings = useService(SettingsService);
 const slice = settings.getSlice(appearanceSlice);
@@ -34,9 +34,10 @@ function setTodayBackground(color: ColorSettings): void {
 }
 // "Unchanged" has no picker option yet, so it shows as the stock color it renders as.
 function textColor(state: Highlight): ColorSettings {
-  return (
-    slice.state.wide[state].text.color ?? appearanceSlice.defaults.wide[state].text.color ?? { type: "transparent" }
-  );
+  const own = slice.state.wide[state].text.color;
+  if (own !== UNCHANGED) return own;
+  const stock = appearanceSlice.defaults.wide[state].text.color;
+  return stock === UNCHANGED ? { type: "transparent" } : stock;
 }
 </script>
 

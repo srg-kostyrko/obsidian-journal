@@ -335,7 +335,7 @@ describe("calendar highlight colors saved at settings v7", () => {
   after(closePopoutWindows);
 
   it("today's text keeps the saved color", async () => {
-    await checkV7(today, "color", "#1a2b3c", ["data-today"]);
+    await checkV7(`${today} > .notes-calendar-cell__text`, "color", "#1a2b3c", ["data-today"]);
   });
 
   it("today's fill keeps the saved background, at full strength", async () => {
@@ -353,7 +353,7 @@ describe("calendar highlight colors saved at settings v7", () => {
   });
 
   it("the open note's text keeps the saved color", async () => {
-    await checkV7(`.notes-month-view__day[data-anchor="${open}"]`, "color", "#7a8b9c", [
+    await checkV7(`.notes-month-view__day[data-anchor="${open}"] > .notes-calendar-cell__text`, "color", "#7a8b9c", [
       "data-active",
       "data-selected",
     ]);

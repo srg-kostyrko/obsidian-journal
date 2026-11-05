@@ -66,3 +66,24 @@ describe("calendar appearance readers", () => {
     expect(leaks).toEqual([]);
   });
 });
+
+const STATES = ["outside", "today", "selected", "active"] as const;
+const TEXT_VALUES = [
+  ["text-color", "text"],
+  ["text-weight", "weight"],
+  ["text-italic", "italic"],
+] as const;
+const passThroughCases = STATES.flatMap((state) =>
+  TEXT_VALUES.map(([value, slot]) => [state, value, `--_${slot}-${state}`] as const),
+);
+
+describe("calendar appearance Unchanged pass-through", () => {
+  // The query is answered by the span's parent, the cell, which is where `--_v-*` lives.
+  it.each(passThroughCases)("%s %s clears %s on the text span when it reads unchanged", (state, value, slot) => {
+    const container = `style(--_v-${state}-${value}: unchanged)`;
+    const rules = components.cell.filter((rule) => rule.container === container);
+    expect(rules.map((rule) => ({ selector: rule.selector, value: rule.declarations.get(slot) }))).toEqual([
+      { selector: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`, value: "initial" },
+    ]);
+  });
+});

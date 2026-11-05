@@ -371,6 +371,17 @@ describe("NotesCalendarCell state layers", () => {
     expect(container.querySelector(".notes-calendar-cell")?.hasAttribute("data-outside")).toBe(true);
   });
 
+  it("wraps the decoration in the text span and keeps every layer a direct child of the cell", () => {
+    onMay25();
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
+    const cell = container.querySelector(".notes-calendar-cell");
+    const text = cell?.querySelector(":scope > .notes-calendar-cell__text");
+    expect(text?.querySelector(':scope > [data-testid="cell-decoration"]')).not.toBeNull();
+    const layers = container.querySelectorAll(".notes-calendar-cell__layer");
+    expect(layers.length).toBeGreaterThan(0);
+    for (const layer of layers) expect(layer.parentElement).toBe(cell);
+  });
+
   it("paints every layer before the decoration", () => {
     const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
     const decoration = container.querySelector('[data-testid="cell-decoration"]');

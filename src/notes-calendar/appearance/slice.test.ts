@@ -20,7 +20,7 @@ import {
 
 const transparent = { type: "transparent" };
 const theme = (name: string) => ({ type: "theme", name });
-const unchangedText = { color: null, weight: null, italic: null };
+const unchangedText = { color: "unchanged", weight: "unchanged", italic: "unchanged" };
 
 describe("appearanceSlice", () => {
   it("defaults reproduce today's look", () => {
@@ -64,6 +64,14 @@ describe("appearanceSlice", () => {
     expect(wide.weekNumber).toEqual({ ...asToday, weight: "bold" });
     expect(wide.date).toEqual(asToday);
     expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
+  });
+
+  it("a highlight's text defaults to unchanged where the stock sets none", () => {
+    expect(appearanceSlice.defaults.wide.selected.text).toEqual({
+      color: "unchanged",
+      weight: "unchanged",
+      italic: "unchanged",
+    });
   });
 
   it("every narrow override defaults to null", () => {
@@ -178,8 +186,21 @@ describe("appearance slice repair on load", () => {
     expect(state.wide.active.text).toEqual({
       color: appearanceSlice.defaults.wide.active.text.color,
       weight: "bold",
-      italic: null,
+      italic: "unchanged",
     });
     expect(state.wide.active.color).toEqual(red);
+  });
+
+  it("a corrupt highlight text leaf repairs to unchanged", async () => {
+    const { state } = await loaded({ wide: { selected: { text: { weight: 7 } } } });
+
+    expect(state.wide.selected.text.weight).toBe("unchanged");
+    expect(state.wide.selected.text.color).toEqual(appearanceSlice.defaults.wide.selected.text.color);
+  });
+
+  it("narrow keeps null as no override and accepts unchanged", () => {
+    const state = v.parse(appearanceSliceSchema, { narrow: { today: { text: { color: "unchanged" } } } });
+
+    expect(state.narrow.today.text).toEqual({ color: "unchanged", weight: null, italic: null });
   });
 });

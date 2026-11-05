@@ -85,34 +85,34 @@ describe("appearanceVariables", () => {
     });
   });
 
-  it("a none style cancels a stock text color with currentColor", () => {
+  it("a none style passes a stock text color through", () => {
     const state = fresh();
     state.wide.today.style = "none";
 
-    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-today-text-color")]: "currentColor" });
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-today-text-color")]: "unchanged" });
   });
 
-  it("a null text color cancels a stock text color with currentColor", () => {
+  it("Unchanged today text writes a pass, never currentColor", () => {
     const state = fresh();
-    state.wide.today.text.color = null;
+    state.wide.today.text.color = "unchanged";
     state.wide.today.text.weight = "semibold";
     state.wide.today.text.italic = false;
 
     expect(appearanceVariables(state)).toEqual({
-      [saved("journal-cell-today-text-color")]: "currentColor",
+      [saved("journal-cell-today-text-color")]: "unchanged",
       [saved("journal-cell-today-text-weight")]: "var(--font-semibold)",
       [saved("journal-cell-today-text-italic")]: "normal",
     });
   });
 
-  it("a null text color writes nothing over an empty stock", () => {
+  it("Unchanged selected text writes nothing", () => {
     const state = fresh();
-    state.wide.selected.text = { color: null, weight: null, italic: null };
+    state.wide.selected.text = { color: "unchanged", weight: "unchanged", italic: "unchanged" };
 
     expect(appearanceVariables(state)).toEqual({});
   });
 
-  it("a narrow none cancels the wide text values it can", () => {
+  it("a narrow none passes every wide text value it can", () => {
     const state = fresh();
     state.wide.selected.text = { color: { type: "custom", color: "#ff0000" }, weight: "bold", italic: true };
     state.narrow.selected.style = "none";
@@ -123,17 +123,42 @@ describe("appearanceVariables", () => {
       [saved("journal-cell-selected-text-italic")]: "italic",
       [saved("journal-cell-selected-ring-width", true)]: "0px",
       [saved("journal-cell-selected-strength", true)]: "0",
-      [saved("journal-cell-selected-text-color", true)]: "currentColor",
-      [saved("journal-cell-selected-text-italic", true)]: "normal",
+      [saved("journal-cell-selected-text-color", true)]: "unchanged",
+      [saved("journal-cell-selected-text-weight", true)]: "unchanged",
+      [saved("journal-cell-selected-text-italic", true)]: "unchanged",
     });
   });
 
-  it("a narrow none cancels a stock text color", () => {
+  it("narrow none over a saved wide weight writes a narrow weight pass", () => {
+    const state = fresh();
+    state.wide.today.text.weight = "bold";
+    state.narrow.today.style = "none";
+
+    expect(appearanceVariables(state)[saved("journal-cell-today-text-weight", true)]).toBe("unchanged");
+  });
+
+  it("narrow none over a stock-only weight writes nothing", () => {
+    const state = fresh();
+    state.wide.today.text.weight = "unchanged";
+    state.narrow.today.style = "none";
+
+    expect(appearanceVariables(state)[saved("journal-cell-today-text-weight", true)]).toBeUndefined();
+  });
+
+  it("writes no currentColor or normal-as-pass anywhere", () => {
+    const state = fresh();
+    state.wide.today.text.color = "unchanged";
+    state.narrow.outside.style = "none";
+
+    expect(Object.values(appearanceVariables(state))).not.toContain("currentColor");
+  });
+
+  it("a narrow none passes a stock text color through", () => {
     const state = fresh();
     state.narrow.outside.style = "none";
 
     expect(appearanceVariables(state)).toEqual({
-      [saved("journal-cell-outside-text-color", true)]: "currentColor",
+      [saved("journal-cell-outside-text-color", true)]: "unchanged",
       [saved("journal-cell-outside-ring-width", true)]: "0px",
       [saved("journal-cell-outside-strength", true)]: "0",
     });

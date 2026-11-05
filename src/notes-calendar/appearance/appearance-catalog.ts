@@ -65,6 +65,8 @@ function highlightEntries(): CatalogEntry[] {
     const cell = `.notes-calendar-cell[${attribute}]`;
     // Weight and italic land on the label: on the cell, an unset chain would unset a host's own weight.
     const label = `${cell} .cell-decoration__content`;
+    // The text span owns the cell's color chain; the cell root holds only the part's own color.
+    const textSpan = `${cell} > .notes-calendar-cell__text`;
     const name = (value: string): string => `journal-cell-${state}-${value}`;
     // A stock color or strength that paints nothing would hide the variable under test, so the
     // companion pins the other half to something visible.
@@ -104,7 +106,7 @@ function highlightEntries(): CatalogEntry[] {
       {
         name: name("text-color"),
         stock: text,
-        probe: { selector: cell, property: "color", sample: "#563412", expect: "rgb(86, 52, 18)" },
+        probe: { selector: textSpan, property: "color", sample: "#563412", expect: "rgb(86, 52, 18)" },
       },
       {
         name: name("text-weight"),

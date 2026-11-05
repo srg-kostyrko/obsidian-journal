@@ -21,6 +21,8 @@ const LIVE_MAGENTA = "#ff00ff";
 
 const TODAY_CELL = ".notes-calendar-cell[data-today]";
 const SELECTED_CELL = ".notes-calendar-cell[data-selected]";
+// The cell's text span owns its color chain; the cell root holds only the part's own color.
+const TODAY_TEXT = `${TODAY_CELL} > .notes-calendar-cell__text`;
 
 function viewCell(viewId: string, cell: string): string {
   return `[data-journal-view="${viewId}"] ${cell}`;
@@ -71,7 +73,9 @@ async function popoutTodayColor(): Promise<string> {
       workspace.iterateAllLeaves((leaf) => {
         const win = leaf.view.containerEl.ownerDocument.defaultView;
         if (!win || win === mainWindow) return;
-        const cell = leaf.view.containerEl.querySelector<HTMLElement>(".notes-calendar-cell[data-today]");
+        const cell = leaf.view.containerEl.querySelector<HTMLElement>(
+          ".notes-calendar-cell[data-today] > .notes-calendar-cell__text",
+        );
         if (cell) color = win.getComputedStyle(cell).color;
       });
       return color ?? "";
@@ -106,16 +110,16 @@ describe("appearance variables and CSS snippets", () => {
     await openView(DEFAULT_VIEW);
     await openView(SNIPPET_TARGET_VIEW);
     await waitForState(
-      () => colorHex(viewCell(SNIPPET_TARGET_VIEW, TODAY_CELL)),
+      () => colorHex(viewCell(SNIPPET_TARGET_VIEW, TODAY_TEXT)),
       (hex) => hex === SNIPPET_BLUE,
       "the snippet-target view's today cell did not turn #0000ff",
     );
-    expect(await colorHex(viewCell(DEFAULT_VIEW, TODAY_CELL))).toBe(SAVED_GREEN);
+    expect(await colorHex(viewCell(DEFAULT_VIEW, TODAY_TEXT))).toBe(SAVED_GREEN);
   });
 
   it("a view-scoped snippet does not reach a calendar in a note", async () => {
     await openInReadingMode("calendar-note.md");
-    const todayInNote = `.markdown-reading-view .block-language-calendar-timeline ${TODAY_CELL}`;
+    const todayInNote = `.markdown-reading-view .block-language-calendar-timeline ${TODAY_TEXT}`;
     await $(todayInNote).waitForExist({ timeoutMsg: "the calendar block in the note did not render" });
     expect(await colorHex(todayInNote)).toBe(SAVED_GREEN);
   });
