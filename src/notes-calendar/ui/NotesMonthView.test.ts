@@ -17,7 +17,9 @@ import { shelvesCoreModule } from "@/shelves/module";
 import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { appearanceCatalog } from "../appearance/appearance-catalog";
 import { notesCalendarModule } from "../module";
+import { calendarStyleRules, NARROW_QUERY, narrowReader, privateName, wideReader } from "../testing";
 
 import NotesMonthView from "./NotesMonthView.vue";
 
@@ -325,6 +327,33 @@ describe("NotesMonthView", () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
       expect(container.querySelectorAll(".notes-month-view__weekday").length).toBe(7);
+    });
+
+    it("the weekday header reads the catalog variable", () => {
+      const rules = calendarStyleRules().monthView;
+      const declared = (container: string | null, property: string): string | undefined =>
+        rules
+          .filter((rule) => rule.selector === ".notes-month-view__weekday" && rule.container === container)
+          .map((rule) => rule.declarations.get(property))
+          .find((value) => value !== undefined);
+      const weekday = appearanceCatalog.filter((entry) => entry.name.startsWith("journal-cell-weekday-"));
+      const reads = {
+        size: "font-size",
+        weight: "font-weight",
+        italic: "font-style",
+        color: "color",
+        case: "text-transform",
+      };
+
+      expect(weekday.map((entry) => entry.name.replace("journal-cell-weekday-", "")).toSorted()).toEqual(
+        Object.keys(reads).toSorted(),
+      );
+      for (const entry of weekday) {
+        const property = reads[entry.name.replace("journal-cell-weekday-", "") as keyof typeof reads];
+        expect(declared(null, property)).toBe(`var(${privateName(entry)})`);
+        expect(declared(null, privateName(entry))).toBe(wideReader(entry));
+        expect(declared(NARROW_QUERY, privateName(entry))).toBe(narrowReader(entry));
+      }
     });
 
     it("orders weekday labels to match the weekdays of the rendered day cells", async () => {

@@ -31,7 +31,7 @@ describe("decoration mark clearance", () => {
           if (cell == null) return null;
           const places = [...cell.querySelectorAll(".cell-marks > .place")];
           if (places.length < 8) return null;
-          const ringLayer = cell.querySelector('[data-layer="selected"]');
+          const ringLayer = cell.querySelector('[data-layer="selected-ring"]');
           if (ringLayer == null) return null;
           const spread = /([\d.]+)px inset/.exec(getComputedStyle(ringLayer).boxShadow);
           const ring = Number(spread?.[1] ?? NaN);

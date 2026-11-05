@@ -1,6 +1,9 @@
 body {
-  --journal-cell-selected-ring: #ff0000;
+  --journal-cell-selected-color: #ff0000;
 }
 [data-journal-view="5a7e9c11-2b3d-4e5f-8a6b-7c8d9e0f1a2b"] {
-  --journal-cell-today-color: #0000ff;
+  --journal-cell-today-text-color: #0000ff;
+}
+[data-journal-view="8c1d2e3f-4a5b-4c6d-9e7f-0a1b2c3d4e5f"] {
+  --journal-cell-cell-min-height: 50px;
 }

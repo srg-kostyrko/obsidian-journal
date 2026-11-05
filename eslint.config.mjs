@@ -806,4 +806,13 @@ export default [
       "obsidianmd/no-nodejs-modules": "off",
     },
   },
+  {
+    // Compares the committed e2e gate snippet, a file in a fixture vault's config folder, with the
+    // catalog. Same reasoning as above: a vitest-only read of a repository path, not a vault's.
+    files: ["src/notes-calendar/appearance/gate-snippet.test.ts"],
+    rules: {
+      "obsidianmd/no-nodejs-modules": "off",
+      "obsidianmd/hardcoded-config-path": "off",
+    },
+  },
 ];

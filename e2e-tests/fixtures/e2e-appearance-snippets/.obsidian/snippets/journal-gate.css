@@ -1,0 +1,168 @@
+/* Generated from appearance-catalog.ts by `npm run gen:appearance-gate`. Do not edit. */
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-color"] {
+  --journal-cell-today-color: #123456;
+  --journal-cell-today-strength: 1;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-ring-width"] {
+  --journal-cell-today-ring-width: 5px;
+  --journal-cell-today-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-strength"] {
+  --journal-cell-today-strength: 0.5;
+  --journal-cell-today-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-text-color"] {
+  --journal-cell-today-text-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-text-weight"] {
+  --journal-cell-today-text-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-text-italic"] {
+  --journal-cell-today-text-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-layer"] {
+  --journal-cell-today-layer: 7;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-color"] {
+  --journal-cell-selected-color: #123456;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-ring-width"] {
+  --journal-cell-selected-ring-width: 5px;
+  --journal-cell-selected-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-strength"] {
+  --journal-cell-selected-strength: 0.5;
+  --journal-cell-selected-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-text-color"] {
+  --journal-cell-selected-text-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-text-weight"] {
+  --journal-cell-selected-text-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-text-italic"] {
+  --journal-cell-selected-text-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-layer"] {
+  --journal-cell-selected-layer: 7;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-color"] {
+  --journal-cell-active-color: #123456;
+  --journal-cell-active-strength: 1;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-ring-width"] {
+  --journal-cell-active-ring-width: 5px;
+  --journal-cell-active-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-strength"] {
+  --journal-cell-active-strength: 0.5;
+  --journal-cell-active-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-text-color"] {
+  --journal-cell-active-text-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-text-weight"] {
+  --journal-cell-active-text-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-text-italic"] {
+  --journal-cell-active-text-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-layer"] {
+  --journal-cell-active-layer: 7;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-color"] {
+  --journal-cell-outside-color: #123456;
+  --journal-cell-outside-strength: 1;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-ring-width"] {
+  --journal-cell-outside-ring-width: 5px;
+  --journal-cell-outside-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-strength"] {
+  --journal-cell-outside-strength: 0.5;
+  --journal-cell-outside-color: #ff0000;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-text-color"] {
+  --journal-cell-outside-text-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-text-weight"] {
+  --journal-cell-outside-text-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-text-italic"] {
+  --journal-cell-outside-text-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-layer"] {
+  --journal-cell-outside-layer: 7;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-heading-size"] {
+  --journal-cell-heading-size: 21px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-heading-weight"] {
+  --journal-cell-heading-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-heading-italic"] {
+  --journal-cell-heading-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-heading-color"] {
+  --journal-cell-heading-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-heading-case"] {
+  --journal-cell-heading-case: uppercase;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-weekday-size"] {
+  --journal-cell-weekday-size: 21px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-weekday-weight"] {
+  --journal-cell-weekday-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-weekday-italic"] {
+  --journal-cell-weekday-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-weekday-color"] {
+  --journal-cell-weekday-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-weekday-case"] {
+  --journal-cell-weekday-case: uppercase;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-size"] {
+  --journal-cell-week-number-size: 21px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-weight"] {
+  --journal-cell-week-number-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-italic"] {
+  --journal-cell-week-number-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-color"] {
+  --journal-cell-week-number-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-case"] {
+  --journal-cell-week-number-case: uppercase;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-size"] {
+  --journal-cell-date-size: 21px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-weight"] {
+  --journal-cell-date-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-italic"] {
+  --journal-cell-date-italic: italic;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-color"] {
+  --journal-cell-date-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-case"] {
+  --journal-cell-date-case: uppercase;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-cell-padding"] {
+  --journal-cell-cell-padding: 9px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-cell-radius"] {
+  --journal-cell-cell-radius: 11px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-cell-gap"] {
+  --journal-cell-cell-gap: 13px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-cell-min-height"] {
+  --journal-cell-cell-min-height: 41px;
+}

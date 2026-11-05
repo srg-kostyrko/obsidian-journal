@@ -24,7 +24,7 @@ const padding = useCellPadding({
   journalNames: () => scope.all.value,
   calendarDecorations: { shelf: () => props.shelf },
 });
-const gridStyle = computed(() => ({ "--journal-cell-padding-inline": horizontalReservation(padding.value) }));
+const gridStyle = computed(() => ({ "--journal-timeline-mark-reservation": horizontalReservation(padding.value) }));
 </script>
 
 <template>
@@ -54,7 +54,7 @@ const gridStyle = computed(() => ({ "--journal-cell-padding-inline": horizontalR
      against a rendered month grid — the figure picks the column count alone, so drift costs
      a column, never a clipped month. The third of the row keeps three months as the maximum
      however wide the note is. */
-  --month-min: calc(10.7em + 16 * var(--journal-cell-padding-inline, 2px));
+  --month-min: calc(10.7em + 16 * var(--journal-timeline-mark-reservation, 2px));
   display: grid;
   gap: var(--gap);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--month-min), (100% - 2 * var(--gap)) / 3)), 1fr));

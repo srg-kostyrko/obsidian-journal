@@ -643,7 +643,7 @@ describe("calendar view", () => {
         "month period button did not become active",
       );
 
-      // --journal-cell-active-bg is saved on the window body (as --journal-saved-cell-active-bg, absent while stock) and inherited, so the probe
+      // --journal-cell-active-color is saved on the window body (as --journal-saved-cell-active-color, absent while stock) and inherited, so the probe
       // resolves it from inside the button and the assertion stays theme-independent.
       // The probe answers "no-button" when the toolbar has not painted, which is a render race
       // reported as a styling failure. Wait for the button itself first.
@@ -655,7 +655,7 @@ describe("calendar view", () => {
         if (!button) return "no-button";
         const probe = document.createElement("div");
         probe.style.backgroundColor =
-          "var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)))";
+          "var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)))";
         button.append(probe);
         const expected = getComputedStyle(probe).backgroundColor;
         probe.remove();

@@ -845,3 +845,10 @@ export function oldJournalDefaultsBasedOnType(write: OldJournalSettings["write"]
 
   return defaults;
 }
+
+/** The `appearance` slice up to data version 7: five highlight colors. */
+export interface AppearanceSettingsV7 {
+  today: { color: ColorSettings; background: ColorSettings };
+  active: { color: ColorSettings; background: ColorSettings };
+  selectedRing: ColorSettings;
+}

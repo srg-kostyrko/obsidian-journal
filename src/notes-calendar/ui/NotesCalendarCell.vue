@@ -17,6 +17,7 @@ const props = defineProps<{
   role?: "gridcell" | "rowheader";
   tabIndex?: number;
   selected?: boolean;
+  outside?: boolean;
 }>();
 
 const rawPeriod = computed(() => toRaw(props.period));
@@ -28,6 +29,20 @@ const resolvedRole = computed(() => props.role ?? (isControl.value ? "button" : 
 const resolvedTabIndex = computed(() => props.tabIndex ?? (isControl.value ? 0 : undefined));
 const today = useToday();
 const isToday = computed(() => rawPeriod.value.contains(today.value));
+const states = computed(() =>
+  (
+    [
+      ["outside", props.outside],
+      ["today", isToday.value],
+      ["selected", props.selected],
+      ["active", isActive.value],
+    ] as const
+  )
+    .filter(([, applies]) => applies)
+    .map(([state]) => state),
+);
+// The open note's fill replaces today's, as it did before layers existed; today's ring stays.
+const fills = computed(() => states.value.filter((state) => state !== "today" || !isActive.value));
 const accessibleName = computed(() =>
   isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
 );
@@ -47,6 +62,7 @@ const hover = useModifierHoverPreview();
     :data-anchor="rawPeriod.anchor.toAnchor()"
     :data-today="isToday || null"
     :data-selected="selected || null"
+    :data-outside="outside || null"
     @click="cell.open(rawPeriod, $event)"
     @auxclick.middle.prevent="cell.open(rawPeriod, $event)"
     @keydown.enter="cell.open(rawPeriod, $event)"
@@ -55,10 +71,21 @@ const hover = useModifierHoverPreview();
     @mouseenter="hover.enter($event, (event) => cell.openPreview(rawPeriod, event))"
     @mouseleave="hover.leave()"
   >
-    <!-- The open note's fill replaces today's, as it did before layers existed. -->
-    <span v-if="isToday && !isActive" class="notes-calendar-cell__layer" data-layer="today" aria-hidden="true" />
-    <span v-if="selected" class="notes-calendar-cell__layer" data-layer="selected" aria-hidden="true" />
-    <span v-if="isActive" class="notes-calendar-cell__layer" data-layer="active" aria-hidden="true" />
+    <!-- Every fill before every ring, so no state's fill can hide another state's ring. -->
+    <span
+      v-for="state in fills"
+      :key="`${state}-fill`"
+      class="notes-calendar-cell__layer"
+      :data-layer="`${state}-fill`"
+      aria-hidden="true"
+    />
+    <span
+      v-for="state in states"
+      :key="`${state}-ring`"
+      class="notes-calendar-cell__layer"
+      :data-layer="`${state}-ring`"
+      aria-hidden="true"
+    />
     <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
   </span>
 </template>
@@ -77,8 +104,280 @@ const hover = useModifierHoverPreview();
   display: flex;
   position: relative;
   isolation: isolate;
-  min-height: 26px;
-  border-radius: var(--radius-s);
+  min-height: var(--_v-cell-min-height);
+  border-radius: var(--_v-cell-radius);
+}
+/* Every catalog value the cell reads, resolved once here and re-resolved by the narrow query below.
+   A value with no stock has no innermost fallback at either width, so unset it stays
+   guaranteed-invalid and the precedence chains fall through it. */
+.notes-calendar-cell {
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  --_v-cell-radius: var(--journal-cell-cell-radius, var(--journal-saved-cell-cell-radius, var(--radius-s)));
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-outside-color: var(--journal-cell-outside-color, var(--journal-saved-cell-outside-color, transparent));
+  --_v-outside-ring-width: var(--journal-cell-outside-ring-width, var(--journal-saved-cell-outside-ring-width, 0px));
+  --_v-outside-strength: var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0));
+  --_v-outside-text-color: var(
+    --journal-cell-outside-text-color,
+    var(--journal-saved-cell-outside-text-color, var(--text-muted))
+  );
+  --_v-outside-text-weight: var(--journal-cell-outside-text-weight, var(--journal-saved-cell-outside-text-weight));
+  --_v-outside-text-italic: var(--journal-cell-outside-text-italic, var(--journal-saved-cell-outside-text-italic));
+  --_v-outside-layer: var(--journal-cell-outside-layer, var(--journal-saved-cell-outside-layer, -1));
+  --_v-today-color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent));
+  --_v-today-ring-width: var(--journal-cell-today-ring-width, var(--journal-saved-cell-today-ring-width, 0px));
+  --_v-today-strength: var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0));
+  --_v-today-text-color: var(
+    --journal-cell-today-text-color,
+    var(--journal-saved-cell-today-text-color, var(--text-accent))
+  );
+  --_v-today-text-weight: var(--journal-cell-today-text-weight, var(--journal-saved-cell-today-text-weight));
+  --_v-today-text-italic: var(--journal-cell-today-text-italic, var(--journal-saved-cell-today-text-italic));
+  --_v-today-layer: var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1));
+  --_v-selected-color: var(
+    --journal-cell-selected-color,
+    var(--journal-saved-cell-selected-color, var(--interactive-accent))
+  );
+  --_v-selected-ring-width: var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px));
+  --_v-selected-strength: var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0));
+  --_v-selected-text-color: var(--journal-cell-selected-text-color, var(--journal-saved-cell-selected-text-color));
+  --_v-selected-text-weight: var(--journal-cell-selected-text-weight, var(--journal-saved-cell-selected-text-weight));
+  --_v-selected-text-italic: var(--journal-cell-selected-text-italic, var(--journal-saved-cell-selected-text-italic));
+  --_v-selected-layer: var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1));
+  --_v-active-color: var(
+    --journal-cell-active-color,
+    var(--journal-saved-cell-active-color, var(--interactive-accent))
+  );
+  --_v-active-ring-width: var(--journal-cell-active-ring-width, var(--journal-saved-cell-active-ring-width, 0px));
+  --_v-active-strength: var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 1));
+  --_v-active-text-color: var(
+    --journal-cell-active-text-color,
+    var(--journal-saved-cell-active-text-color, var(--text-on-accent))
+  );
+  --_v-active-text-weight: var(--journal-cell-active-text-weight, var(--journal-saved-cell-active-text-weight));
+  --_v-active-text-italic: var(--journal-cell-active-text-italic, var(--journal-saved-cell-active-text-italic));
+  --_v-active-layer: var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1));
+}
+@container journal-calendar (max-width: 28em) {
+  .notes-calendar-cell {
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
+      )
+    );
+    --_v-cell-radius: var(
+      --journal-cell-cell-radius-narrow,
+      var(
+        --journal-saved-cell-cell-radius-narrow,
+        var(--journal-cell-cell-radius, var(--journal-saved-cell-cell-radius, var(--radius-s)))
+      )
+    );
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(
+        --journal-saved-cell-cell-min-height-narrow,
+        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
+      )
+    );
+    --_v-outside-color: var(
+      --journal-cell-outside-color-narrow,
+      var(
+        --journal-saved-cell-outside-color-narrow,
+        var(--journal-cell-outside-color, var(--journal-saved-cell-outside-color, transparent))
+      )
+    );
+    --_v-outside-ring-width: var(
+      --journal-cell-outside-ring-width-narrow,
+      var(
+        --journal-saved-cell-outside-ring-width-narrow,
+        var(--journal-cell-outside-ring-width, var(--journal-saved-cell-outside-ring-width, 0px))
+      )
+    );
+    --_v-outside-strength: var(
+      --journal-cell-outside-strength-narrow,
+      var(
+        --journal-saved-cell-outside-strength-narrow,
+        var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0))
+      )
+    );
+    --_v-outside-text-color: var(
+      --journal-cell-outside-text-color-narrow,
+      var(
+        --journal-saved-cell-outside-text-color-narrow,
+        var(--journal-cell-outside-text-color, var(--journal-saved-cell-outside-text-color, var(--text-muted)))
+      )
+    );
+    --_v-outside-text-weight: var(
+      --journal-cell-outside-text-weight-narrow,
+      var(
+        --journal-saved-cell-outside-text-weight-narrow,
+        var(--journal-cell-outside-text-weight, var(--journal-saved-cell-outside-text-weight))
+      )
+    );
+    --_v-outside-text-italic: var(
+      --journal-cell-outside-text-italic-narrow,
+      var(
+        --journal-saved-cell-outside-text-italic-narrow,
+        var(--journal-cell-outside-text-italic, var(--journal-saved-cell-outside-text-italic))
+      )
+    );
+    --_v-outside-layer: var(
+      --journal-cell-outside-layer-narrow,
+      var(
+        --journal-saved-cell-outside-layer-narrow,
+        var(--journal-cell-outside-layer, var(--journal-saved-cell-outside-layer, -1))
+      )
+    );
+    --_v-today-color: var(
+      --journal-cell-today-color-narrow,
+      var(
+        --journal-saved-cell-today-color-narrow,
+        var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent))
+      )
+    );
+    --_v-today-ring-width: var(
+      --journal-cell-today-ring-width-narrow,
+      var(
+        --journal-saved-cell-today-ring-width-narrow,
+        var(--journal-cell-today-ring-width, var(--journal-saved-cell-today-ring-width, 0px))
+      )
+    );
+    --_v-today-strength: var(
+      --journal-cell-today-strength-narrow,
+      var(
+        --journal-saved-cell-today-strength-narrow,
+        var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0))
+      )
+    );
+    --_v-today-text-color: var(
+      --journal-cell-today-text-color-narrow,
+      var(
+        --journal-saved-cell-today-text-color-narrow,
+        var(--journal-cell-today-text-color, var(--journal-saved-cell-today-text-color, var(--text-accent)))
+      )
+    );
+    --_v-today-text-weight: var(
+      --journal-cell-today-text-weight-narrow,
+      var(
+        --journal-saved-cell-today-text-weight-narrow,
+        var(--journal-cell-today-text-weight, var(--journal-saved-cell-today-text-weight))
+      )
+    );
+    --_v-today-text-italic: var(
+      --journal-cell-today-text-italic-narrow,
+      var(
+        --journal-saved-cell-today-text-italic-narrow,
+        var(--journal-cell-today-text-italic, var(--journal-saved-cell-today-text-italic))
+      )
+    );
+    --_v-today-layer: var(
+      --journal-cell-today-layer-narrow,
+      var(
+        --journal-saved-cell-today-layer-narrow,
+        var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1))
+      )
+    );
+    --_v-selected-color: var(
+      --journal-cell-selected-color-narrow,
+      var(
+        --journal-saved-cell-selected-color-narrow,
+        var(--journal-cell-selected-color, var(--journal-saved-cell-selected-color, var(--interactive-accent)))
+      )
+    );
+    --_v-selected-ring-width: var(
+      --journal-cell-selected-ring-width-narrow,
+      var(
+        --journal-saved-cell-selected-ring-width-narrow,
+        var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px))
+      )
+    );
+    --_v-selected-strength: var(
+      --journal-cell-selected-strength-narrow,
+      var(
+        --journal-saved-cell-selected-strength-narrow,
+        var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0))
+      )
+    );
+    --_v-selected-text-color: var(
+      --journal-cell-selected-text-color-narrow,
+      var(
+        --journal-saved-cell-selected-text-color-narrow,
+        var(--journal-cell-selected-text-color, var(--journal-saved-cell-selected-text-color))
+      )
+    );
+    --_v-selected-text-weight: var(
+      --journal-cell-selected-text-weight-narrow,
+      var(
+        --journal-saved-cell-selected-text-weight-narrow,
+        var(--journal-cell-selected-text-weight, var(--journal-saved-cell-selected-text-weight))
+      )
+    );
+    --_v-selected-text-italic: var(
+      --journal-cell-selected-text-italic-narrow,
+      var(
+        --journal-saved-cell-selected-text-italic-narrow,
+        var(--journal-cell-selected-text-italic, var(--journal-saved-cell-selected-text-italic))
+      )
+    );
+    --_v-selected-layer: var(
+      --journal-cell-selected-layer-narrow,
+      var(
+        --journal-saved-cell-selected-layer-narrow,
+        var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1))
+      )
+    );
+    --_v-active-color: var(
+      --journal-cell-active-color-narrow,
+      var(
+        --journal-saved-cell-active-color-narrow,
+        var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)))
+      )
+    );
+    --_v-active-ring-width: var(
+      --journal-cell-active-ring-width-narrow,
+      var(
+        --journal-saved-cell-active-ring-width-narrow,
+        var(--journal-cell-active-ring-width, var(--journal-saved-cell-active-ring-width, 0px))
+      )
+    );
+    --_v-active-strength: var(
+      --journal-cell-active-strength-narrow,
+      var(
+        --journal-saved-cell-active-strength-narrow,
+        var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 1))
+      )
+    );
+    --_v-active-text-color: var(
+      --journal-cell-active-text-color-narrow,
+      var(
+        --journal-saved-cell-active-text-color-narrow,
+        var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)))
+      )
+    );
+    --_v-active-text-weight: var(
+      --journal-cell-active-text-weight-narrow,
+      var(
+        --journal-saved-cell-active-text-weight-narrow,
+        var(--journal-cell-active-text-weight, var(--journal-saved-cell-active-text-weight))
+      )
+    );
+    --_v-active-text-italic: var(
+      --journal-cell-active-text-italic-narrow,
+      var(
+        --journal-saved-cell-active-text-italic-narrow,
+        var(--journal-cell-active-text-italic, var(--journal-saved-cell-active-text-italic))
+      )
+    );
+    --_v-active-layer: var(
+      --journal-cell-active-layer-narrow,
+      var(
+        --journal-saved-cell-active-layer-narrow,
+        var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1))
+      )
+    );
+  }
 }
 .notes-calendar-cell[data-inactive] {
   cursor: default;
@@ -90,13 +389,37 @@ const hover = useModifierHoverPreview();
   outline: 2px solid var(--background-modifier-border-focus);
   outline-offset: -1px;
 }
-/* [data-active] follows [data-today] so a cell that is both the open note and today resolves
-   to the active colors — the note you're viewing wins over the today marker. */
+/* Text precedence, highest first: open note, selected, today, outside, then the part's own color
+   (`--_part-color`, set by the grid on week numbers and dates). Each applicable state sets its private
+   value with no fallback, so an unset value is guaranteed-invalid and the chain falls through to the
+   next. A state whose value is currentColor still wins: that is how "unchanged" and "none" cancel a
+   stock color, at the cost of blocking lower states. */
+.notes-calendar-cell[data-outside] {
+  --_text-outside: var(--_v-outside-text-color);
+  --_weight-outside: var(--_v-outside-text-weight);
+  --_italic-outside: var(--_v-outside-text-italic);
+  --_over-outside: calc(clamp(0, var(--_v-outside-layer), 1) * 100%);
+}
 .notes-calendar-cell[data-today] {
-  color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, var(--text-accent)));
+  --_text-today: var(--_v-today-text-color);
+  --_weight-today: var(--_v-today-text-weight);
+  --_italic-today: var(--_v-today-text-italic);
+  --_over-today: calc(clamp(0, var(--_v-today-layer), 1) * 100%);
+}
+.notes-calendar-cell[data-selected] {
+  --_text-selected: var(--_v-selected-text-color);
+  --_weight-selected: var(--_v-selected-text-weight);
+  --_italic-selected: var(--_v-selected-text-italic);
+  --_over-selected: calc(clamp(0, var(--_v-selected-layer), 1) * 100%);
 }
 .notes-calendar-cell[data-active] {
-  color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--text-on-accent)));
+  --_text-active: var(--_v-active-text-color);
+  --_weight-active: var(--_v-active-text-weight);
+  --_italic-active: var(--_v-active-text-italic);
+  --_over-active: calc(clamp(0, var(--_v-active-layer), 1) * 100%);
+}
+.notes-calendar-cell {
+  color: var(--_text-active, var(--_text-selected, var(--_text-today, var(--_text-outside, var(--_part-color)))));
 }
 /* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
    z-index in the shared decoration would leak into every other host's stacking context. The border
@@ -107,6 +430,35 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell :deep(.cell-decoration__content) {
   position: relative;
   z-index: 2;
+  /* Label padding: on top of the decoration's own mark reservation, and never shrinking its fill. */
+  padding: var(--_v-cell-padding);
+}
+/* A decoration paints its text color with !important on the element around the label, which beats
+   the cell's color, so a state set over decorations (its layer above 0) re-paints the label itself.
+   The layer clamps to a 0%/100% weight: under, the mix passes the inherited decoration color through;
+   over, it takes the state's text. States nest in text precedence, the highest outermost, and a state
+   with no text color passes the lower states' result through rather than blocking it. Weight and
+   italic are set here rather than on the cell, where an unset chain would unset the week number's
+   bold; here it only inherits. */
+.notes-calendar-cell:is([data-outside], [data-today], [data-selected], [data-active]) :deep(.cell-decoration__content) {
+  --_over-outside-text: color-mix(in srgb, var(--_text-outside, currentColor) var(--_over-outside, 0%), currentColor);
+  --_over-today-text: color-mix(
+    in srgb,
+    var(--_text-today, var(--_over-outside-text)) var(--_over-today, 0%),
+    var(--_over-outside-text)
+  );
+  --_over-selected-text: color-mix(
+    in srgb,
+    var(--_text-selected, var(--_over-today-text)) var(--_over-selected, 0%),
+    var(--_over-today-text)
+  );
+  color: color-mix(
+    in srgb,
+    var(--_text-active, var(--_over-selected-text)) var(--_over-active, 0%),
+    var(--_over-selected-text)
+  );
+  font-weight: var(--_weight-active, var(--_weight-selected, var(--_weight-today, var(--_weight-outside))));
+  font-style: var(--_italic-active, var(--_italic-selected, var(--_italic-today, var(--_italic-outside))));
 }
 .notes-calendar-cell :deep(.cell-marks),
 .notes-calendar-cell :deep(.decoration-corner) {
@@ -123,19 +475,39 @@ const hover = useModifierHoverPreview();
   border-radius: inherit;
   pointer-events: none;
 }
-.notes-calendar-cell__layer[data-layer="today"] {
-  background-color: var(--journal-cell-today-bg, var(--journal-saved-cell-today-bg, transparent));
-  z-index: var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1));
+.notes-calendar-cell__layer[data-layer^="outside-"] {
+  --_color: var(--_v-outside-color);
+  --_strength: var(--_v-outside-strength);
+  --_ring-width: var(--_v-outside-ring-width);
+  z-index: var(--_v-outside-layer);
 }
-/* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear this ring;
-   widening it means widening that too. */
-.notes-calendar-cell__layer[data-layer="selected"] {
-  box-shadow: inset 0 0 0 2px
-    var(--journal-cell-selected-ring, var(--journal-saved-cell-selected-ring, var(--interactive-accent)));
-  z-index: var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1));
+.notes-calendar-cell__layer[data-layer^="today-"] {
+  --_color: var(--_v-today-color);
+  --_strength: var(--_v-today-strength);
+  --_ring-width: var(--_v-today-ring-width);
+  z-index: var(--_v-today-layer);
 }
-.notes-calendar-cell__layer[data-layer="active"] {
-  background-color: var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)));
-  z-index: var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1));
+.notes-calendar-cell__layer[data-layer^="selected-"] {
+  --_color: var(--_v-selected-color);
+  --_strength: var(--_v-selected-strength);
+  --_ring-width: var(--_v-selected-ring-width);
+  z-index: var(--_v-selected-layer);
+}
+.notes-calendar-cell__layer[data-layer^="active-"] {
+  --_color: var(--_v-active-color);
+  --_strength: var(--_v-active-strength);
+  --_ring-width: var(--_v-active-ring-width);
+  z-index: var(--_v-active-layer);
+}
+/* Opacity rather than color-mix: a WebView without color-mix drops the whole declaration, and the
+   open note's fill would vanish under its on-accent text. The layer holds only this background. */
+.notes-calendar-cell__layer[data-layer$="-fill"] {
+  background-color: var(--_color);
+  opacity: var(--_strength);
+}
+/* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear the stock selected
+   ring; widening it means widening that too. */
+.notes-calendar-cell__layer[data-layer$="-ring"] {
+  box-shadow: inset 0 0 0 var(--_ring-width) var(--_color);
 }
 </style>

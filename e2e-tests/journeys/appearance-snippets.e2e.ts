@@ -94,7 +94,7 @@ describe("appearance variables and CSS snippets", () => {
     const selected = viewCell(DEFAULT_VIEW, SELECTED_CELL);
     await $(selected).waitForExist({ timeoutMsg: "the default view has no selected cell" });
     // The ring is drawn by the cell's selected layer, not the cell itself.
-    const ring = `${selected} [data-layer="selected"]`;
+    const ring = `${selected} [data-layer="selected-ring"]`;
     await waitForState(
       () => ringHex(ring),
       (hex) => hex === "#ff0000",
@@ -139,9 +139,9 @@ describe("appearance variables and CSS snippets", () => {
 
     it("a saved color changed while the popout is open reaches it", async () => {
       const settings = JSON.parse((await readRawSettings()) ?? "{}") as {
-        appearance: { today: { color: unknown } };
+        appearance: { wide: { today: { text: { color: unknown } } } };
       };
-      settings.appearance.today.color = { type: "custom", color: LIVE_MAGENTA };
+      settings.appearance.wide.today.text.color = { type: "custom", color: LIVE_MAGENTA };
       await writeRawSettings(JSON.stringify(settings));
       await triggerExternalSettingsChange();
       await waitForState(

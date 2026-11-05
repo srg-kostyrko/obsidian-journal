@@ -6,11 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- CSS snippets can now change the calendar's highlight colors without `!important`. Setting `--journal-cell-today-color`, `--journal-cell-today-bg`, `--journal-cell-active-color`, `--journal-cell-active-bg` or `--journal-cell-selected-ring` from any selector — `body`, `:root`, or the calendar itself — now wins over the colors chosen under **Calendar highlighting**, in the main window and in popout windows alike. Before, those colors were written onto each calendar directly, so a snippet on `body` or `:root` only won with `!important`.
+- CSS snippets can now change how the calendar looks without `!important`. Every calendar appearance value is a `--journal-cell-*` CSS variable, for example `--journal-cell-today-color` (today's highlight color) or `--journal-cell-selected-color`, and setting one from any selector — `body`, `:root`, or the calendar itself — wins over the value chosen under **Calendar highlighting**, in the main window and in popout windows alike. Before, those colors were written onto each calendar directly, so a snippet on `body` or `:root` only won with `!important`. Each value also has a `-narrow` variant, such as `--journal-cell-today-color-narrow`, that applies when the calendar itself is narrower than about 28em, however wide the window is. Today's color fills the day only when `--journal-cell-today-strength` is set as well, because the stock text-only style has a strength of 0; a strength is a number from 0 to 1, such as `0.4`. Your settings migrate automatically. The full list of variables comes with the manual page, in a later release.
 
 ### Bug Fixes
 
 - The selected date's ring now shows over more than it did. It used to hide under a decoration background, so on a decorated day nothing marked where the calendar view was, and under any fill on the open note's day or on today. It now shows over a decoration and its border, over the open note's fill and over today's background, unless its color matches the fill it sits on. The open note's fill still sits under a decoration, so the decoration's color, and what it means, stays visible on the note you are reading.
+- A day outside the month that is today now shows today's accent color instead of the muted outside color.
+- A day outside the month that is the open note now shows the open note's text color instead of muted text on the accent fill, which was hard to read.
 
 ## [3.6.0] - 2026-11-01
 

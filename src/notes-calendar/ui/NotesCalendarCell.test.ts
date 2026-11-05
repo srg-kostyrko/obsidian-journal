@@ -29,6 +29,7 @@ function mount(props: {
   role?: "gridcell" | "rowheader";
   tabIndex?: number;
   selected?: boolean;
+  outside?: boolean;
 }) {
   return render(NotesCalendarCell, { props });
 }
@@ -311,16 +312,22 @@ function layers(c: Element) {
   return [...c.querySelectorAll<HTMLElement>(".notes-calendar-cell__layer")].map((l) => l.dataset.layer);
 }
 
+function onMay25() {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-05-25T12:00:00"));
+}
+
 describe("NotesCalendarCell state layers", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("renders a selected layer when selected", () => {
+  it("renders a selected fill and ring when selected, hidden from assistive tech", () => {
     const { container } = mount({ period: may25, cell: stubApi(), selected: true });
-    const found = container.querySelectorAll('.notes-calendar-cell__layer[data-layer="selected"]');
-    expect(found).toHaveLength(1);
-    expect(found[0]?.getAttribute("aria-hidden")).toBe("true");
+    expect(layers(container)).toEqual(["selected-fill", "selected-ring"]);
+    for (const layer of container.querySelectorAll(".notes-calendar-cell__layer")) {
+      expect(layer.getAttribute("aria-hidden")).toBe("true");
+    }
   });
 
   it("renders no layer for a plain cell", () => {
@@ -328,27 +335,47 @@ describe("NotesCalendarCell state layers", () => {
     expect(layers(container)).toEqual([]);
   });
 
-  it("renders only the open-note layer for a cell that is both today and open, before the decoration", () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
-    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }) });
-    expect(layers(container)).toEqual(["active"]);
-    const decoration = container.querySelector('[data-testid="cell-decoration"]');
-    const last = container.querySelector('[data-layer="active"]');
-    expect(last?.compareDocumentPosition(decoration as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-  });
-
-  it("renders the today layer for a cell that is today only", () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
-    const { container } = mount({ period: may25, cell: stubApi() });
-    expect(layers(container)).toEqual(["today"]);
-  });
-
-  it("orders selected then active, with no today layer, when today is also selected and open", () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
+  it("renders fill then ring layers in state order", () => {
+    onMay25();
     const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
-    expect(layers(container)).toEqual(["selected", "active"]);
+    expect(layers(container)).toEqual(["selected-fill", "active-fill", "today-ring", "selected-ring", "active-ring"]);
+  });
+
+  it("keeps today's ring but not its fill on the open note", () => {
+    onMay25();
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }) });
+    expect(layers(container)).toEqual(["active-fill", "today-ring", "active-ring"]);
+  });
+
+  it("renders today's fill and ring for a cell that is today only", () => {
+    onMay25();
+    const { container } = mount({ period: may25, cell: stubApi() });
+    expect(layers(container)).toEqual(["today-fill", "today-ring"]);
+  });
+
+  it("renders outside layers only for outside cells", () => {
+    const inside = mount({ period: may25, cell: stubApi() });
+    expect(layers(inside.container)).toEqual([]);
+    expect(inside.container.querySelector(".notes-calendar-cell")?.hasAttribute("data-outside")).toBe(false);
+    inside.unmount();
+    onMay25();
+    const { container } = mount({ period: may25, cell: stubApi(), outside: true, selected: true });
+    expect(layers(container)).toEqual([
+      "outside-fill",
+      "today-fill",
+      "selected-fill",
+      "outside-ring",
+      "today-ring",
+      "selected-ring",
+    ]);
+    expect(container.querySelector(".notes-calendar-cell")?.hasAttribute("data-outside")).toBe(true);
+  });
+
+  it("paints every layer before the decoration", () => {
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
+    const decoration = container.querySelector('[data-testid="cell-decoration"]');
+    for (const layer of container.querySelectorAll(".notes-calendar-cell__layer")) {
+      expect(layer.compareDocumentPosition(decoration as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    }
   });
 });

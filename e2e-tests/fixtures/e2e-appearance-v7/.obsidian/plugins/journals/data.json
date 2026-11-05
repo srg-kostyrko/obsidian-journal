@@ -1,0 +1,51 @@
+{
+  "version": 7,
+  "logging": { "level": "debug" },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "appearance": {
+    "today": {
+      "color": { "type": "custom", "color": "#1a2b3c" },
+      "background": { "type": "custom", "color": "#4d5e6f" }
+    },
+    "active": {
+      "color": { "type": "custom", "color": "#7a8b9c" },
+      "background": { "type": "custom", "color": "#a1b2c3" }
+    },
+    "selectedRing": { "type": "custom", "color": "#c4d5e6" }
+  },
+  "views": {
+    "47e75fae-240a-410e-aecd-83797c50fc56": {
+      "id": "47e75fae-240a-410e-aecd-83797c50fc56",
+      "name": "Calendar",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "356ab3ba-0dcf-4d25-9f85-b0cea3e5f0da",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": false }
+        }
+      ]
+    }
+  }
+}
