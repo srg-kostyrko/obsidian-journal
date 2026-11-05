@@ -327,6 +327,23 @@ e2e job runs exactly this single command before installing the fixture.
    failing first test cannot otherwise show. Headless CI flakes are
    near-undebuggable without all of this.
 
+   A failing `before`/`after` hook never reaches `afterTest`, so an `afterHook`
+   hook runs the same capture for it, named for the hook's title. Both write two
+   lines ahead of the trail: `frames at failure:` (whether the window was still
+   producing frames) and `page at failure:`, read with a plain `browser.execute`
+   rather than the service's helper — the page URL, `document.readyState`,
+   whether `app` exists, the vault name, the loaded plugin ids, and whether
+   `wdioObsidianService` is defined. That tells a vault that never opened from a
+   boot whose plugins did not load, which is the question a reload that times out
+   in a `before all` leaves. The trail still ships when the helper is gone: only
+   the plugin's half needs it.
+
+   The browser process's own log goes to `e2e-tests/.reports/chromium-<cid>.log`,
+   one file per spec file as the junit report is (`--enable-logging=file` with a
+   per-session `--log-file`, set in `beforeSession`). Chromium truncates it at
+   each launch, so it holds the last boot of that spec file — a spec's
+   `reloadObsidian` replaces the file its first boot wrote.
+
    Records come from the buffer rather than the console because the WebDriver log
    wire renders console _arguments_ instead of serializing them: a record's fields
    arrive as the bare word `Object`, losing exactly the path or id worth reading.

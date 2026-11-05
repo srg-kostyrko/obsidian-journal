@@ -97,6 +97,100 @@ function pluginLine(record: PluginLogRecord): string {
   return `${at(record.timestamp)} [${record.level}] [${name}] ${record.message}${fields}`;
 }
 
+// Where the page stands, read without the service's helper: a boot that wedges can leave a live
+// page on which the helper plugin never loaded, so executeObsidian is what fails. Tells "the vault
+// never opened" (no app, or another page) from "a plugin load blocked" (the app, short a plugin).
+interface PageState {
+  href: string;
+  readyState: string;
+  hasApp: boolean;
+  vault: string | null;
+  plugins: string[] | null;
+  serviceHelper: string;
+}
+
+async function readPageState(): Promise<PageState> {
+  return await browser.execute(() => {
+    const runtime = window as unknown as {
+      app?: { vault?: { getName?: () => string }; plugins?: { plugins?: Record<string, unknown> } };
+      wdioObsidianService?: unknown;
+    };
+    const app = runtime.app;
+    return {
+      href: location.href,
+      readyState: document.readyState,
+      hasApp: app !== undefined,
+      vault: app?.vault?.getName?.() ?? null,
+      plugins: app?.plugins?.plugins === undefined ? null : Object.keys(app.plugins.plugins),
+      serviceHelper: typeof runtime.wdioObsidianService,
+    };
+  });
+}
+
+async function captureFailure(fullTitle: string, title: string): Promise<void> {
+  // Before the screenshot, which forces the very frame this probe is looking for.
+  let frameState: FrameState | null = null;
+  try {
+    frameState = await readFrameState();
+  } catch {
+    // A wedged renderer cannot answer; the null says so.
+  }
+  let pageState: PageState | null = null;
+  try {
+    pageState = await readPageState();
+  } catch {
+    // Same as above.
+  }
+  const name = fullTitle.replaceAll(/[^\w]+/g, "-").toLowerCase();
+  try {
+    const screenshot = await browser.takeScreenshot();
+    await mkdir(SCREENSHOT_DIR, { recursive: true });
+    await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
+  } catch {
+    // A lost renderer cannot be captured, and throwing here would drop the trail below too —
+    // which is the only record of why it was lost.
+  }
+
+  // A screenshot shows a surface that never changed; it cannot show why. The trail can, so it
+  // ships beside it — and also goes to stdout, because the job log is what a triager reads
+  // first and downloading an artifact is a second trip.
+  let records: PluginLogRecord[] = [];
+  let consoleEntries: unknown[] = [];
+  try {
+    records = await readPluginLog();
+  } catch {
+    // A wedged renderer loses the session before the hook runs, and a page without the service's
+    // helper fails here; whatever was collected still ships.
+  }
+  try {
+    consoleEntries = await browser.getLogs("browser");
+  } catch {
+    // Same as above.
+  }
+  const trail = [
+    ...records.map((record) => [record.timestamp, pluginLine(record)] as const),
+    ...consoleEntries
+      .filter(isConsoleEntry)
+      .filter((entry) => !isPluginEcho(entry))
+      .map((entry) => [entry.timestamp, `${at(entry.timestamp)} [${entry.level}] ${entry.message}`] as const),
+  ]
+    .toSorted(([a], [b]) => a - b)
+    .map(([, line]) => line);
+  const lines = [
+    `frames at failure: ${frameState === null ? "renderer did not answer" : JSON.stringify(frameState)}`,
+    `page at failure: ${pageState === null ? "renderer did not answer" : JSON.stringify(pageState)}`,
+    ...trail,
+  ];
+  await mkdir(LOG_DIR, { recursive: true });
+  await writeFile(path.join(LOG_DIR, `${name}.log`), `${lines.join("\n")}\n`);
+  // The merged story, not just the plugin's half: the harness markers say when the spec touched
+  // the vault, and a boot-window failure is only legible as "the create landed before the
+  // subscriber did" when both halves sit on one timeline. Printing the plugin log alone left
+  // that ordering readable only in the artifact, which is the second trip this copy exists to
+  // spare.
+  console.log([`--- journals log: ${title} ---`, ...lines].join("\n"));
+}
+
 // Version matrix is data-driven so CI jobs select it via OBSIDIAN_VERSIONS without
 // editing this file: PR gate -> "latest/latest"; nightly -> the floor + mismatch
 // combos (see docs/e2e-testing-strategy.md). `earliest` resolves manifest.minAppVersion.
@@ -120,11 +214,14 @@ if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
 }
 
 // A renderer that dies takes the page's console and the plugin's log with it, so only the browser
-// process can say whether it crashed, hung, or lost its GPU process. Chromium truncates the file at
-// each launch, so it holds the last Obsidian boot of the run — enough for a failure that repeats on
-// every boot, which is the kind that needs it. Chromium will not create the directory, hence onPrepare.
-const CHROMIUM_LOG = path.resolve(REPORTS_DIR, "chromium.log");
-const CHROMIUM_LOG_ARGS = ["--enable-logging", `--log-file=${CHROMIUM_LOG}`];
+// process can say whether it crashed, hung, or lost its GPU process. Bare --enable-logging sends that
+// to stderr, which nothing keeps (and on Windows child processes cannot reach), so the file stayed
+// empty; Electron writes to --log-file only under --enable-logging=file (documented from Electron 28,
+// the 1.5.8 floor installer, through the current release). The file is named per spec file, by the
+// worker's cid as the junit report is, because two workers sharing one path overwrote each other.
+// Chromium will not create the directory, hence onPrepare.
+const CHROMIUM_LOG_ARGS = ["--enable-logging=file"];
+const chromiumLogArg = (cid: string): string => `--log-file=${path.resolve(REPORTS_DIR, `chromium-${cid}.log`)}`;
 
 // Installer 1.5.8 (Electron 28, Chrome 120) is Obsidian's own minimum installer, so the floor legs run
 // on it. On the windows-2025 runner image from 20261018 (OS build 26100.33650; 33438 was fine) its
@@ -236,6 +333,14 @@ export const config: WebdriverIO.Config = {
     await mkdir(REPORTS_DIR, { recursive: true });
   },
 
+  // The service's reloadObsidian relaunches from the session's requested capabilities, so the
+  // argument set here reaches every boot of the spec file.
+  beforeSession: function (_config, capabilities, _specs, cid) {
+    const options = (capabilities as WebdriverIO.Capabilities)["goog:chromeOptions"];
+    if (options === undefined) return;
+    options.args = [...(options.args ?? []).filter((arg) => !arg.startsWith("--log-file=")), chromiumLogArg(cid)];
+  },
+
   // `obsidian` reporter wraps spec output with the Obsidian version; `junit` makes
   // retry/quarantine visibility a CI artifact.
   reporters: [
@@ -280,54 +385,13 @@ export const config: WebdriverIO.Config = {
   // artifact under e2e-tests/.reports.
   afterTest: async function (test, _context, result: { passed: boolean }) {
     if (result.passed) return;
-    // Before the screenshot, which forces the very frame this probe is looking for.
-    let frameState: FrameState | null = null;
-    try {
-      frameState = await readFrameState();
-    } catch {
-      // A wedged renderer cannot answer; the null says so.
-    }
-    const name = `${test.parent} ${test.title}`.replaceAll(/[^\w]+/g, "-").toLowerCase();
-    try {
-      const screenshot = await browser.takeScreenshot();
-      await mkdir(SCREENSHOT_DIR, { recursive: true });
-      await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
-    } catch {
-      // A lost renderer cannot be captured, and throwing here would drop the trail below too —
-      // which is the only record of why it was lost.
-    }
+    await captureFailure(`${test.parent} ${test.title}`, test.title);
+  },
 
-    // A screenshot shows a surface that never changed; it cannot show why. The trail can, so it
-    // ships beside it — and also goes to stdout, because the job log is what a triager reads
-    // first and downloading an artifact is a second trip.
-    let records: PluginLogRecord[] = [];
-    let consoleEntries: unknown[] = [];
-    try {
-      records = await readPluginLog();
-      consoleEntries = await browser.getLogs("browser");
-    } catch {
-      // A wedged renderer loses the session before the hook runs; whatever was collected still ships.
-    }
-    const trail = [
-      ...records.map((record) => [record.timestamp, pluginLine(record)] as const),
-      ...consoleEntries
-        .filter(isConsoleEntry)
-        .filter((entry) => !isPluginEcho(entry))
-        .map((entry) => [entry.timestamp, `${at(entry.timestamp)} [${entry.level}] ${entry.message}`] as const),
-    ]
-      .toSorted(([a], [b]) => a - b)
-      .map(([, line]) => line);
-    const lines = [
-      `frames at failure: ${frameState === null ? "renderer did not answer" : JSON.stringify(frameState)}`,
-      ...trail,
-    ];
-    await mkdir(LOG_DIR, { recursive: true });
-    await writeFile(path.join(LOG_DIR, `${name}.log`), `${lines.join("\n")}\n`);
-    // The merged story, not just the plugin's half: the harness markers say when the spec touched
-    // the vault, and a boot-window failure is only legible as "the create landed before the
-    // subscriber did" when both halves sit on one timeline. Printing the plugin log alone left
-    // that ordering readable only in the artifact, which is the second trip this copy exists to
-    // spare.
-    console.log([`--- journals log: ${test.title} ---`, ...lines].join("\n"));
+  // A failing before/after hook never reaches afterTest, so a boot that wedges in a spec's
+  // `before all` used to leave no capture at all.
+  afterHook: async function (test, _context, result: { passed: boolean; error?: unknown }) {
+    if (result.passed && result.error === undefined) return;
+    await captureFailure(`${test.parent} ${test.title}`, test.title);
   },
 };
