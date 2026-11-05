@@ -190,6 +190,27 @@ describe("AppearanceSubpage", () => {
     ).toBeTruthy();
   });
 
+  it("groups the controls under a family section that starts open and collapses", async () => {
+    mount();
+    await userEvent.selectOptions(partsList(), "date");
+
+    const family = screen.getByRole("button", { name: m.calendar_appearance_family({ family: "text" }) });
+    expect(family.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByText("--journal-cell-date-size")).toBeTruthy();
+
+    await userEvent.click(family);
+
+    expect(family.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText("--journal-cell-date-size")).toBeNull();
+
+    await userEvent.selectOptions(partsList(), "heading");
+    expect(
+      screen
+        .getByRole("button", { name: m.calendar_appearance_family({ family: "text" }) })
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
+  });
+
   it("the parts list reaches every part", async () => {
     mount();
 

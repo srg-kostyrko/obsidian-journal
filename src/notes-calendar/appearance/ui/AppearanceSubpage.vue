@@ -9,6 +9,7 @@ import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiButton from "@/ui/UiButton.vue";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
@@ -85,6 +86,17 @@ const inspected = computed(() => {
   return { part, family, controls: visibleControls(part, style) };
 });
 
+// Keyed by part, so collapsing a family on one part leaves the same family open on the next.
+const collapsed = ref(new Set<string>());
+const familyKey = (part: PartKey, family: string): string => `${part}.${family}`;
+const familyOpen = (part: PartKey, family: string): boolean => !collapsed.value.has(familyKey(part, family));
+function setFamilyOpen(part: PartKey, family: string, open: boolean): void {
+  const next = new Set(collapsed.value);
+  if (open) next.delete(familyKey(part, family));
+  else next.add(familyKey(part, family));
+  collapsed.value = next;
+}
+
 function reset(part: PartKey): void {
   slice.state = withReset(slice.state, width.value, part);
 }
@@ -160,19 +172,20 @@ function reset(part: PartKey): void {
         {{ m.calendar_appearance_reset({ width }) }}
       </UiButton>
     </UiSettingRow>
-    <UiSettingRow
-      heading
-      no-controls
+    <UiCollapsibleBlock
       class="appearance-subpage__family"
-      :name="m.calendar_appearance_family({ family: inspected.family })"
-    />
-    <AppearanceControl
-      v-for="control of inspected.controls"
-      :key="`${inspected.part}.${control.path.join('.')}`"
-      :part="inspected.part"
-      :control="control"
-      :width="width"
-    />
+      :expanded="familyOpen(inspected.part, inspected.family)"
+      @update:expanded="setFamilyOpen(inspected.part, inspected.family, $event === true)"
+    >
+      <template #trigger>{{ m.calendar_appearance_family({ family: inspected.family }) }}</template>
+      <AppearanceControl
+        v-for="control of inspected.controls"
+        :key="`${inspected.part}.${control.path.join('.')}`"
+        :part="inspected.part"
+        :control="control"
+        :width="width"
+      />
+    </UiCollapsibleBlock>
   </template>
 </template>
 
@@ -275,9 +288,9 @@ function reset(part: PartKey): void {
   font-weight: var(--font-normal);
   color: var(--text-muted);
 }
-/* A subheading under the part's own heading, so it steps down rather than repeating its weight. */
-.appearance-subpage__family :deep(.setting-item-name) {
-  font-size: var(--font-ui-smaller);
+/* A subsection under the part's own heading, so it steps down rather than repeating its weight. */
+.appearance-subpage__family :deep(.collapsible-trigger-text) {
+  font-size: var(--font-ui-small);
   color: var(--text-muted);
 }
 </style>
