@@ -9,6 +9,9 @@ const find = (name: string) => {
   return entry;
 };
 
+const propertyOf = (suffix: string) =>
+  appearanceCatalog.filter((entry) => entry.name.endsWith(suffix)).map((entry) => entry.probe.property);
+
 describe("appearanceCatalog", () => {
   it("names follow part-value", () => {
     expect(names).toEqual(
@@ -44,5 +47,25 @@ describe("appearanceCatalog", () => {
       expect({ name: entry.name, same: entry.probe.sample === entry.stock }).toEqual({ name: entry.name, same: false });
       expect({ name: entry.name, selector: entry.probe.selector }).not.toEqual({ name: entry.name, selector: "" });
     }
+  });
+
+  it("every probe states what the gate expects, and its companions are catalog names", () => {
+    const publicNames = new Set(appearanceCatalog.map((entry) => publicName(entry)));
+    for (const entry of appearanceCatalog) {
+      expect({ name: entry.name, empty: entry.probe.expect === "" }).toEqual({ name: entry.name, empty: false });
+      const companions = Object.keys(entry.probe.with ?? {});
+      for (const key of companions) {
+        expect({ name: entry.name, key, known: publicNames.has(key as `--${string}`) }).toEqual({
+          name: entry.name,
+          key,
+          known: true,
+        });
+      }
+    }
+  });
+
+  it("strength probes read background-color and ring-width probes read box-shadow", () => {
+    expect(new Set(propertyOf("-strength"))).toEqual(new Set(["background-color"]));
+    expect(new Set(propertyOf("-ring-width"))).toEqual(new Set(["box-shadow"]));
   });
 });
