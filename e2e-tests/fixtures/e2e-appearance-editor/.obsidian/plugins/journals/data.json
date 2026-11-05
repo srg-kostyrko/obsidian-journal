@@ -1,0 +1,82 @@
+{
+  "version": 8,
+  "logging": {
+    "level": "debug"
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
+    }
+  },
+  "views": {
+    "3e8b5c1a-7d2f-4a9e-b6c0-1f2e3d4c5b6a": {
+      "id": "3e8b5c1a-7d2f-4a9e-b6c0-1f2e3d4c5b6a",
+      "name": "Editor target",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "4f9c6d2b-8e3a-4b0f-a7d1-2a3b4c5d6e7f",
+          "key": "toolbar",
+          "config": {
+            "items": [
+              {
+                "id": "5a0d7e3c-9f4b-4c1a-b8e2-3b4c5d6e7f80",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "next",
+                    "unit": "month",
+                    "amount": 1
+                  },
+                  "icon": "chevron-right",
+                  "tooltip": "Editor next month"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "6b1e8f4d-0a5c-4d2b-89f3-4c5d6e7f8091",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "default",
+            "showHeading": false
+          }
+        }
+      ]
+    }
+  }
+}

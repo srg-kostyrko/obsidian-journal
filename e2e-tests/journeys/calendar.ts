@@ -1,4 +1,4 @@
-import { $ } from "@wdio/globals";
+import { $, browser } from "@wdio/globals";
 
 import { waitForState } from "../support/wait.js";
 
@@ -36,4 +36,28 @@ export function calendarSurface(root: string, daySelector = ".notes-month-view__
       `waited for the ${anchor} day cell to become data-active`,
     );
   return { cell, periodCell, waitForActive };
+}
+
+// The label's color goes through color-mix, which Chromium serializes as color(srgb …) and
+// WebDriver cannot parse to hex, so the page paints it on a canvas and reads the pixel back.
+export async function labelHexOf(cellSelector: string): Promise<string | undefined> {
+  const hex = await browser.execute((selector: string) => {
+    const label = document.querySelector(`${selector} .cell-decoration__content`);
+    const context = document.createElement("canvas").getContext("2d");
+    if (label === null || context === null) return null;
+    const color = getComputedStyle(label).color;
+    // A color the canvas rejects leaves fillStyle on its preset; two presets both surviving means
+    // the read failed, and the raw value goes back so it can never equal a hex.
+    const rejected = ["#010203", "#040506"].every((preset) => {
+      context.fillStyle = preset;
+      context.fillStyle = color;
+      return context.fillStyle === preset;
+    });
+    if (rejected) return color;
+    context.fillStyle = color;
+    context.fillRect(0, 0, 1, 1);
+    const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+  }, cellSelector);
+  return hex ?? undefined;
 }

@@ -8,10 +8,9 @@ import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
+import { labelHexOf, type CellLocator } from "./calendar.js";
 import { borderTop, dayAnchor, decorationBackgroundHex, decorationTextHex, note } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
-
-import type { CellLocator } from "./calendar.js";
 
 // The highlight layers (today / selected / active) stack around a decoration inside one isolated
 // cell. These read the compiled scoped CSS from real Chromium, which no unit test can: jsdom
@@ -54,30 +53,6 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
   }, anchor);
   if (reply === null) return undefined;
   return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-}
-
-// The label's color goes through color-mix, which Chromium serializes as color(srgb …) and
-// WebDriver cannot parse to hex, so the page paints it on a canvas and reads the pixel back.
-async function labelHexOf(cellSelector: string): Promise<string | undefined> {
-  const hex = await browser.execute((selector: string) => {
-    const label = document.querySelector(`${selector} .cell-decoration__content`);
-    const context = document.createElement("canvas").getContext("2d");
-    if (label === null || context === null) return null;
-    const color = getComputedStyle(label).color;
-    // A color the canvas rejects leaves fillStyle on its preset; two presets both surviving means
-    // the read failed, and the raw value goes back so it can never equal a hex.
-    const rejected = ["#010203", "#040506"].every((preset) => {
-      context.fillStyle = preset;
-      context.fillStyle = color;
-      return context.fillStyle === preset;
-    });
-    if (rejected) return color;
-    context.fillStyle = color;
-    context.fillRect(0, 0, 1, 1);
-    const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
-    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-  }, cellSelector);
-  return hex ?? undefined;
 }
 
 const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
