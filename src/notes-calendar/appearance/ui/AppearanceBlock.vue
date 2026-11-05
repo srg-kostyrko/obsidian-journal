@@ -15,7 +15,7 @@ const ui = useService(SettingsUiService);
 
 <template>
   <!-- A link row like the maintenance block: the editor needs a page of its own for the preview. -->
-  <UiSettingRow heading :help="manual.view.calendars">
+  <UiSettingRow heading :help="manual.view.appearance">
     <template #name>
       <UiIconedRow :icon="icons.section.appearance">{{ m.calendar_appearance_section_title() }}</UiIconedRow>
     </template>

@@ -33,7 +33,7 @@ export const manual = {
     settings: "/views#a-view-s-settings",
     blocks: "/views#blocks",
     notesByDate: "/views#notes-by-date",
-    calendars: "/views#month-calendar-and-week-calendar",
+    appearance: "/views#calendar-appearance",
   },
   startup: {
     openOnStartup: "/notes#opening-a-note-when-obsidian-starts",
