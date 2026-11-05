@@ -475,18 +475,22 @@ describe("text on a day outside the month", () => {
       ({ label, onAccent, muted }) => label !== undefined && label === onAccent && onAccent !== muted,
       message,
     ).catch(async (error: unknown) => {
+      if (!isTimeoutOf(error, message)) throw error;
       throw asLabelMismatch(error, message, `${JSON.stringify(last)}, body ${await bodyOnAccent()}`);
     });
   });
 });
 
 // Obsidian sets --text-on-accent on the body from the accent color's luminance, so a failure names
-// which side moved: the label, or the reference.
-function bodyOnAccent(): Promise<string> {
-  return browser.execute(
-    () =>
-      `--text-on-accent inline "${document.body.style.getPropertyValue("--text-on-accent")}", computed "${getComputedStyle(document.body).getPropertyValue("--text-on-accent").trim()}"`,
-  );
+// which side moved: the label, or the reference. It only enriches a timeout's message, so a
+// renderer that cannot answer must never replace the failure itself.
+async function bodyOnAccent(): Promise<string> {
+  return browser
+    .execute(
+      () =>
+        `--text-on-accent inline "${document.body.style.getPropertyValue("--text-on-accent")}", computed "${getComputedStyle(document.body).getPropertyValue("--text-on-accent").trim()}"`,
+    )
+    .catch(() => "unreadable");
 }
 
 // Rounded: Obsidian's zoom scales authored pixels.
@@ -589,8 +593,12 @@ class LabelMismatchError extends Error {
 }
 
 // Only the wait's own timeout reads as a mismatch; a renderer death or any other error passes through.
+function isTimeoutOf(error: unknown, message: string): boolean {
+  return error instanceof Error && error.message.startsWith(message);
+}
+
 function asLabelMismatch(error: unknown, message: string, last: string | undefined): unknown {
-  if (error instanceof Error && error.message.startsWith(message)) {
+  if (isTimeoutOf(error, message)) {
     return new LabelMismatchError(`${message}: read ${String(last)}`, { cause: error });
   }
   return error;
