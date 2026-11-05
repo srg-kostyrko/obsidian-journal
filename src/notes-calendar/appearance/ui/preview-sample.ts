@@ -34,7 +34,7 @@ const PREVIEW_PARTS: Readonly<Record<string, readonly PartKey[]>> = {
   heading: ["heading"],
 };
 
-/** Every part the element belongs to, most specific first. */
+/** Every part the element belongs to, in the order a click should offer them. */
 export function partsAt(target: Element): readonly PartKey[] {
   const parts = new Set<PartKey>();
   const cell = target.closest(".notes-calendar-cell");
@@ -42,5 +42,8 @@ export function partsAt(target: Element): readonly PartKey[] {
   const part = target.closest<HTMLElement>("[data-preview-part]")?.dataset.previewPart;
   const keys = PREVIEW_PARTS[part ?? ""] ?? [];
   for (const key of keys) parts.add(key);
-  return CHIP_ORDER.filter((key) => parts.has(key));
+  const ordered = CHIP_ORDER.filter((key) => parts.has(key));
+  // A day is mostly its state, so a state leads there; a label (the month name, a week number) is
+  // what was clicked, so it leads and the today it contains follows.
+  return part === "date" ? ordered : [...keys, ...ordered.filter((key) => !keys.includes(key))];
 }

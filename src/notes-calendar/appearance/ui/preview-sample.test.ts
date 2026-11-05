@@ -67,18 +67,18 @@ describe("partsAt", () => {
     expect(partsAt(target)).toEqual(["selected", "today", "date", "cell"]);
   });
 
-  it("names the current week number", () => {
+  it("names the current week number before the today it contains", () => {
     const target = element({ class: CELL, "data-preview-part": "weekNumber", "data-today": "true" });
-    expect(partsAt(target)).toEqual(["today", "weekNumber"]);
+    expect(partsAt(target)).toEqual(["weekNumber", "today"]);
   });
 
   it("names a weekday header", () => {
     expect(partsAt(element({ "data-preview-part": "weekday" }))).toEqual(["weekday"]);
   });
 
-  it("names the heading's month cell", () => {
+  it("names the heading's month cell before the today it contains", () => {
     const target = element({ "data-preview-part": "heading" }, { class: CELL, "data-today": "true" }, {});
-    expect(partsAt(target)).toEqual(["today", "heading"]);
+    expect(partsAt(target)).toEqual(["heading", "today"]);
   });
 
   it("names an outside day", () => {

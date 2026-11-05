@@ -193,9 +193,11 @@ open note, days from the months either side and a few decorated days, drawn at t
 editing: **Narrow** at the size of a slim sidebar calendar, **Wide** across the whole panel. The wide
 preview never gets narrow enough to count as a narrow calendar, so on a very narrow settings pane it
 scrolls sideways instead. Click a part of it to edit that part; a day, a week number or a heading can also be
-reached with Tab and picked with Enter or Space. Where a click lands on more than one part — a day
-that is today is also a date number and a cell — the most specific one is edited, and **Also here**,
-under the preview, lists the others so you can switch to the one you meant. **Editing** lists every
+reached with Tab and picked with Enter or Space. Where a click lands on more than one part, one is
+edited and **Also here**, under the preview, lists the others so you can switch to the one you meant.
+On a day, its state comes first: today's date edits **Today**, with **Date number** and **Cells** under
+**Also here**. On the month name or a week number, that label comes first, and the **Today** it
+contains is under **Also here**. **Editing** lists every
 part too, so you can pick one without the preview:
 
 - **Month heading** — the month and year above the grid.
