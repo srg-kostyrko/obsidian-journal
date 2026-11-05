@@ -361,6 +361,18 @@ async function openOutsideView(): Promise<void> {
   });
 }
 
+// Clicked through the DOM, not the pointer: the sidebar reveal is still animating when the first
+// day cell shows, so a physical click can land mid-slide and be lost, and re-clicking until the
+// month changes would page twice if the lost click arrived late. `click()` runs the handler once,
+// synchronously.
+async function pageToNextMonth(): Promise<void> {
+  const selector = `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`;
+  await $(selector).waitForExist({ timeoutMsg: "the outside-days view has no next-month button" });
+  await browser.execute((css: string) => {
+    document.querySelector<HTMLElement>(css)?.click();
+  }, selector);
+}
+
 const firstDayAnchor = (): Promise<string | null> =>
   $(`${OUTSIDE_VIEW_ROOT} .notes-month-view__day`).getAttribute("data-anchor");
 
@@ -374,9 +386,7 @@ async function pageToMonthWithOutsideDay(): Promise<string> {
     if (first !== undefined) return (await first.getAttribute("data-anchor")) ?? "";
     if (step === MAX_MONTH_STEPS) break;
     const before = await firstDayAnchor();
-    await $(
-      `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`,
-    ).click();
+    await pageToNextMonth();
     await waitForState(
       firstDayAnchor,
       (anchor) => anchor !== before,
@@ -770,9 +780,7 @@ describe("text precedence", () => {
       await openOutsideView();
       expect(await $$(".notes-month-view").length).toBe(1);
       const before = await firstDayAnchor();
-      await $(
-        `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`,
-      ).click();
+      await pageToNextMonth();
       await waitForState(firstDayAnchor, (anchor) => anchor !== before, "the outside-days view did not page to April");
       await $(today).waitForExist({ timeoutMsg: `April 2027 did not show ${PINNED_TODAY} as an outside today` });
       await moveSelectionOff(PINNED_TODAY, APRIL_SPARE);
