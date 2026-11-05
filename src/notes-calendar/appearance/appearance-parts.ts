@@ -13,6 +13,8 @@ export interface Control {
   /** Catalog name of the variable the control feeds; absent for a style, which no single variable carries. */
   readonly entry?: string;
   readonly role?: ThemeColorFieldRole;
+  /** Roles that replace `role` for a style: a ring is a border, a fill is a background. */
+  readonly roleByStyle?: Partial<Readonly<Record<HighlightStyle, ThemeColorFieldRole>>>;
   /** The select's neutral choice stores "unchanged" rather than null. */
   readonly unchanged?: boolean;
   readonly range?: {
@@ -37,7 +39,14 @@ function highlightControls(part: string): readonly Control[] {
   const entry = (value: string): string => `journal-cell-${part}-${value}`;
   return [
     { path: ["style"], kind: "select", options: STYLES },
-    { path: ["color"], kind: "color", entry: entry("color"), role: "background", shownFor: SHAPED },
+    {
+      path: ["color"],
+      kind: "color",
+      entry: entry("color"),
+      role: "background",
+      roleByStyle: { ring: "border" },
+      shownFor: SHAPED,
+    },
     {
       path: ["ringWidth"],
       kind: "slider",
@@ -142,4 +151,8 @@ export function visibleControls(part: PartKey, style: HighlightStyle | undefined
   const { controls } = PARTS[part];
   if (style === undefined) return controls;
   return controls.filter((control) => control.shownFor === undefined || control.shownFor.includes(style));
+}
+
+export function roleFor(control: Control, style: HighlightStyle | undefined): ThemeColorFieldRole {
+  return (style === undefined ? undefined : control.roleByStyle?.[style]) ?? control.role ?? "text";
 }

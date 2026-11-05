@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { CHIP_ORDER, PARTS, visibleControls, type PartKey } from "./appearance-parts";
+import { themeColorGroupsFor } from "@/ui/theme-colors";
+
+import { CHIP_ORDER, PARTS, roleFor, visibleControls, type PartKey } from "./appearance-parts";
 import { writtenEntryNames } from "./appearance-variables";
 
 const names = (part: PartKey, style?: Parameters<typeof visibleControls>[1]) =>
@@ -55,5 +57,24 @@ describe("visibleControls", () => {
 
   it("shows every control of a part with no style", () => {
     expect(visibleControls("cell", undefined)).toBe(PARTS.cell.controls);
+  });
+});
+
+describe("roleFor", () => {
+  const color = PARTS.selected.controls.find((control) => control.path.join(".") === "color");
+  const offered = (style: Parameters<typeof roleFor>[1]) =>
+    color === undefined ? [] : themeColorGroupsFor(roleFor(color, style)).flatMap((group) => group.names);
+
+  it("offers a ring color the accent and status colors a border reads well in", () => {
+    expect(offered("ring")).toContain("text-accent");
+  });
+
+  it("keeps a background fill on surface colors", () => {
+    expect(offered("background")).not.toContain("text-accent");
+  });
+
+  it("leaves a control without a style-dependent role on its own role", () => {
+    const text = PARTS.heading.controls.find((control) => control.kind === "color");
+    expect(text && roleFor(text, undefined)).toBe("text");
   });
 });

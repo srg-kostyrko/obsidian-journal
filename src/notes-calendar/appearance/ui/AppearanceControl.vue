@@ -21,8 +21,8 @@ import {
   withNarrowCleared,
   withValue,
 } from "../appearance-editing";
-import { PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
-import { appearanceSlice, UNCHANGED } from "../slice";
+import { PARTS, roleFor, type Control, type PartKey, type Width } from "../appearance-parts";
+import { appearanceSlice, UNCHANGED, type HighlightStyle } from "../slice";
 
 const { part, control, width } = defineProps<{ part: PartKey; control: Control; width: Width }>();
 
@@ -41,6 +41,14 @@ const label = computed(() =>
 const variable = computed(() => {
   const entry = appearanceCatalog.find((candidate) => candidate.name === control.entry);
   return entry === undefined ? undefined : publicName(entry, width === "narrow");
+});
+
+const role = computed(() => {
+  const style =
+    family.value === "highlight"
+      ? (valueAt(slice.state, width, part, ["style"]) as HighlightStyle | undefined)
+      : undefined;
+  return roleFor(control, style);
 });
 
 const value = computed(() => toControlValue(control, valueAt(slice.state, width, part, control.path)));
@@ -109,7 +117,7 @@ function writeSlider(next: number): void {
     <template v-if="control.kind === 'color'">
       <UiColorSettingsPicker
         :model-value="colorValue"
-        :role="control.role ?? 'text'"
+        :role="role"
         :unchanged="control.unchanged === true"
         :default="offersDefault"
         @update:model-value="write"

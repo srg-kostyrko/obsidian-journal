@@ -187,6 +187,7 @@ const previewMinHeight = (): Promise<number | undefined> => minHeightOf(".appear
 const savedNames = (): Promise<string[]> =>
   browser.execute((prefix: string) => [...document.body.style].filter((name) => name.startsWith(prefix)), SAVED_PREFIX);
 
+// The cases build on one another's editor state (the reset case undoes the earlier ones), so running a single case with --grep is not supported.
 describe("the appearance editor drives the rendered calendar", () => {
   before(async () => {
     await reloadObsidianOn(PINNED_TODAY, {
