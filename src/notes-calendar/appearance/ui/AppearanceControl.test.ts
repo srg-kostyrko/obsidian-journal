@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { fireEvent, screen, within } from "@testing-library/vue";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick, shallowRef } from "vue";
 
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
@@ -12,6 +13,7 @@ import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
+import { AppearancePreviewRootKey } from "./preview-root-key";
 
 function control(part: PartKey, ...path: string[]): Control {
   const found = PARTS[part].controls.find((candidate) => candidate.path.join(".") === path.join("."));
@@ -178,6 +180,66 @@ describe("AppearanceControl", () => {
     } finally {
       document.body.style.removeProperty("--radius-s");
     }
+  });
+
+  describe("names the value Default resolves to", () => {
+    const theme = { "--font-normal": "400", "--font-semibold": "600", "--font-bold": "700", "--text-muted": "#999999" };
+    beforeEach(() => {
+      document.body.setCssProps(theme);
+      return () => {
+        for (const name of Object.keys(theme)) document.body.style.removeProperty(name);
+      };
+    });
+
+    it("on a select, through the option's own label", async () => {
+      mount("weekNumber", control("weekNumber", "weight"));
+
+      const label = m.calendar_appearance_default_resolved({
+        value: m.calendar_appearance_option({ option: "weight_bold" }),
+      });
+      expect(await screen.findByRole("option", { name: label })).toBeTruthy();
+    });
+
+    it("on a color, as a swatch beside Default", async () => {
+      slice().state = withValue(slice().state, "wide", "weekday", ["color"], null);
+      const { container } = mount("weekday", control("weekday", "color"));
+
+      await vi.waitFor(() => {
+        const swatch = container.querySelector<HTMLElement>(".ui-color-settings-picker__swatch");
+        expect(swatch?.style.backgroundColor).toBe("#999999");
+      });
+    });
+
+    it("from what the preview inherits, for an inherit stock", async () => {
+      const theme = new CSSStyleSheet();
+      theme.replaceSync(".preview-root-under-test { text-transform: uppercase; }");
+      document.adoptedStyleSheets = [theme];
+      const root = document.createElement("div");
+      root.classList.add("preview-root-under-test");
+      document.body.append(root);
+      try {
+        harness.render(AppearanceControl, {
+          props: { part: "heading", control: control("heading", "case"), width: "wide" },
+          global: { provide: { [AppearancePreviewRootKey as symbol]: shallowRef(root) } },
+        });
+
+        const label = m.calendar_appearance_default_resolved({
+          value: m.calendar_appearance_option({ option: "case_upper" }),
+        });
+        expect(await screen.findByRole("option", { name: label })).toBeTruthy();
+      } finally {
+        root.remove();
+        document.adoptedStyleSheets = [];
+      }
+    });
+  });
+
+  it("shows plain Default when the stock resolves to nothing", async () => {
+    const { container } = mount("weekNumber", control("weekNumber", "weight"));
+    await nextTick();
+
+    expect(screen.getByRole("option", { name: m.calendar_appearance_default() })).toBeTruthy();
+    expect(container.querySelector(".ui-color-settings-picker__swatch")).toBeNull();
   });
 
   it("shows Default alone when a stock cannot be placed", () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, shallowReactive, shallowRef, watchEffect } from "vue";
+import { computed, provide, shallowReactive, shallowRef, useTemplateRef, watchEffect } from "vue";
 
 import { DayPeriod, YearPeriod, type Period } from "@/calendar";
 import { useToday } from "@/calendar/ui";
@@ -42,6 +42,9 @@ const rows = computed(() =>
   })),
 );
 const weekdayNames = computed(() => (rows.value[0]?.days ?? []).map((day) => day.period.start.format("ddd")));
+
+const root = useTemplateRef<HTMLElement>("root");
+defineExpose({ root });
 
 function noop(): void {
   // Clicks pick a part instead of opening a note, so the preview reaches no service.
@@ -134,6 +137,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 
 <template>
   <div
+    ref="root"
     class="appearance-preview"
     :style="SIZES[width]"
     @click="onPick"

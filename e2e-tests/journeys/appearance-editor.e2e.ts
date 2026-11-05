@@ -8,7 +8,7 @@ import { waitForState } from "../support/wait.js";
 import { labelHexOf } from "./calendar.js";
 
 type Width = "wide" | "narrow";
-type PartKey = "today" | "outside" | "cell";
+type PartKey = "today" | "outside" | "cell" | "weekNumber";
 
 // The editor writes the appearance slice and the calendar reads it back through the saved body
 // variables, so each case drives the subpage's controls and reads the rendered view, never the slice.
@@ -266,6 +266,23 @@ describe("the appearance editor drives the rendered calendar", () => {
       expect(read).toEqual({ value: "4", fill: String(4 / 12), theme: "4px" });
       expect(await row.getText()).toContain(`4px`);
       expect(await row.getText()).toContain(m.calendar_appearance_default());
+    });
+  });
+
+  // Also before any edit: the week numbers' stock weight is var(--font-bold), which Obsidian defines.
+  describe("a stock select", () => {
+    it("names the value its Default resolves to", async () => {
+      await chooseWidth("wide");
+      await chooseFromList("weekNumber");
+      const select = $(controlRowPath(m.calendar_appearance_control({ control: "text_weight" }))).$("select");
+      const label = m.calendar_appearance_default_resolved({
+        value: m.calendar_appearance_option({ option: "weight_bold" }),
+      });
+      await expectRead(
+        () => select.$('option[value=""]').getText(),
+        label,
+        "the week numbers' weight did not name its Default",
+      );
     });
   });
 

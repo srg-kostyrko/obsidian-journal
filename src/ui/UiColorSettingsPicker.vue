@@ -12,7 +12,14 @@ const {
   role,
   unchanged = false,
   default: withDefault = false,
-} = defineProps<{ role: ThemeColorFieldRole; unchanged?: boolean; default?: boolean }>();
+  defaultColor = "",
+} = defineProps<{
+  role: ThemeColorFieldRole;
+  unchanged?: boolean;
+  default?: boolean;
+  /** The CSS color Default resolves to, shown as a swatch while Default is chosen; empty shows none. */
+  defaultColor?: string;
+}>();
 // The literal mirrors UNCHANGED in notes-calendar/appearance; src/ui cannot import from there.
 const model = defineModel<M>({ required: true });
 
@@ -117,6 +124,11 @@ const customColor = computed<string>({
         :style="{ backgroundColor: `var(--${themeName})` }"
       />
     </template>
+    <span
+      v-else-if="kind === 'default' && defaultColor"
+      class="ui-color-settings-picker__swatch"
+      :style="{ backgroundColor: defaultColor }"
+    />
     <UiColorPicker v-if="kind === 'custom'" v-model="customColor" />
   </span>
 </template>

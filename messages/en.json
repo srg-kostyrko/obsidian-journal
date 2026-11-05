@@ -155,6 +155,7 @@
     }
   ],
   "calendar_appearance_default": "Default",
+  "calendar_appearance_default_resolved": "Default ({value})",
   "calendar_appearance_unchanged": "Unchanged",
   "calendar_appearance_narrow_only": "Narrow only",
   "calendar_appearance_narrow_only_clear": "Use the all-widths value",

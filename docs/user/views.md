@@ -243,7 +243,10 @@ The four highlights share one set:
 The text parts — **Month heading**, **Weekday header**, **Week numbers** and **Date number** — offer
 **Size**, **Weight**, **Italic**, **Color** and **Case** (**As written**, **Uppercase**,
 **Lowercase** or **Title case**). **Weight**, **Italic**, **Color** and **Case** also offer
-**Default**, which leaves the value to the calendar's stock style. While you edit **Narrow**, a
+**Default**, which leaves the value to the calendar's stock style. **Default** names what that
+style comes to under your theme, such as **Default (Bold)** for the week numbers' weight, and a
+**Default** color shows a swatch of it; where the editor cannot tell, it reads plain **Default**.
+While you edit **Narrow**, a
 narrow-only value goes back to the all-widths one through its
 [**Narrow only**](#narrow-only-values-and-resetting) tag instead.
 

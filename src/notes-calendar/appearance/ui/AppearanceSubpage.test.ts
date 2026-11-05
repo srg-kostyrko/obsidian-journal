@@ -56,6 +56,18 @@ function plainDay(container: Element): HTMLElement {
   return cell;
 }
 
+function italicSelect(): HTMLSelectElement {
+  return screen.getByRole<HTMLSelectElement>("combobox", {
+    name: m.calendar_appearance_control({ control: "text_italic" }),
+  });
+}
+
+function italicDefault(option: "on" | "off"): string {
+  return m.calendar_appearance_default_resolved({
+    value: m.calendar_appearance_option({ option: `italic_${option}` }),
+  });
+}
+
 async function switchTo(width: "wide" | "narrow"): Promise<void> {
   await userEvent.click(screen.getByRole("radio", { name: m.calendar_appearance_width({ width }) }));
 }
@@ -269,5 +281,22 @@ describe("AppearanceSubpage", () => {
 
     expect(preview()?.style.width).toBe("260px");
     expect(screen.getByText("--journal-cell-cell-padding-narrow")).toBeTruthy();
+  });
+
+  it("names an inherited Default from the preview, and reads it again when the width switches", async () => {
+    mount();
+    await userEvent.selectOptions(partsList(), "heading");
+    expect(await within(italicSelect()).findByRole("option", { name: italicDefault("off") })).toBeTruthy();
+
+    const theme = new CSSStyleSheet();
+    theme.replaceSync(".appearance-preview { font-style: italic; }");
+    document.adoptedStyleSheets = [theme];
+    try {
+      await switchTo("narrow");
+
+      expect(await within(italicSelect()).findByRole("option", { name: italicDefault("on") })).toBeTruthy();
+    } finally {
+      document.adoptedStyleSheets = [];
+    }
   });
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from "vue";
+import { computed, provide, ref, useId, useTemplateRef } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -20,6 +20,7 @@ import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
 import AppearancePreview from "./AppearancePreview.vue";
+import { AppearancePreviewRootKey } from "./preview-root-key";
 
 const { nav } = defineProps<{ nav: SubpageNav }>();
 
@@ -39,6 +40,12 @@ const LIST_ORDER: readonly PartKey[] = [
 ];
 
 const width = ref<Width>("wide");
+
+const preview = useTemplateRef<InstanceType<typeof AppearancePreview>>("preview");
+provide(
+  AppearancePreviewRootKey,
+  computed(() => preview.value?.root),
+);
 const widthOptions = computed(() =>
   (["narrow", "wide"] as const).map((value) => ({ value, label: m.calendar_appearance_width({ width: value }) })),
 );
@@ -103,7 +110,7 @@ function reset(part: PartKey): void {
       <!-- Wide keeps a floor above the breakpoint, so a pane narrower than that scrolls here, not the page. -->
       <div class="appearance-subpage__scroller">
         <div class="appearance-subpage__frame" :class="{ 'appearance-subpage__frame--fill': width === 'wide' }">
-          <AppearancePreview :width="width" :picked="selected" :spot="spot" @pick="onPick" />
+          <AppearancePreview ref="preview" :width="width" :picked="selected" :spot="spot" @pick="onPick" />
         </div>
       </div>
       <p class="appearance-subpage__caption">{{ m.calendar_appearance_editing({ width }) }}</p>

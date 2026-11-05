@@ -186,5 +186,21 @@ describe("UiColorSettingsPicker", () => {
       expect(document.querySelector(".ui-color-settings-picker__swatch")).toBeNull();
       expect(document.querySelector('input[type="color"]')).toBeNull();
     });
+
+    it("shows a swatch of the default color for a Default model when it is given one", () => {
+      render(UiColorSettingsPicker, {
+        props: { modelValue: null, role: "text", default: true, defaultColor: "rgb(18, 52, 86)" },
+      });
+      const swatch = document.querySelector<HTMLElement>(".ui-color-settings-picker__swatch");
+      expect(swatch?.style.backgroundColor).toBe("rgb(18, 52, 86)");
+      expect(screen.getAllByRole("combobox")).toHaveLength(1);
+    });
+
+    it("shows no default swatch once another kind is chosen", () => {
+      render(UiColorSettingsPicker, {
+        props: { modelValue: { type: "transparent" }, role: "text", default: true, defaultColor: "rgb(18, 52, 86)" },
+      });
+      expect(document.querySelector(".ui-color-settings-picker__swatch")).toBeNull();
+    });
   });
 });

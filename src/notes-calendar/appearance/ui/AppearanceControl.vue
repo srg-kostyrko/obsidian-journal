@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, inject, shallowRef, useTemplateRef, watch, type ComponentPublicInstance } from "vue";
 
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
@@ -24,7 +24,9 @@ import {
 import { PARTS, roleFor, type Control, type PartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, UNCHANGED, type HighlightStyle } from "../slice";
 
+import { AppearancePreviewRootKey } from "./preview-root-key";
 import { stockNumber } from "./stock-number";
+import { inheritedProperty, resolveStock, stockOption } from "./stock-value";
 
 const { part, control, width } = defineProps<{ part: PartKey; control: Control; width: Width }>();
 
@@ -40,10 +42,8 @@ const label = computed(() =>
   m.calendar_appearance_control({ control: [family.value, ...control.path.map(snake)].join("_") as ControlKey }),
 );
 
-const variable = computed(() => {
-  const entry = appearanceCatalog.find((candidate) => candidate.name === control.entry);
-  return entry === undefined ? undefined : publicName(entry, width === "narrow");
-});
+const entry = computed(() => appearanceCatalog.find((candidate) => candidate.name === control.entry));
+const variable = computed(() => (entry.value === undefined ? undefined : publicName(entry.value, width === "narrow")));
 
 const role = computed(() => {
   const style =
@@ -69,14 +69,19 @@ const nullable = computed(() => family.value === "text");
 // offered there only while it is already what shows, and "Narrow only" is the way back to shared.
 const offersDefault = computed(() => nullable.value && (width === "wide" || value.value === null));
 const selectValue = computed(() => (typeof value.value === "string" ? value.value : ""));
+const leaf = control.path.at(-1) ?? "";
+const optionLabel = (option: string): string =>
+  m.calendar_appearance_option({ option: `${leaf}_${option}` as OptionKey });
+const defaultLabel = computed(() => {
+  const option = stockShown.value === undefined ? undefined : stockOption(leaf, stockShown.value, readVariable);
+  return option === undefined
+    ? m.calendar_appearance_default()
+    : m.calendar_appearance_default_resolved({ value: optionLabel(option) });
+});
 const choices = computed(() => {
-  const group = control.path.at(-1) ?? "";
-  const named = (control.options ?? []).map((option) => ({
-    value: option,
-    label: m.calendar_appearance_option({ option: `${group}_${option}` as OptionKey }),
-  }));
+  const named = (control.options ?? []).map((option) => ({ value: option, label: optionLabel(option) }));
   if (control.unchanged) return [{ value: UNCHANGED, label: m.calendar_appearance_unchanged() }, ...named];
-  return offersDefault.value ? [{ value: "", label: m.calendar_appearance_default() }, ...named] : named;
+  return offersDefault.value ? [{ value: "", label: defaultLabel.value }, ...named] : named;
 });
 function writeSelect(next: string): void {
   write(next === "" && nullable.value ? null : next);
@@ -86,12 +91,37 @@ const colorValue = computed(() => value.value as ColorSettings | typeof UNCHANGE
 
 // Obsidian defines theme variables on <body>; reading the body this control renders in keeps a
 // popout window on its own theme.
-const valueElement = useTemplateRef<HTMLElement>("valueElement");
+const row = useTemplateRef<ComponentPublicInstance>("row");
+const rowElement = computed<Element | undefined>(() => row.value?.$el as Element | undefined);
 function readVariable(name: string): string {
-  const body = valueElement.value?.ownerDocument.body;
+  const body = rowElement.value?.ownerDocument.body;
   const view = body?.ownerDocument.defaultView;
   return body && view ? view.getComputedStyle(body).getPropertyValue(name) : "";
 }
+
+// The preview root inherits what the calendar does under this theme, and no part's own setting
+// reaches it, so it is where an `inherit` stock is read.
+const previewRoot = inject(AppearancePreviewRootKey, null);
+function readStock(): string | undefined {
+  const found = entry.value;
+  if (found === undefined || rowElement.value === undefined) return;
+  const stock = width === "narrow" ? (found.stockNarrow ?? found.stock) : found.stock;
+  const root = previewRoot?.value;
+  const property = inheritedProperty(leaf);
+  const inherited =
+    root && property ? root.ownerDocument.defaultView?.getComputedStyle(root).getPropertyValue(property) : undefined;
+  return resolveStock(stock, readVariable, inherited);
+}
+// Computed style is not reactive: it is read after the DOM settles, again whenever the width
+// switches, since the preview's computed style can differ between the two.
+const stockShown = shallowRef<string | undefined>();
+watch(
+  [rowElement, () => previewRoot?.value, () => width],
+  () => {
+    stockShown.value = readStock();
+  },
+  { flush: "post", immediate: true },
+);
 const sliderNumber = computed<number | undefined>(() => {
   if (typeof value.value === "number") return value.value;
   if (typeof value.value !== "string" || control.range === undefined) return;
@@ -105,7 +135,7 @@ function writeSlider(next: number): void {
 </script>
 
 <template>
-  <UiSettingRow class="appearance-control">
+  <UiSettingRow ref="row" class="appearance-control">
     <template #name>
       {{ label }}
       <button
@@ -128,11 +158,12 @@ function writeSlider(next: number): void {
         :role="role"
         :unchanged="control.unchanged === true"
         :default="offersDefault"
+        :default-color="stockShown ?? ''"
         @update:model-value="write"
       />
     </template>
     <template v-else-if="control.kind === 'slider' && control.range">
-      <span ref="valueElement" class="appearance-control__value">
+      <span class="appearance-control__value">
         <span v-if="sliderNumber !== undefined">{{ `${sliderNumber}${control.range.unit}` }}</span>
         <span v-if="atStock || sliderNumber === undefined" class="appearance-control__default">
           {{ m.calendar_appearance_default() }}
