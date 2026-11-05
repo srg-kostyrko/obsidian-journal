@@ -38,26 +38,73 @@ export function calendarSurface(root: string, daySelector = ".notes-month-view__
   return { cell, periodCell, waitForActive };
 }
 
-// The label's color goes through color-mix, which Chromium serializes as color(srgb …) and
-// WebDriver cannot parse to hex, so the page paints it on a canvas and reads the pixel back.
+// A cell label's own color, or a theme variable as that cell would resolve it: a probe inside the
+// cell's parent, so the same body and view scoping apply.
+export type ColorSource = { readonly label: string } | { readonly variable: string; readonly near: string };
+
+// Reads every color in one call, so a label and the reference it is compared to come from the same
+// frame, and normalizes each to hex through CSS alone. The label's color goes through color-mix,
+// which WebDriver cannot parse to hex; resolving a color through color-mix(in srgb) onto a probe
+// gives one color(srgb …) form whatever the source syntax, parsed here. A canvas pixel read did
+// this before and is out on purpose: a context that loses its backing returns zeroed pixels, which read
+// as #000000. A value that does not resolve comes back raw, so it can never equal a hex.
+export async function readColors<K extends string>(
+  sources: Record<K, ColorSource>,
+): Promise<Record<K, string | undefined>> {
+  const entries = (Object.keys(sources) as K[]).map((key) => ({ key, source: sources[key] }));
+  const read = await browser.execute((entries: { key: string; source: ColorSource }[]) => {
+    const resolved: Record<string, string | null> = {};
+    const probe = document.createElement("span");
+    document.body.append(probe);
+    for (const { key, source } of entries) {
+      let raw: string | null = null;
+      if ("label" in source) {
+        const label = document.querySelector(`${source.label} .cell-decoration__content`);
+        if (label !== null) raw = getComputedStyle(label).color;
+      } else {
+        const host = document.querySelector(source.near)?.parentElement;
+        if (host != null) {
+          const scoped = document.createElement("span");
+          scoped.style.color = `var(${source.variable})`;
+          host.append(scoped);
+          raw = getComputedStyle(scoped).color;
+          scoped.remove();
+        }
+      }
+      if (raw === null) {
+        resolved[key] = null;
+        continue;
+      }
+      probe.style.color = "";
+      probe.style.color = `color-mix(in srgb, ${raw} 100%, transparent)`;
+      const srgb = /^color\(srgb (\S+) (\S+) (\S+)(?: \/ (\S+))?\)$/.exec(getComputedStyle(probe).color);
+      const channels = srgb?.slice(1, 4).map(Number);
+      if (
+        probe.style.color === "" ||
+        channels === undefined ||
+        srgb?.[4] !== undefined ||
+        channels.some(Number.isNaN)
+      ) {
+        resolved[key] = `unresolved ${raw}`;
+        continue;
+      }
+      resolved[key] = `#${channels
+        .map((channel) =>
+          Math.round(Math.min(1, Math.max(0, channel)) * 255)
+            .toString(16)
+            .padStart(2, "0"),
+        )
+        .join("")}`;
+    }
+    probe.remove();
+    return resolved;
+  }, entries);
+  const colors: Partial<Record<K, string>> = {};
+  for (const { key } of entries) colors[key] = read[key] ?? undefined;
+  return colors as Record<K, string | undefined>;
+}
+
 export async function labelHexOf(cellSelector: string): Promise<string | undefined> {
-  const hex = await browser.execute((selector: string) => {
-    const label = document.querySelector(`${selector} .cell-decoration__content`);
-    const context = document.createElement("canvas").getContext("2d");
-    if (label === null || context === null) return null;
-    const color = getComputedStyle(label).color;
-    // A color the canvas rejects leaves fillStyle on its preset; two presets both surviving means
-    // the read failed, and the raw value goes back so it can never equal a hex.
-    const rejected = ["#010203", "#040506"].every((preset) => {
-      context.fillStyle = preset;
-      context.fillStyle = color;
-      return context.fillStyle === preset;
-    });
-    if (rejected) return color;
-    context.fillStyle = color;
-    context.fillRect(0, 0, 1, 1);
-    const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
-    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-  }, cellSelector);
-  return hex ?? undefined;
+  const { label } = await readColors({ label: { label: cellSelector } });
+  return label;
 }

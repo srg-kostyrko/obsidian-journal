@@ -8,7 +8,7 @@ import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { labelHexOf, type CellLocator } from "./calendar.js";
+import { labelHexOf, readColors, type CellLocator } from "./calendar.js";
 import { borderTop, dayAnchor, decorationBackgroundHex, decorationTextHex, note } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
 
@@ -57,38 +57,6 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
 
 const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
 const labelHex = (anchor: string): Promise<string | undefined> => labelHexOf(daySelector(anchor));
-
-// A theme variable's color as the cell would resolve it: a probe inside the cell's parent, so the
-// same body and view scoping apply, normalized the same way as labelHex.
-async function themeHex(anchor: string, variable: string): Promise<string | undefined> {
-  const hex = await browser.execute(
-    (cellAnchor: string, name: string) => {
-      const host = document.querySelector(
-        `.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`,
-      )?.parentElement;
-      const context = document.createElement("canvas").getContext("2d");
-      if (host == null || context === null) return null;
-      const probe = document.createElement("span");
-      probe.style.color = `var(${name})`;
-      host.append(probe);
-      const color = getComputedStyle(probe).color;
-      probe.remove();
-      const rejected = ["#010203", "#040506"].every((preset) => {
-        context.fillStyle = preset;
-        context.fillStyle = color;
-        return context.fillStyle === preset;
-      });
-      if (rejected) return `unparsed theme color ${color}`;
-      context.fillStyle = color;
-      context.fillRect(0, 0, 1, 1);
-      const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
-      return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-    },
-    anchor,
-    variable,
-  );
-  return hex ?? undefined;
-}
 
 // The pixels of a 3px strip across the cell's left edge. The 2px ring renders narrower under
 // Obsidian's zoom and straddles pixel boundaries, so one sample can be part pane background;
@@ -404,7 +372,7 @@ describe("text on a day outside the month", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
     await openOutsideView();
-    // clickCell, labelHex and themeHex query the document, so this view must be the only calendar.
+    // clickCell and readColors query the document, so this view must be the only calendar.
     expect(await $$(".notes-month-view").length).toBe(1);
     anchor = await pageToMonthWithOutsideDay();
     expect(anchor).not.toBe("");
@@ -429,18 +397,41 @@ describe("text on a day outside the month", () => {
 
   after(closePopoutWindows);
 
+  // The references are re-read with the label on every poll: one sampled before the wait and
+  // wrong once stays wrong for the whole wait.
   it("an open note on a day outside the month shows the open-note text, not the muted outside color", async () => {
-    const onAccent = await themeHex(anchor, "--text-on-accent");
-    const muted = await themeHex(anchor, "--text-muted");
-    expect(onAccent).not.toBe(muted);
+    const cell = daySelector(anchor);
+    const message = "the open outside day's label did not take --text-on-accent, distinct from --text-muted";
+    let last: Record<"label" | "onAccent" | "muted", string | undefined> | undefined;
     await waitForState(
-      () => labelHex(anchor),
-      (hex) => hex === onAccent,
-      `the open outside day's label did not take --text-on-accent (${String(onAccent)})`,
-    );
-    expect(await labelHex(anchor)).not.toBe(muted);
+      async () => {
+        last = await readColors({
+          label: { label: cell },
+          onAccent: { variable: "--text-on-accent", near: cell },
+          muted: { variable: "--text-muted", near: cell },
+        });
+        return last;
+      },
+      ({ label, onAccent, muted }) => label !== undefined && label === onAccent && onAccent !== muted,
+      message,
+    ).catch(async (error: unknown) => {
+      if (!isTimeoutOf(error, message)) throw error;
+      throw asLabelMismatch(error, message, `${JSON.stringify(last)}, body ${await bodyOnAccent()}`);
+    });
   });
 });
+
+// Obsidian sets --text-on-accent on the body from the accent color's luminance, so a failure names
+// which side moved: the label, or the reference. It only enriches a timeout's message, so a
+// renderer that cannot answer must never replace the failure itself.
+async function bodyOnAccent(): Promise<string> {
+  return browser
+    .execute(
+      () =>
+        `--text-on-accent inline "${document.body.style.getPropertyValue("--text-on-accent")}", computed "${getComputedStyle(document.body).getPropertyValue("--text-on-accent").trim()}"`,
+    )
+    .catch(() => "unreadable");
+}
 
 // Rounded: Obsidian's zoom scales authored pixels.
 async function outsideViewLabelSize(selector: string): Promise<number | undefined> {
@@ -470,9 +461,19 @@ describe("date text on days outside the month", () => {
   });
 
   it("an outside day keeps the muted color over the date color", async () => {
-    const muted = await themeHex(anchor, "--text-muted");
-    expect(muted).not.toBe("#123456");
-    expect(await labelHex(anchor)).toBe(muted);
+    const cell = daySelector(anchor);
+    const message = "an outside day's label did not keep --text-muted over the snippet's #123456 date color";
+    let last: Record<"label" | "muted", string | undefined> | undefined;
+    await waitForState(
+      async () => {
+        last = await readColors({ label: { label: cell }, muted: { variable: "--text-muted", near: cell } });
+        return last;
+      },
+      ({ label, muted }) => label !== undefined && label === muted && muted !== "#123456",
+      message,
+    ).catch((error: unknown) => {
+      throw asLabelMismatch(error, message, JSON.stringify(last));
+    });
   });
 });
 
@@ -532,8 +533,12 @@ class LabelMismatchError extends Error {
 }
 
 // Only the wait's own timeout reads as a mismatch; a renderer death or any other error passes through.
+function isTimeoutOf(error: unknown, message: string): boolean {
+  return error instanceof Error && error.message.startsWith(message);
+}
+
 function asLabelMismatch(error: unknown, message: string, last: string | undefined): unknown {
-  if (error instanceof Error && error.message.startsWith(message)) {
+  if (isTimeoutOf(error, message)) {
     return new LabelMismatchError(`${message}: read ${String(last)}`, { cause: error });
   }
   return error;
