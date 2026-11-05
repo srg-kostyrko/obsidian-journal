@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="M extends ColorSettings | 'unchanged'">
+<script setup lang="ts" generic="M extends ColorSettings | 'unchanged' | null">
 import { computed } from "vue";
 
 import type { ColorSettings } from "@/decorations";
@@ -8,26 +8,37 @@ import { themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
 
-const { role, unchanged = false } = defineProps<{ role: ThemeColorFieldRole; unchanged?: boolean }>();
+const {
+  role,
+  unchanged = false,
+  default: withDefault = false,
+} = defineProps<{ role: ThemeColorFieldRole; unchanged?: boolean; default?: boolean }>();
 // The literal mirrors UNCHANGED in notes-calendar/appearance; src/ui cannot import from there.
 const model = defineModel<M>({ required: true });
 
 // Widening the ref's type lets us write any member of the constraint without a cast; TS
 // property variance is covariant, so this is how a generic model is written safely here.
-const wide: { value: ColorSettings | "unchanged" } = model;
-function write(next: ColorSettings | "unchanged") {
+const wide: { value: ColorSettings | "unchanged" | null } = model;
+function write(next: ColorSettings | "unchanged" | null) {
   wide.value = next;
 }
 
 const groups = computed(() => themeColorGroupsFor(role));
 const offered = computed(() => new Set(groups.value.flatMap((group) => group.names)));
 
-const kind = computed<ColorSettings["type"] | "unchanged">({
-  get: () => (model.value === "unchanged" ? "unchanged" : model.value.type),
+const kind = computed<ColorSettings["type"] | "unchanged" | "default">({
+  get: () => {
+    if (model.value === null) return "default";
+    return model.value === "unchanged" ? "unchanged" : model.value.type;
+  },
   set: (next) => {
     switch (next) {
       case "unchanged": {
         write("unchanged");
+        break;
+      }
+      case "default": {
+        write(null);
         break;
       }
       case "transparent": {
@@ -46,14 +57,18 @@ const kind = computed<ColorSettings["type"] | "unchanged">({
 });
 
 const themeName = computed<string>({
-  get: () => (model.value !== "unchanged" && model.value.type === "theme" ? model.value.name : ""),
+  get: () =>
+    model.value !== null && model.value !== "unchanged" && model.value.type === "theme" ? model.value.name : "",
   set: (next) => {
     if (kind.value === "theme") write({ type: "theme", name: next });
   },
 });
 
 const customColor = computed<string>({
-  get: () => (model.value !== "unchanged" && model.value.type === "custom" ? model.value.color : "#000000"),
+  get: () =>
+    model.value !== null && model.value !== "unchanged" && model.value.type === "custom"
+      ? model.value.color
+      : "#000000",
   set: (next) => {
     if (kind.value === "custom") write({ type: "custom", color: next });
   },
@@ -63,6 +78,7 @@ const customColor = computed<string>({
 <template>
   <span class="ui-color-settings-picker">
     <UiDropdown v-model="kind">
+      <option v-if="withDefault" value="default">{{ m.ui_color_kind_label({ kind: "default" }) }}</option>
       <option v-if="unchanged" value="unchanged">{{ m.ui_color_kind_label({ kind: "unchanged" }) }}</option>
       <option value="transparent">{{ m.ui_color_kind_label({ kind: "transparent" }) }}</option>
       <option value="theme">{{ m.ui_color_kind_label({ kind: "theme" }) }}</option>

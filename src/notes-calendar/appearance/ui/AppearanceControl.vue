@@ -55,6 +55,9 @@ function clearNarrow(): void {
 
 // A text part's leaves are nullable and null is its Default; a select cannot hold null, so "" stands in.
 const nullable = computed(() => family.value === "text");
+// At narrow, null means "no override", so picking Default would snap back to the wide value; it is
+// offered there only while it is already what shows, and "Narrow only" is the way back to shared.
+const offersDefault = computed(() => nullable.value && (width === "wide" || value.value === null));
 const selectValue = computed(() => (typeof value.value === "string" ? value.value : ""));
 const choices = computed(() => {
   const group = control.path.at(-1) ?? "";
@@ -63,18 +66,13 @@ const choices = computed(() => {
     label: m.calendar_appearance_option({ option: `${group}_${option}` as OptionKey }),
   }));
   if (control.unchanged) return [{ value: UNCHANGED, label: m.calendar_appearance_unchanged() }, ...named];
-  return nullable.value ? [{ value: "", label: m.calendar_appearance_default() }, ...named] : named;
+  return offersDefault.value ? [{ value: "", label: m.calendar_appearance_default() }, ...named] : named;
 });
 function writeSelect(next: string): void {
   write(next === "" && nullable.value ? null : next);
 }
 
-// The picker has no Default, so a text color left at its default shows as a theme color not yet chosen.
-const NO_THEME: ColorSettings = { type: "theme", name: "" };
-const colorValue = computed<ColorSettings | typeof UNCHANGED>(
-  () => (value.value as ColorSettings | typeof UNCHANGED | null | undefined) ?? NO_THEME,
-);
-const colorIsDefault = computed(() => value.value === null);
+const colorValue = computed(() => value.value as ColorSettings | typeof UNCHANGED | null);
 
 const NUMBER_WITH_UNIT = /^(-?\d*\.?\d+)(px|em|%)$/;
 // A stock written as a theme expression has no position on the slider, so it reads Default until moved.
@@ -109,11 +107,11 @@ function writeSlider(next: number): void {
       <code v-if="variable" class="appearance-control__variable">{{ variable }}</code>
     </template>
     <template v-if="control.kind === 'color'">
-      <span v-if="colorIsDefault" class="appearance-control__default">{{ m.calendar_appearance_default() }}</span>
       <UiColorSettingsPicker
         :model-value="colorValue"
         :role="control.role ?? 'text'"
         :unchanged="control.unchanged === true"
+        :default="offersDefault"
         @update:model-value="write"
       />
     </template>
@@ -154,8 +152,7 @@ function writeSlider(next: number): void {
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
-.appearance-control__value,
-.appearance-control__default {
+.appearance-control__value {
   font-size: var(--font-ui-small);
   color: var(--text-muted);
   white-space: nowrap;

@@ -82,6 +82,7 @@
     }
   ],
   "calendar_appearance_parts_here": "この位置のパーツ",
+  "calendar_appearance_modified": "変更済み",
   "calendar_appearance_family": [
     {
       "declarations": ["input family"],
@@ -103,8 +104,8 @@
         "control=highlight_ring_width": "枠線の幅",
         "control=highlight_strength": "強さ",
         "control=highlight_text_color": "テキストの色",
-        "control=highlight_text_weight": "太さ",
-        "control=highlight_text_italic": "イタリック",
+        "control=highlight_text_weight": "テキストの太さ",
+        "control=highlight_text_italic": "テキストのイタリック",
         "control=highlight_over": "装飾の上に表示",
         "control=text_size": "サイズ",
         "control=text_weight": "太さ",
@@ -1124,7 +1125,8 @@
         "kind=transparent": "透明",
         "kind=theme": "テーマ変数",
         "kind=custom": "カスタム",
-        "kind=unchanged": "変更なし"
+        "kind=unchanged": "変更なし",
+        "kind=default": "デフォルト"
       }
     }
   ],

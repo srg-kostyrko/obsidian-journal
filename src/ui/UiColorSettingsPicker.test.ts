@@ -26,6 +26,10 @@ function mountUnchanged(initial: ColorSettings | "unchanged", unchanged = true) 
   return render(UiColorSettingsPicker, { props: { modelValue: initial, role: "text", unchanged } });
 }
 
+function mountDefault(initial: ColorSettings | null, withDefault = true) {
+  return render(UiColorSettingsPicker, { props: { modelValue: initial, role: "text", default: withDefault } });
+}
+
 describe("UiColorSettingsPicker", () => {
   describe("kind selection", () => {
     it("emits a transparent value when switched to transparent", async () => {
@@ -143,6 +147,41 @@ describe("UiColorSettingsPicker", () => {
 
     it("shows no swatch and no theme select for an Unchanged model", () => {
       mountUnchanged("unchanged");
+      expect(screen.getAllByRole("combobox")).toHaveLength(1);
+      expect(document.querySelector(".ui-color-settings-picker__swatch")).toBeNull();
+      expect(document.querySelector('input[type="color"]')).toBeNull();
+    });
+  });
+
+  describe("default choice", () => {
+    it("offers Default only when asked", () => {
+      const label = m.ui_color_kind_label({ kind: "default" });
+      const { unmount } = mountDefault({ type: "transparent" });
+      expect(screen.getByRole("option", { name: label })).toBeTruthy();
+      unmount();
+      mountDefault({ type: "transparent" }, false);
+      expect(screen.queryByRole("option", { name: label })).toBeNull();
+    });
+
+    it("emits null when Default is chosen", async () => {
+      const { emitted } = mountDefault({ type: "custom", color: "#ff0000" });
+      await userEvent.selectOptions(screen.getByRole("combobox"), "default");
+      expect(emitted<[unknown]>("update:modelValue").at(-1)?.[0]).toBeNull();
+    });
+
+    it("shows a null model as Default", () => {
+      mountDefault(null);
+      expect(screen.getByRole<HTMLSelectElement>("combobox").value).toBe("default");
+    });
+
+    it("emits an empty theme value when Theme is chosen from Default", async () => {
+      const { emitted } = mountDefault(null);
+      await userEvent.selectOptions(screen.getByRole("combobox"), "theme");
+      expect(emitted<[unknown]>("update:modelValue").at(-1)?.[0]).toEqual({ type: "theme", name: "" });
+    });
+
+    it("shows no swatch and no theme select for a Default model", () => {
+      mountDefault(null);
       expect(screen.getAllByRole("combobox")).toHaveLength(1);
       expect(document.querySelector(".ui-color-settings-picker__swatch")).toBeNull();
       expect(document.querySelector('input[type="color"]')).toBeNull();

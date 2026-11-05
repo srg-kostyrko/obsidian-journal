@@ -82,6 +82,7 @@
     }
   ],
   "calendar_appearance_parts_here": "Parti in questo punto",
+  "calendar_appearance_modified": "Modificato",
   "calendar_appearance_family": [
     {
       "declarations": ["input family"],
@@ -103,8 +104,8 @@
         "control=highlight_ring_width": "Spessore del contorno",
         "control=highlight_strength": "Intensità",
         "control=highlight_text_color": "Colore del testo",
-        "control=highlight_text_weight": "Peso",
-        "control=highlight_text_italic": "Corsivo",
+        "control=highlight_text_weight": "Peso del testo",
+        "control=highlight_text_italic": "Testo in corsivo",
         "control=highlight_over": "Sopra le decorazioni",
         "control=text_size": "Dimensione",
         "control=text_weight": "Peso",
@@ -1269,7 +1270,8 @@
         "kind=transparent": "Trasparente",
         "kind=theme": "Variabile del tema",
         "kind=custom": "Personalizzato",
-        "kind=unchanged": "Invariato"
+        "kind=unchanged": "Invariato",
+        "kind=default": "Predefinito"
       }
     }
   ],

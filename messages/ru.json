@@ -82,6 +82,7 @@
     }
   ],
   "calendar_appearance_parts_here": "Элементы в этом месте",
+  "calendar_appearance_modified": "Изменено",
   "calendar_appearance_family": [
     {
       "declarations": ["input family"],
@@ -103,8 +104,8 @@
         "control=highlight_ring_width": "Толщина контура",
         "control=highlight_strength": "Интенсивность",
         "control=highlight_text_color": "Цвет текста",
-        "control=highlight_text_weight": "Насыщенность",
-        "control=highlight_text_italic": "Курсив",
+        "control=highlight_text_weight": "Насыщенность текста",
+        "control=highlight_text_italic": "Курсив текста",
         "control=highlight_over": "Поверх оформления",
         "control=text_size": "Размер",
         "control=text_weight": "Насыщенность",
@@ -1275,7 +1276,8 @@
         "kind=transparent": "Прозрачный",
         "kind=theme": "Переменная темы",
         "kind=custom": "Свой",
-        "kind=unchanged": "Без изменений"
+        "kind=unchanged": "Без изменений",
+        "kind=default": "По умолчанию"
       }
     }
   ],

@@ -82,6 +82,7 @@
     }
   ],
   "calendar_appearance_parts_here": "이 위치의 부분",
+  "calendar_appearance_modified": "수정됨",
   "calendar_appearance_family": [
     {
       "declarations": ["input family"],
@@ -103,8 +104,8 @@
         "control=highlight_ring_width": "테두리 두께",
         "control=highlight_strength": "강도",
         "control=highlight_text_color": "텍스트 색상",
-        "control=highlight_text_weight": "굵기",
-        "control=highlight_text_italic": "기울임",
+        "control=highlight_text_weight": "텍스트 굵기",
+        "control=highlight_text_italic": "텍스트 기울임",
         "control=highlight_over": "장식 위에 표시",
         "control=text_size": "크기",
         "control=text_weight": "굵기",
@@ -1269,7 +1270,8 @@
         "kind=transparent": "투명",
         "kind=theme": "테마 변수",
         "kind=custom": "사용자 지정",
-        "kind=unchanged": "변경 없음"
+        "kind=unchanged": "변경 없음",
+        "kind=default": "기본값"
       }
     }
   ],

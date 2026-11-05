@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/vue";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { CalendarDate } from "@/calendar";
 import { date } from "@/calendar/testing";
@@ -45,10 +45,11 @@ beforeAll(() => initLocale("en"));
 describe("AppearanceSubpage", () => {
   let harness: TestHarness;
   const slice = () => harness.settings.getSlice(appearanceSlice);
-  const nav = { back: vi.fn(), push: vi.fn(), replace: vi.fn() };
+  let nav: { back: Mock; push: Mock; replace: Mock };
   const mount = () => harness.render(AppearanceSubpage, { props: { nav } });
 
   beforeEach(async () => {
+    nav = { back: vi.fn(), push: vi.fn(), replace: vi.fn() };
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
     harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
   });
@@ -118,14 +119,19 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(todayCell(container));
 
     const todayChip = () => chips()[1];
+    const modified = m.calendar_appearance_modified();
     expect(todayOption().textContent).toContain("•");
+    expect(todayOption().getAttribute("aria-label")).toContain(modified);
     expect(todayChip().classList.contains("is-modified")).toBe(true);
-    expect(chips()[0].classList.contains("is-modified")).toBe(false);
+    expect(within(todayChip()).getByText(modified)).toBeTruthy();
+    expect(chips()[0].textContent).not.toContain(modified);
 
     await switchTo("narrow");
 
     expect(todayOption().textContent).not.toContain("•");
+    expect(todayOption().getAttribute("aria-label")).toBeNull();
     expect(todayChip().classList.contains("is-modified")).toBe(false);
+    expect(todayChip().textContent).not.toContain(modified);
   });
 
   it("Reset at Narrow clears only narrow", async () => {

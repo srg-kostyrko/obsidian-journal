@@ -5,6 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { withValue } from "../appearance-editing";
 import { PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
 import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
@@ -93,6 +94,37 @@ describe("AppearanceControl", () => {
     await userEvent.selectOptions(select, "under");
 
     expect(slice().state.wide.selected.over).toBe(false);
+  });
+
+  it.each([["weight"], ["italic"], ["case"]])("offers no Default on a set text %s while Narrow is edited", (leaf) => {
+    slice().state = withValue(slice().state, "wide", "heading", ["weight"], "bold");
+    slice().state = withValue(slice().state, "wide", "heading", ["italic"], true);
+    slice().state = withValue(slice().state, "wide", "heading", ["case"], "upper");
+    mount("heading", control("heading", leaf), "narrow");
+
+    const offered = [...screen.getByRole<HTMLSelectElement>("combobox").options].map((option) => option.value);
+    expect(offered).not.toContain("");
+    expect(screen.queryByRole("option", { name: m.calendar_appearance_default() })).toBeNull();
+  });
+
+  it("offers Default on a text color, shows a null color as Default, and writes null for that leaf only", async () => {
+    slice().state = withValue(slice().state, "wide", "heading", ["weight"], "bold");
+    slice().state = withValue(slice().state, "wide", "heading", ["color"], { type: "custom", color: "#563412" });
+    const { container } = mount("heading", control("heading", "color"));
+
+    await userEvent.selectOptions(kindSelect(container), "default");
+
+    expect(slice().state.wide.heading.color).toBeNull();
+    expect(slice().state.wide.heading.weight).toBe("bold");
+    expect(kindSelect(container).value).toBe("default");
+    expect(screen.getAllByText(m.calendar_appearance_default()).map((element) => element.tagName)).toEqual(["OPTION"]);
+  });
+
+  it("offers no Default on a set text color while Narrow is edited", () => {
+    slice().state = withValue(slice().state, "wide", "heading", ["color"], { type: "custom", color: "#563412" });
+    const { container } = mount("heading", control("heading", "color"), "narrow");
+
+    expect([...kindSelect(container).options].map((option) => option.value)).not.toContain("default");
   });
 
   it("offers Default on a text weight and writes null for it", async () => {

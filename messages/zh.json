@@ -82,6 +82,7 @@
     }
   ],
   "calendar_appearance_parts_here": "此处的部分",
+  "calendar_appearance_modified": "已修改",
   "calendar_appearance_family": [
     {
       "declarations": ["input family"],
@@ -103,8 +104,8 @@
         "control=highlight_ring_width": "边框宽度",
         "control=highlight_strength": "强度",
         "control=highlight_text_color": "文本颜色",
-        "control=highlight_text_weight": "字重",
-        "control=highlight_text_italic": "斜体",
+        "control=highlight_text_weight": "文本字重",
+        "control=highlight_text_italic": "文本斜体",
         "control=highlight_over": "显示在装饰之上",
         "control=text_size": "尺寸",
         "control=text_weight": "字重",
@@ -1124,7 +1125,8 @@
         "kind=transparent": "透明",
         "kind=theme": "主题变量",
         "kind=custom": "自定义",
-        "kind=unchanged": "不变"
+        "kind=unchanged": "不变",
+        "kind=default": "默认"
       }
     }
   ],

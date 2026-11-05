@@ -97,7 +97,13 @@ function reset(part: PartKey): void {
       @update:model-value="onList"
     >
       <option value="">{{ m.calendar_appearance_part_placeholder() }}</option>
-      <option v-for="part of LIST_ORDER" :key="part" :value="part">
+      <!-- An option holds text only, so the dot is the visible marker and the label carries the word. -->
+      <option
+        v-for="part of LIST_ORDER"
+        :key="part"
+        :value="part"
+        :aria-label="modified(part) ? `${partName(part)} (${m.calendar_appearance_modified()})` : undefined"
+      >
         {{ modified(part) ? `${partName(part)} •` : partName(part) }}
       </option>
     </UiDropdown>
@@ -114,7 +120,10 @@ function reset(part: PartKey): void {
         @click="selected = part"
       >
         {{ partName(part) }}
-        <span v-if="modified(part)" class="appearance-subpage__marker" aria-hidden="true">•</span>
+        <template v-if="modified(part)">
+          <span class="appearance-subpage__marker" aria-hidden="true">•</span>
+          <span class="appearance-subpage__hidden">{{ m.calendar_appearance_modified() }}</span>
+        </template>
       </button>
     </div>
   </UiSettingRow>
@@ -155,11 +164,29 @@ function reset(part: PartKey): void {
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
 }
+.appearance-subpage__hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .appearance-subpage__marker {
   margin-inline-start: var(--size-2-1);
   color: var(--text-accent);
 }
-.appearance-subpage__chip.is-active .appearance-subpage__marker {
+.appearance-subpage__chip.is-active .appearance-subpage__hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.appearance-subpage__marker {
   color: inherit;
 }
 </style>
