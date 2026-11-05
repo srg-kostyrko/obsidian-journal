@@ -56,64 +56,77 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
   return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
 }
 
-// The label's color goes through color-mix, which Chromium serializes as color(srgb …) and
-// WebDriver cannot parse to hex, so the page paints it on a canvas and reads the pixel back.
+// A cell label's own color, or a theme variable as that cell would resolve it: a probe inside the
+// cell's parent, so the same body and view scoping apply.
+type ColorSource = { readonly label: string } | { readonly variable: string; readonly near: string };
+
+// Reads every color in one call, so a label and the reference it is compared to come from the same
+// frame, and normalizes each to hex through CSS alone. The label's color goes through color-mix,
+// which WebDriver cannot parse to hex; resolving a color through color-mix(in srgb) onto a probe
+// gives one color(srgb …) form whatever the source syntax, parsed here. A canvas pixel read did
+// this before and is out on purpose: a context that loses its backing returns zeroed pixels, which read
+// as #000000. A value that does not resolve comes back raw, so it can never equal a hex.
+async function readColors<K extends string>(sources: Record<K, ColorSource>): Promise<Record<K, string | undefined>> {
+  const entries = (Object.keys(sources) as K[]).map((key) => ({ key, source: sources[key] }));
+  const read = await browser.execute((entries: { key: string; source: ColorSource }[]) => {
+    const resolved: Record<string, string | null> = {};
+    const probe = document.createElement("span");
+    document.body.append(probe);
+    for (const { key, source } of entries) {
+      let raw: string | null = null;
+      if ("label" in source) {
+        const label = document.querySelector(`${source.label} .cell-decoration__content`);
+        if (label !== null) raw = getComputedStyle(label).color;
+      } else {
+        const host = document.querySelector(source.near)?.parentElement;
+        if (host != null) {
+          const scoped = document.createElement("span");
+          scoped.style.color = `var(${source.variable})`;
+          host.append(scoped);
+          raw = getComputedStyle(scoped).color;
+          scoped.remove();
+        }
+      }
+      if (raw === null) {
+        resolved[key] = null;
+        continue;
+      }
+      probe.style.color = "";
+      probe.style.color = `color-mix(in srgb, ${raw} 100%, transparent)`;
+      const srgb = /^color\(srgb (\S+) (\S+) (\S+)(?: \/ (\S+))?\)$/.exec(getComputedStyle(probe).color);
+      const channels = srgb?.slice(1, 4).map(Number);
+      if (
+        probe.style.color === "" ||
+        channels === undefined ||
+        srgb?.[4] !== undefined ||
+        channels.some(Number.isNaN)
+      ) {
+        resolved[key] = `unresolved ${raw}`;
+        continue;
+      }
+      resolved[key] = `#${channels
+        .map((channel) =>
+          Math.round(Math.min(1, Math.max(0, channel)) * 255)
+            .toString(16)
+            .padStart(2, "0"),
+        )
+        .join("")}`;
+    }
+    probe.remove();
+    return resolved;
+  }, entries);
+  const colors: Partial<Record<K, string>> = {};
+  for (const { key } of entries) colors[key] = read[key] ?? undefined;
+  return colors as Record<K, string | undefined>;
+}
+
 async function labelHexOf(cellSelector: string): Promise<string | undefined> {
-  const hex = await browser.execute((selector: string) => {
-    const label = document.querySelector(`${selector} .cell-decoration__content`);
-    const context = document.createElement("canvas").getContext("2d");
-    if (label === null || context === null) return null;
-    const color = getComputedStyle(label).color;
-    // A color the canvas rejects leaves fillStyle on its preset; two presets both surviving means
-    // the read failed, and the raw value goes back so it can never equal a hex.
-    const rejected = ["#010203", "#040506"].every((preset) => {
-      context.fillStyle = preset;
-      context.fillStyle = color;
-      return context.fillStyle === preset;
-    });
-    if (rejected) return color;
-    context.fillStyle = color;
-    context.fillRect(0, 0, 1, 1);
-    const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
-    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-  }, cellSelector);
-  return hex ?? undefined;
+  const { label } = await readColors({ label: { label: cellSelector } });
+  return label;
 }
 
 const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
 const labelHex = (anchor: string): Promise<string | undefined> => labelHexOf(daySelector(anchor));
-
-// A theme variable's color as the cell would resolve it: a probe inside the cell's parent, so the
-// same body and view scoping apply, normalized the same way as labelHex.
-async function themeHex(anchor: string, variable: string): Promise<string | undefined> {
-  const hex = await browser.execute(
-    (cellAnchor: string, name: string) => {
-      const host = document.querySelector(
-        `.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`,
-      )?.parentElement;
-      const context = document.createElement("canvas").getContext("2d");
-      if (host == null || context === null) return null;
-      const probe = document.createElement("span");
-      probe.style.color = `var(${name})`;
-      host.append(probe);
-      const color = getComputedStyle(probe).color;
-      probe.remove();
-      const rejected = ["#010203", "#040506"].every((preset) => {
-        context.fillStyle = preset;
-        context.fillStyle = color;
-        return context.fillStyle === preset;
-      });
-      if (rejected) return `unparsed theme color ${color}`;
-      context.fillStyle = color;
-      context.fillRect(0, 0, 1, 1);
-      const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
-      return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-    },
-    anchor,
-    variable,
-  );
-  return hex ?? undefined;
-}
 
 // The pixels of a 3px strip across the cell's left edge. The 2px ring renders narrower under
 // Obsidian's zoom and straddles pixel boundaries, so one sample can be part pane background;
@@ -419,7 +432,7 @@ describe("text on a day outside the month", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
     await openOutsideView();
-    // clickCell, labelHex and themeHex query the document, so this view must be the only calendar.
+    // clickCell and readColors query the document, so this view must be the only calendar.
     expect(await $$(".notes-month-view").length).toBe(1);
     anchor = await pageToMonthWithOutsideDay();
     expect(anchor).not.toBe("");
@@ -444,18 +457,37 @@ describe("text on a day outside the month", () => {
 
   after(closePopoutWindows);
 
+  // The references are re-read with the label on every poll: one sampled before the wait and
+  // wrong once stays wrong for the whole wait.
   it("an open note on a day outside the month shows the open-note text, not the muted outside color", async () => {
-    const onAccent = await themeHex(anchor, "--text-on-accent");
-    const muted = await themeHex(anchor, "--text-muted");
-    expect(onAccent).not.toBe(muted);
+    const cell = daySelector(anchor);
+    const message = "the open outside day's label did not take --text-on-accent, distinct from --text-muted";
+    let last: Record<"label" | "onAccent" | "muted", string | undefined> | undefined;
     await waitForState(
-      () => labelHex(anchor),
-      (hex) => hex === onAccent,
-      `the open outside day's label did not take --text-on-accent (${String(onAccent)})`,
-    );
-    expect(await labelHex(anchor)).not.toBe(muted);
+      async () => {
+        last = await readColors({
+          label: { label: cell },
+          onAccent: { variable: "--text-on-accent", near: cell },
+          muted: { variable: "--text-muted", near: cell },
+        });
+        return last;
+      },
+      ({ label, onAccent, muted }) => label !== undefined && label === onAccent && onAccent !== muted,
+      message,
+    ).catch(async (error: unknown) => {
+      throw asLabelMismatch(error, message, `${JSON.stringify(last)}, body ${await bodyOnAccent()}`);
+    });
   });
 });
+
+// Obsidian sets --text-on-accent on the body from the accent color's luminance, so a failure names
+// which side moved: the label, or the reference.
+function bodyOnAccent(): Promise<string> {
+  return browser.execute(
+    () =>
+      `--text-on-accent inline "${document.body.style.getPropertyValue("--text-on-accent")}", computed "${getComputedStyle(document.body).getPropertyValue("--text-on-accent").trim()}"`,
+  );
+}
 
 // Rounded: Obsidian's zoom scales authored pixels.
 async function outsideViewLabelSize(selector: string): Promise<number | undefined> {
@@ -485,9 +517,19 @@ describe("date text on days outside the month", () => {
   });
 
   it("an outside day keeps the muted color over the date color", async () => {
-    const muted = await themeHex(anchor, "--text-muted");
-    expect(muted).not.toBe("#123456");
-    expect(await labelHex(anchor)).toBe(muted);
+    const cell = daySelector(anchor);
+    const message = "an outside day's label did not keep --text-muted over the snippet's #123456 date color";
+    let last: Record<"label" | "muted", string | undefined> | undefined;
+    await waitForState(
+      async () => {
+        last = await readColors({ label: { label: cell }, muted: { variable: "--text-muted", near: cell } });
+        return last;
+      },
+      ({ label, muted }) => label !== undefined && label === muted && muted !== "#123456",
+      message,
+    ).catch((error: unknown) => {
+      throw asLabelMismatch(error, message, JSON.stringify(last));
+    });
   });
 });
 
