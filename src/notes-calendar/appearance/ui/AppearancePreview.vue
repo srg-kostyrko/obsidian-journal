@@ -17,7 +17,11 @@ import type { PartKey, Width } from "../appearance-parts";
 const props = defineProps<{ width: Width; picked?: PartKey }>();
 const emit = defineEmits<{ pick: [parts: readonly PartKey[]] }>();
 
-const PIXELS: Readonly<Record<Width, string>> = { wide: "640px", narrow: "260px" };
+// Wide fills what it is given, but never below the calendar's 28em breakpoint, where it would draw the narrow look.
+const SIZES: Readonly<Record<Width, Readonly<Record<string, string>>>> = {
+  wide: { width: "100%", minWidth: "30em" },
+  narrow: { width: "260px" },
+};
 
 const SAMPLE_DECORATION: readonly JournalDecorationStyle[] = [
   { type: "background", color: { type: "theme", name: "text-highlight-bg" } },
@@ -105,7 +109,7 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
 <template>
   <div
     class="appearance-preview"
-    :style="{ width: PIXELS[width] }"
+    :style="SIZES[width]"
     @click="onPick"
     @keydown.enter="onPick"
     @keydown.space.prevent="onPick"

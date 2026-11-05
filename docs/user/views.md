@@ -189,9 +189,10 @@ sidebar, say. Changes made under **Wide** apply at every width. Changes made und
 only to narrow calendars, and take the place of the all-widths value there.
 
 Below the switch is the preview: a sample month around today, with today, the selected date, an
-open note, days from the months either side and a few decorated days, drawn at its true size for the
-width you are editing. On a settings pane narrower than the wide preview, the preview scrolls
-sideways. Click a part of it to edit that part; a day, a week number or a heading can also be
+open note, days from the months either side and a few decorated days, drawn at the width you are
+editing: **Narrow** at the size of a slim sidebar calendar, **Wide** across the whole panel. The wide
+preview never gets narrow enough to count as a narrow calendar, so on a very narrow settings pane it
+scrolls sideways instead. Click a part of it to edit that part; a day, a week number or a heading can also be
 reached with Tab and picked with Enter or Space. Where a click lands on more than one part — a day
 that is today is also a date number and a cell — the most specific one is edited, and **Also here**,
 under the preview, lists the others so you can switch to the one you meant. **Editing** lists every

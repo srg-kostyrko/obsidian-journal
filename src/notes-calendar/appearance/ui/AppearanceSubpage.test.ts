@@ -222,7 +222,7 @@ describe("AppearanceSubpage", () => {
   it("the width switch drives the preview and the edited width", async () => {
     const { container } = mount();
     const preview = () => container.querySelector<HTMLElement>(".appearance-preview");
-    expect(preview()?.style.width).toBe("640px");
+    expect(preview()?.style.width).toBe("100%");
     await userEvent.selectOptions(partsList(), "cell");
 
     await switchTo("narrow");

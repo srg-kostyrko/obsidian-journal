@@ -30,7 +30,7 @@ const NARROW_HEIGHT = 40;
 // The sidebar itself sits below the breakpoint, so both widths are forced on the block root.
 const NARROW_WIDTH = "300px";
 const WIDE_WIDTH = "700px";
-const PREVIEW_PIXELS: Readonly<Record<Width, string>> = { wide: "640px", narrow: "260px" };
+const PREVIEW_WIDTH: Readonly<Record<Width, string>> = { wide: "100%", narrow: "260px" };
 
 const SAVED_PREFIX = "--journal-saved-cell-";
 
@@ -98,7 +98,7 @@ const previewWidth = (): Promise<string> =>
 
 async function chooseWidth(width: Width): Promise<void> {
   await $(`.ui-segmented-control__label=${m.calendar_appearance_width({ width })}`).click();
-  await expectRead(previewWidth, PREVIEW_PIXELS[width], `the preview did not switch to ${width}`);
+  await expectRead(previewWidth, PREVIEW_WIDTH[width], `the preview did not switch to ${width}`);
 }
 
 const partsList = () => $(`select[aria-label="${m.calendar_appearance_part_label()}"]`);
@@ -185,6 +185,38 @@ async function minHeightOf(selector: string): Promise<number | undefined> {
 
 const viewMinHeight = (): Promise<number | undefined> => minHeightOf(`${ROOT} .notes-calendar-cell[role="gridcell"]`);
 const previewMinHeight = (): Promise<number | undefined> => minHeightOf(".appearance-preview .appearance-preview__day");
+
+// The frame keeps its padding at Wide, for the outline's room, so the preview fills the frame and the frame the stage.
+async function previewBox(): Promise<{
+  preview: number;
+  frameContent: number;
+  frame: number;
+  stageContent: number;
+  breakpoint: number;
+  scrollWidth: number;
+  clientWidth: number;
+} | null> {
+  return browser.execute(() => {
+    const preview = document.querySelector<HTMLElement>(".appearance-preview");
+    const frame = document.querySelector<HTMLElement>(".appearance-subpage__frame");
+    const stage = document.querySelector<HTMLElement>(".appearance-subpage__stage");
+    const scroller = document.querySelector<HTMLElement>(".appearance-subpage__scroller");
+    if (!preview || !frame || !stage || !scroller) return null;
+    const inner = (element: HTMLElement): number => {
+      const style = getComputedStyle(element);
+      return element.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight);
+    };
+    return {
+      preview: preview.getBoundingClientRect().width,
+      frameContent: inner(frame),
+      frame: frame.getBoundingClientRect().width,
+      stageContent: inner(stage),
+      breakpoint: 28 * Number.parseFloat(getComputedStyle(preview).fontSize),
+      scrollWidth: scroller.scrollWidth,
+      clientWidth: scroller.clientWidth,
+    };
+  });
+}
 
 const savedNames = (): Promise<string[]> =>
   browser.execute((prefix: string) => [...document.body.style].filter((name) => name.startsWith(prefix)), SAVED_PREFIX);
@@ -287,8 +319,21 @@ describe("the appearance editor drives the rendered calendar", () => {
     it("the preview switches widths with the editor", async () => {
       await chooseWidth("narrow");
       await expectRead(previewMinHeight, NARROW_HEIGHT, "the narrow preview did not use the narrow row height");
+      const narrow = await previewBox();
+      expect(narrow?.preview).toBe(260);
       await chooseWidth("wide");
       await expectRead(previewMinHeight, WIDE_HEIGHT, "the wide preview did not use the wide row height");
+    });
+
+    it("the wide preview fills its stage without scrolling it", async () => {
+      await chooseWidth("wide");
+      const box = await previewBox();
+      expect(box).not.toBeNull();
+      if (box === null) return;
+      expect(Math.abs(box.preview - box.frameContent)).toBeLessThanOrEqual(1);
+      expect(Math.abs(box.frame - box.stageContent)).toBeLessThanOrEqual(1);
+      expect(box.preview).toBeGreaterThan(box.breakpoint);
+      expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth);
     });
   });
 

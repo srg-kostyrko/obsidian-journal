@@ -145,12 +145,17 @@ describe("AppearancePreview", () => {
     });
   });
 
-  it.each([
-    ["wide", "640px"],
-    ["narrow", "260px"],
-  ] as const)("sizes the %s preview to %s", (width, pixels) => {
-    const { container } = render(AppearancePreview, { props: { width } });
+  it("sizes the narrow preview to 260px", () => {
+    const { container } = render(AppearancePreview, { props: { width: "narrow" } });
     const root = container.querySelector<HTMLElement>(".appearance-preview");
-    expect(root?.style.width).toBe(pixels);
+    expect(root?.style.width).toBe("260px");
+    expect(root?.style.minWidth).toBe("");
+  });
+
+  it("fills the wide preview's container, but no narrower than past the breakpoint", () => {
+    const { container } = render(AppearancePreview, { props: { width: "wide" } });
+    const root = container.querySelector<HTMLElement>(".appearance-preview");
+    expect(root?.style.width).toBe("100%");
+    expect(root?.style.minWidth).toBe("30em");
   });
 });

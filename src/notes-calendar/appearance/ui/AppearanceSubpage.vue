@@ -93,9 +93,9 @@ function reset(part: PartKey): void {
       <UiSegmentedControl v-model="width" :options="widthOptions" :aria-label="m.calendar_appearance_width_label()" />
     </div>
     <div class="appearance-subpage__stage">
-      <!-- The preview keeps its true width, so a pane narrower than Wide scrolls here, not the page. -->
+      <!-- Wide keeps a floor above the breakpoint, so a pane narrower than that scrolls here, not the page. -->
       <div class="appearance-subpage__scroller">
-        <div class="appearance-subpage__frame">
+        <div class="appearance-subpage__frame" :class="{ 'appearance-subpage__frame--fill': width === 'wide' }">
           <AppearancePreview :width="width" :picked="selected" @pick="onPick" />
         </div>
       </div>
@@ -204,6 +204,9 @@ function reset(part: PartKey): void {
   padding: var(--size-4-2);
   border: 1px dashed var(--background-modifier-border);
   border-radius: var(--radius-m);
+}
+.appearance-subpage__frame--fill {
+  width: auto;
 }
 .appearance-subpage__caption {
   margin: var(--size-4-2) 0 0;
