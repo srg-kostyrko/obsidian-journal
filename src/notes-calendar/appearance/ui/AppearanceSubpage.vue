@@ -93,7 +93,10 @@ function reset(part: PartKey): void {
   <!-- Above the inspector, not beside it: the settings pane cannot fit the wide preview and a column. -->
   <section class="appearance-subpage__panel">
     <div class="appearance-subpage__panel-head">
-      <span class="appearance-subpage__panel-title">{{ m.calendar_appearance_preview() }}</span>
+      <div class="appearance-subpage__panel-heading">
+        <span class="appearance-subpage__panel-title">{{ m.calendar_appearance_preview() }}</span>
+        <span class="appearance-subpage__panel-hint">{{ m.calendar_appearance_part_hint() }}</span>
+      </div>
       <UiSegmentedControl v-model="width" :options="widthOptions" :aria-label="m.calendar_appearance_width_label()" />
     </div>
     <div class="appearance-subpage__stage">
@@ -103,9 +106,7 @@ function reset(part: PartKey): void {
           <AppearancePreview :width="width" :picked="selected" :spot="spot" @pick="onPick" />
         </div>
       </div>
-      <p class="appearance-subpage__caption">
-        {{ m.calendar_appearance_editing({ width }) }} {{ m.calendar_appearance_part_hint() }}
-      </p>
+      <p class="appearance-subpage__caption">{{ m.calendar_appearance_editing({ width }) }}</p>
     </div>
     <div class="appearance-subpage__selection">
       <div class="appearance-subpage__line">
@@ -184,9 +185,20 @@ function reset(part: PartKey): void {
   padding: var(--size-4-2) var(--size-4-3);
   border-bottom: 1px solid var(--background-modifier-border);
 }
+.appearance-subpage__panel-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-1);
+  min-width: 0;
+}
 .appearance-subpage__panel-title {
   font-size: var(--font-ui-small);
   font-weight: var(--font-semibold);
+}
+/* Read before the preview, not after it: placed under the calendar, the hint went unnoticed. */
+.appearance-subpage__panel-hint {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
 }
 .appearance-subpage__stage {
   padding: var(--size-4-4) var(--size-4-3) var(--size-4-3);

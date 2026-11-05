@@ -190,12 +190,13 @@ describe("AppearanceSubpage", () => {
     expect(chips()).toEqual([]);
   });
 
-  it("captions the preview with the edited width and how to pick a part, and shows no controls until one is", () => {
+  it("says how to pick a part beside the preview's title, captions the width, and shows no controls until one is", () => {
     const { container } = mount();
 
+    const head = container.querySelector(".appearance-subpage__panel-head");
+    expect(head?.textContent).toContain(m.calendar_appearance_part_hint());
     const caption = container.querySelector(".appearance-subpage__caption");
-    expect(caption?.textContent).toContain(m.calendar_appearance_editing({ width: "wide" }));
-    expect(caption?.textContent).toContain(m.calendar_appearance_part_hint());
+    expect(caption?.textContent?.trim()).toBe(m.calendar_appearance_editing({ width: "wide" }));
     expect(screen.queryByText(/--journal-cell-/)).toBeNull();
     expect(container.querySelector(".appearance-subpage__inspector")).toBeNull();
   });
