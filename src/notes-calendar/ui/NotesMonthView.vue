@@ -248,15 +248,35 @@ const isSelected = (period: Period): boolean =>
 </template>
 
 <style scoped>
+/* A container cannot query itself, so the private values below sit on the root's descendants. Each
+   resolves its catalog value once, and the narrow query re-resolves it, so rules read only `--_v-*`. */
 .notes-month-view {
+  container: journal-calendar / inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--size-2-2);
 }
+/* Chromium 120 still makes a size container a stacking context, which traps the lifted cell of an open
+   mark popover (NotesCalendarCell) inside this grid, under whatever follows it, such as the next month
+   of a timeline. Lift the grid with it. */
+.notes-month-view:has(.mark-overflow__popover) {
+  position: relative;
+  z-index: var(--layer-popover);
+}
 .notes-month-view__header {
+  --_v-heading-size: var(--journal-cell-heading-size, var(--journal-saved-cell-heading-size, inherit));
+  --_v-heading-weight: var(--journal-cell-heading-weight, var(--journal-saved-cell-heading-weight, inherit));
+  --_v-heading-italic: var(--journal-cell-heading-italic, var(--journal-saved-cell-heading-italic, inherit));
+  --_v-heading-color: var(--journal-cell-heading-color, var(--journal-saved-cell-heading-color, inherit));
+  --_v-heading-case: var(--journal-cell-heading-case, var(--journal-saved-cell-heading-case, inherit));
   display: flex;
   justify-content: space-around;
   gap: var(--size-2-2);
+  font-size: var(--_v-heading-size);
+  font-weight: var(--_v-heading-weight);
+  font-style: var(--_v-heading-italic);
+  color: var(--_v-heading-color);
+  text-transform: var(--_v-heading-case);
 }
 /* Flanked by the timeline block's previous/next controls, the heading is the navigation
    row: it centres instead of reaching the strip's edges, because Obsidian overlays its
@@ -266,9 +286,10 @@ const isSelected = (period: Period): boolean =>
   justify-content: center;
 }
 .notes-month-view__grid {
+  --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
   display: grid;
   grid-template-columns: repeat(var(--day-columns, 7), 1fr);
-  gap: var(--size-2-1);
+  gap: var(--_v-cell-gap);
 }
 .notes-month-view__grid[data-weeks="left"] {
   grid-template-columns: auto repeat(var(--day-columns, 7), 1fr);
@@ -280,7 +301,7 @@ const isSelected = (period: Period): boolean =>
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
-  gap: var(--size-2-1);
+  gap: var(--_v-cell-gap);
 }
 @supports not (grid-template-columns: subgrid) {
   .notes-month-view__row {
@@ -288,15 +309,211 @@ const isSelected = (period: Period): boolean =>
   }
 }
 .notes-month-view__weekday {
-  font-size: 0.6em;
+  --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
+  --_v-weekday-weight: var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit));
+  --_v-weekday-italic: var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit));
+  --_v-weekday-color: var(--journal-cell-weekday-color, var(--journal-saved-cell-weekday-color, var(--text-muted)));
+  --_v-weekday-case: var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit));
+  font-size: var(--_v-weekday-size);
+  font-weight: var(--_v-weekday-weight);
+  font-style: var(--_v-weekday-italic);
   line-height: 1;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--_v-weekday-color);
+  text-transform: var(--_v-weekday-case);
   display: flex;
   justify-content: center;
   align-items: end;
 }
+/* Week numbers and dates are cells, whose color the cell's state precedence owns; `--_part-color` is
+   the bottom of that chain, so a state with no text color of its own leaves the part's color. */
 .notes-month-view__week-number {
-  font-weight: var(--font-bold);
+  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
+  --_v-week-number-weight: var(
+    --journal-cell-week-number-weight,
+    var(--journal-saved-cell-week-number-weight, var(--font-bold))
+  );
+  --_v-week-number-italic: var(
+    --journal-cell-week-number-italic,
+    var(--journal-saved-cell-week-number-italic, inherit)
+  );
+  --_v-week-number-color: var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit));
+  --_v-week-number-case: var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit));
+  --_part-color: var(--_v-week-number-color);
+  font-size: var(--_v-week-number-size);
+  font-weight: var(--_v-week-number-weight);
+  font-style: var(--_v-week-number-italic);
+  text-transform: var(--_v-week-number-case);
+}
+.notes-month-view__day:not([data-outside]) {
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
+  --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
+  --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
+  --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
+  --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
+  --_part-color: var(--_v-date-color);
+  font-size: var(--_v-date-size);
+  font-weight: var(--_v-date-weight);
+  font-style: var(--_v-date-italic);
+  text-transform: var(--_v-date-case);
+}
+@container journal-calendar (max-width: 28em) {
+  .notes-month-view__header {
+    --_v-heading-size: var(
+      --journal-cell-heading-size-narrow,
+      var(
+        --journal-saved-cell-heading-size-narrow,
+        var(--journal-cell-heading-size, var(--journal-saved-cell-heading-size, inherit))
+      )
+    );
+    --_v-heading-weight: var(
+      --journal-cell-heading-weight-narrow,
+      var(
+        --journal-saved-cell-heading-weight-narrow,
+        var(--journal-cell-heading-weight, var(--journal-saved-cell-heading-weight, inherit))
+      )
+    );
+    --_v-heading-italic: var(
+      --journal-cell-heading-italic-narrow,
+      var(
+        --journal-saved-cell-heading-italic-narrow,
+        var(--journal-cell-heading-italic, var(--journal-saved-cell-heading-italic, inherit))
+      )
+    );
+    --_v-heading-color: var(
+      --journal-cell-heading-color-narrow,
+      var(
+        --journal-saved-cell-heading-color-narrow,
+        var(--journal-cell-heading-color, var(--journal-saved-cell-heading-color, inherit))
+      )
+    );
+    --_v-heading-case: var(
+      --journal-cell-heading-case-narrow,
+      var(
+        --journal-saved-cell-heading-case-narrow,
+        var(--journal-cell-heading-case, var(--journal-saved-cell-heading-case, inherit))
+      )
+    );
+  }
+  .notes-month-view__grid {
+    --_v-cell-gap: var(
+      --journal-cell-cell-gap-narrow,
+      var(
+        --journal-saved-cell-cell-gap-narrow,
+        var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)))
+      )
+    );
+  }
+  .notes-month-view__weekday {
+    --_v-weekday-size: var(
+      --journal-cell-weekday-size-narrow,
+      var(
+        --journal-saved-cell-weekday-size-narrow,
+        var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em))
+      )
+    );
+    --_v-weekday-weight: var(
+      --journal-cell-weekday-weight-narrow,
+      var(
+        --journal-saved-cell-weekday-weight-narrow,
+        var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit))
+      )
+    );
+    --_v-weekday-italic: var(
+      --journal-cell-weekday-italic-narrow,
+      var(
+        --journal-saved-cell-weekday-italic-narrow,
+        var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit))
+      )
+    );
+    --_v-weekday-color: var(
+      --journal-cell-weekday-color-narrow,
+      var(
+        --journal-saved-cell-weekday-color-narrow,
+        var(--journal-cell-weekday-color, var(--journal-saved-cell-weekday-color, var(--text-muted)))
+      )
+    );
+    --_v-weekday-case: var(
+      --journal-cell-weekday-case-narrow,
+      var(
+        --journal-saved-cell-weekday-case-narrow,
+        var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit))
+      )
+    );
+  }
+  .notes-month-view__week-number {
+    --_v-week-number-size: var(
+      --journal-cell-week-number-size-narrow,
+      var(
+        --journal-saved-cell-week-number-size-narrow,
+        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit))
+      )
+    );
+    --_v-week-number-weight: var(
+      --journal-cell-week-number-weight-narrow,
+      var(
+        --journal-saved-cell-week-number-weight-narrow,
+        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-bold)))
+      )
+    );
+    --_v-week-number-italic: var(
+      --journal-cell-week-number-italic-narrow,
+      var(
+        --journal-saved-cell-week-number-italic-narrow,
+        var(--journal-cell-week-number-italic, var(--journal-saved-cell-week-number-italic, inherit))
+      )
+    );
+    --_v-week-number-color: var(
+      --journal-cell-week-number-color-narrow,
+      var(
+        --journal-saved-cell-week-number-color-narrow,
+        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit))
+      )
+    );
+    --_v-week-number-case: var(
+      --journal-cell-week-number-case-narrow,
+      var(
+        --journal-saved-cell-week-number-case-narrow,
+        var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit))
+      )
+    );
+  }
+  .notes-month-view__day:not([data-outside]) {
+    --_v-date-size: var(
+      --journal-cell-date-size-narrow,
+      var(
+        --journal-saved-cell-date-size-narrow,
+        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
+      )
+    );
+    --_v-date-weight: var(
+      --journal-cell-date-weight-narrow,
+      var(
+        --journal-saved-cell-date-weight-narrow,
+        var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit))
+      )
+    );
+    --_v-date-italic: var(
+      --journal-cell-date-italic-narrow,
+      var(
+        --journal-saved-cell-date-italic-narrow,
+        var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit))
+      )
+    );
+    --_v-date-color: var(
+      --journal-cell-date-color-narrow,
+      var(
+        --journal-saved-cell-date-color-narrow,
+        var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit))
+      )
+    );
+    --_v-date-case: var(
+      --journal-cell-date-case-narrow,
+      var(
+        --journal-saved-cell-date-case-narrow,
+        var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit))
+      )
+    );
+  }
 }
 </style>

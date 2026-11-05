@@ -21,7 +21,11 @@
   "appearance": {
     "wide": {
       "today": { "text": { "color": { "type": "custom", "color": "#00ff00" } } },
-      "selected": { "color": { "type": "custom", "color": "#00ff00" } }
+      "selected": { "color": { "type": "custom", "color": "#00ff00" } },
+      "cell": { "minHeight": 30 }
+    },
+    "narrow": {
+      "cell": { "minHeight": 40 }
     }
   },
   "views": {
@@ -52,6 +56,22 @@
       "blocks": [
         {
           "id": "6b8f0d22-3c4e-4f60-9b7c-8d9e0f1a2b3c",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": false }
+        }
+      ]
+    },
+    "8c1d2e3f-4a5b-4c6d-9e7f-0a1b2c3d4e5f": {
+      "id": "8c1d2e3f-4a5b-4c6d-9e7f-0a1b2c3d4e5f",
+      "name": "Narrow snippet",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "blocks": [
+        {
+          "id": "9d2e3f40-5b6c-4d7e-8f90-1b2c3d4e5f60",
           "key": "month-calendar",
           "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": false }
         }

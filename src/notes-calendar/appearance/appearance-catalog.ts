@@ -183,7 +183,13 @@ const BOX_ENTRIES: readonly CatalogEntry[] = [
   {
     name: "journal-cell-cell-padding",
     stock: "0px",
-    probe: { selector: ".notes-calendar-cell", property: "padding-top", sample: "9px", expect: "9px" },
+    // Label padding: the decoration's fill still covers the whole cell.
+    probe: {
+      selector: ".notes-calendar-cell .cell-decoration__content",
+      property: "padding-top",
+      sample: "9px",
+      expect: "9px",
+    },
   },
   {
     name: "journal-cell-cell-radius",
