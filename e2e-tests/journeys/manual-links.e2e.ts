@@ -49,6 +49,24 @@ describe("manual links in settings", () => {
       await expectLinks(DASHBOARD);
     });
 
+    // A link row's name is an icon row, a block; the help link must still share the title's line
+    // (within 5px: closeTo with precision -1). The bug this guards measured 18.75px.
+    it("keeps a link row's help on the line of its title", async () => {
+      await expectLinks(DASHBOARD);
+      for (const path of [manual.view.appearance, manual.troubleshooting.maintenance]) {
+        const offset = await browser.execute((href: string) => {
+          const link = document.querySelector(`.setting-item-name a.manual-link[href="${CSS.escape(href)}"]`);
+          const title = link?.parentElement?.querySelector(".iconed-row");
+          if (!link || !title) return null;
+          const a = link.getBoundingClientRect();
+          const t = title.getBoundingClientRect();
+          return Math.abs(a.top + a.height / 2 - (t.top + t.height / 2));
+        }, manualUrl(path));
+        expect({ path, found: offset !== null }).toEqual({ path, found: true });
+        expect({ path, offset }).toEqual({ path, offset: expect.closeTo(0, -1) as unknown });
+      }
+    });
+
     it("links every section of a custom-interval journal's page", async () => {
       await openJournalSubpage("spill-me", "sprint");
 
