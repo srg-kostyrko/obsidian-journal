@@ -39,6 +39,8 @@ function picked(container: Element): HTMLElement[] {
   return [...container.querySelectorAll<HTMLElement>(".appearance-preview__picked")];
 }
 
+const isLight = (element: Element): boolean => element.classList.contains("appearance-preview__picked--light");
+
 describe("AppearancePreview", () => {
   beforeEach(() => {
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
@@ -131,11 +133,38 @@ describe("AppearancePreview", () => {
       expect(emitted("pick")).toEqual([[["date", "cell"], "2026-05-20"]]);
     });
 
-    it("outlines the weekday header row", () => {
+    it("outlines every weekday name", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekday" } });
-      const outlined = picked(container);
-      expect(outlined).toHaveLength(1);
-      expect(outlined[0].querySelectorAll('[data-preview-part="weekday"]')).toHaveLength(7);
+      expect(picked(container)).toEqual([...container.querySelectorAll<HTMLElement>('[data-preview-part="weekday"]')]);
+      expect(picked(container)).toHaveLength(7);
+    });
+
+    describe("weighs the outline by how many elements it marks", () => {
+      it("marks a single day strongly", () => {
+        const { container } = render(AppearancePreview, { props: { width: "wide", picked: "today" } });
+        expect(picked(container)).toHaveLength(1);
+        expect(picked(container).filter(isLight)).toEqual([]);
+      });
+
+      it("marks the clicked day strongly for a part every day has", () => {
+        const { container } = render(AppearancePreview, {
+          props: { width: "wide", picked: "cell", spot: "2026-05-20" },
+        });
+        expect(picked(container).filter(isLight)).toEqual([]);
+      });
+
+      it("marks every day lightly for a part every day has, with no spot", () => {
+        const { container } = render(AppearancePreview, { props: { width: "wide", picked: "cell" } });
+        const days = [...container.querySelectorAll<HTMLElement>('[data-preview-part="date"]')];
+        expect(picked(container)).toEqual(days);
+        expect(picked(container).every(isLight)).toBe(true);
+      });
+
+      it("marks the week numbers lightly", () => {
+        const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekNumber" } });
+        expect(picked(container).length).toBeGreaterThan(1);
+        expect(picked(container).every(isLight)).toBe(true);
+      });
     });
 
     it("outlines every week number", () => {

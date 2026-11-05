@@ -76,8 +76,9 @@ function onPick(event: Event): void {
   emit("pick", parts, event.target.closest<HTMLElement>('[data-preview-part="date"]')?.dataset.anchor);
 }
 
-// A state outlines every day in it. Every day is a date number and a cell, so outlining all of them
-// would point at nothing: those two outline the day they were picked at, or every day when they were not.
+// A state outlines every day in it. Every day is a date number and a cell, so those two outline the day
+// they were picked at, or every day when they were not. One element takes a strong outline; a part
+// spread over many takes a light one on each, or a grid of heavy boxes would bury the calendar.
 function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
   const anchor = day.period.anchor.toAnchor();
   switch (props.picked) {
@@ -102,6 +103,33 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
     }
   }
 }
+
+const pickedCount = computed(() => {
+  switch (props.picked) {
+    case undefined: {
+      return 0;
+    }
+    case "heading": {
+      return 2;
+    }
+    case "weekday": {
+      return weekdayNames.value.length;
+    }
+    case "weekNumber": {
+      return rows.value.length;
+    }
+    default: {
+      return rows.value.reduce((count, row) => count + row.days.filter(isPickedDay).length, 0);
+    }
+  }
+});
+
+function pickedClass(isPicked: boolean): Record<string, boolean> {
+  return {
+    "appearance-preview__picked": isPicked,
+    "appearance-preview__picked--light": isPicked && pickedCount.value > 1,
+  };
+}
 </script>
 
 <template>
@@ -113,16 +141,17 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
     @keydown.space.prevent="onPick"
   >
     <div class="appearance-preview__header" data-preview-part="heading">
-      <NotesCalendarCell :class="{ 'appearance-preview__picked': picked === 'heading' }" :period="month" :cell="cell" />
-      <NotesCalendarCell :class="{ 'appearance-preview__picked': picked === 'heading' }" :period="year" :cell="cell" />
+      <NotesCalendarCell :class="pickedClass(picked === 'heading')" :period="month" :cell="cell" />
+      <NotesCalendarCell :class="pickedClass(picked === 'heading')" :period="year" :cell="cell" />
     </div>
     <div class="appearance-preview__grid">
-      <div class="appearance-preview__row" :class="{ 'appearance-preview__picked': picked === 'weekday' }">
+      <div class="appearance-preview__row">
         <div class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
         <span
           v-for="(name, i) in weekdayNames"
           :key="i"
           class="appearance-preview__weekday"
+          :class="pickedClass(picked === 'weekday')"
           data-preview-part="weekday"
         >
           {{ name }}
@@ -131,7 +160,7 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
       <div v-for="row in rows" :key="row.key" class="appearance-preview__row">
         <NotesCalendarCell
           class="appearance-preview__week-number"
-          :class="{ 'appearance-preview__picked': picked === 'weekNumber' }"
+          :class="pickedClass(picked === 'weekNumber')"
           data-preview-part="weekNumber"
           :period="row.week"
           :cell="cell"
@@ -140,7 +169,7 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
           v-for="day in row.days"
           :key="day.period.anchor.toAnchor()"
           class="appearance-preview__day"
-          :class="{ 'appearance-preview__picked': isPickedDay(day) }"
+          :class="pickedClass(isPickedDay(day))"
           data-preview-part="date"
           :period="day.period"
           :cell="cell"
@@ -167,6 +196,12 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
   z-index: 1;
   outline: 2px dashed var(--interactive-accent);
   outline-offset: 1px;
+}
+/* The plain accent first, for a WebView without color-mix. */
+.appearance-preview__picked--light {
+  outline: 1px dotted var(--interactive-accent);
+  outline: 1px dotted color-mix(in srgb, var(--interactive-accent) 55%, transparent);
+  outline-offset: 0;
 }
 .appearance-preview__header {
   --_v-heading-size: var(--journal-cell-heading-size, var(--journal-saved-cell-heading-size, inherit));
