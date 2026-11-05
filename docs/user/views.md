@@ -221,7 +221,8 @@ A part you have changed carries a dot in **Editing** and in **Also here**. When 
 ### What each part offers
 
 The controls are headed by the part's name and the width they apply to, **All widths** or
-**Narrow**, and depend on the part. Every one but a highlight's **Style** shows, beneath its name, the
+**Narrow**, and depend on the part. They are grouped in sections by kind (**Text**, **Highlight** or
+**Box**), each open to start with and folded away by clicking its name. Every one but a highlight's **Style** shows, beneath its name, the
 CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
 **Narrow**, the name shown is the narrow one, ending in `-narrow`.
 
