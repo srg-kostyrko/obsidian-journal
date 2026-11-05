@@ -8,10 +8,9 @@ import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
+import { labelHexOf, readColors, type CellLocator } from "./calendar.js";
 import { borderTop, dayAnchor, decorationBackgroundHex, decorationTextHex, note } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
-
-import type { CellLocator } from "./calendar.js";
 
 // The highlight layers (today / selected / active) stack around a decoration inside one isolated
 // cell. These read the compiled scoped CSS from real Chromium, which no unit test can: jsdom
@@ -54,75 +53,6 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
   }, anchor);
   if (reply === null) return undefined;
   return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-}
-
-// A cell label's own color, or a theme variable as that cell would resolve it: a probe inside the
-// cell's parent, so the same body and view scoping apply.
-type ColorSource = { readonly label: string } | { readonly variable: string; readonly near: string };
-
-// Reads every color in one call, so a label and the reference it is compared to come from the same
-// frame, and normalizes each to hex through CSS alone. The label's color goes through color-mix,
-// which WebDriver cannot parse to hex; resolving a color through color-mix(in srgb) onto a probe
-// gives one color(srgb …) form whatever the source syntax, parsed here. A canvas pixel read did
-// this before and is out on purpose: a context that loses its backing returns zeroed pixels, which read
-// as #000000. A value that does not resolve comes back raw, so it can never equal a hex.
-async function readColors<K extends string>(sources: Record<K, ColorSource>): Promise<Record<K, string | undefined>> {
-  const entries = (Object.keys(sources) as K[]).map((key) => ({ key, source: sources[key] }));
-  const read = await browser.execute((entries: { key: string; source: ColorSource }[]) => {
-    const resolved: Record<string, string | null> = {};
-    const probe = document.createElement("span");
-    document.body.append(probe);
-    for (const { key, source } of entries) {
-      let raw: string | null = null;
-      if ("label" in source) {
-        const label = document.querySelector(`${source.label} .cell-decoration__content`);
-        if (label !== null) raw = getComputedStyle(label).color;
-      } else {
-        const host = document.querySelector(source.near)?.parentElement;
-        if (host != null) {
-          const scoped = document.createElement("span");
-          scoped.style.color = `var(${source.variable})`;
-          host.append(scoped);
-          raw = getComputedStyle(scoped).color;
-          scoped.remove();
-        }
-      }
-      if (raw === null) {
-        resolved[key] = null;
-        continue;
-      }
-      probe.style.color = "";
-      probe.style.color = `color-mix(in srgb, ${raw} 100%, transparent)`;
-      const srgb = /^color\(srgb (\S+) (\S+) (\S+)(?: \/ (\S+))?\)$/.exec(getComputedStyle(probe).color);
-      const channels = srgb?.slice(1, 4).map(Number);
-      if (
-        probe.style.color === "" ||
-        channels === undefined ||
-        srgb?.[4] !== undefined ||
-        channels.some(Number.isNaN)
-      ) {
-        resolved[key] = `unresolved ${raw}`;
-        continue;
-      }
-      resolved[key] = `#${channels
-        .map((channel) =>
-          Math.round(Math.min(1, Math.max(0, channel)) * 255)
-            .toString(16)
-            .padStart(2, "0"),
-        )
-        .join("")}`;
-    }
-    probe.remove();
-    return resolved;
-  }, entries);
-  const colors: Partial<Record<K, string>> = {};
-  for (const { key } of entries) colors[key] = read[key] ?? undefined;
-  return colors as Record<K, string | undefined>;
-}
-
-async function labelHexOf(cellSelector: string): Promise<string | undefined> {
-  const { label } = await readColors({ label: { label: cellSelector } });
-  return label;
 }
 
 const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
@@ -399,6 +329,18 @@ async function openOutsideView(): Promise<void> {
   });
 }
 
+// Clicked through the DOM, not the pointer: the sidebar reveal is still animating when the first
+// day cell shows, so a physical click can land mid-slide and be lost, and re-clicking until the
+// month changes would page twice if the lost click arrived late. `click()` runs the handler once,
+// synchronously.
+async function pageToNextMonth(): Promise<void> {
+  const selector = `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`;
+  await $(selector).waitForExist({ timeoutMsg: "the outside-days view has no next-month button" });
+  await browser.execute((css: string) => {
+    document.querySelector<HTMLElement>(css)?.click();
+  }, selector);
+}
+
 const firstDayAnchor = (): Promise<string | null> =>
   $(`${OUTSIDE_VIEW_ROOT} .notes-month-view__day`).getAttribute("data-anchor");
 
@@ -412,9 +354,7 @@ async function pageToMonthWithOutsideDay(): Promise<string> {
     if (first !== undefined) return (await first.getAttribute("data-anchor")) ?? "";
     if (step === MAX_MONTH_STEPS) break;
     const before = await firstDayAnchor();
-    await $(
-      `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`,
-    ).click();
+    await pageToNextMonth();
     await waitForState(
       firstDayAnchor,
       (anchor) => anchor !== before,
@@ -845,9 +785,7 @@ describe("text precedence", () => {
       await openOutsideView();
       expect(await $$(".notes-month-view").length).toBe(1);
       const before = await firstDayAnchor();
-      await $(
-        `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`,
-      ).click();
+      await pageToNextMonth();
       await waitForState(firstDayAnchor, (anchor) => anchor !== before, "the outside-days view did not page to April");
       await $(today).waitForExist({ timeoutMsg: `April 2027 did not show ${PINNED_TODAY} as an outside today` });
       await moveSelectionOff(PINNED_TODAY, APRIL_SPARE);

@@ -169,6 +169,12 @@ const WRITERS: Writers = {
   cell: boxWriter,
 };
 
+/** The part as the cell sees it at narrow width: narrow overrides laid over the wide values. */
+export function mergedPart<P extends keyof AppearanceParts>(state: AppearanceSliceState, part: P): AppearanceParts[P] {
+  const writer: PartWriter<AppearanceParts[P], NarrowOverrides[P]> = WRITERS[part];
+  return writer.merge(state.wide[part], state.narrow[part]);
+}
+
 const PARTS = Object.keys(WRITERS) as (keyof AppearanceParts)[];
 
 const catalogByName = new Map(appearanceCatalog.map((entry) => [entry.name, entry]));

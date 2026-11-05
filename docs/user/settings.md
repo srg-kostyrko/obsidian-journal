@@ -35,7 +35,7 @@ in order.
 | **Tasks**                                                        | **Checkbox tasks** — **Enable**, **Status symbols**, **Identification rule**                              | [Tasks](/tasks)                                                            |
 |                                                                  | **Checkbox tasks** — **Roll over**: **Rolled marker**, **Copy or move**, **Mark as rolled**               | [Tasks](/tasks#roll-over-settings)                                         |
 |                                                                  | **Task notes** — on or off, **Configure**                                                                 | [Tasks](/tasks#task-notes-settings)                                        |
-| **Calendar highlighting**                                        | **Today**, **Active**, **Selected date — ring** colors                                                    | [Views](/views#month-calendar-and-week-calendar)                           |
+| **Calendar appearance**                                          | **Open**                                                                                                  | [Calendar appearance page](#calendar-appearance-page)                      |
 | **Logging**                                                      | **Log level**, **Export logs**                                                                            | [Troubleshooting](/troubleshooting#reporting-a-bug)                        |
 | **Maintenance**                                                  | **Open**                                                                                                  | [Maintenance page](#maintenance-page)                                      |
 
@@ -97,6 +97,16 @@ Reached with **Configure** on a view's row, under **Views** on the main settings
 | _the view's name_ | **Rename view**                                                                                                                          | [Views](/views#a-view-s-settings) |
 |                   | **Icon**, **Default shelf**, **Show in ribbon**, **Open on startup**, **Remember last viewed date**, **Follow active note**, **Open in** | [Views](/views#a-view-s-settings) |
 | **Blocks**        | **Add block**; per block its own settings                                                                                                | [Views](/views#blocks)            |
+
+## Calendar appearance page
+
+Reached with **Open** under **Calendar appearance**, on the main settings page.
+
+| Section                 | Settings                                                                                                           | Explained in                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| **Calendar appearance** | **Preview** — **Narrow**, **Wide**; the preview; **Editing**; **Also here**                                        | [Views](/views#calendar-appearance)              |
+|                         | the chosen part's controls, under **Text**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only** | [Views](/views#what-each-part-offers)            |
+|                         | beside the part's name: **Reset to default**, **Reset narrow overrides**                                           | [Views](/views#narrow-only-values-and-resetting) |
 
 ## Maintenance page
 

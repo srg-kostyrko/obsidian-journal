@@ -60,8 +60,9 @@ describe("appearanceSlice", () => {
     });
     const asToday = { size: "inherit", weight: null, italic: null, color: null, case: null };
     expect(wide.heading).toEqual(asToday);
-    expect(wide.weekday).toEqual({ ...asToday, size: "0.6em", color: theme("text-muted") });
-    expect(wide.weekNumber).toEqual({ ...asToday, weight: "bold" });
+    // A stock a Default option covers is stored as Default, so a fresh install reads Default there.
+    expect(wide.weekday).toEqual({ ...asToday, size: "0.6em" });
+    expect(wide.weekNumber).toEqual(asToday);
     expect(wide.date).toEqual(asToday);
     expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
   });

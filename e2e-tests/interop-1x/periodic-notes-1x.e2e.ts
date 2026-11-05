@@ -5,6 +5,7 @@ import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
   clickButton,
   clickDialogButton,
+  clickSectionButton,
   closeSettings,
   openSettings,
   waitForDialogClosed,
@@ -15,7 +16,7 @@ import { waitForState } from "../support/wait.js";
 // Runs only under the Periodic Notes 1.x capability (see wdio.conf.mts).
 async function importFromMaintenance(): Promise<void> {
   await openSettings();
-  await clickButton(m.maintenance_open());
+  await clickSectionButton(m.maintenance_heading(), m.maintenance_open());
   await clickButton(m.import_action());
   await clickDialogButton(m.import_preview_confirm());
   await clickDialogButton(m.import_connect_run());

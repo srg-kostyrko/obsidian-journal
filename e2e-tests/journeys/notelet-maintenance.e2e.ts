@@ -1,7 +1,7 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
-import { clickButton, closeSettings, openSettings } from "../support/settings.js";
+import { clickButton, clickSectionButton, closeSettings, openSettings } from "../support/settings.js";
 import { frontmatterOf, seedNote, waitForFrontmatter } from "../support/vault.js";
 
 // A type deleted in "keep" mode leaves its notelets claiming a name no config resolves. They stay
@@ -28,7 +28,7 @@ describe("maintenance — orphaned notelet type", () => {
     );
 
     await openSettings();
-    await clickButton(m.maintenance_open());
+    await clickSectionButton(m.maintenance_heading(), m.maintenance_open());
 
     // The scan walks the whole vault and its groups render already expanded, so the wait is for
     // the finding to appear — clicking the group trigger here would collapse it instead.

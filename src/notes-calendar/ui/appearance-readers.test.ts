@@ -9,11 +9,11 @@ type Component = keyof typeof components;
 const GRID_PARTS = ["heading", "weekday", "week-number", "date", "cell-gap"];
 
 // Each grid renders its own heading, weekday header, week numbers, dates and gaps, so each has to read
-// them; the highlights and the cell box live in the cell alone.
+// them — the editor's preview grid included; the highlights and the cell box live in the cell alone.
 function renderers(entry: CatalogEntry): readonly Component[] {
   const part = entry.name.replace(/^journal-cell-/, "");
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix)
-    ? ["monthView", "weekView"]
+    ? ["monthView", "weekView", "preview"]
     : ["cell"];
 }
 
@@ -23,7 +23,7 @@ const cases = appearanceCatalog.flatMap((entry) =>
 
 describe("calendar appearance readers", () => {
   it("assigns every catalog entry to the components that render it", () => {
-    expect(appearanceCatalog.filter((entry) => renderers(entry).length === 2).length).toBe(21);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).length === 3).length).toBe(21);
   });
 
   it.each(cases)(

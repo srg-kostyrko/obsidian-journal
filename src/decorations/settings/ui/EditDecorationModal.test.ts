@@ -7,6 +7,7 @@ import { m } from "@/i18n";
 import type { TypeId } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
+import { calendarAppearanceCoreModule } from "@/notes-calendar/appearance/module";
 import { testContainer } from "@/testing";
 
 import { buildCondition } from "../../testing";
@@ -25,7 +26,7 @@ async function mountModal(options: {
   conditionTypes: readonly JournalDecorationCondition["type"][];
   decoration?: JournalDecoration;
 }) {
-  const harness = await testContainer({ modules: [journalsCoreModule] });
+  const harness = await testContainer({ modules: [journalsCoreModule, calendarAppearanceCoreModule] });
   return harness.renderModal(EditDecorationModal, {
     props: { conditionTypes: options.conditionTypes, decoration: options.decoration },
   });
@@ -237,7 +238,7 @@ describe("EditDecorationModal", () => {
   describe("journal name hand-off", () => {
     it("passes journalName through to ConditionItem's notelet-type picker", async () => {
       const harness = await testContainer({
-        modules: [journalsCoreModule],
+        modules: [journalsCoreModule, calendarAppearanceCoreModule],
         data: {
           journals: {
             Work: fixedJournal(

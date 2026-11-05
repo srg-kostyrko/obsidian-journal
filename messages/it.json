@@ -35,28 +35,139 @@
   "day_notes_settings_property_description": "Proprietà Frontmatter usata come data di creazione. Le note senza un valore valido usano l’ora di creazione del file.",
   "day_notes_settings_format_label": "Formato della data di creazione",
   "day_notes_settings_format_description": "Formato della data usato per analizzare la proprietà della data di creazione.",
-  "calendar_appearance_selected_ring": "Data selezionata — contorno",
-  "calendar_appearance_selected_ring_description": "Colore del contorno della cella del calendario corrispondente alla data selezionata della vista.",
   "calendar_apply_globally_desc": "Se disattivata, le impostazioni della configurazione settimanale si applicano solo alle date all'interno dei diari e non influiscono sulle date create da altri plugin o da Obsidian stesso.",
   "calendar_apply_globally_restart_hint": "Potrebbe essere necessario riavviare Obsidian affinché le modifiche abbiano effetto.",
   "calendar_apply_globally_title": "Applica la configurazione settimanale a tutte le date presenti nel vault",
-  "calendar_appearance_active_background": "Attivo — sfondo",
-  "calendar_appearance_active_text": "Attivo — testo",
-  "calendar_appearance_section_title": "Evidenziazione del calendario",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "Aspetto del calendario",
+  "calendar_appearance_open": "Apri",
+  "calendar_appearance_preview": "Anteprima",
+  "calendar_appearance_width_label": "Larghezza",
+  "calendar_appearance_width": [
     {
-      "declarations": ["input layer", "input target"],
-      "selectors": ["layer", "target"],
+      "declarations": ["input width"],
+      "selectors": ["width"],
       "match": {
-        "layer=text,target=today": "Colore del testo della cella del calendario per la data odierna.",
-        "layer=background,target=today": "Colore di sfondo della cella del calendario per la data odierna.",
-        "layer=text,target=active": "Colore del testo della cella del calendario la cui nota è attualmente aperta.",
-        "layer=background,target=active": "Colore di sfondo della cella del calendario la cui nota è attualmente aperta."
+        "width=wide": "Largo",
+        "width=narrow": "Stretto"
       }
     }
   ],
-  "calendar_appearance_today_background": "Oggi — sfondo",
-  "calendar_appearance_today_text": "Oggi — testo",
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Le modifiche si applicano a ogni larghezza.",
+        "width=narrow": "Le modifiche si applicano solo ai calendari stretti e sostituiscono il valore per tutte le larghezze."
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Tutte le larghezze",
+        "width=narrow": "Stretto"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "In modifica",
+  "calendar_appearance_part_placeholder": "Scegli una parte",
+  "calendar_appearance_part_hint": "Fai clic su una parte dell'anteprima o sceglila dall'elenco.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "Oggi",
+        "part=selected": "Data selezionata",
+        "part=active": "Nota aperta",
+        "part=outside": "Giorni fuori dal mese",
+        "part=heading": "Intestazione del mese",
+        "part=weekday": "Intestazione dei giorni della settimana",
+        "part=weekNumber": "Numeri di settimana",
+        "part=date": "Numero del giorno",
+        "part=cell": "Celle"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "Anche qui",
+  "calendar_appearance_modified": "Modificato",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=text": "Testo",
+        "family=highlight": "Evidenziazione",
+        "family=box": "Riquadro"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=highlight_style": "Stile",
+        "control=highlight_color": "Colore di evidenziazione",
+        "control=highlight_ring_width": "Spessore del contorno",
+        "control=highlight_strength": "Intensità",
+        "control=highlight_text_color": "Colore del testo",
+        "control=highlight_text_weight": "Peso del testo",
+        "control=highlight_text_italic": "Testo in corsivo",
+        "control=highlight_over": "Sopra le decorazioni",
+        "control=text_size": "Dimensione",
+        "control=text_weight": "Peso",
+        "control=text_italic": "Corsivo",
+        "control=text_color": "Colore",
+        "control=text_case": "Maiuscole e minuscole",
+        "control=box_padding": "Spaziatura interna",
+        "control=box_radius": "Raggio degli angoli",
+        "control=box_gap": "Spazio tra le celle",
+        "control=box_min_height": "Altezza delle righe"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=style_ring": "Contorno",
+        "option=style_background": "Sfondo",
+        "option=style_text": "Solo testo",
+        "option=style_none": "Nessuno",
+        "option=weight_normal": "Normale",
+        "option=weight_semibold": "Semigrassetto",
+        "option=weight_bold": "Grassetto",
+        "option=italic_on": "Attivo",
+        "option=italic_off": "Disattivo",
+        "option=over_over": "Sì",
+        "option=over_under": "No",
+        "option=case_none": "Come scritto",
+        "option=case_upper": "Maiuscolo",
+        "option=case_lower": "Minuscolo",
+        "option=case_title": "Iniziali maiuscole"
+      }
+    }
+  ],
+  "calendar_appearance_default": "Predefinito",
+  "calendar_appearance_default_resolved": "Predefinito ({value})",
+  "calendar_appearance_unchanged": "Invariato",
+  "calendar_appearance_narrow_only": "Solo stretto",
+  "calendar_appearance_narrow_only_clear": "Usa il valore per tutte le larghezze",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Ripristina i valori predefiniti",
+        "width=narrow": "Ripristina i valori stretti"
+      }
+    }
+  ],
   "common_label_back": "Torna all'elenco",
   "common_label_calendar": "Calendario",
   "common_pick_a_date": "Scegli una data",
@@ -1170,7 +1281,9 @@
       "match": {
         "kind=transparent": "Trasparente",
         "kind=theme": "Variabile del tema",
-        "kind=custom": "Personalizzato"
+        "kind=custom": "Personalizzato",
+        "kind=unchanged": "Invariato",
+        "kind=default": "Predefinito"
       }
     }
   ],

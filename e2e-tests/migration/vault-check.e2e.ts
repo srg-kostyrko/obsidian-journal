@@ -1,7 +1,7 @@
 import { browser } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
-import { clickButton, closeSettings, openSettings } from "../support/settings.js";
+import { clickButton, clickSectionButton, closeSettings, openSettings } from "../support/settings.js";
 import { waitForJournalFrontmatter } from "../support/vault.js";
 
 // The fixture ships no calendar override, so the week grid comes from this harness's global
@@ -19,7 +19,7 @@ describe("maintenance vault check", () => {
     await waitForJournalFrontmatter("Weeks/2026-W03.md", { journal: "weekly", date: "2026-01-14" });
 
     await openSettings();
-    await clickButton(m.maintenance_open());
+    await clickSectionButton(m.maintenance_heading(), m.maintenance_open());
     await clickButton(m.maintenance_check_fix_all());
 
     // The repair is only real once the note is indexed at its intended anchor, and that

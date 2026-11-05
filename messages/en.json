@@ -35,29 +35,140 @@
   "day_notes_settings_property_description": "Frontmatter property used as the creation date. Notes without a valid value use their file creation time.",
   "day_notes_settings_format_label": "Creation date format",
   "day_notes_settings_format_description": "Date format used to parse the creation date property.",
-  "calendar_appearance_selected_ring": "Selected date — ring",
-  "calendar_appearance_selected_ring_description": "Ring color of the calendar cell matching the view's selected date.",
 
   "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
   "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
   "calendar_apply_globally_title": "Apply week configuration to all dates in vault",
-  "calendar_appearance_active_background": "Active — background",
-  "calendar_appearance_active_text": "Active — text",
-  "calendar_appearance_section_title": "Calendar highlighting",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "Calendar appearance",
+  "calendar_appearance_open": "Open",
+  "calendar_appearance_preview": "Preview",
+  "calendar_appearance_width_label": "Width",
+  "calendar_appearance_width": [
     {
-      "declarations": ["input target", "input layer"],
-      "selectors": ["target", "layer"],
+      "declarations": ["input width"],
+      "selectors": ["width"],
       "match": {
-        "target=today,layer=text": "Text color of the calendar cell for today's date.",
-        "target=today,layer=background": "Background color of the calendar cell for today's date.",
-        "target=active,layer=text": "Text color of the calendar cell whose note is currently open.",
-        "target=active,layer=background": "Background color of the calendar cell whose note is currently open."
+        "width=wide": "Wide",
+        "width=narrow": "Narrow"
       }
     }
   ],
-  "calendar_appearance_today_background": "Today — background",
-  "calendar_appearance_today_text": "Today — text",
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Changes apply at every width.",
+        "width=narrow": "Changes apply only to narrow calendars and override the all-widths value."
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "All widths",
+        "width=narrow": "Narrow"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "Editing",
+  "calendar_appearance_part_placeholder": "Choose a part",
+  "calendar_appearance_part_hint": "Click any part of the preview, or choose one from the list.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "Today",
+        "part=selected": "Selected date",
+        "part=active": "Open note",
+        "part=outside": "Days outside the month",
+        "part=heading": "Month heading",
+        "part=weekday": "Weekday header",
+        "part=weekNumber": "Week numbers",
+        "part=date": "Date number",
+        "part=cell": "Cells"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "Also here",
+  "calendar_appearance_modified": "Modified",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=text": "Text",
+        "family=highlight": "Highlight",
+        "family=box": "Box"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=highlight_style": "Style",
+        "control=highlight_color": "Highlight color",
+        "control=highlight_ring_width": "Ring width",
+        "control=highlight_strength": "Strength",
+        "control=highlight_text_color": "Text color",
+        "control=highlight_text_weight": "Text weight",
+        "control=highlight_text_italic": "Text italic",
+        "control=highlight_over": "Over decorations",
+        "control=text_size": "Size",
+        "control=text_weight": "Weight",
+        "control=text_italic": "Italic",
+        "control=text_color": "Color",
+        "control=text_case": "Case",
+        "control=box_padding": "Padding",
+        "control=box_radius": "Corner radius",
+        "control=box_gap": "Gap between cells",
+        "control=box_min_height": "Row height"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=style_ring": "Ring",
+        "option=style_background": "Background",
+        "option=style_text": "Text only",
+        "option=style_none": "None",
+        "option=weight_normal": "Normal",
+        "option=weight_semibold": "Semi-bold",
+        "option=weight_bold": "Bold",
+        "option=italic_on": "On",
+        "option=italic_off": "Off",
+        "option=over_over": "Yes",
+        "option=over_under": "No",
+        "option=case_none": "As written",
+        "option=case_upper": "Uppercase",
+        "option=case_lower": "Lowercase",
+        "option=case_title": "Title case"
+      }
+    }
+  ],
+  "calendar_appearance_default": "Default",
+  "calendar_appearance_default_resolved": "Default ({value})",
+  "calendar_appearance_unchanged": "Unchanged",
+  "calendar_appearance_narrow_only": "Narrow only",
+  "calendar_appearance_narrow_only_clear": "Use the all-widths value",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Reset to default",
+        "width=narrow": "Reset narrow overrides"
+      }
+    }
+  ],
   "common_label_back": "Back to list",
   "common_label_calendar": "Calendar",
   "common_pick_a_date": "Pick a date",
@@ -1170,7 +1281,9 @@
       "match": {
         "kind=transparent": "Transparent",
         "kind=theme": "Theme variable",
-        "kind=custom": "Custom"
+        "kind=custom": "Custom",
+        "kind=unchanged": "Unchanged",
+        "kind=default": "Default"
       }
     }
   ],

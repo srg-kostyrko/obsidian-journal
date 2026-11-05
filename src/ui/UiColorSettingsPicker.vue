@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="M extends ColorSettings | 'unchanged' | null">
 import { computed } from "vue";
 
 import type { ColorSettings } from "@/decorations";
@@ -8,32 +8,76 @@ import { themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
 
-const { role } = defineProps<{ role: ThemeColorFieldRole }>();
-const model = defineModel<ColorSettings>({ required: true });
+const {
+  role,
+  unchanged = false,
+  default: withDefault = false,
+  defaultColor = "",
+} = defineProps<{
+  role: ThemeColorFieldRole;
+  unchanged?: boolean;
+  default?: boolean;
+  /** The CSS color Default resolves to, shown as a swatch while Default is chosen; empty shows none. */
+  defaultColor?: string;
+}>();
+// The literal mirrors UNCHANGED in notes-calendar/appearance; src/ui cannot import from there.
+const model = defineModel<M>({ required: true });
+
+// Widening the ref's type lets us write any member of the constraint without a cast; TS
+// property variance is covariant, so this is how a generic model is written safely here.
+const wide: { value: ColorSettings | "unchanged" | null } = model;
+function write(next: ColorSettings | "unchanged" | null) {
+  wide.value = next;
+}
 
 const groups = computed(() => themeColorGroupsFor(role));
 const offered = computed(() => new Set(groups.value.flatMap((group) => group.names)));
 
-const kind = computed<ColorSettings["type"]>({
-  get: () => model.value.type,
+const kind = computed<ColorSettings["type"] | "unchanged" | "default">({
+  get: () => {
+    if (model.value === null) return "default";
+    return model.value === "unchanged" ? "unchanged" : model.value.type;
+  },
   set: (next) => {
-    if (next === "transparent") model.value = { type: "transparent" };
-    else if (next === "theme") model.value = { type: "theme", name: "" };
-    else model.value = { type: "custom", color: "#000000" };
+    switch (next) {
+      case "unchanged": {
+        write("unchanged");
+        break;
+      }
+      case "default": {
+        write(null);
+        break;
+      }
+      case "transparent": {
+        write({ type: "transparent" });
+        break;
+      }
+      case "theme": {
+        write({ type: "theme", name: "" });
+        break;
+      }
+      default: {
+        write({ type: "custom", color: "#000000" });
+      }
+    }
   },
 });
 
 const themeName = computed<string>({
-  get: () => (model.value.type === "theme" ? model.value.name : ""),
+  get: () =>
+    model.value !== null && model.value !== "unchanged" && model.value.type === "theme" ? model.value.name : "",
   set: (next) => {
-    if (model.value.type === "theme") model.value = { type: "theme", name: next };
+    if (kind.value === "theme") write({ type: "theme", name: next });
   },
 });
 
 const customColor = computed<string>({
-  get: () => (model.value.type === "custom" ? model.value.color : "#000000"),
+  get: () =>
+    model.value !== null && model.value !== "unchanged" && model.value.type === "custom"
+      ? model.value.color
+      : "#000000",
   set: (next) => {
-    if (model.value.type === "custom") model.value = { type: "custom", color: next };
+    if (kind.value === "custom") write({ type: "custom", color: next });
   },
 });
 </script>
@@ -41,11 +85,13 @@ const customColor = computed<string>({
 <template>
   <span class="ui-color-settings-picker">
     <UiDropdown v-model="kind">
+      <option v-if="withDefault" value="default">{{ m.ui_color_kind_label({ kind: "default" }) }}</option>
+      <option v-if="unchanged" value="unchanged">{{ m.ui_color_kind_label({ kind: "unchanged" }) }}</option>
       <option value="transparent">{{ m.ui_color_kind_label({ kind: "transparent" }) }}</option>
       <option value="theme">{{ m.ui_color_kind_label({ kind: "theme" }) }}</option>
       <option value="custom">{{ m.ui_color_kind_label({ kind: "custom" }) }}</option>
     </UiDropdown>
-    <template v-if="model.type === 'theme'">
+    <template v-if="kind === 'theme'">
       <UiDropdown
         v-model="themeName"
         class="ui-color-settings-picker__theme"
@@ -78,7 +124,12 @@ const customColor = computed<string>({
         :style="{ backgroundColor: `var(--${themeName})` }"
       />
     </template>
-    <UiColorPicker v-if="model.type === 'custom'" v-model="customColor" />
+    <span
+      v-else-if="kind === 'default' && defaultColor"
+      class="ui-color-settings-picker__swatch"
+      :style="{ backgroundColor: defaultColor }"
+    />
+    <UiColorPicker v-if="kind === 'custom'" v-model="customColor" />
   </span>
 </template>
 

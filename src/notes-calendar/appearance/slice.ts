@@ -149,8 +149,9 @@ const wideDefaults = {
   }),
   outside: highlight({ text: { color: theme("text-muted"), weight: UNCHANGED, italic: UNCHANGED } }),
   heading: text({}),
-  weekday: text({ size: "0.6em", color: theme("text-muted") }),
-  weekNumber: text({ weight: "bold" }),
+  // Null, not a copy of the stock: Default is the stock, so an explicit copy would read as a change.
+  weekday: text({ size: "0.6em" }),
+  weekNumber: text({}),
   date: text({}),
   cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 },
 };
