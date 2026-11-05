@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
+import { themeColorGroupsFor } from "@/ui/theme-colors";
 
 import { withValue } from "../appearance-editing";
 import { PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
@@ -76,6 +77,22 @@ describe("AppearanceControl", () => {
 
     const text = mount("heading", control("heading", "color"));
     expect([...kindSelect(text.container).options].map((option) => option.value)).not.toContain("unchanged");
+  });
+
+  it.each([
+    ["ring", "border"],
+    ["background", "background"],
+  ] as const)("offers the %s highlight color the theme colors of the %s role", (style, role) => {
+    slice().state = withValue(slice().state, "wide", "selected", ["style"], style);
+    slice().state = withValue(slice().state, "wide", "selected", ["color"], { type: "theme", name: "" });
+    mount("selected", control("selected", "color"));
+
+    const offered = [
+      ...screen.getByRole<HTMLSelectElement>("combobox", { name: m.ui_color_theme_variable_label() }).options,
+    ]
+      .map((option) => option.value)
+      .filter((value) => value !== "");
+    expect(offered).toEqual(themeColorGroupsFor(role).flatMap((group) => group.names));
   });
 
   it("writes a picked color through the model", async () => {
