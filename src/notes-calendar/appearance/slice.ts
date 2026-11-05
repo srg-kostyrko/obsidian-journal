@@ -14,56 +14,102 @@ export type HighlightStyle = v.InferOutput<typeof styleSchema>;
 export type TextCase = v.InferOutput<typeof caseSchema>;
 
 // A null text value is "as today": nothing is written for it, so whatever renders underneath shows.
-export interface HighlightValues {
-  style: HighlightStyle;
-  color: ColorSettings;
-  ringWidth: number;
-  strength: number;
-  text: { color: ColorSettings | null; weight: Weight | null; italic: boolean | null };
-  over: boolean;
-}
+const highlightTextEntries = {
+  color: v.nullable(colorSchema),
+  weight: v.nullable(weightSchema),
+  italic: v.nullable(v.boolean()),
+};
 
-export interface TextValues {
-  size: string;
-  weight: Weight | null;
-  italic: boolean | null;
-  color: ColorSettings | null;
-  case: TextCase | null;
-}
+const highlightEntries = {
+  // No climb: resetting a corrupt style alone narrows the highlight to its stock style, and
+  // resetting the whole part would lose its other values too.
+  style: styleSchema,
+  color: colorSchema,
+  ringWidth: pixelsSchema,
+  strength: strengthSchema,
+  text: v.object(highlightTextEntries),
+  over: v.boolean(),
+};
 
-export interface BoxValues {
-  padding: number;
-  radius: string;
-  gap: string;
-  minHeight: number;
-}
+const textEntries = {
+  size: v.string(),
+  weight: v.nullable(weightSchema),
+  italic: v.nullable(v.boolean()),
+  color: v.nullable(colorSchema),
+  case: v.nullable(caseSchema),
+};
 
-export interface AppearanceParts {
-  today: HighlightValues;
-  selected: HighlightValues;
-  active: HighlightValues;
-  outside: HighlightValues;
-  heading: TextValues;
-  weekday: TextValues;
-  weekNumber: TextValues;
-  date: TextValues;
-  cell: BoxValues;
-}
+const boxEntries = {
+  padding: pixelsSchema,
+  radius: v.string(),
+  gap: v.string(),
+  minHeight: pixelsSchema,
+};
+
+type Shape<E extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<E, undefined>>;
+
+export type HighlightValues = Shape<typeof highlightEntries>;
+export type TextValues = Shape<typeof textEntries>;
+export type BoxValues = Shape<typeof boxEntries>;
 
 export type Overrides<T> = { [K in keyof T]: T[K] | null };
 
-export type NarrowHighlight = Overrides<Omit<HighlightValues, "text">> & { text: HighlightValues["text"] };
-
-export type NarrowOverrides = {
-  [P in keyof AppearanceParts]: AppearanceParts[P] extends HighlightValues
-    ? NarrowHighlight
-    : Overrides<AppearanceParts[P]>;
+type Defaulted<E extends v.ObjectEntries> = {
+  [K in keyof E]: v.OptionalSchema<E[K], () => v.InferInput<E[K]>>;
 };
 
-export interface AppearanceSliceState {
-  wide: AppearanceParts;
-  narrow: NarrowOverrides;
+type Overridden<E extends v.ObjectEntries> = {
+  [K in keyof E]: v.OptionalSchema<v.NullableSchema<E[K], undefined>, null>;
+};
+
+const fresh =
+  <T>(value: T) =>
+  (): T =>
+    structuredClone(value);
+
+/** Each field defaults on its own, so a repair resets only the field that failed. */
+function withDefaults<E extends v.ObjectEntries>(entries: E, defaults: Shape<E>): Defaulted<E> {
+  const values = new Map<string, unknown>(Object.entries(defaults));
+  // Object.fromEntries forgets which schema sits under which key; the mapped type restores it.
+  return Object.fromEntries(
+    Object.entries(entries).map(([key, schema]) => [key, v.optional(schema, fresh(values.get(key)))]),
+  ) as Defaulted<E>;
 }
+
+// A corrupt override repairs to "no override": the wide value still applies, so nothing is lost.
+function asOverrides<E extends v.ObjectEntries>(entries: E): Overridden<E> {
+  // Object.fromEntries forgets which schema sits under which key; the mapped type restores it.
+  return Object.fromEntries(
+    Object.entries(entries).map(([key, schema]) => [key, v.optional(v.nullable(schema), null)]),
+  ) as Overridden<E>;
+}
+
+function defaultedPart<E extends v.ObjectEntries>(entries: E, defaults: Shape<E>) {
+  return v.optional(v.object(withDefaults(entries, defaults)), fresh(defaults));
+}
+
+function overriddenPart<E extends v.ObjectEntries>(entries: E) {
+  const part = v.object(asOverrides(entries));
+  // Every override is optional and defaults to null, so an empty object is a whole part with no
+  // overrides; TS cannot see through the mapped entries that `{}` is a valid input.
+  const empty = {} as v.InferInput<typeof part>;
+  return v.optional(part, fresh(empty));
+}
+
+function highlightPart(defaults: HighlightValues) {
+  return v.optional(
+    v.object({
+      ...withDefaults(highlightEntries, defaults),
+      text: defaultedPart(highlightTextEntries, defaults.text),
+    }),
+    fresh(defaults),
+  );
+}
+
+const narrowHighlightPart = v.optional(
+  v.object({ ...asOverrides(highlightEntries), text: overriddenPart(highlightTextEntries) }),
+  () => ({}),
+);
 
 const theme = (name: string): ColorSettings => ({ type: "theme", name });
 const transparent = (): ColorSettings => ({ type: "transparent" });
@@ -84,7 +130,7 @@ function text(overrides: Partial<TextValues>): TextValues {
   return { size: "inherit", weight: null, italic: null, color: null, case: null, ...overrides };
 }
 
-const wideDefaults: AppearanceParts = {
+const wideDefaults = {
   today: highlight({ text: { color: theme("text-accent"), weight: null, italic: null } }),
   selected: highlight({ style: "ring", color: theme("interactive-accent"), over: true }),
   active: highlight({
@@ -100,126 +146,35 @@ const wideDefaults: AppearanceParts = {
   cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 },
 };
 
-function nulls<T extends object>(value: T): Overrides<T> {
-  return Object.fromEntries(Object.keys(value).map((key) => [key, null])) as Overrides<T>;
-}
-
-function narrowHighlight(): NarrowHighlight {
-  return { ...nulls(highlight({})), text: { color: null, weight: null, italic: null } };
-}
-
-const narrowDefaults: NarrowOverrides = {
-  today: narrowHighlight(),
-  selected: narrowHighlight(),
-  active: narrowHighlight(),
-  outside: narrowHighlight(),
-  heading: nulls(wideDefaults.heading),
-  weekday: nulls(wideDefaults.weekday),
-  weekNumber: nulls(wideDefaults.weekNumber),
-  date: nulls(wideDefaults.date),
-  cell: nulls(wideDefaults.cell),
-};
-
-const fresh =
-  <T>(value: T) =>
-  (): T =>
-    structuredClone(value);
-
-function textOfHighlightSchema(defaults: HighlightValues["text"]) {
-  return v.object({
-    color: v.optional(v.nullable(colorSchema), fresh(defaults.color)),
-    weight: v.optional(v.nullable(weightSchema), defaults.weight),
-    italic: v.optional(v.nullable(v.boolean()), defaults.italic),
-  });
-}
-
-function highlightSchema(defaults: HighlightValues) {
-  return v.object({
-    // No climb: resetting a corrupt style alone narrows the highlight to its stock style, and
-    // resetting the whole part would lose its other values too.
-    style: v.optional(styleSchema, defaults.style),
-    color: v.optional(colorSchema, fresh(defaults.color)),
-    ringWidth: v.optional(pixelsSchema, defaults.ringWidth),
-    strength: v.optional(strengthSchema, defaults.strength),
-    text: v.optional(textOfHighlightSchema(defaults.text), fresh(defaults.text)),
-    over: v.optional(v.boolean(), defaults.over),
-  });
-}
-
-function textSchema(defaults: TextValues) {
-  return v.object({
-    size: v.optional(v.string(), defaults.size),
-    weight: v.optional(v.nullable(weightSchema), defaults.weight),
-    italic: v.optional(v.nullable(v.boolean()), defaults.italic),
-    color: v.optional(v.nullable(colorSchema), fresh(defaults.color)),
-    case: v.optional(v.nullable(caseSchema), defaults.case),
-  });
-}
-
-function boxSchema(defaults: BoxValues) {
-  return v.object({
-    padding: v.optional(pixelsSchema, defaults.padding),
-    radius: v.optional(v.string(), defaults.radius),
-    gap: v.optional(v.string(), defaults.gap),
-    minHeight: v.optional(pixelsSchema, defaults.minHeight),
-  });
-}
-
-// A corrupt override repairs to "no override": the wide value still applies, so nothing is lost.
-const override = <T extends v.GenericSchema>(schema: T) => v.optional(v.nullable(schema), null);
-
-const narrowHighlightSchema = v.object({
-  style: override(styleSchema),
-  color: override(colorSchema),
-  ringWidth: override(pixelsSchema),
-  strength: override(strengthSchema),
-  text: v.optional(
-    v.object({ color: override(colorSchema), weight: override(weightSchema), italic: override(v.boolean()) }),
-    fresh(narrowDefaults.today.text),
-  ),
-  over: override(v.boolean()),
-});
-
-const narrowTextSchema = v.object({
-  size: override(v.string()),
-  weight: override(weightSchema),
-  italic: override(v.boolean()),
-  color: override(colorSchema),
-  case: override(caseSchema),
-});
-
-const narrowBoxSchema = v.object({
-  padding: override(pixelsSchema),
-  radius: override(v.string()),
-  gap: override(v.string()),
-  minHeight: override(pixelsSchema),
-});
-
 const wideSchema = v.object({
-  today: v.optional(highlightSchema(wideDefaults.today), fresh(wideDefaults.today)),
-  selected: v.optional(highlightSchema(wideDefaults.selected), fresh(wideDefaults.selected)),
-  active: v.optional(highlightSchema(wideDefaults.active), fresh(wideDefaults.active)),
-  outside: v.optional(highlightSchema(wideDefaults.outside), fresh(wideDefaults.outside)),
-  heading: v.optional(textSchema(wideDefaults.heading), fresh(wideDefaults.heading)),
-  weekday: v.optional(textSchema(wideDefaults.weekday), fresh(wideDefaults.weekday)),
-  weekNumber: v.optional(textSchema(wideDefaults.weekNumber), fresh(wideDefaults.weekNumber)),
-  date: v.optional(textSchema(wideDefaults.date), fresh(wideDefaults.date)),
-  cell: v.optional(boxSchema(wideDefaults.cell), fresh(wideDefaults.cell)),
+  today: highlightPart(wideDefaults.today),
+  selected: highlightPart(wideDefaults.selected),
+  active: highlightPart(wideDefaults.active),
+  outside: highlightPart(wideDefaults.outside),
+  heading: defaultedPart(textEntries, wideDefaults.heading),
+  weekday: defaultedPart(textEntries, wideDefaults.weekday),
+  weekNumber: defaultedPart(textEntries, wideDefaults.weekNumber),
+  date: defaultedPart(textEntries, wideDefaults.date),
+  cell: defaultedPart(boxEntries, wideDefaults.cell),
 });
 
 const narrowSchema = v.object({
-  today: v.optional(narrowHighlightSchema, fresh(narrowDefaults.today)),
-  selected: v.optional(narrowHighlightSchema, fresh(narrowDefaults.selected)),
-  active: v.optional(narrowHighlightSchema, fresh(narrowDefaults.active)),
-  outside: v.optional(narrowHighlightSchema, fresh(narrowDefaults.outside)),
-  heading: v.optional(narrowTextSchema, fresh(narrowDefaults.heading)),
-  weekday: v.optional(narrowTextSchema, fresh(narrowDefaults.weekday)),
-  weekNumber: v.optional(narrowTextSchema, fresh(narrowDefaults.weekNumber)),
-  date: v.optional(narrowTextSchema, fresh(narrowDefaults.date)),
-  cell: v.optional(narrowBoxSchema, fresh(narrowDefaults.cell)),
+  today: narrowHighlightPart,
+  selected: narrowHighlightPart,
+  active: narrowHighlightPart,
+  outside: narrowHighlightPart,
+  heading: overriddenPart(textEntries),
+  weekday: overriddenPart(textEntries),
+  weekNumber: overriddenPart(textEntries),
+  date: overriddenPart(textEntries),
+  cell: overriddenPart(boxEntries),
 });
 
-const defaults: AppearanceSliceState = { wide: wideDefaults, narrow: narrowDefaults };
+export type AppearanceParts = v.InferOutput<typeof wideSchema>;
+export type NarrowOverrides = v.InferOutput<typeof narrowSchema>;
+export type NarrowHighlight = NarrowOverrides["today"];
+
+const narrowDefaults: NarrowOverrides = v.parse(narrowSchema, {});
 
 // The parts default one by one, so a v7 → v8 migration that writes only `wide` parses without a repair.
 export const appearanceSliceSchema = v.object({
@@ -227,8 +182,10 @@ export const appearanceSliceSchema = v.object({
   narrow: v.optional(narrowSchema, fresh(narrowDefaults)),
 });
 
+export type AppearanceSliceState = v.InferOutput<typeof appearanceSliceSchema>;
+
 export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceSchema>(
   "appearance",
   appearanceSliceSchema,
-  defaults,
+  { wide: wideDefaults, narrow: narrowDefaults },
 );

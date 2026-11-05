@@ -1,11 +1,22 @@
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 import { testContainer } from "@/testing";
 
-import { appearanceSlice, appearanceSliceSchema } from "./slice";
+import {
+  appearanceSlice,
+  appearanceSliceSchema,
+  type AppearanceParts,
+  type AppearanceSliceState,
+  type BoxValues,
+  type HighlightValues,
+  type NarrowHighlight,
+  type NarrowOverrides,
+  type Overrides,
+  type TextValues,
+} from "./slice";
 
 const transparent = { type: "transparent" };
 const theme = (name: string) => ({ type: "theme", name });
@@ -71,6 +82,39 @@ describe("appearanceSlice", () => {
 
   it("parses an empty object into the defaults", () => {
     expect(v.parse(appearanceSliceSchema, {})).toEqual(appearanceSlice.defaults);
+  });
+});
+
+describe("appearance slice types", () => {
+  it("the schema parses to the slice state", () => {
+    expectTypeOf<v.InferOutput<typeof appearanceSliceSchema>>().toEqualTypeOf<{
+      wide: AppearanceParts;
+      narrow: NarrowOverrides;
+    }>();
+    expectTypeOf<AppearanceSliceState>().toEqualTypeOf<{ wide: AppearanceParts; narrow: NarrowOverrides }>();
+  });
+
+  it("each wide part holds its kind's values", () => {
+    expectTypeOf<AppearanceParts>().toEqualTypeOf<{
+      today: HighlightValues;
+      selected: HighlightValues;
+      active: HighlightValues;
+      outside: HighlightValues;
+      heading: TextValues;
+      weekday: TextValues;
+      weekNumber: TextValues;
+      date: TextValues;
+      cell: BoxValues;
+    }>();
+  });
+
+  it("every narrow part overrides exactly its wide part's fields", () => {
+    expectTypeOf<keyof NarrowOverrides>().toEqualTypeOf<keyof AppearanceParts>();
+    expectTypeOf<NarrowOverrides["heading"]>().toEqualTypeOf<Overrides<TextValues>>();
+    expectTypeOf<NarrowOverrides["cell"]>().toEqualTypeOf<Overrides<BoxValues>>();
+    expectTypeOf<keyof NarrowHighlight>().toEqualTypeOf<keyof HighlightValues>();
+    expectTypeOf<Omit<NarrowHighlight, "text">>().toEqualTypeOf<Overrides<Omit<HighlightValues, "text">>>();
+    expectTypeOf<NarrowHighlight["text"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
   });
 });
 
