@@ -53,6 +53,13 @@ async function mount(styles: JournalDecoration["styles"] = [], minHeight?: numbe
 }
 
 describe("DecorationCanvas", () => {
+  it("falls back to the stock row height when the saved min-height is below 1", async () => {
+    await mount([], 0);
+    const canvas = document.querySelector<HTMLElement>(".decoration-canvas");
+    expect(canvas?.style.getPropertyValue("--cell-source-size")).toBe("26px");
+    expect(document.body.getHTML()).not.toContain("Infinity");
+  });
+
   it("magnification uses the saved cell min-height", async () => {
     await mount([], 40);
     expect(
