@@ -1,5 +1,5 @@
-import { getFrontMatterInfo, parseYaml, type CachedMetadata } from "obsidian";
-import { beforeEach, describe, it, expect, onTestFinished, vi } from "vitest";
+import { getFrontMatterInfo, parseYaml, TFile, type CachedMetadata } from "obsidian";
+import { assert, beforeEach, describe, it, expect, onTestFinished, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -32,6 +32,7 @@ import {
 } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { SelfWriteGuard } from "./self-write-guard";
+import { TemplateContentService } from "./template-content";
 
 import type { JournalConfig } from "../config";
 import type { TypeId } from "../notelets/config";
@@ -468,6 +469,79 @@ describe("NoteCreationService.ensureNote — an unclaimed version parsed after t
     harness.host.emitMetadata(path, {});
 
     expect(harness.resolve(JournalsIndex).entryByPath(path).isNone()).toBe(true);
+  });
+
+  // A Templater prompt or a slow user script can hold the render for seconds, so the protection has
+  // to start when the entry is registered, not when the empty file was written.
+  it("reports a note whose template took seconds to render once", async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    vi.spyOn(harness.resolve(TemplateContentService), "renderFor").mockReturnValue(
+      AsyncResult.fromPromise(
+        new Promise<string>((resolve) => {
+          window.setTimeout(() => {
+            resolve("body");
+          }, 60_000);
+        }),
+        (error) => error as NoteReadError,
+      ),
+    );
+    const seen = recordEntryChanges(harness);
+
+    const created = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expectOk(await created);
+    deliverStaleThenClaimedParse(harness, {});
+
+    expect(seen).toEqual(["added:created"]);
+  });
+
+  it("unregisters a created note whose claim is gone when no claimed parse follows", async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+    harness.host.emitMetadata(path, {});
+
+    vi.runAllTimers();
+
+    expect(harness.resolve(JournalsIndex).entryByPath(path).isNone()).toBe(true);
+  });
+
+  it("stops checking the note once the subscription is disposed", async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+    harness.host.emitMetadata(path, {});
+
+    await harness.resolve(VaultSubscriptionService)[Symbol.asyncDispose]();
+    vi.runAllTimers();
+
+    expect(harness.resolve(JournalsIndex).entryByPath(path).isSome()).toBe(true);
+  });
+
+  it("keeps the protection for a note renamed before its claimed version parsed", async () => {
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+    const renamed = "Renamed.md" as VaultPath;
+    const claimed = harness.host.app.metadataCache.getCache(path);
+    const file = harness.host.app.vault.getAbstractFileByPath(path);
+    assert(file instanceof TFile);
+    const seen = recordEntryChanges(harness);
+
+    await harness.host.app.vault.rename(file, renamed);
+    harness.host.emitMetadata(renamed, {});
+    harness.host.emitMetadata(renamed, { ...claimed });
+
+    expect(seen).toEqual(["removed:moved", "added:moved"]);
   });
 });
 
