@@ -70,7 +70,8 @@ const fresh =
 /** Each field defaults on its own, so a repair resets only the field that failed. */
 function withDefaults<E extends v.ObjectEntries>(entries: E, defaults: Shape<E>): Defaulted<E> {
   const values = new Map<string, unknown>(Object.entries(defaults));
-  // Object.fromEntries forgets which schema sits under which key; the mapped type restores it.
+  // Object.fromEntries forgets which schema sits under which key; the mapped type restores it. Typing
+  // each default as the entry's input relies on no entry having a transform, so input equals output.
   return Object.fromEntries(
     Object.entries(entries).map(([key, schema]) => [key, v.optional(schema, fresh(values.get(key)))]),
   ) as Defaulted<E>;
@@ -96,6 +97,9 @@ function overriddenPart<E extends v.ObjectEntries>(entries: E) {
   return v.optional(part, fresh(empty));
 }
 
+// `text` is the only nested group given per-leaf defaults and overrides; a new nested group in
+// `highlightEntries` needs the same spread here and in `narrowHighlightPart`, or it defaults and
+// overrides as a whole.
 function highlightPart(defaults: HighlightValues) {
   return v.optional(
     v.object({

@@ -109,9 +109,11 @@ describe("appearance slice types", () => {
   });
 
   it("every narrow part overrides exactly its wide part's fields", () => {
-    expectTypeOf<keyof NarrowOverrides>().toEqualTypeOf<keyof AppearanceParts>();
-    expectTypeOf<NarrowOverrides["heading"]>().toEqualTypeOf<Overrides<TextValues>>();
-    expectTypeOf<NarrowOverrides["cell"]>().toEqualTypeOf<Overrides<BoxValues>>();
+    expectTypeOf<NarrowOverrides>().toEqualTypeOf<{
+      [P in keyof AppearanceParts]: AppearanceParts[P] extends HighlightValues
+        ? NarrowHighlight
+        : Overrides<AppearanceParts[P]>;
+    }>();
     expectTypeOf<keyof NarrowHighlight>().toEqualTypeOf<keyof HighlightValues>();
     expectTypeOf<Omit<NarrowHighlight, "text">>().toEqualTypeOf<Overrides<Omit<HighlightValues, "text">>>();
     expectTypeOf<NarrowHighlight["text"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
