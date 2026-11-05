@@ -177,16 +177,7 @@ function reset(part: PartKey): void {
   margin-inline-start: var(--size-2-1);
   color: var(--text-accent);
 }
-.appearance-subpage__chip.is-active .appearance-subpage__hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.appearance-subpage__marker {
+.appearance-subpage__chip.is-active .appearance-subpage__marker {
   color: inherit;
 }
 </style>
