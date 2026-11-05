@@ -109,6 +109,7 @@
       "showInRibbon": true,
       "leaf": "right",
       "openOnStartup": false,
+      "followActiveDate": false,
       "blocks": [
         {
           "id": "fa0d1e2b-0b1c-4d4e-8f5a-7b8c9d0e1f2a",

@@ -1,4 +1,4 @@
-import { browser, expect } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
@@ -65,6 +65,31 @@ async function labelHex(anchor: string): Promise<string | undefined> {
     const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
     return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
   }, anchor);
+  return hex ?? undefined;
+}
+
+// A theme variable's color as the cell would resolve it: a probe inside the cell's parent, so the
+// same body and view scoping apply, normalized the same way as labelHex.
+async function themeHex(anchor: string, variable: string): Promise<string | undefined> {
+  const hex = await browser.execute(
+    (cellAnchor: string, name: string) => {
+      const host = document.querySelector(
+        `.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`,
+      )?.parentElement;
+      const context = document.createElement("canvas").getContext("2d");
+      if (host == null || context === null) return null;
+      const probe = document.createElement("span");
+      probe.style.color = `var(${name})`;
+      host.append(probe);
+      context.fillStyle = getComputedStyle(probe).color;
+      probe.remove();
+      context.fillRect(0, 0, 1, 1);
+      const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+      return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+    },
+    anchor,
+    variable,
+  );
   return hex ?? undefined;
 }
 
@@ -313,5 +338,49 @@ describe("today's ring on the open note's day", () => {
       (hexes) => hexes.some(isRingPixel),
       "today's #ff00ff ring did not show at the open note's edge over the #00aa55 fill",
     );
+  });
+});
+
+describe("text on a day outside the month", () => {
+  let anchor: string;
+
+  // An undecorated note on a leading or trailing day: a one-month block shows outside days as
+  // interactive, so the note opens from its cell and the cell is both outside and the open note.
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
+    await openCalendarView();
+    const outside = $(".notes-month-view__day[data-outside]");
+    await outside.waitForExist({ timeoutMsg: "the month view rendered no outside day" });
+    anchor = (await outside.getAttribute("data-anchor")) ?? "";
+    await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
+    await clickCell(anchor, false);
+    await waitForActiveNote(`day/${anchor}.md`);
+    await calendar.waitForActive(anchor);
+    // The fixture snippet gives the selected state its own text color, over decorations, so the
+    // selection moves to an in-month day to leave the open note's text alone on the cell.
+    const cell = calendar.cell(anchor);
+    await clickCell(dayAnchor(DAY), true);
+    await waitForState(
+      async () => (await cell.getAttribute("aria-selected")) ?? "false",
+      (selected) => selected === "false",
+      "the outside day stayed selected after the selection moved into the month",
+    );
+    // The fixture's view does not follow the active date; following would page to the note's month
+    // and make the day an inside one.
+    expect(await cell.getAttribute("data-outside")).toBe("true");
+  });
+
+  after(closePopoutWindows);
+
+  it("an open note on a day outside the month shows the open-note text, not the muted outside color", async () => {
+    const onAccent = await themeHex(anchor, "--text-on-accent");
+    const muted = await themeHex(anchor, "--text-muted");
+    expect(onAccent).not.toBe(muted);
+    await waitForState(
+      () => labelHex(anchor),
+      (hex) => hex === onAccent,
+      `the open outside day's label did not take --text-on-accent (${String(onAccent)})`,
+    );
+    expect(await labelHex(anchor)).not.toBe(muted);
   });
 });
