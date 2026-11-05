@@ -2,7 +2,7 @@ import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { reloadObsidianOn } from "../support/clock.js";
-import { closeSettings, openSettings } from "../support/settings.js";
+import { clickSectionButton, closeSettings, openSettings } from "../support/settings.js";
 import { waitForState } from "../support/wait.js";
 
 import { labelHexOf } from "./calendar.js";
@@ -89,10 +89,7 @@ async function pageViewForward(): Promise<void> {
 
 async function openEditor(): Promise<void> {
   await openSettings();
-  const title = m.calendar_appearance_section_title();
-  await $(
-    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][contains(normalize-space(.), "${title}")]]//button[normalize-space(.)="${m.calendar_appearance_open()}"]`,
-  ).click();
+  await clickSectionButton(m.calendar_appearance_section_title(), m.calendar_appearance_open());
   await $(".appearance-preview").waitForDisplayed({ timeoutMsg: "the appearance subpage showed no preview" });
 }
 

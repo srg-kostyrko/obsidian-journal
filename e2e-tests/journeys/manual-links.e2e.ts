@@ -1,9 +1,10 @@
-import { $, browser, expect } from "@wdio/globals";
+import { browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { manual, manualUrl, type ManualPath } from "../../src/ui/manual.js";
 import {
   clickIcon,
+  clickSectionButton,
   closeSettings,
   expandSection,
   openJournalSubpage,
@@ -30,13 +31,6 @@ const DASHBOARD: ManualPath[] = [
   manual.troubleshooting.reportingBug,
   manual.troubleshooting.maintenance,
 ];
-
-// The appearance and maintenance blocks both label their button "Open", so scope it by the section.
-async function clickSectionButton(section: string, text: string): Promise<void> {
-  await $(
-    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][contains(normalize-space(.), "${section}")]]//button[normalize-space(.)="${text}"]`,
-  ).click();
-}
 
 async function expectLinks(paths: readonly ManualPath[]): Promise<void> {
   const expected = paths.map(manualUrl);

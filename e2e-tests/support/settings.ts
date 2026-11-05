@@ -106,6 +106,14 @@ export async function clickButton(text: string): Promise<void> {
   await $(`button=${text}`).click();
 }
 
+// Dashboard blocks share button labels (the appearance and maintenance blocks both say "Open"), and
+// `clickButton` takes the first match, so pick the button inside the section that names it.
+export async function clickSectionButton(section: string, text: string): Promise<void> {
+  await $(
+    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][contains(normalize-space(.), "${section}")]]//button[normalize-space(.)="${text}"]`,
+  ).click();
+}
+
 // The week-configuration modal renders one "Use" button per preset row, so the plain
 // button=text selector would always hit the first. Scope by the row's visible name.
 export async function clickRowButton(rowName: string, text: string): Promise<void> {
