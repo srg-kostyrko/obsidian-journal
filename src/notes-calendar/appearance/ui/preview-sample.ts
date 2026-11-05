@@ -9,20 +9,15 @@ export interface PreviewSample {
   readonly decorated: readonly AnchorString[];
 }
 
-/**
- * Sample states relative to the real today, which the cell marks on its own through `useToday()`.
- * Every state gets a day of its own: text precedence puts the open note over Selected, and Selected's
- * stock ring is the accent the open note fills, so sharing a day would hide edits to Selected. The
- * selected day is also the decorated one, as Selected draws over decorations by default. It is the
- * month's first day that is neither today nor the open note's, so it is deterministic at any month
- * position; a month has at least 28 days, so one always exists.
- */
+/** Sample states around the real today, each on a day of its own. */
 export function sampleDays(today: CalendarDate): PreviewSample {
   const month = MonthPeriod.containing(today);
   const ahead = today.shift(2, "d");
   const clamped = month.contains(ahead) ? ahead : month.end;
   // On the month's last day the clamp lands on today, which would layer the open note over Today.
   const active = clamped.isSame(today) ? today.shift(-2, "d") : clamped;
+  // A day of its own: the open note outranks Selected's text and fills under its accent ring, so a
+  // shared day would hide edits to Selected. It carries the decoration, which Selected draws over.
   const selected = [...month.days()].find((day) => !day.isSame(today) && !day.isSame(active)) ?? month.start;
   return {
     month,
