@@ -546,6 +546,14 @@ class LabelMismatchError extends Error {
   override name = "LabelMismatchError";
 }
 
+// Only the wait's own timeout reads as a mismatch; a renderer death or any other error passes through.
+function asLabelMismatch(error: unknown, message: string, last: string | undefined): unknown {
+  if (error instanceof Error && error.message.startsWith(message)) {
+    return new LabelMismatchError(`${message}: read ${String(last)}`, { cause: error });
+  }
+  return error;
+}
+
 // Every save also writes a fresh cell min-height, which no case reads: the wait on it is the one sync
 // point that does not depend on how the writer encodes Unchanged, which the forced-fail runs change.
 let saveMarker = 26;
@@ -633,8 +641,8 @@ async function expectLabelHex(cellSelector: string, expected: string, message: s
     },
     (hex) => hex === expected,
     message,
-  ).catch(() => {
-    throw new LabelMismatchError(`${message}: read ${String(last)}`);
+  ).catch((error: unknown) => {
+    throw asLabelMismatch(error, message, last);
   });
 }
 
@@ -647,8 +655,8 @@ async function expectLabelWeight(cellSelector: string, expected: string, message
     },
     (weight) => weight === expected,
     message,
-  ).catch(() => {
-    throw new LabelMismatchError(`${message}: read ${String(last)}`);
+  ).catch((error: unknown) => {
+    throw asLabelMismatch(error, message, last);
   });
 }
 

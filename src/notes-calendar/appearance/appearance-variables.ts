@@ -9,6 +9,8 @@ import { SettingsService } from "@/settings";
 import { appearanceCatalog, savedName, type CatalogEntry } from "./appearance-catalog";
 import {
   appearanceSlice,
+  UNCHANGED,
+  type Unchanged,
   type AppearanceParts,
   type AppearanceSliceState,
   type BoxValues,
@@ -34,7 +36,7 @@ interface Pass {
 }
 
 const PASS: Pass = { pass: true };
-const PASS_TOKEN = "unchanged";
+const PASS_TOKEN = UNCHANGED;
 
 /** One catalog value of a part: its CSS from the part's values, and which narrow leaves feed it. */
 interface Value<Part, Narrow> {
@@ -82,7 +84,7 @@ function styleValues(h: HighlightValues): { ring: number; strength: number; text
     .exhaustive();
 }
 
-const orNull = <T>(value: T | "unchanged"): T | null => (value === "unchanged" ? null : value);
+const orNull = <T>(value: T | Unchanged): T | null => (value === UNCHANGED ? null : value);
 
 const textOf = (h: HighlightValues): HighlightValues["text"] | undefined => (styleValues(h).text ? h.text : undefined);
 
