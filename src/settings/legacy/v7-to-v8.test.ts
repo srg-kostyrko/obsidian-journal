@@ -63,6 +63,17 @@ describe("v7ToV8Migration", () => {
     expect(appearanceVariables(state)).toEqual({ "--journal-saved-cell-today-text-color": "#111111" });
   });
 
+  it("drops a null v7 text color so the v8 default fills it", () => {
+    const state = migrated({
+      ...stockV7,
+      today: { color: null, background: transparent },
+      active: { color: null, background: theme("interactive-accent") },
+    });
+
+    expect(state).toEqual(appearanceSlice.defaults);
+    expect(appearanceVariables(state)).toEqual({});
+  });
+
   it("leaves stock-only settings producing no saved variables", () => {
     const state = migrated(stockV7);
 

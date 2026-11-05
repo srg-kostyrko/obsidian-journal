@@ -21,6 +21,7 @@ function isColor(color: unknown): color is ColorSettings {
 
 // A present but malformed color is still carried to its new place: the load repair then resets it
 // and logs the field, as it would have at v7. Only an absent one is left for the slice default.
+// A null text color is absent too: v8 reads null as "unchanged", but v7 repaired it to the stock.
 function put(target: Raw, key: string, value: unknown): void {
   if (value !== undefined) target[key] = value;
 }
@@ -32,14 +33,14 @@ function migrateAppearance(old: Partial<Record<keyof AppearanceSettingsV7, unkno
   const oldToday = isRecord(old.today) ? old.today : {};
   const oldActive = isRecord(old.active) ? old.active : {};
 
-  if (oldToday.color !== undefined) today.text = { color: oldToday.color };
+  if (oldToday.color !== undefined && oldToday.color !== null) today.text = { color: oldToday.color };
   put(today, "color", oldToday.background);
   if (isColor(oldToday.background) && !isTransparent(oldToday.background)) {
     today.style = "background";
     today.strength = 100;
   }
 
-  if (oldActive.color !== undefined) active.text = { color: oldActive.color };
+  if (oldActive.color !== undefined && oldActive.color !== null) active.text = { color: oldActive.color };
   put(active, "color", oldActive.background);
   active.style = "background";
 

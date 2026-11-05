@@ -135,6 +135,8 @@ function textOfHighlightSchema(defaults: HighlightValues["text"]) {
 
 function highlightSchema(defaults: HighlightValues) {
   return v.object({
+    // No climb: resetting a corrupt style alone narrows the highlight to its stock style, and
+    // resetting the whole part would lose its other values too.
     style: v.optional(styleSchema, defaults.style),
     color: v.optional(colorSchema, fresh(defaults.color)),
     ringWidth: v.optional(pixelsSchema, defaults.ringWidth),
