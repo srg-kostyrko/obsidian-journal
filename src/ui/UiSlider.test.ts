@@ -22,6 +22,12 @@ describe("UiSlider", () => {
     expect(emitted("update:modelValue")).toEqual([[0.65]]);
   });
 
+  it("fills the track up to its value, the way Obsidian's own slider does", () => {
+    render(UiSlider, { props: { modelValue: 3, min: 1, max: 5, step: 1 } });
+
+    expect(range().style.getPropertyValue("--slider-fill-ratio")).toBe("0.5");
+  });
+
   it("takes its accessible name from the label", () => {
     render(UiSlider, { props: { modelValue: 0, min: 0, max: 8, step: 1, label: "Gap" } });
 

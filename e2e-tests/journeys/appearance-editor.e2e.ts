@@ -209,6 +209,32 @@ describe("the appearance editor drives the rendered calendar", () => {
     await detachView();
   });
 
+  // Runs before any case edits a value: it reads the stock, which Obsidian defines as var(--radius-s).
+  describe("a stock slider", () => {
+    it("sits on the value its theme stock renders as, with the track filled up to it", async () => {
+      await chooseWidth("wide");
+      await chooseFromList("cell");
+      const row = $(controlRowPath(m.calendar_appearance_control({ control: "box_radius" })));
+      const range = row.$('input[type="range"]');
+      await range.waitForExist({ timeoutMsg: "the corner radius row showed no slider" });
+
+      const read = await browser.execute(
+        (input: HTMLInputElement) => {
+          const body = input.ownerDocument.body;
+          return {
+            value: input.value,
+            fill: input.style.getPropertyValue("--slider-fill-ratio"),
+            theme: getComputedStyle(body).getPropertyValue("--radius-s").trim(),
+          };
+        },
+        (await range.getElement()) as unknown as HTMLInputElement,
+      );
+      expect(read).toEqual({ value: "4", fill: String(4 / 12), theme: "4px" });
+      expect(await row.getText()).toContain(`4px`);
+      expect(await row.getText()).toContain(m.calendar_appearance_default());
+    });
+  });
+
   describe("a color", () => {
     it("a color set in the editor paints the calendar view", async () => {
       await pickInPreview(".appearance-preview__day[data-today]", "today");

@@ -160,16 +160,31 @@ describe("AppearanceControl", () => {
     expect(slice().state.wide.heading.weight).toBeNull();
   });
 
-  it("shows Default for a theme-expression stock until the slider moves, then writes with the unit", async () => {
+  it("places a theme-expression stock at the value it renders as, marked Default, until the slider moves", async () => {
+    document.body.setCssProps({ "--radius-s": "4px" });
+    try {
+      mount("cell", control("cell", "radius"));
+      // The theme is read once the control is mounted, which settles before the first paint.
+      expect(await screen.findByText("4px")).toBeTruthy();
+      const range = screen.getByRole<HTMLInputElement>("slider");
+      expect(range.value).toBe("4");
+      expect(screen.getByText(m.calendar_appearance_default())).toBeTruthy();
+
+      await fireEvent.update(range, "6");
+
+      expect(slice().state.wide.cell.radius).toBe("6px");
+      expect(screen.getByText("6px")).toBeTruthy();
+      expect(screen.queryByText(m.calendar_appearance_default())).toBeNull();
+    } finally {
+      document.body.style.removeProperty("--radius-s");
+    }
+  });
+
+  it("shows Default alone when a stock cannot be placed", () => {
     mount("cell", control("cell", "radius"));
+
     expect(screen.getByText(m.calendar_appearance_default())).toBeTruthy();
-    const range = screen.getByRole<HTMLInputElement>("slider");
-    expect(range.value).toBe("0");
-
-    await fireEvent.update(range, "4");
-
-    expect(slice().state.wide.cell.radius).toBe("4px");
-    expect(screen.queryByText(m.calendar_appearance_default())).toBeNull();
+    expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("0");
   });
 
   it("writes a number to a numeric leaf", async () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
@@ -23,6 +23,8 @@ import {
 } from "../appearance-editing";
 import { PARTS, roleFor, type Control, type PartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, UNCHANGED, type HighlightStyle } from "../slice";
+
+import { stockNumber } from "./stock-number";
 
 const { part, control, width } = defineProps<{ part: PartKey; control: Control; width: Width }>();
 
@@ -82,14 +84,20 @@ function writeSelect(next: string): void {
 
 const colorValue = computed(() => value.value as ColorSettings | typeof UNCHANGED | null);
 
-const NUMBER_WITH_UNIT = /^(-?\d*\.?\d+)(px|em|%)$/;
-// A stock written as a theme expression has no position on the slider, so it reads Default until moved.
+// Obsidian defines theme variables on <body>; reading the body this control renders in keeps a
+// popout window on its own theme.
+const valueElement = useTemplateRef<HTMLElement>("valueElement");
+function readVariable(name: string): string {
+  const body = valueElement.value?.ownerDocument.body;
+  const view = body?.ownerDocument.defaultView;
+  return body && view ? view.getComputedStyle(body).getPropertyValue(name) : "";
+}
 const sliderNumber = computed<number | undefined>(() => {
   if (typeof value.value === "number") return value.value;
-  const match = typeof value.value === "string" ? NUMBER_WITH_UNIT.exec(value.value) : null;
-  if (match === null || match[2] !== control.range?.unit) return;
-  return Number(match[1]);
+  if (typeof value.value !== "string" || control.range === undefined) return;
+  return stockNumber(value.value, control.range.unit, readVariable);
 });
+const atStock = computed(() => sourceAt(slice.state, width, part, control.path) === "stock");
 const writesString = computed(() => typeof valueAt(appearanceSlice.defaults, "wide", part, control.path) === "string");
 function writeSlider(next: number): void {
   write(writesString.value ? `${next}${control.range?.unit ?? ""}` : next);
@@ -124,8 +132,11 @@ function writeSlider(next: number): void {
       />
     </template>
     <template v-else-if="control.kind === 'slider' && control.range">
-      <span class="appearance-control__value">
-        {{ sliderNumber === undefined ? m.calendar_appearance_default() : `${sliderNumber}${control.range.unit}` }}
+      <span ref="valueElement" class="appearance-control__value">
+        <span v-if="sliderNumber !== undefined">{{ `${sliderNumber}${control.range.unit}` }}</span>
+        <span v-if="atStock || sliderNumber === undefined" class="appearance-control__default">
+          {{ m.calendar_appearance_default() }}
+        </span>
       </span>
       <UiSlider
         :model-value="sliderNumber ?? control.range.min"
@@ -161,8 +172,13 @@ function writeSlider(next: number): void {
   color: var(--text-faint);
 }
 .appearance-control__value {
+  display: inline-flex;
+  gap: var(--size-2-2);
   font-size: var(--font-ui-small);
   color: var(--text-muted);
   white-space: nowrap;
+}
+.appearance-control__default {
+  color: var(--text-faint);
 }
 </style>
