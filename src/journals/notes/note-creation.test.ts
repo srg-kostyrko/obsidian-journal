@@ -1,5 +1,5 @@
-import { getFrontMatterInfo, parseYaml } from "obsidian";
-import { beforeEach, describe, it, expect, vi } from "vitest";
+import { getFrontMatterInfo, parseYaml, type CachedMetadata } from "obsidian";
+import { beforeEach, describe, it, expect, onTestFinished, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -392,6 +392,82 @@ describe("NoteCreationService.ensureNote — Templater", () => {
     expect(harness.templater.applyCalls).toEqual([
       { templatePath: "Templates/daily.md", targetPath: "2026-05-19.md", content: "body" },
     ]);
+  });
+});
+
+async function bootDaily(config: JournalConfig): Promise<TestHarness> {
+  return testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: config } },
+    initialize: [VaultSubscriptionService],
+  });
+}
+
+function recordEntryChanges(harness: TestHarness): string[] {
+  const seen: string[] = [];
+  harness.resolve(JournalsIndex).events.on("entryChanged", (event) => {
+    seen.push(`${event.kind}:${event.reason}`);
+  });
+  return seen;
+}
+
+// Obsidian parses each version of a file in turn, and a parse can deliver a version that was read
+// before a later write landed. ensureNote writes the file empty (and, with a template, its body)
+// before the claim, so a parse of either can arrive after the entry was registered as created.
+describe("NoteCreationService.ensureNote — an unclaimed version parsed after the claim", () => {
+  const path = "2026-05-19.md" as VaultPath;
+
+  // The fake's cache already holds the claimed version, so the late parse is staged by handing
+  // the index the unclaimed one first and the claimed one after it, the order Obsidian delivers.
+  function deliverStaleThenClaimedParse(harness: TestHarness, stale: CachedMetadata): void {
+    const claimed = harness.host.app.metadataCache.getCache(path);
+    harness.host.emitMetadata(path, stale);
+    harness.host.emitMetadata(path, { ...claimed });
+  }
+
+  it("reports a note created with no template once", async () => {
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    const seen = recordEntryChanges(harness);
+
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+    deliverStaleThenClaimedParse(harness, {});
+
+    expect(seen).toEqual(["added:created"]);
+  });
+
+  it("reports a note created from a template once", async () => {
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }));
+    harness.host.putFile("Templates/daily.md", "---\ntags: [x]\n---\nbody");
+    const seen = recordEntryChanges(harness);
+
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+    deliverStaleThenClaimedParse(harness, { frontmatter: { tags: ["x"] } });
+
+    expect(seen).toEqual(["added:created"]);
+  });
+
+  it("unregisters a created note whose claim is removed after its claimed version parsed", async () => {
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+    harness.host.emitMetadata(path);
+
+    harness.host.emitMetadata(path, {});
+
+    expect(harness.resolve(JournalsIndex).entryByPath(path).isNone()).toBe(true);
+  });
+
+  it("unregisters a created note whose unclaimed parse arrives once our own write has settled", async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const harness = await bootDaily(fixedJournal("daily", { type: "day" }));
+    expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+
+    vi.runAllTimers();
+    harness.host.emitMetadata(path, {});
+
+    expect(harness.resolve(JournalsIndex).entryByPath(path).isNone()).toBe(true);
   });
 });
 

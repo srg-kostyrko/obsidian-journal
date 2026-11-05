@@ -10,6 +10,7 @@ import { SettingsEventsToken } from "@/settings";
 import { CycleService } from "./cycle";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
+import { SelfWriteGuard } from "./notes/self-write-guard";
 import { JournalsRepository } from "./repository";
 import { JournalsEventsToken } from "./tokens";
 
@@ -27,10 +28,13 @@ export class VaultSubscriptionService {
   readonly #logger = inject(LoggerFactoryToken).named("vault-subscription");
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
+  readonly #guard = inject(SelfWriteGuard);
   readonly #unsubscribes: (() => void)[] = [];
   // Notes created after layout-ready but before the startup walk completes. Index readiness waits
   // for every note to resolve, so it cannot tell such a note from one that existed at launch.
   readonly #arrivedDuringStartup = new Set<VaultPath>();
+  // Notes registered as created whose claimed version Obsidian has not parsed yet.
+  readonly #awaitingClaimedParse = new Set<VaultPath>();
 
   #originOf(path: VaultPath): EntryOrigin {
     return this.#index.isReady() || this.#arrivedDuringStartup.has(path) ? "live" : "walk";
@@ -76,18 +80,37 @@ export class VaultSubscriptionService {
     return this.#notes.allMarkdownNotes().every((path) => this.#metadata.get(path).isSome());
   }
 
+  // Creation writes a note's file before its claim, and Obsidian parses one version at a time from
+  // a read that can predate the next write, so a parse of the unclaimed version can arrive after
+  // the entry was registered as created. Read as a removed claim, it unregisters the note and the
+  // claimed parse re-adds it as "appeared". The queue is sequential, so once the claimed version
+  // has parsed, every later parse read a later version; until then only our own write window
+  // (the guard) bounds the wait, so a claim really removed in it is still honored afterwards.
+  #staleBeforeClaim(path: VaultPath): boolean {
+    if (!this.#awaitingClaimedParse.has(path)) return false;
+    if (this.#guard.suppresses(path)) {
+      this.#logger.debug("unclaimed version parsed after its claim was written", { path });
+      return true;
+    }
+    this.#awaitingClaimedParse.delete(path);
+    return false;
+  }
+
   #scan(path: VaultPath, options: { reconcileCustom: boolean; origin: EntryOrigin }): void {
     const fm = this.#readFrontmatter(path);
     if (!fm) {
+      if (this.#staleBeforeClaim(path)) return;
       this.#index.unregister(path);
       return;
     }
     const entry = this.#frontmatter.parseEntry(path, fm);
     if (entry.isNone()) {
+      if (this.#staleBeforeClaim(path)) return;
       this.#index.unregister(path);
       this.#logger.debug("frontmatter not parseable", { path });
       return;
     }
+    this.#awaitingClaimedParse.delete(path);
     const outcome = this.#index.register(entry.value, options.origin);
     if (outcome === "collision") {
       this.#logger.warn("note shares an anchor with another note; not the canonical entry", { path });
@@ -146,12 +169,16 @@ export class VaultSubscriptionService {
       this.#notes.events.on("metadata-changed", (path) =>
         this.#scan(path, { reconcileCustom: true, origin: this.#originOf(path) }),
       ),
+      this.#index.events.on("entryChanged", (event) => {
+        if (event.kind === "added" && event.reason === "created") this.#awaitingClaimedParse.add(event.entry.path);
+      }),
       this.#notes.events.on("renamed", ({ from, to }) => {
         if (this.#arrivedDuringStartup.delete(from)) this.#arrivedDuringStartup.add(to);
         this.#index.transferPath(from, to);
       }),
       this.#notes.events.on("deleted", (path) => {
         this.#arrivedDuringStartup.delete(path);
+        this.#awaitingClaimedParse.delete(path);
         this.#index.unregister(path, "deleted");
       }),
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
