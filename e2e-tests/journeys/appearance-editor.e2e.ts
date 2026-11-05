@@ -283,6 +283,8 @@ describe("the appearance editor drives the rendered calendar", () => {
         label,
         "the week numbers' weight did not name its Default",
       );
+      // A fresh vault stores the stock as Default, so Default is what the select shows.
+      expect(await select.getValue()).toBe("");
     });
   });
 

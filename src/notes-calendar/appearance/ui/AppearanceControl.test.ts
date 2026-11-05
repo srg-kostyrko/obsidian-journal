@@ -7,7 +7,7 @@ import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 import { themeColorGroupsFor } from "@/ui/theme-colors";
 
-import { withValue } from "../appearance-editing";
+import { isModified, withValue } from "../appearance-editing";
 import { PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
 import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
@@ -200,8 +200,24 @@ describe("AppearanceControl", () => {
       expect(await screen.findByRole("option", { name: label })).toBeTruthy();
     });
 
+    it("is what a fresh week-number weight shows, unmodified, and Bold chosen outright modifies it", async () => {
+      mount("weekNumber", control("weekNumber", "weight"));
+      const select = screen.getByRole<HTMLSelectElement>("combobox");
+      const label = m.calendar_appearance_default_resolved({
+        value: m.calendar_appearance_option({ option: "weight_bold" }),
+      });
+      await screen.findByRole("option", { name: label });
+
+      expect(select.selectedOptions[0]?.textContent?.trim()).toBe(label);
+      expect(isModified(slice().state, "wide", "weekNumber")).toBe(false);
+
+      await userEvent.selectOptions(select, "bold");
+
+      expect(slice().state.wide.weekNumber.weight).toBe("bold");
+      expect(isModified(slice().state, "wide", "weekNumber")).toBe(true);
+    });
+
     it("on a color, as a swatch beside Default", async () => {
-      slice().state = withValue(slice().state, "wide", "weekday", ["color"], null);
       const { container } = mount("weekday", control("weekday", "color"));
 
       await vi.waitFor(() => {
