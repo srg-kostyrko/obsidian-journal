@@ -55,6 +55,10 @@ const hover = useModifierHoverPreview();
     @mouseenter="hover.enter($event, (event) => cell.openPreview(rawPeriod, event))"
     @mouseleave="hover.leave()"
   >
+    <!-- The open note's fill replaces today's, as it did before layers existed. -->
+    <span v-if="isToday && !isActive" class="notes-calendar-cell__layer" data-layer="today" aria-hidden="true" />
+    <span v-if="selected" class="notes-calendar-cell__layer" data-layer="selected" aria-hidden="true" />
+    <span v-if="isActive" class="notes-calendar-cell__layer" data-layer="active" aria-hidden="true" />
     <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
   </span>
 </template>
@@ -71,6 +75,8 @@ const hover = useModifierHoverPreview();
      it. The cell is flex so the decoration stretches to fill that floor instead of resolving its
      height: 100% against a parent that has only a min-height. */
   display: flex;
+  position: relative;
+  isolation: isolate;
   min-height: 26px;
   border-radius: var(--radius-s);
 }
@@ -88,16 +94,48 @@ const hover = useModifierHoverPreview();
    to the active colors — the note you're viewing wins over the today marker. */
 .notes-calendar-cell[data-today] {
   color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, var(--text-accent)));
-  background-color: var(--journal-cell-today-bg, var(--journal-saved-cell-today-bg, transparent));
 }
 .notes-calendar-cell[data-active] {
   color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--text-on-accent)));
-  background-color: var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)));
+}
+/* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
+   z-index in the shared decoration would leak into every other host's stacking context. The border
+   is left out on purpose: it is decoration, not content, so the selected ring paints above it.
+   Marks and corners sit above the label, as positioned marks sat above the static label before
+   layers existed: the content follows the marks in the DOM, so at an equal z-index the label would
+   take the pointer from an overflow badge it overlaps. */
+.notes-calendar-cell :deep(.cell-decoration__content) {
+  position: relative;
+  z-index: 2;
+}
+.notes-calendar-cell :deep(.cell-marks),
+.notes-calendar-cell :deep(.decoration-corner) {
+  z-index: 3;
+}
+/* The isolated cell traps the popover's z-index, so later sibling cells would paint over its
+   overhang; lift the whole cell while the popover is open. */
+.notes-calendar-cell:has(.mark-overflow__popover) {
+  z-index: var(--layer-popover);
+}
+.notes-calendar-cell__layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.notes-calendar-cell__layer[data-layer="today"] {
+  background-color: var(--journal-cell-today-bg, var(--journal-saved-cell-today-bg, transparent));
+  z-index: var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1));
 }
 /* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear this ring;
    widening it means widening that too. */
-.notes-calendar-cell[data-selected] {
+.notes-calendar-cell__layer[data-layer="selected"] {
   box-shadow: inset 0 0 0 2px
     var(--journal-cell-selected-ring, var(--journal-saved-cell-selected-ring, var(--interactive-accent)));
+  z-index: var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1));
+}
+.notes-calendar-cell__layer[data-layer="active"] {
+  background-color: var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)));
+  z-index: var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1));
 }
 </style>

@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - CSS snippets can now change the calendar's highlight colors without `!important`. Setting `--journal-cell-today-color`, `--journal-cell-today-bg`, `--journal-cell-active-color`, `--journal-cell-active-bg` or `--journal-cell-selected-ring` from any selector — `body`, `:root`, or the calendar itself — now wins over the colors chosen under **Calendar highlighting**, in the main window and in popout windows alike. Before, those colors were written onto each calendar directly, so a snippet on `body` or `:root` only won with `!important`.
 
+### Bug Fixes
+
+- The selected date's ring now shows over more than it did. It used to hide under a decoration background, so on a decorated day nothing marked where the calendar view was, and under any fill on the open note's day or on today. It now shows over a decoration and its border, over the open note's fill and over today's background, unless its color matches the fill it sits on. The open note's fill still sits under a decoration, so the decoration's color, and what it means, stays visible on the note you are reading.
+
 ## [3.6.0] - 2026-11-01
 
 ### Features

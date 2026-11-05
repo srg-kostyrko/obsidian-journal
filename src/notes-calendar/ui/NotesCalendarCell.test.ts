@@ -306,3 +306,49 @@ describe("NotesCalendarCell", () => {
     });
   });
 });
+
+function layers(c: Element) {
+  return [...c.querySelectorAll<HTMLElement>(".notes-calendar-cell__layer")].map((l) => l.dataset.layer);
+}
+
+describe("NotesCalendarCell state layers", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("renders a selected layer when selected", () => {
+    const { container } = mount({ period: may25, cell: stubApi(), selected: true });
+    const found = container.querySelectorAll('.notes-calendar-cell__layer[data-layer="selected"]');
+    expect(found).toHaveLength(1);
+    expect(found[0]?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("renders no layer for a plain cell", () => {
+    const { container } = mount({ period: may25, cell: stubApi() });
+    expect(layers(container)).toEqual([]);
+  });
+
+  it("renders only the open-note layer for a cell that is both today and open, before the decoration", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }) });
+    expect(layers(container)).toEqual(["active"]);
+    const decoration = container.querySelector('[data-testid="cell-decoration"]');
+    const last = container.querySelector('[data-layer="active"]');
+    expect(last?.compareDocumentPosition(decoration as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("renders the today layer for a cell that is today only", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
+    const { container } = mount({ period: may25, cell: stubApi() });
+    expect(layers(container)).toEqual(["today"]);
+  });
+
+  it("orders selected then active, with no today layer, when today is also selected and open", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-05-25T12:00:00"));
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
+    expect(layers(container)).toEqual(["selected", "active"]);
+  });
+});
