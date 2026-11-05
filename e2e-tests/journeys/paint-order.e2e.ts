@@ -250,14 +250,16 @@ describe("the open-note fill on a cell with no decoration", () => {
 });
 
 describe("paint order with a snippet", () => {
+  let cell: CellLocator;
+
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order-snippet", plugins: ["journals"] });
+    cell = await selectDecoratedOpenDay();
   });
 
   after(closePopoutWindows);
 
   it("a snippet can put the selected ring back under", async () => {
-    const cell = await selectDecoratedOpenDay();
     await waitForState(
       () => layerZ(cell, "selected-ring"),
       (z) => z === "-1",
