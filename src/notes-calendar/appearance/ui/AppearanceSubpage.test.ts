@@ -42,6 +42,20 @@ function todayCell(container: Element): HTMLElement {
   return cell;
 }
 
+function outlined(container: Element): Element[] {
+  return [...container.querySelectorAll(".appearance-preview__picked")];
+}
+
+function days(container: Element): Element[] {
+  return [...container.querySelectorAll('[data-preview-part="date"]')];
+}
+
+function plainDay(container: Element): HTMLElement {
+  const cell = container.querySelector<HTMLElement>('[data-preview-part="date"][data-anchor="2026-05-20"]');
+  if (!cell) throw new Error("no preview cell for 2026-05-20");
+  return cell;
+}
+
 async function switchTo(width: "wide" | "narrow"): Promise<void> {
   await userEvent.click(screen.getByRole("radio", { name: m.calendar_appearance_width({ width }) }));
 }
@@ -111,13 +125,38 @@ describe("AppearanceSubpage", () => {
 
   it("outlines the edited part in the preview", async () => {
     const { container } = mount();
-    const outlined = () => [...container.querySelectorAll(".appearance-preview__picked")];
 
     await userEvent.click(todayCell(container));
-    expect(outlined()).toEqual([todayCell(container)]);
+    expect(outlined(container)).toEqual([todayCell(container)]);
 
     await userEvent.selectOptions(partsList(), "weekNumber");
-    expect(outlined()).toEqual([...container.querySelectorAll('[data-preview-part="weekNumber"]')]);
+    expect(outlined(container)).toEqual([...container.querySelectorAll('[data-preview-part="weekNumber"]')]);
+  });
+
+  describe("a part every day has", () => {
+    it("outlines every day when chosen from the list after a click", async () => {
+      const { container } = mount();
+      await userEvent.click(plainDay(container));
+      expect(outlined(container)).toEqual([plainDay(container)]);
+
+      await userEvent.selectOptions(partsList(), "cell");
+
+      expect(outlined(container)).toEqual(days(container));
+    });
+
+    it("keeps the clicked day when chosen from also here", async () => {
+      const { container } = mount();
+      await userEvent.click(plainDay(container));
+
+      await userEvent.click(
+        within(screen.getByRole("group", { name: m.calendar_appearance_also_here() })).getByRole("button", {
+          name: partName("cell"),
+        }),
+      );
+
+      expect(partsList().value).toBe("cell");
+      expect(outlined(container)).toEqual([plainDay(container)]);
+    });
   });
 
   it("heads the controls with the part's name and the width they apply to, Reset beside them", async () => {

@@ -55,7 +55,7 @@ describe("AppearancePreview", () => {
 
     await userEvent.click(today);
 
-    expect(emitted("pick")).toEqual([[partsAt(today)]]);
+    expect(emitted("pick")).toEqual([[partsAt(today), "2026-05-13"]]);
     expect(partsAt(today)).toEqual(["selected", "today", "date", "cell"]);
   });
 
@@ -66,7 +66,7 @@ describe("AppearancePreview", () => {
     today.focus();
     await userEvent.keyboard(key);
 
-    expect(emitted("pick")).toEqual([[["selected", "today", "date", "cell"]]]);
+    expect(emitted("pick")).toEqual([[["selected", "today", "date", "cell"], "2026-05-13"]]);
   });
 
   it("marks the open note two days after today", () => {
@@ -114,13 +114,21 @@ describe("AppearancePreview", () => {
       expect(picked(container)).toEqual(outside);
     });
 
-    it("outlines only the clicked day for a part every day has", async () => {
-      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "cell" } });
+    it("outlines only the spot's day for a part every day has, and every day with no spot", async () => {
+      const { container, rerender } = render(AppearancePreview, { props: { width: "wide", picked: "cell" } });
       expect(picked(container)).toHaveLength(container.querySelectorAll('[data-preview-part="date"]').length);
+
+      await rerender({ width: "wide", picked: "cell", spot: "2026-05-20" });
+
+      expect(picked(container)).toEqual([cellAt(container, "2026-05-20")]);
+    });
+
+    it("reports the clicked day with the parts", async () => {
+      const { container, emitted } = render(AppearancePreview, { props: { width: "wide" } });
 
       await userEvent.click(cellAt(container, "2026-05-20"));
 
-      expect(picked(container)).toEqual([cellAt(container, "2026-05-20")]);
+      expect(emitted("pick")).toEqual([[["date", "cell"], "2026-05-20"]]);
     });
 
     it("outlines the weekday header row", () => {

@@ -101,7 +101,7 @@ async function chooseWidth(width: Width): Promise<void> {
   await expectRead(previewWidth, PREVIEW_WIDTH[width], `the preview did not switch to ${width}`);
 }
 
-const partsList = () => $(`select[aria-label="${m.calendar_appearance_part_label()}"]`);
+const partsList = () => $(`//select[@id=//label[normalize-space(.)="${m.calendar_appearance_part_label()}"]/@for]`);
 
 async function chooseFromList(part: PartKey): Promise<void> {
   await partsList().selectByAttribute("value", part);

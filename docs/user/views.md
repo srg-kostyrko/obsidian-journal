@@ -208,7 +208,8 @@ part too, so you can pick one without the preview:
 
 A dashed outline in the preview marks the part you are editing: every day a highlight applies to,
 the weekday row, the week numbers or the heading. **Date number** and **Cells** belong to every day,
-so they outline the day you clicked, or every day when you chose them from **Editing**.
+so they outline the day you clicked when you picked them there, by the click itself or from **Also
+here**, and every day when you chose them from **Editing**.
 
 A part you have changed carries a dot in **Editing** and in **Also here**. When you edit
 **Narrow**, the dot means the part has a narrow-only value.

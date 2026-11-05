@@ -45,17 +45,21 @@ const widthOptions = computed(() =>
 
 const selected = ref<PartKey | undefined>(undefined);
 const chips = ref<readonly PartKey[]>([]);
+// An "also here" chip keeps the spot, since its parts are the ones there; the list names no spot.
+const spot = ref<string | undefined>(undefined);
 
 function isPart(value: string): value is PartKey {
   return Object.hasOwn(PARTS, value);
 }
-function onPick(parts: readonly PartKey[]): void {
+function onPick(parts: readonly PartKey[], at: string | undefined): void {
   chips.value = parts;
+  spot.value = at;
   selected.value = parts.at(0);
 }
 function onList(value: string): void {
   selected.value = isPart(value) ? value : undefined;
   chips.value = [];
+  spot.value = undefined;
 }
 
 const others = computed(() => chips.value.filter((part) => part !== selected.value));
@@ -96,7 +100,7 @@ function reset(part: PartKey): void {
       <!-- Wide keeps a floor above the breakpoint, so a pane narrower than that scrolls here, not the page. -->
       <div class="appearance-subpage__scroller">
         <div class="appearance-subpage__frame" :class="{ 'appearance-subpage__frame--fill': width === 'wide' }">
-          <AppearancePreview :width="width" :picked="selected" @pick="onPick" />
+          <AppearancePreview :width="width" :picked="selected" :spot="spot" @pick="onPick" />
         </div>
       </div>
       <p class="appearance-subpage__caption">
@@ -106,12 +110,7 @@ function reset(part: PartKey): void {
     <div class="appearance-subpage__selection">
       <div class="appearance-subpage__line">
         <label class="appearance-subpage__label" :for="listId">{{ m.calendar_appearance_part_label() }}</label>
-        <UiDropdown
-          :id="listId"
-          :model-value="selected ?? ''"
-          :aria-label="m.calendar_appearance_part_label()"
-          @update:model-value="onList"
-        >
+        <UiDropdown :id="listId" :model-value="selected ?? ''" @update:model-value="onList">
           <option value="">{{ m.calendar_appearance_part_placeholder() }}</option>
           <!-- An option holds text only, so the dot is the visible marker and the label carries the word. -->
           <option

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, ref, shallowReactive, shallowRef, watchEffect } from "vue";
+import { computed, provide, shallowReactive, shallowRef, watchEffect } from "vue";
 
 import { DayPeriod, YearPeriod, type Period } from "@/calendar";
 import { useToday } from "@/calendar/ui";
@@ -14,8 +14,9 @@ import { partsAt, sampleDays } from "./preview-sample";
 import type { NotesCellApi } from "../../use-notes-cell";
 import type { PartKey, Width } from "../appearance-parts";
 
-const props = defineProps<{ width: Width; picked?: PartKey }>();
-const emit = defineEmits<{ pick: [parts: readonly PartKey[]] }>();
+/** `spot` is the anchor of the day a part was picked at, if it was picked at one. */
+const props = defineProps<{ width: Width; picked?: PartKey; spot?: string }>();
+const emit = defineEmits<{ pick: [parts: readonly PartKey[], spot: string | undefined] }>();
 
 // Wide fills what it is given, but never below the calendar's 28em breakpoint, where it would draw the narrow look.
 const SIZES: Readonly<Record<Width, Readonly<Record<string, string>>>> = {
@@ -68,18 +69,15 @@ function isElement(target: EventTarget | null): target is Element {
   return target !== null && "closest" in target;
 }
 
-const spot = ref<string | undefined>(undefined);
-
 function onPick(event: Event): void {
   if (!isElement(event.target)) return;
   const parts = partsAt(event.target);
   if (parts.length === 0) return;
-  spot.value = event.target.closest<HTMLElement>('[data-preview-part="date"]')?.dataset.anchor;
-  emit("pick", parts);
+  emit("pick", parts, event.target.closest<HTMLElement>('[data-preview-part="date"]')?.dataset.anchor);
 }
 
 // A state outlines every day in it. Every day is a date number and a cell, so outlining all of them
-// would point at nothing: those two outline the day that was clicked, or every day when none was.
+// would point at nothing: those two outline the day they were picked at, or every day when they were not.
 function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
   const anchor = day.period.anchor.toAnchor();
   switch (props.picked) {
@@ -97,7 +95,7 @@ function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
     }
     case "date":
     case "cell": {
-      return spot.value === undefined || spot.value === anchor;
+      return props.spot === undefined || props.spot === anchor;
     }
     default: {
       return false;
