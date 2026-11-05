@@ -1,6 +1,7 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { runCommand } from "../support/commands.js";
+import { waitForState } from "../support/wait.js";
 
 import { calendarSurface } from "./calendar.js";
 
@@ -31,6 +32,7 @@ export async function openCalendarView(): Promise<void> {
   await $(MONTH_VIEW).waitForExist({
     timeoutMsg: "calendar month view did not render after the Open Calendar ribbon click",
   });
+  await waitForViewPlaced();
 }
 
 // Fixtures with no persisted `views` get the auto-seeded default view, which has no ribbon
@@ -40,6 +42,27 @@ export async function openSeededCalendarView(): Promise<void> {
   await $(MONTH_VIEW).waitForExist({
     timeoutMsg: "calendar month view did not render after the open-calendar command",
   });
+  await waitForViewPlaced();
+}
+
+// Revealing a sidebar leaf expands its split on an animation, and the view mounts before it
+// ends, so the grid slides sideways while the split widens — 44px, more than a column, as
+// measured. WebDriver reads a click's coordinates once, so a click sent mid-slide lands on the
+// neighboring day. Obsidian marks the animation itself: `expand()` sets an inline
+// `overflow: hidden` on the split and clears it on completion (1.8.7 through 1.15.0).
+async function waitForViewPlaced(): Promise<void> {
+  await waitForState(
+    () =>
+      browser.execute((selector: string) => {
+        const view = document.querySelector(selector);
+        if (!view) return null;
+        const dock = view.closest<HTMLElement>(".mod-sidedock");
+        if (!dock) return true;
+        return !dock.classList.contains("is-sidedock-collapsed") && dock.style.overflow !== "hidden";
+      }, MONTH_VIEW),
+    (placed) => placed,
+    "the calendar's sidebar did not finish expanding",
+  );
 }
 
 // Opens a copy of the main window's journal view in a popout and waits for its month grid.
