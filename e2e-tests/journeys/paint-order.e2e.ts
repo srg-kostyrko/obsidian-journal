@@ -430,3 +430,37 @@ describe("text on a day outside the month", () => {
     expect(await labelHex(anchor)).not.toBe(muted);
   });
 });
+
+// Rounded: Obsidian's zoom scales authored pixels.
+async function outsideViewLabelSize(selector: string): Promise<number | undefined> {
+  const size = await $(`${OUTSIDE_VIEW_ROOT} ${selector} .cell-decoration__content`).getCSSProperty("font-size");
+  return typeof size.parsed.value === "number" ? Math.round(size.parsed.value) : undefined;
+}
+
+describe("date text on days outside the month", () => {
+  let anchor: string;
+
+  // The fixture snippet sets the date size and color on the outside-days view only.
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
+    await openOutsideView();
+    expect(await $$(".notes-month-view").length).toBe(1);
+    anchor = await pageToMonthWithOutsideDay();
+    expect(anchor).not.toBe("");
+  });
+
+  it("date size reaches days outside the month", async () => {
+    await waitForState(
+      () => outsideViewLabelSize(".notes-month-view__day:not([data-outside])"),
+      (px) => px === 21,
+      "an in-month date label did not take the snippet's 21px date size",
+    );
+    expect(await outsideViewLabelSize(`.notes-month-view__day[data-anchor="${anchor}"]`)).toBe(21);
+  });
+
+  it("an outside day keeps the muted color over the date color", async () => {
+    const muted = await themeHex(anchor, "--text-muted");
+    expect(muted).not.toBe("#123456");
+    expect(await labelHex(anchor)).toBe(muted);
+  });
+});

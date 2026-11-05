@@ -326,7 +326,9 @@ const isSelected = (period: Period): boolean =>
   align-items: end;
 }
 /* Week numbers and dates are cells, whose color the cell's state precedence owns; `--_part-color` is
-   the bottom of that chain, so a state with no text color of its own leaves the part's color. */
+   the bottom of that chain, so a state with no text color of its own leaves the part's color. Dates
+   outside the month take the date values too; the outside highlight's text sits above `--_part-color`,
+   so they stay muted. */
 .notes-month-view__week-number {
   --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
   --_v-week-number-weight: var(
@@ -345,7 +347,7 @@ const isSelected = (period: Period): boolean =>
   font-style: var(--_v-week-number-italic);
   text-transform: var(--_v-week-number-case);
 }
-.notes-month-view__day:not([data-outside]) {
+.notes-month-view__day {
   --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
@@ -478,7 +480,7 @@ const isSelected = (period: Period): boolean =>
       )
     );
   }
-  .notes-month-view__day:not([data-outside]) {
+  .notes-month-view__day {
     --_v-date-size: var(
       --journal-cell-date-size-narrow,
       var(
