@@ -217,7 +217,7 @@ const isSelected = (period: Period): boolean =>
   gap: var(--size-2-2);
 }
 /* Chromium 120 still makes a size container a stacking context, which traps the lifted cell of an open
-   mark popover (NotesCalendarCell) inside this grid, under whatever follows it, such as the next month
+   mark popover (NotesCalendarCell) inside this grid, under whatever follows it, such as the next week
    of a timeline. Lift the grid with it. */
 .notes-week-view:has(.mark-overflow__popover) {
   position: relative;

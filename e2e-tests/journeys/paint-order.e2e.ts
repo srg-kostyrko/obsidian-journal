@@ -1,5 +1,6 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -391,7 +392,9 @@ async function pageToMonthWithOutsideDay(): Promise<string> {
     if (first !== undefined) return (await first.getAttribute("data-anchor")) ?? "";
     if (step === MAX_MONTH_STEPS) break;
     const before = await firstDayAnchor();
-    await $(`${OUTSIDE_VIEW_ROOT} [aria-label="Next month"]`).click();
+    await $(
+      `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`,
+    ).click();
     await waitForState(
       firstDayAnchor,
       (anchor) => anchor !== before,
