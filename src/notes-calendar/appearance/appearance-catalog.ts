@@ -23,7 +23,7 @@ const HIGHLIGHT_STATES = [
     attribute: "data-today",
     color: "transparent",
     ring: "0px",
-    strength: "0%",
+    strength: "0",
     text: "var(--text-accent)",
     layer: "-1",
   },
@@ -32,7 +32,7 @@ const HIGHLIGHT_STATES = [
     attribute: "data-selected",
     color: "var(--interactive-accent)",
     ring: "2px",
-    strength: "0%",
+    strength: "0",
     text: "",
     layer: "1",
   },
@@ -41,7 +41,7 @@ const HIGHLIGHT_STATES = [
     attribute: "data-active",
     color: "var(--interactive-accent)",
     ring: "0px",
-    strength: "100%",
+    strength: "1",
     text: "var(--text-on-accent)",
     layer: "-1",
   },
@@ -50,7 +50,7 @@ const HIGHLIGHT_STATES = [
     attribute: "data-outside",
     color: "transparent",
     ring: "0px",
-    strength: "0%",
+    strength: "0",
     text: "var(--text-muted)",
     layer: "-1",
   },
@@ -68,7 +68,7 @@ function highlightEntries(): CatalogEntry[] {
     const name = (value: string): string => `journal-cell-${state}-${value}`;
     // A stock color or strength that paints nothing would hide the variable under test, so the
     // companion pins the other half to something visible.
-    const solid = { [`--${name("strength")}`]: "100%" };
+    const solid = { [`--${name("strength")}`]: "1" };
     const red = { [`--${name("color")}`]: "#ff0000" };
     return [
       {
@@ -96,7 +96,7 @@ function highlightEntries(): CatalogEntry[] {
         probe: {
           selector: layer(state, "fill"),
           property: "opacity",
-          sample: "50%",
+          sample: "0.5",
           with: red,
           expect: "0.5",
         },

@@ -1,14 +1,14 @@
 /* Generated from appearance-catalog.ts by `npm run gen:appearance-gate`. Do not edit. */
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-color"] {
   --journal-cell-today-color: #123456;
-  --journal-cell-today-strength: 100%;
+  --journal-cell-today-strength: 1;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-ring-width"] {
   --journal-cell-today-ring-width: 5px;
   --journal-cell-today-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-strength"] {
-  --journal-cell-today-strength: 50%;
+  --journal-cell-today-strength: 0.5;
   --journal-cell-today-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-today-text-color"] {
@@ -31,7 +31,7 @@
   --journal-cell-selected-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-strength"] {
-  --journal-cell-selected-strength: 50%;
+  --journal-cell-selected-strength: 0.5;
   --journal-cell-selected-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-selected-text-color"] {
@@ -48,14 +48,14 @@
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-color"] {
   --journal-cell-active-color: #123456;
-  --journal-cell-active-strength: 100%;
+  --journal-cell-active-strength: 1;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-ring-width"] {
   --journal-cell-active-ring-width: 5px;
   --journal-cell-active-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-strength"] {
-  --journal-cell-active-strength: 50%;
+  --journal-cell-active-strength: 0.5;
   --journal-cell-active-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-active-text-color"] {
@@ -72,14 +72,14 @@
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-color"] {
   --journal-cell-outside-color: #123456;
-  --journal-cell-outside-strength: 100%;
+  --journal-cell-outside-strength: 1;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-ring-width"] {
   --journal-cell-outside-ring-width: 5px;
   --journal-cell-outside-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-strength"] {
-  --journal-cell-outside-strength: 50%;
+  --journal-cell-outside-strength: 0.5;
   --journal-cell-outside-color: #ff0000;
 }
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-outside-text-color"] {

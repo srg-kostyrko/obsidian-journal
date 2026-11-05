@@ -52,7 +52,7 @@ describe("v7ToV8Migration", () => {
     expect(state.wide.today).toMatchObject({ style: "background", strength: 100, color: custom("#222222") });
     expect(appearanceVariables(state)).toEqual({
       "--journal-saved-cell-today-color": "#222222",
-      "--journal-saved-cell-today-strength": "100%",
+      "--journal-saved-cell-today-strength": "1",
     });
   });
 

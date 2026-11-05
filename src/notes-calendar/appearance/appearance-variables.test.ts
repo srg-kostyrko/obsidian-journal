@@ -52,7 +52,7 @@ describe("appearanceVariables", () => {
 
     expect(appearanceVariables(state)).toEqual({
       [saved("journal-cell-active-ring-width")]: "3px",
-      [saved("journal-cell-active-strength")]: "0%",
+      [saved("journal-cell-active-strength")]: "0",
     });
   });
 
@@ -63,7 +63,7 @@ describe("appearanceVariables", () => {
 
     expect(appearanceVariables(state)).toEqual({
       [saved("journal-cell-selected-ring-width")]: "0px",
-      [saved("journal-cell-selected-strength")]: "40%",
+      [saved("journal-cell-selected-strength")]: "0.4",
     });
   });
 
@@ -72,7 +72,7 @@ describe("appearanceVariables", () => {
     state.wide.today.style = "background";
     state.wide.today.strength = 250;
 
-    expect(appearanceVariables(state)[saved("journal-cell-today-strength")]).toBe("100%");
+    expect(appearanceVariables(state)[saved("journal-cell-today-strength")]).toBe("1");
   });
 
   it("a none style writes zero ring, zero strength, and no text values over an empty stock", () => {
@@ -122,7 +122,7 @@ describe("appearanceVariables", () => {
       [saved("journal-cell-selected-text-weight")]: "var(--font-bold)",
       [saved("journal-cell-selected-text-italic")]: "italic",
       [saved("journal-cell-selected-ring-width", true)]: "0px",
-      [saved("journal-cell-selected-strength", true)]: "0%",
+      [saved("journal-cell-selected-strength", true)]: "0",
       [saved("journal-cell-selected-text-color", true)]: "currentColor",
       [saved("journal-cell-selected-text-italic", true)]: "normal",
     });
@@ -135,7 +135,7 @@ describe("appearanceVariables", () => {
     expect(appearanceVariables(state)).toEqual({
       [saved("journal-cell-outside-text-color", true)]: "currentColor",
       [saved("journal-cell-outside-ring-width", true)]: "0px",
-      [saved("journal-cell-outside-strength", true)]: "0%",
+      [saved("journal-cell-outside-strength", true)]: "0",
     });
   });
 
@@ -159,7 +159,7 @@ describe("appearanceVariables", () => {
 
     expect(appearanceVariables(state)).toEqual({
       [saved("journal-cell-today-color")]: "#111111",
-      [saved("journal-cell-today-strength")]: "60%",
+      [saved("journal-cell-today-strength")]: "0.6",
       [saved("journal-cell-today-layer")]: "1",
       [saved("journal-cell-heading-size")]: "1.2em",
       [saved("journal-cell-heading-weight")]: "var(--font-bold)",
@@ -179,7 +179,7 @@ describe("appearanceVariables", () => {
 
     expect(appearanceVariables(state)).toEqual({
       [saved("journal-cell-today-ring-width", true)]: "4px",
-      [saved("journal-cell-today-strength", true)]: "0%",
+      [saved("journal-cell-today-strength", true)]: "0",
       [saved("journal-cell-today-text-color", true)]: "var(--text-accent)",
     });
   });

@@ -91,7 +91,7 @@ function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighli
     values: [
       { suffix: "color", css: (h) => colorToString(h.color), reads: (n) => [n.color] },
       { suffix: "ring-width", css: (h) => px(styleValues(h).ring), reads: (n) => [n.style, n.ringWidth] },
-      { suffix: "strength", css: (h) => `${styleValues(h).strength}%`, reads: (n) => [n.style, n.strength] },
+      { suffix: "strength", css: (h) => String(styleValues(h).strength / 100), reads: (n) => [n.style, n.strength] },
       { suffix: "text-color", css: textColor, reads: (n) => [n.style, n.text.color] },
       { suffix: "text-weight", css: (h) => weight(textOf(h)?.weight ?? null), reads: (n) => [n.style, n.text.weight] },
       { suffix: "text-italic", css: textItalic, reads: (n) => [n.style, n.text.italic] },

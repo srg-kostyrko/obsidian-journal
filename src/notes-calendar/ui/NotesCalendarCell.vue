@@ -116,7 +116,7 @@ const hover = useModifierHoverPreview();
   --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
   --_v-outside-color: var(--journal-cell-outside-color, var(--journal-saved-cell-outside-color, transparent));
   --_v-outside-ring-width: var(--journal-cell-outside-ring-width, var(--journal-saved-cell-outside-ring-width, 0px));
-  --_v-outside-strength: var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0%));
+  --_v-outside-strength: var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0));
   --_v-outside-text-color: var(
     --journal-cell-outside-text-color,
     var(--journal-saved-cell-outside-text-color, var(--text-muted))
@@ -126,7 +126,7 @@ const hover = useModifierHoverPreview();
   --_v-outside-layer: var(--journal-cell-outside-layer, var(--journal-saved-cell-outside-layer, -1));
   --_v-today-color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent));
   --_v-today-ring-width: var(--journal-cell-today-ring-width, var(--journal-saved-cell-today-ring-width, 0px));
-  --_v-today-strength: var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0%));
+  --_v-today-strength: var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0));
   --_v-today-text-color: var(
     --journal-cell-today-text-color,
     var(--journal-saved-cell-today-text-color, var(--text-accent))
@@ -139,7 +139,7 @@ const hover = useModifierHoverPreview();
     var(--journal-saved-cell-selected-color, var(--interactive-accent))
   );
   --_v-selected-ring-width: var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px));
-  --_v-selected-strength: var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0%));
+  --_v-selected-strength: var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0));
   --_v-selected-text-color: var(--journal-cell-selected-text-color, var(--journal-saved-cell-selected-text-color));
   --_v-selected-text-weight: var(--journal-cell-selected-text-weight, var(--journal-saved-cell-selected-text-weight));
   --_v-selected-text-italic: var(--journal-cell-selected-text-italic, var(--journal-saved-cell-selected-text-italic));
@@ -149,7 +149,7 @@ const hover = useModifierHoverPreview();
     var(--journal-saved-cell-active-color, var(--interactive-accent))
   );
   --_v-active-ring-width: var(--journal-cell-active-ring-width, var(--journal-saved-cell-active-ring-width, 0px));
-  --_v-active-strength: var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 100%));
+  --_v-active-strength: var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 1));
   --_v-active-text-color: var(
     --journal-cell-active-text-color,
     var(--journal-saved-cell-active-text-color, var(--text-on-accent))
@@ -199,7 +199,7 @@ const hover = useModifierHoverPreview();
       --journal-cell-outside-strength-narrow,
       var(
         --journal-saved-cell-outside-strength-narrow,
-        var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0%))
+        var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0))
       )
     );
     --_v-outside-text-color: var(
@@ -248,7 +248,7 @@ const hover = useModifierHoverPreview();
       --journal-cell-today-strength-narrow,
       var(
         --journal-saved-cell-today-strength-narrow,
-        var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0%))
+        var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0))
       )
     );
     --_v-today-text-color: var(
@@ -297,7 +297,7 @@ const hover = useModifierHoverPreview();
       --journal-cell-selected-strength-narrow,
       var(
         --journal-saved-cell-selected-strength-narrow,
-        var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0%))
+        var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0))
       )
     );
     --_v-selected-text-color: var(
@@ -346,7 +346,7 @@ const hover = useModifierHoverPreview();
       --journal-cell-active-strength-narrow,
       var(
         --journal-saved-cell-active-strength-narrow,
-        var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 100%))
+        var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 1))
       )
     );
     --_v-active-text-color: var(

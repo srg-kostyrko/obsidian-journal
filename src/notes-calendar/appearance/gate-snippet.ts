@@ -6,7 +6,7 @@ export const GATE_VIEW_ID = "f761ecd9-f604-49c3-a157-f1a1e8b7b2fe";
 export const GATE_ATTRIBUTE = "data-appearance-gate";
 
 // One rule per entry, not one block for all: a companion pins the very variable another entry samples
-// (today's color probe needs strength 100%, today's strength probe samples 50%).
+// (today's color probe needs strength 1, today's strength probe samples 0.5).
 function rule(entry: CatalogEntry): string {
   const declarations = [[publicName(entry), entry.probe.sample], ...Object.entries(entry.probe.with ?? {})];
   return [
