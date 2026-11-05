@@ -190,7 +190,8 @@ only to narrow calendars, and take the place of the all-widths value there.
 
 Below it is a preview: a sample month around today, with today, the selected date, an open note,
 days from the months either side and a few decorated days, drawn at the width you are editing. Click
-a part of it to edit that part, or reach it with Tab and press Enter or Space. Where a click lands on
+a part of it to edit that part; a day, a week number or a heading can also be reached with Tab and
+picked with Enter or Space. Where a click lands on
 more than one part — a day that is today is also a date number and a cell — **Parts at this spot**
 lists them all, the most specific first, and you choose the one you meant. **Part** lists every part too, so you
 can pick one without the preview:
@@ -209,8 +210,8 @@ A part you have changed carries a dot in **Part** and in **Parts at this spot**.
 ### What each part offers
 
 The controls depend on the part. Every one but a highlight's **Style** shows, beneath its name, the
-CSS variable it sets, so a [CSS snippet](#changing-it-with-a-css-snippet) can set the same thing;
-while you edit **Narrow**, the name shown is the narrow one, ending in `-narrow`.
+CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
+**Narrow**, the name shown is the narrow one, ending in `-narrow`.
 
 The four highlights share one set:
 
@@ -236,7 +237,8 @@ narrow-only value goes back to the all-widths one through its
 
 **Cells** offers **Padding**, **Corner radius**, **Gap between cells** and **Row height**, the
 smallest height a row of cells takes. The decoration editor's style canvas draws its sample cell at
-this row height, so a style is previewed at the size it is shown.
+the all-widths row height, so a style is previewed at the size a wide calendar shows it; a
+narrow-only row height does not change the canvas.
 
 ### Unchanged
 
@@ -264,11 +266,15 @@ all-widths ones alone. Either is dimmed when there is nothing to reset.
 
 ### Changing it with a CSS snippet
 
-Every control the editor shows a variable for sets a `--journal-cell-*` CSS variable, such as
-`--journal-cell-today-color`, and each has a narrow form ending in `-narrow`. A
-[CSS snippet](https://help.obsidian.md/snippets) that sets one, on `body` or anywhere else, wins over
-the value chosen in the editor, without `!important`, and the editor's preview shows it too. A
-snippet can also set a highlight's text color, weight or italic to `unchanged`.
+The editor keeps its values to itself; the variable a control shows is the public one a
+[CSS snippet](https://help.obsidian.md/snippets) sets to override it. Each is a `--journal-cell-*`
+variable, such as `--journal-cell-today-color`, and each has a narrow form ending in `-narrow`. A
+snippet that sets one, on `body` or anywhere else, wins over the value chosen in the editor, without
+`!important`, and the editor's preview shows it too. Most names follow the part and the control, but
+three do not: **Over decorations** is `--journal-cell-<state>-layer`, `1` for over and `-1` for under,
+as in `--journal-cell-today-layer`; **Row height** is `--journal-cell-cell-min-height`; and **Week
+numbers** are `--journal-cell-week-number-*`. A snippet can also set a highlight's text color,
+weight or italic to `unchanged`.
 
 ## Examples
 

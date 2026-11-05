@@ -1,9 +1,8 @@
-import { browser, expect } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { manual, manualUrl, type ManualPath } from "../../src/ui/manual.js";
 import {
-  clickButton,
   clickIcon,
   closeSettings,
   expandSection,
@@ -27,10 +26,17 @@ const DASHBOARD: ManualPath[] = [
   manual.period.weeks,
   manual.decorations.owners,
   manual.tasks.page,
-  manual.view.calendars,
+  manual.view.appearance,
   manual.troubleshooting.reportingBug,
   manual.troubleshooting.maintenance,
 ];
+
+// The appearance and maintenance blocks both label their button "Open", so scope it by the section.
+async function clickSectionButton(section: string, text: string): Promise<void> {
+  await $(
+    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][contains(normalize-space(.), "${section}")]]//button[normalize-space(.)="${text}"]`,
+  ).click();
+}
 
 async function expectLinks(paths: readonly ManualPath[]): Promise<void> {
   const expected = paths.map(manualUrl);
@@ -83,8 +89,14 @@ describe("manual links in settings", () => {
       await expectLinks([manual.view.settings, manual.view.blocks]);
     });
 
+    it("links every section of the calendar appearance page", async () => {
+      await clickSectionButton(m.calendar_appearance_section_title(), m.calendar_appearance_open());
+
+      await expectLinks([manual.view.appearance]);
+    });
+
     it("links every section of the maintenance page", async () => {
-      await clickButton(m.maintenance_open());
+      await clickSectionButton(m.maintenance_heading(), m.maintenance_open());
 
       await expectLinks([manual.troubleshooting.snapshots, manual.guides.importing, manual.troubleshooting.vaultCheck]);
     });

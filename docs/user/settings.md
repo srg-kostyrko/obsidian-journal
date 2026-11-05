@@ -102,11 +102,11 @@ Reached with **Configure** on a view's row, under **Views** on the main settings
 
 Reached with **Open** under **Calendar appearance**, on the main settings page.
 
-| Section                          | Settings                                                                        | Explained in                                     |
-| -------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------ |
-| **Calendar appearance**          | **Width** — **Narrow**, **Wide**; the preview; **Part**; **Parts at this spot** | [Views](/views#calendar-appearance)              |
-| **Text**, **Highlight**, **Box** | the chosen part's controls, each with its CSS variable; **Narrow only**         | [Views](/views#what-each-part-offers)            |
-|                                  | **Reset to default**, **Reset narrow overrides**                                | [Views](/views#narrow-only-values-and-resetting) |
+| Section                 | Settings                                                                                                           | Explained in                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| **Calendar appearance** | **Width** — **Narrow**, **Wide**; the preview; **Part**; **Parts at this spot**                                    | [Views](/views#calendar-appearance)              |
+|                         | the chosen part's controls, under **Text**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only** | [Views](/views#what-each-part-offers)            |
+|                         | **Reset to default**, **Reset narrow overrides**                                                                   | [Views](/views#narrow-only-values-and-resetting) |
 
 ## Maintenance page
 

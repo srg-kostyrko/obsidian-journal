@@ -6,6 +6,7 @@ import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -76,7 +77,7 @@ function reset(part: PartKey): void {
 
 <template>
   <UiBackLink @click="nav.back()" />
-  <UiSettingRow heading no-controls>
+  <UiSettingRow heading no-controls :help="manual.view.appearance">
     <template #name>
       <UiIconedRow :icon="icons.section.appearance">{{ m.calendar_appearance_section_title() }}</UiIconedRow>
     </template>
