@@ -109,10 +109,54 @@
       "showInRibbon": true,
       "leaf": "right",
       "openOnStartup": false,
-      "followActiveDate": false,
       "blocks": [
         {
           "id": "fa0d1e2b-0b1c-4d4e-8f5a-7b8c9d0e1f2a",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "default",
+            "showHeading": false
+          }
+        }
+      ]
+    },
+    "6d1c0e5a-3f2b-4c8d-9a7e-5b4c3d2e1f0a": {
+      "id": "6d1c0e5a-3f2b-4c8d-9a7e-5b4c3d2e1f0a",
+      "name": "Outside days",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "7e2d1f6b-4a3c-4d9e-8b8f-6c5d4e3f2a1b",
+          "key": "toolbar",
+          "config": {
+            "items": [
+              {
+                "id": "8f3e2a7c-5b4d-4eaf-9c9a-7d6e5f4a3b2c",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "next",
+                    "unit": "month",
+                    "amount": 1
+                  },
+                  "icon": "chevron-right",
+                  "tooltip": "Next month"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "9a4f3b8d-6c5e-4fba-8dab-8e7f6a5b4c3d",
           "key": "month-calendar",
           "config": {
             "before": 0,

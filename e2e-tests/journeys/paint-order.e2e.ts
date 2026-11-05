@@ -1,4 +1,4 @@
-import { $, browser, expect } from "@wdio/globals";
+import { $, $$, browser, expect } from "@wdio/globals";
 
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
@@ -341,6 +341,50 @@ describe("today's ring on the open note's day", () => {
   });
 });
 
+// A second view in the base fixture: it does not follow the active date, so opening an outside
+// day's note leaves that day outside instead of paging to the note's month, and it carries a
+// next-month button. Kept apart from the base view, which every other case here uses as stock.
+const OUTSIDE_VIEW = "6d1c0e5a-3f2b-4c8d-9a7e-5b4c3d2e1f0a";
+const OUTSIDE_VIEW_ROOT = `[data-journal-view="${OUTSIDE_VIEW}"]`;
+const MAX_MONTH_STEPS = 3;
+
+async function openOutsideView(): Promise<void> {
+  // Revealed, not only placed: the right sidebar boots collapsed, and the next-month button has to
+  // be clickable.
+  await browser.executeObsidian(async ({ app }, id) => {
+    const leaf = app.workspace.getRightLeaf(false);
+    if (leaf === null) return;
+    await leaf.setViewState({ type: `journal-view:${id}`, active: true });
+    await app.workspace.revealLeaf(leaf);
+  }, OUTSIDE_VIEW);
+  await $(`${OUTSIDE_VIEW_ROOT} .notes-month-view__day`).waitForDisplayed({
+    timeoutMsg: "the outside-days view did not show a day cell",
+  });
+}
+
+const firstDayAnchor = (): Promise<string | null> =>
+  $(`${OUTSIDE_VIEW_ROOT} .notes-month-view__day`).getAttribute("data-anchor");
+
+// A month that starts on the week's first day and ends on its last (February 2027 under a Monday
+// start) shows no outside day, so this pages forward with the view's own control until one does.
+// Answers "" when none of the next MAX_MONTH_STEPS months has one either.
+async function pageToMonthWithOutsideDay(): Promise<string> {
+  for (let step = 0; step <= MAX_MONTH_STEPS; step++) {
+    const outside = await $$(`${OUTSIDE_VIEW_ROOT} .notes-month-view__day[data-outside]`).getElements();
+    const first = outside.at(0);
+    if (first !== undefined) return (await first.getAttribute("data-anchor")) ?? "";
+    if (step === MAX_MONTH_STEPS) break;
+    const before = await firstDayAnchor();
+    await $(`${OUTSIDE_VIEW_ROOT} [aria-label="Next month"]`).click();
+    await waitForState(
+      firstDayAnchor,
+      (anchor) => anchor !== before,
+      "the outside-days view did not page to the next month",
+    );
+  }
+  return "";
+}
+
 describe("text on a day outside the month", () => {
   let anchor: string;
 
@@ -348,10 +392,11 @@ describe("text on a day outside the month", () => {
   // interactive, so the note opens from its cell and the cell is both outside and the open note.
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
-    await openCalendarView();
-    const outside = $(".notes-month-view__day[data-outside]");
-    await outside.waitForExist({ timeoutMsg: "the month view rendered no outside day" });
-    anchor = (await outside.getAttribute("data-anchor")) ?? "";
+    await openOutsideView();
+    // clickCell, labelHex and themeHex query the document, so this view must be the only calendar.
+    expect(await $$(".notes-month-view").length).toBe(1);
+    anchor = await pageToMonthWithOutsideDay();
+    expect(anchor).not.toBe("");
     await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
     await clickCell(anchor, false);
     await waitForActiveNote(`day/${anchor}.md`);
@@ -359,14 +404,15 @@ describe("text on a day outside the month", () => {
     // The fixture snippet gives the selected state its own text color, over decorations, so the
     // selection moves to an in-month day to leave the open note's text alone on the cell.
     const cell = calendar.cell(anchor);
-    await clickCell(dayAnchor(DAY), true);
+    const inside = await $(`${OUTSIDE_VIEW_ROOT} .notes-month-view__day:not([data-outside])`).getAttribute(
+      "data-anchor",
+    );
+    await clickCell(inside ?? "", true);
     await waitForState(
       async () => (await cell.getAttribute("aria-selected")) ?? "false",
       (selected) => selected === "false",
       "the outside day stayed selected after the selection moved into the month",
     );
-    // The fixture's view does not follow the active date; following would page to the note's month
-    // and make the day an inside one.
     expect(await cell.getAttribute("data-outside")).toBe("true");
   });
 
