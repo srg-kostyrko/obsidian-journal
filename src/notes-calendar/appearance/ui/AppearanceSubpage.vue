@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useId } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -58,6 +58,10 @@ function onList(value: string): void {
   chips.value = [];
 }
 
+const others = computed(() => chips.value.filter((part) => part !== selected.value));
+const listId = useId();
+const othersId = useId();
+
 const partName = (part: PartKey): string => m.calendar_appearance_part({ part });
 const modified = (part: PartKey): boolean => isModified(slice.state, width.value, part);
 
@@ -82,54 +86,79 @@ function reset(part: PartKey): void {
       <UiIconedRow :icon="icons.section.appearance">{{ m.calendar_appearance_section_title() }}</UiIconedRow>
     </template>
   </UiSettingRow>
-  <UiSettingRow :name="m.calendar_appearance_width_label()">
-    <template #description>{{ m.calendar_appearance_editing({ width }) }}</template>
-    <UiSegmentedControl v-model="width" :options="widthOptions" />
-  </UiSettingRow>
   <!-- Above the inspector, not beside it: the settings pane cannot fit the wide preview and a column. -->
-  <div class="appearance-subpage__preview">
-    <AppearancePreview :width="width" @pick="onPick" />
-  </div>
-  <UiSettingRow :name="m.calendar_appearance_part_label()">
-    <template v-if="!inspected" #description>{{ m.calendar_appearance_part_hint() }}</template>
-    <UiDropdown
-      :model-value="selected ?? ''"
-      :aria-label="m.calendar_appearance_part_label()"
-      @update:model-value="onList"
-    >
-      <option value="">{{ m.calendar_appearance_part_placeholder() }}</option>
-      <!-- An option holds text only, so the dot is the visible marker and the label carries the word. -->
-      <option
-        v-for="part of LIST_ORDER"
-        :key="part"
-        :value="part"
-        :aria-label="modified(part) ? `${partName(part)} (${m.calendar_appearance_modified()})` : undefined"
-      >
-        {{ modified(part) ? `${partName(part)} •` : partName(part) }}
-      </option>
-    </UiDropdown>
-  </UiSettingRow>
-  <UiSettingRow v-if="chips.length > 1" stacked :name="m.calendar_appearance_parts_here()">
-    <div class="appearance-subpage__chips" role="group" :aria-label="m.calendar_appearance_parts_here()">
-      <button
-        v-for="part of chips"
-        :key="part"
-        type="button"
-        class="appearance-subpage__chip"
-        :class="{ 'is-active': part === selected, 'is-modified': modified(part) }"
-        :aria-pressed="part === selected"
-        @click="selected = part"
-      >
-        {{ partName(part) }}
-        <template v-if="modified(part)">
-          <span class="appearance-subpage__marker" aria-hidden="true">•</span>
-          <span class="appearance-subpage__hidden">{{ m.calendar_appearance_modified() }}</span>
-        </template>
-      </button>
+  <section class="appearance-subpage__panel">
+    <div class="appearance-subpage__panel-head">
+      <span class="appearance-subpage__panel-title">{{ m.calendar_appearance_preview() }}</span>
+      <UiSegmentedControl v-model="width" :options="widthOptions" :aria-label="m.calendar_appearance_width_label()" />
     </div>
-  </UiSettingRow>
+    <div class="appearance-subpage__stage">
+      <!-- The preview keeps its true width, so a pane narrower than Wide scrolls here, not the page. -->
+      <div class="appearance-subpage__scroller">
+        <div class="appearance-subpage__frame">
+          <AppearancePreview :width="width" :picked="selected" @pick="onPick" />
+        </div>
+      </div>
+      <p class="appearance-subpage__caption">
+        {{ m.calendar_appearance_editing({ width }) }} {{ m.calendar_appearance_part_hint() }}
+      </p>
+    </div>
+    <div class="appearance-subpage__selection">
+      <div class="appearance-subpage__line">
+        <label class="appearance-subpage__label" :for="listId">{{ m.calendar_appearance_part_label() }}</label>
+        <UiDropdown
+          :id="listId"
+          :model-value="selected ?? ''"
+          :aria-label="m.calendar_appearance_part_label()"
+          @update:model-value="onList"
+        >
+          <option value="">{{ m.calendar_appearance_part_placeholder() }}</option>
+          <!-- An option holds text only, so the dot is the visible marker and the label carries the word. -->
+          <option
+            v-for="part of LIST_ORDER"
+            :key="part"
+            :value="part"
+            :aria-label="modified(part) ? `${partName(part)} (${m.calendar_appearance_modified()})` : undefined"
+          >
+            {{ modified(part) ? `${partName(part)} •` : partName(part) }}
+          </option>
+        </UiDropdown>
+      </div>
+      <div v-if="others.length > 0" class="appearance-subpage__line" role="group" :aria-labelledby="othersId">
+        <span :id="othersId" class="appearance-subpage__label">{{ m.calendar_appearance_also_here() }}</span>
+        <button
+          v-for="part of others"
+          :key="part"
+          type="button"
+          class="appearance-subpage__chip"
+          :class="{ 'is-modified': modified(part) }"
+          @click="selected = part"
+        >
+          {{ partName(part) }}
+          <template v-if="modified(part)">
+            <span class="appearance-subpage__marker" aria-hidden="true">•</span>
+            <span class="appearance-subpage__hidden">{{ m.calendar_appearance_modified() }}</span>
+          </template>
+        </button>
+      </div>
+    </div>
+  </section>
   <template v-if="inspected">
-    <UiSettingRow heading no-controls :name="m.calendar_appearance_family({ family: inspected.family })" />
+    <UiSettingRow heading class="appearance-subpage__inspector">
+      <template #name>
+        {{ partName(inspected.part) }}
+        <span class="appearance-subpage__scope">{{ m.calendar_appearance_scope({ width }) }}</span>
+      </template>
+      <UiButton :disabled="!modified(inspected.part)" @click="reset(inspected.part)">
+        {{ m.calendar_appearance_reset({ width }) }}
+      </UiButton>
+    </UiSettingRow>
+    <UiSettingRow
+      heading
+      no-controls
+      class="appearance-subpage__family"
+      :name="m.calendar_appearance_family({ family: inspected.family })"
+    />
     <AppearanceControl
       v-for="control of inspected.controls"
       :key="`${inspected.part}.${control.path.join('.')}`"
@@ -137,33 +166,74 @@ function reset(part: PartKey): void {
       :control="control"
       :width="width"
     />
-    <UiSettingRow controls-only>
-      <UiButton :disabled="!modified(inspected.part)" @click="reset(inspected.part)">
-        {{ m.calendar_appearance_reset({ width }) }}
-      </UiButton>
-    </UiSettingRow>
   </template>
 </template>
 
 <style scoped>
-.appearance-subpage__preview {
-  overflow-x: auto;
-  padding-block: var(--size-4-2);
+.appearance-subpage__panel {
+  margin-block: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background-color: var(--background-secondary);
+  overflow: hidden;
 }
-.appearance-subpage__chips {
+.appearance-subpage__panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--size-4-3);
+  padding: var(--size-4-2) var(--size-4-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.appearance-subpage__panel-title {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+}
+.appearance-subpage__stage {
+  padding: var(--size-4-4) var(--size-4-3) var(--size-4-3);
+  background-color: var(--background-primary);
+}
+.appearance-subpage__scroller {
+  overflow-x: auto;
+}
+/* Auto margins rather than flex centering: a frame wider than the stage then overflows to the
+   scrollable side instead of past the left edge, where no scrollbar reaches. */
+.appearance-subpage__frame {
+  width: fit-content;
+  margin-inline: auto;
+  padding: var(--size-4-2);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+.appearance-subpage__caption {
+  margin: var(--size-4-2) 0 0;
+  text-align: center;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+.appearance-subpage__selection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.appearance-subpage__line {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-1);
+  align-items: center;
+  gap: var(--size-4-1) var(--size-4-2);
+}
+.appearance-subpage__label {
+  min-width: 5em;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
 }
 .appearance-subpage__chip {
   height: auto;
   padding: var(--size-2-1) var(--size-4-2);
   border-radius: var(--radius-l);
   font-size: var(--font-ui-small);
-}
-.appearance-subpage__chip.is-active {
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent);
 }
 .appearance-subpage__hidden {
   position: absolute;
@@ -178,7 +248,15 @@ function reset(part: PartKey): void {
   margin-inline-start: var(--size-2-1);
   color: var(--text-accent);
 }
-.appearance-subpage__chip.is-active .appearance-subpage__marker {
-  color: inherit;
+.appearance-subpage__scope {
+  margin-inline-start: var(--size-4-2);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-normal);
+  color: var(--text-muted);
+}
+/* A subheading under the part's own heading, so it steps down rather than repeating its weight. */
+.appearance-subpage__family :deep(.setting-item-name) {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
 }
 </style>

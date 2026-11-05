@@ -101,20 +101,22 @@ async function chooseWidth(width: Width): Promise<void> {
   await expectRead(previewWidth, PREVIEW_PIXELS[width], `the preview did not switch to ${width}`);
 }
 
+const partsList = () => $(`select[aria-label="${m.calendar_appearance_part_label()}"]`);
+
 async function chooseFromList(part: PartKey): Promise<void> {
-  await $(`select[aria-label="${m.calendar_appearance_part_label()}"]`).selectByAttribute("value", part);
+  await partsList().selectByAttribute("value", part);
 }
 
-// Clicks a cell of the preview, then the part's chip when the spot holds several parts.
+// Clicks a cell of the preview, then the part's "also here" chip when the click edits another part.
 async function pickInPreview(cellSelector: string, part: PartKey): Promise<void> {
   await $(`.appearance-preview ${cellSelector}`).click();
   const name = m.calendar_appearance_part({ part });
   const chip = $(`//button[contains(@class,"appearance-subpage__chip")][starts-with(normalize-space(.), "${name}")]`);
   if (await chip.isExisting()) await chip.click();
   await waitForState(
-    () => chip.getAttribute("aria-pressed"),
-    (pressed) => pressed === "true",
-    `the ${name} chip did not become the inspected part`,
+    () => partsList().getValue(),
+    (value) => value === part,
+    `${name} did not become the edited part`,
   );
 }
 
@@ -232,6 +234,26 @@ describe("the appearance editor drives the rendered calendar", () => {
       expect(read).toEqual({ value: "4", fill: String(4 / 12), theme: "4px" });
       expect(await row.getText()).toContain(`4px`);
       expect(await row.getText()).toContain(m.calendar_appearance_default());
+    });
+  });
+
+  describe("the preview panel", () => {
+    // The cases after this one edit at Wide without choosing it.
+    after(async () => {
+      await chooseWidth("wide");
+    });
+
+    it("centers the preview on its stage", async () => {
+      await chooseWidth("narrow");
+      const gaps = await browser.execute(() => {
+        const stage = document.querySelector(".appearance-subpage__stage")?.getBoundingClientRect();
+        const preview = document.querySelector(".appearance-preview")?.getBoundingClientRect();
+        if (stage === undefined || preview === undefined) return null;
+        return { left: preview.left - stage.left, right: stage.right - preview.right };
+      });
+      expect(gaps).not.toBeNull();
+      expect(Math.abs((gaps?.left ?? 0) - (gaps?.right ?? 0))).toBeLessThan(2);
+      expect(gaps?.left).toBeGreaterThan(0);
     });
   });
 

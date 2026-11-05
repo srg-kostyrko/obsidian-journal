@@ -183,18 +183,19 @@ A container for toolbar items such as buttons and the shelf selector. **Add tool
 looks: the month and week calendars in views, and the calendars of timeline code blocks. It applies
 to all of them at once; there is no per-view appearance.
 
-At the top, **Width** switches between **Wide** and **Narrow**. A calendar counts as narrow when the
+At the top is a panel headed **Preview**, whose switch moves between **Wide** and **Narrow**. A calendar counts as narrow when the
 calendar itself is narrower than about 28em, however wide the window is — a calendar in a slim
 sidebar, say. Changes made under **Wide** apply at every width. Changes made under **Narrow** apply
 only to narrow calendars, and take the place of the all-widths value there.
 
-Below it is a preview: a sample month around today, with today, the selected date, an open note,
-days from the months either side and a few decorated days, drawn at the width you are editing. Click
-a part of it to edit that part; a day, a week number or a heading can also be reached with Tab and
-picked with Enter or Space. Where a click lands on
-more than one part — a day that is today is also a date number and a cell — **Parts at this spot**
-lists them all, the most specific first, and you choose the one you meant. **Part** lists every part too, so you
-can pick one without the preview:
+Below the switch is the preview: a sample month around today, with today, the selected date, an
+open note, days from the months either side and a few decorated days, drawn at its true size for the
+width you are editing. On a settings pane narrower than the wide preview, the preview scrolls
+sideways. Click a part of it to edit that part; a day, a week number or a heading can also be
+reached with Tab and picked with Enter or Space. Where a click lands on more than one part — a day
+that is today is also a date number and a cell — the most specific one is edited, and **Also here**,
+under the preview, lists the others so you can switch to the one you meant. **Editing** lists every
+part too, so you can pick one without the preview:
 
 - **Month heading** — the month and year above the grid.
 - **Weekday header** — the row of weekday names.
@@ -204,12 +205,17 @@ can pick one without the preview:
   editor) and **Days outside the month** — the four highlights.
 - **Cells** — the size and spacing of every cell.
 
-A part you have changed carries a dot in **Part** and in **Parts at this spot**. When you edit
+A dashed outline in the preview marks the part you are editing: every day a highlight applies to,
+the weekday row, the week numbers or the heading. **Date number** and **Cells** belong to every day,
+so they outline the day you clicked, or every day when you chose them from **Editing**.
+
+A part you have changed carries a dot in **Editing** and in **Also here**. When you edit
 **Narrow**, the dot means the part has a narrow-only value.
 
 ### What each part offers
 
-The controls depend on the part. Every one but a highlight's **Style** shows, beneath its name, the
+The controls are headed by the part's name and the width they apply to, **All widths** or
+**Narrow**, and depend on the part. Every one but a highlight's **Style** shows, beneath its name, the
 CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
 **Narrow**, the name shown is the narrow one, ending in `-narrow`.
 
@@ -259,7 +265,7 @@ the plain number color rather than today's accent.
 While you edit **Narrow**, a control that has a narrow-only value carries a **Narrow only** tag next
 to its name. Click the tag to remove that value, so the all-widths value applies at narrow width too.
 
-The button at the bottom of a part's controls resets that part for the width you are editing:
+The button beside the part's name, above its controls, resets that part for the width you are editing:
 **Reset to default** under **Wide** puts the part's all-widths values back to their defaults, and
 **Reset narrow overrides** under **Narrow** removes the part's narrow-only values and leaves the
 all-widths ones alone. Either is dimmed when there is nothing to reset.

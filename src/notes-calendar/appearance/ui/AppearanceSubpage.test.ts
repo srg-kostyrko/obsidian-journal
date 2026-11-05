@@ -22,8 +22,14 @@ function partsList(): HTMLSelectElement {
 }
 
 function chips(): HTMLElement[] {
-  const group = screen.queryByRole("group", { name: m.calendar_appearance_parts_here() });
+  const group = screen.queryByRole("group", { name: m.calendar_appearance_also_here() });
   return group ? within(group).getAllByRole("button") : [];
+}
+
+function inspectorHeading(container: Element): HTMLElement {
+  const heading = container.querySelector<HTMLElement>(".appearance-subpage__inspector");
+  if (!heading) throw new Error("no inspector heading");
+  return heading;
 }
 
 function todayOption(): HTMLOptionElement {
@@ -66,22 +72,71 @@ describe("AppearanceSubpage", () => {
     expect(nav.back).toHaveBeenCalledOnce();
   });
 
-  it("a preview pick selects the first chip and lists the rest", async () => {
+  it("the width switch sits in the preview panel's header", () => {
+    const { container } = mount();
+    const header = container.querySelector<HTMLElement>(".appearance-subpage__panel-head");
+    if (!header) throw new Error("no preview panel header");
+
+    expect(within(header).getByText(m.calendar_appearance_preview())).toBeTruthy();
+    expect(within(header).getByRole("radiogroup", { name: m.calendar_appearance_width_label() })).toBeTruthy();
+  });
+
+  it("a preview pick edits the first part and lists the others as also here", async () => {
     const { container } = mount();
 
     await userEvent.click(todayCell(container));
 
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
-      (["selected", "today", "date", "cell"] as const).map(partName),
-    );
-    expect(chips().map((chip) => chip.getAttribute("aria-pressed"))).toEqual(["true", "false", "false", "false"]);
     expect(partsList().value).toBe("selected");
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["today", "date", "cell"] as const).map(partName));
     expect(screen.getByText("--journal-cell-selected-ring-width")).toBeTruthy();
 
-    await userEvent.click(chips()[1]);
+    await userEvent.click(chips()[0]);
 
     expect(partsList().value).toBe("today");
-    expect(chips().map((chip) => chip.getAttribute("aria-pressed"))).toEqual(["false", "true", "false", "false"]);
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
+      (["selected", "date", "cell"] as const).map(partName),
+    );
+  });
+
+  it("hides also here when the spot holds only the edited part", async () => {
+    const { container } = mount();
+    const weekNumber = container.querySelector<HTMLElement>('[data-preview-part="weekNumber"]');
+    if (!weekNumber) throw new Error("no week number in the preview");
+
+    await userEvent.click(weekNumber);
+
+    expect(partsList().value).toBe("weekNumber");
+    expect(screen.queryByRole("group", { name: m.calendar_appearance_also_here() })).toBeNull();
+  });
+
+  it("outlines the edited part in the preview", async () => {
+    const { container } = mount();
+    const outlined = () => [...container.querySelectorAll(".appearance-preview__picked")];
+
+    await userEvent.click(todayCell(container));
+    expect(outlined()).toEqual([todayCell(container)]);
+
+    await userEvent.selectOptions(partsList(), "weekNumber");
+    expect(outlined()).toEqual([...container.querySelectorAll('[data-preview-part="weekNumber"]')]);
+  });
+
+  it("heads the controls with the part's name and the width they apply to, Reset beside them", async () => {
+    const { container } = mount();
+    await userEvent.selectOptions(partsList(), "date");
+
+    const heading = () => inspectorHeading(container);
+    expect(within(heading()).getByText(partName("date"))).toBeTruthy();
+    expect(within(heading()).getByText(m.calendar_appearance_scope({ width: "wide" }))).toBeTruthy();
+    expect(
+      within(heading()).getByRole("button", { name: m.calendar_appearance_reset({ width: "wide" }) }),
+    ).toBeTruthy();
+
+    await switchTo("narrow");
+
+    expect(within(heading()).getByText(m.calendar_appearance_scope({ width: "narrow" }))).toBeTruthy();
+    expect(
+      within(heading()).getByRole("button", { name: m.calendar_appearance_reset({ width: "narrow" }) }),
+    ).toBeTruthy();
   });
 
   it("the parts list reaches every part", async () => {
@@ -96,11 +151,14 @@ describe("AppearanceSubpage", () => {
     expect(chips()).toEqual([]);
   });
 
-  it("prompts for a part until one is chosen", () => {
-    mount();
+  it("captions the preview with the edited width and how to pick a part, and shows no controls until one is", () => {
+    const { container } = mount();
 
-    expect(screen.getByText(m.calendar_appearance_part_hint())).toBeTruthy();
+    const caption = container.querySelector(".appearance-subpage__caption");
+    expect(caption?.textContent).toContain(m.calendar_appearance_editing({ width: "wide" }));
+    expect(caption?.textContent).toContain(m.calendar_appearance_part_hint());
     expect(screen.queryByText(/--journal-cell-/)).toBeNull();
+    expect(container.querySelector(".appearance-subpage__inspector")).toBeNull();
   });
 
   it("hides the controls the chosen style does not use", async () => {
@@ -118,13 +176,13 @@ describe("AppearanceSubpage", () => {
     slice().state = withValue(slice().state, "wide", "today", ["ringWidth"], 3);
     await userEvent.click(todayCell(container));
 
-    const todayChip = () => chips()[1];
+    const todayChip = () => chips()[0];
     const modified = m.calendar_appearance_modified();
     expect(todayOption().textContent).toContain("•");
     expect(todayOption().getAttribute("aria-label")).toContain(modified);
     expect(todayChip().classList.contains("is-modified")).toBe(true);
     expect(within(todayChip()).getByText(modified)).toBeTruthy();
-    expect(chips()[0].textContent).not.toContain(modified);
+    expect(chips()[1].textContent).not.toContain(modified);
 
     await switchTo("narrow");
 

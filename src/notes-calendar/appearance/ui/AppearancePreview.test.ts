@@ -35,6 +35,10 @@ function cellAt(container: Element, anchor: string): HTMLElement {
   return cell;
 }
 
+function picked(container: Element): HTMLElement[] {
+  return [...container.querySelectorAll<HTMLElement>(".appearance-preview__picked")];
+}
+
 describe("AppearancePreview", () => {
   beforeEach(() => {
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
@@ -90,6 +94,55 @@ describe("AppearancePreview", () => {
     expect(decorated).toHaveLength(2);
     expect(decorated).toContainEqual(["2026-05-13", "background,color"]);
     expect(decorated.map(([, styles]) => styles)).toEqual(["background,color", "background,color"]);
+  });
+
+  describe("outlines the part being edited", () => {
+    it("outlines nothing while no part is picked", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide" } });
+      expect(picked(container)).toEqual([]);
+    });
+
+    it("outlines the cell in a state", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "today" } });
+      expect(picked(container)).toEqual([cellAt(container, "2026-05-13")]);
+    });
+
+    it("outlines every cell of a state several days share", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "outside" } });
+      const outside = [...container.querySelectorAll<HTMLElement>('[data-preview-part="date"][data-outside]')];
+      expect(outside.length).toBeGreaterThan(1);
+      expect(picked(container)).toEqual(outside);
+    });
+
+    it("outlines only the clicked day for a part every day has", async () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "cell" } });
+      expect(picked(container)).toHaveLength(container.querySelectorAll('[data-preview-part="date"]').length);
+
+      await userEvent.click(cellAt(container, "2026-05-20"));
+
+      expect(picked(container)).toEqual([cellAt(container, "2026-05-20")]);
+    });
+
+    it("outlines the weekday header row", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekday" } });
+      const outlined = picked(container);
+      expect(outlined).toHaveLength(1);
+      expect(outlined[0].querySelectorAll('[data-preview-part="weekday"]')).toHaveLength(7);
+    });
+
+    it("outlines every week number", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekNumber" } });
+      const weekNumbers = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekNumber"]')];
+      expect(weekNumbers.length).toBeGreaterThan(3);
+      expect(picked(container)).toEqual(weekNumbers);
+    });
+
+    it("outlines both heading cells", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "heading" } });
+      const heading = container.querySelector('[data-preview-part="heading"]');
+      expect(picked(container)).toEqual([...(heading?.querySelectorAll<HTMLElement>(".notes-calendar-cell") ?? [])]);
+      expect(picked(container)).toHaveLength(2);
+    });
   });
 
   it.each([

@@ -40,6 +40,7 @@
   "calendar_apply_globally_title": "Aplicar la configuración de la semana a todas las fechas de la bóveda",
   "calendar_appearance_section_title": "Apariencia del calendario",
   "calendar_appearance_open": "Abrir",
+  "calendar_appearance_preview": "Vista previa",
   "calendar_appearance_width_label": "Anchura",
   "calendar_appearance_width": [
     {
@@ -61,7 +62,17 @@
       }
     }
   ],
-  "calendar_appearance_part_label": "Parte",
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Todos los anchos",
+        "width=narrow": "Estrecho"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "Editando",
   "calendar_appearance_part_placeholder": "Elige una parte",
   "calendar_appearance_part_hint": "Haz clic en cualquier parte de la vista previa o elige una de la lista.",
   "calendar_appearance_part": [
@@ -81,7 +92,7 @@
       }
     }
   ],
-  "calendar_appearance_parts_here": "Partes en este punto",
+  "calendar_appearance_also_here": "También aquí",
   "calendar_appearance_modified": "Modificado",
   "calendar_appearance_family": [
     {

@@ -104,9 +104,9 @@ Reached with **Open** under **Calendar appearance**, on the main settings page.
 
 | Section                 | Settings                                                                                                           | Explained in                                     |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| **Calendar appearance** | **Width** — **Narrow**, **Wide**; the preview; **Part**; **Parts at this spot**                                    | [Views](/views#calendar-appearance)              |
+| **Calendar appearance** | **Preview** — **Narrow**, **Wide**; the preview; **Editing**; **Also here**                                        | [Views](/views#calendar-appearance)              |
 |                         | the chosen part's controls, under **Text**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only** | [Views](/views#what-each-part-offers)            |
-|                         | **Reset to default**, **Reset narrow overrides**                                                                   | [Views](/views#narrow-only-values-and-resetting) |
+|                         | beside the part's name: **Reset to default**, **Reset narrow overrides**                                           | [Views](/views#narrow-only-values-and-resetting) |
 
 ## Maintenance page
 

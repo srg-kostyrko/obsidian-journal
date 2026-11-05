@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, shallowReactive, shallowRef, watchEffect } from "vue";
+import { computed, provide, ref, shallowReactive, shallowRef, watchEffect } from "vue";
 
 import { DayPeriod, YearPeriod, type Period } from "@/calendar";
 import { useToday } from "@/calendar/ui";
@@ -14,7 +14,7 @@ import { partsAt, sampleDays } from "./preview-sample";
 import type { NotesCellApi } from "../../use-notes-cell";
 import type { PartKey, Width } from "../appearance-parts";
 
-defineProps<{ width: Width }>();
+const props = defineProps<{ width: Width; picked?: PartKey }>();
 const emit = defineEmits<{ pick: [parts: readonly PartKey[]] }>();
 
 const PIXELS: Readonly<Record<Width, string>> = { wide: "640px", narrow: "260px" };
@@ -64,10 +64,41 @@ function isElement(target: EventTarget | null): target is Element {
   return target !== null && "closest" in target;
 }
 
+const spot = ref<string | undefined>(undefined);
+
 function onPick(event: Event): void {
   if (!isElement(event.target)) return;
   const parts = partsAt(event.target);
-  if (parts.length > 0) emit("pick", parts);
+  if (parts.length === 0) return;
+  spot.value = event.target.closest<HTMLElement>('[data-preview-part="date"]')?.dataset.anchor;
+  emit("pick", parts);
+}
+
+// A state outlines every day in it. Every day is a date number and a cell, so outlining all of them
+// would point at nothing: those two outline the day that was clicked, or every day when none was.
+function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
+  const anchor = day.period.anchor.toAnchor();
+  switch (props.picked) {
+    case "today": {
+      return anchor === today.value.toAnchor();
+    }
+    case "selected": {
+      return anchor === sample.value.selected;
+    }
+    case "active": {
+      return anchor === sample.value.active;
+    }
+    case "outside": {
+      return day.outside;
+    }
+    case "date":
+    case "cell": {
+      return spot.value === undefined || spot.value === anchor;
+    }
+    default: {
+      return false;
+    }
+  }
 }
 </script>
 
@@ -80,11 +111,11 @@ function onPick(event: Event): void {
     @keydown.space.prevent="onPick"
   >
     <div class="appearance-preview__header" data-preview-part="heading">
-      <NotesCalendarCell :period="month" :cell="cell" />
-      <NotesCalendarCell :period="year" :cell="cell" />
+      <NotesCalendarCell :class="{ 'appearance-preview__picked': picked === 'heading' }" :period="month" :cell="cell" />
+      <NotesCalendarCell :class="{ 'appearance-preview__picked': picked === 'heading' }" :period="year" :cell="cell" />
     </div>
     <div class="appearance-preview__grid">
-      <div class="appearance-preview__row">
+      <div class="appearance-preview__row" :class="{ 'appearance-preview__picked': picked === 'weekday' }">
         <div class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
         <span
           v-for="(name, i) in weekdayNames"
@@ -98,6 +129,7 @@ function onPick(event: Event): void {
       <div v-for="row in rows" :key="row.key" class="appearance-preview__row">
         <NotesCalendarCell
           class="appearance-preview__week-number"
+          :class="{ 'appearance-preview__picked': picked === 'weekNumber' }"
           data-preview-part="weekNumber"
           :period="row.week"
           :cell="cell"
@@ -106,6 +138,7 @@ function onPick(event: Event): void {
           v-for="day in row.days"
           :key="day.period.anchor.toAnchor()"
           class="appearance-preview__day"
+          :class="{ 'appearance-preview__picked': isPickedDay(day) }"
           data-preview-part="date"
           :period="day.period"
           :cell="cell"
@@ -125,6 +158,13 @@ function onPick(event: Event): void {
   display: flex;
   flex-direction: column;
   gap: var(--size-2-2);
+}
+/* Outside the element's box and stacked over its neighbors, so it moves nothing in the grid and never
+   reaches the state layers inside a cell; dashed, so it reads as the editor's mark, not a state. */
+.appearance-preview__picked {
+  z-index: 1;
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: 1px;
 }
 .appearance-preview__header {
   --_v-heading-size: var(--journal-cell-heading-size, var(--journal-saved-cell-heading-size, inherit));
