@@ -50,7 +50,7 @@ export interface AppearanceParts {
   cell: BoxValues;
 }
 
-type Overrides<T> = { [K in keyof T]: T[K] | null };
+export type Overrides<T> = { [K in keyof T]: T[K] | null };
 
 export type NarrowHighlight = Overrides<Omit<HighlightValues, "text">> & { text: HighlightValues["text"] };
 

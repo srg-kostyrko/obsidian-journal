@@ -12,26 +12,31 @@ import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { appearanceSlice } from "../slice";
+import { appearanceSlice, type HighlightValues } from "../slice";
 
 const settings = useService(SettingsService);
 const slice = settings.getSlice(appearanceSlice);
 const expanded = ref(false);
 
-function setTodayColor(color: ColorSettings): void {
-  slice.state = { ...slice.state, today: { ...slice.state.today, color } };
+type Highlight = "today" | "selected" | "active";
+
+function setHighlight(state: Highlight, values: Partial<HighlightValues>): void {
+  const wide = slice.state.wide;
+  slice.state = { ...slice.state, wide: { ...wide, [state]: { ...wide[state], ...values } } };
 }
-function setTodayBackground(background: ColorSettings): void {
-  slice.state = { ...slice.state, today: { ...slice.state.today, background } };
+function setText(state: Highlight, color: ColorSettings): void {
+  setHighlight(state, { text: { ...slice.state.wide[state].text, color } });
 }
-function setActiveColor(color: ColorSettings): void {
-  slice.state = { ...slice.state, active: { ...slice.state.active, color } };
+// Until the editor offers the style, a today background is how a user asks for a filled today,
+// the same reading the v7 migration gives a stored one.
+function setTodayBackground(color: ColorSettings): void {
+  setHighlight("today", { color, style: color.type === "transparent" ? "text" : "background" });
 }
-function setActiveBackground(background: ColorSettings): void {
-  slice.state = { ...slice.state, active: { ...slice.state.active, background } };
-}
-function setSelectedRing(selectedRing: ColorSettings): void {
-  slice.state = { ...slice.state, selectedRing };
+// "Unchanged" has no picker option yet, so it shows as the stock color it renders as.
+function textColor(state: Highlight): ColorSettings {
+  return (
+    slice.state.wide[state].text.color ?? appearanceSlice.defaults.wide[state].text.color ?? { type: "transparent" }
+  );
 }
 </script>
 
@@ -42,38 +47,46 @@ function setSelectedRing(selectedRing: ColorSettings): void {
     </template>
     <UiSettingRow :name="m.calendar_appearance_today_text()">
       <template #description>{{ m.calendar_appearance_description({ target: "today", layer: "text" }) }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.today.color" role="text" @update:model-value="setTodayColor" />
+      <UiColorSettingsPicker
+        :model-value="textColor('today')"
+        role="text"
+        @update:model-value="setText('today', $event)"
+      />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_today_background()">
       <template #description>
         {{ m.calendar_appearance_description({ target: "today", layer: "background" }) }}
       </template>
       <UiColorSettingsPicker
-        :model-value="slice.state.today.background"
+        :model-value="slice.state.wide.today.color"
         role="background"
         @update:model-value="setTodayBackground"
       />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_active_text()">
       <template #description>{{ m.calendar_appearance_description({ target: "active", layer: "text" }) }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.active.color" role="text" @update:model-value="setActiveColor" />
+      <UiColorSettingsPicker
+        :model-value="textColor('active')"
+        role="text"
+        @update:model-value="setText('active', $event)"
+      />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_active_background()">
       <template #description>
         {{ m.calendar_appearance_description({ target: "active", layer: "background" }) }}
       </template>
       <UiColorSettingsPicker
-        :model-value="slice.state.active.background"
+        :model-value="slice.state.wide.active.color"
         role="background"
-        @update:model-value="setActiveBackground"
+        @update:model-value="setHighlight('active', { color: $event })"
       />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_selected_ring()">
       <template #description>{{ m.calendar_appearance_selected_ring_description() }}</template>
       <UiColorSettingsPicker
-        :model-value="slice.state.selectedRing"
+        :model-value="slice.state.wide.selected.color"
         role="border"
-        @update:model-value="setSelectedRing"
+        @update:model-value="setHighlight('selected', { color: $event })"
       />
     </UiSettingRow>
   </UiCollapsibleBlock>

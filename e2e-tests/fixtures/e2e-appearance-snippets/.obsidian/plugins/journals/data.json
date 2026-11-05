@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "logging": { "level": "debug" },
   "journals": {
     "daily": {
@@ -19,15 +19,10 @@
     }
   },
   "appearance": {
-    "today": {
-      "color": { "type": "custom", "color": "#00ff00" },
-      "background": { "type": "transparent" }
-    },
-    "active": {
-      "color": { "type": "theme", "name": "text-on-accent" },
-      "background": { "type": "theme", "name": "interactive-accent" }
-    },
-    "selectedRing": { "type": "custom", "color": "#00ff00" }
+    "wide": {
+      "today": { "text": { "color": { "type": "custom", "color": "#00ff00" } } },
+      "selected": { "color": { "type": "custom", "color": "#00ff00" } }
+    }
   },
   "views": {
     "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c": {

@@ -93,7 +93,7 @@ describe("v6ToV7Migration", () => {
     const result = runMigrations(raw, legacyMigrations, CURRENT_VERSION);
     expect(result.isOk()).toBe(true);
     const value = result.isOk() ? (result.value as { version: number }) : undefined;
-    expect(value?.version).toBe(7);
+    expect(value?.version).toBe(CURRENT_VERSION);
     expect(conditionsOf(value as unknown as Record<string, unknown>)).toEqual([anyOpen]);
   });
 

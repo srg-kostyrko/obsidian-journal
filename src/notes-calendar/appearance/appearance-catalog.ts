@@ -23,7 +23,7 @@ const HIGHLIGHT_STATES = [
     attribute: "data-today",
     color: "transparent",
     ring: "0px",
-    strength: "100%",
+    strength: "0%",
     text: "var(--text-accent)",
     layer: "-1",
   },

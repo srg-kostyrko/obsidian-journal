@@ -1,51 +1,175 @@
+import { cloneFnJSON } from "@vueuse/core";
 import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import { testContainer, type TestHarness } from "@/testing";
 
-import { AppearanceVariables, appearanceVariables } from "./appearance-variables";
+import { appearanceCatalog, savedName } from "./appearance-catalog";
+import { AppearanceVariables, appearanceVariables, writtenEntryNames } from "./appearance-variables";
 import { calendarAppearanceCoreModule } from "./module";
 import { appearanceSlice } from "./slice";
 import { calendarAppearanceStartupModule } from "./startup-module";
 
-import type { AppearanceSliceState } from "./slice";
+const fresh = () => structuredClone(appearanceSlice.defaults);
+
+function saved(name: string, narrow = false): string {
+  const entry = appearanceCatalog.find((candidate) => candidate.name === name);
+  if (!entry) throw new Error(`no catalog entry ${name}`);
+  return savedName(entry, narrow);
+}
 
 describe("appearanceVariables", () => {
-  it("leaves out every stock color", () => {
-    expect(appearanceVariables(structuredClone(appearanceSlice.defaults))).toEqual({});
+  it("writes nothing for defaults", () => {
+    expect(appearanceVariables(fresh())).toEqual({});
   });
 
-  it("maps a custom color onto its CSS variable and nothing else", () => {
-    const state = structuredClone(appearanceSlice.defaults);
-    state.selectedRing = { type: "custom", color: "#00ff00" };
-
-    expect(appearanceVariables(state)).toEqual({ "--journal-saved-cell-selected-color": "#00ff00" });
+  it("writes every catalog entry from some part value", () => {
+    expect([...writtenEntryNames()].toSorted()).toEqual(appearanceCatalog.map((entry) => entry.name).toSorted());
   });
 
-  it("maps every non-stock color", () => {
-    const state: AppearanceSliceState = {
-      today: { color: { type: "theme", name: "text-normal" }, background: { type: "custom", color: "#111" } },
-      active: { color: { type: "custom", color: "#fff" }, background: { type: "transparent" } },
-      selectedRing: { type: "theme", name: "text-accent" },
-    };
+  it("writes the narrow name for a narrow override", () => {
+    const state = fresh();
+    state.narrow.cell.minHeight = 30;
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-cell-min-height", true)]: "30px" });
+  });
+
+  it("writes a narrow override even when it equals the stock value", () => {
+    const state = fresh();
+    state.wide.cell.minHeight = 40;
+    state.narrow.cell.minHeight = 26;
 
     expect(appearanceVariables(state)).toEqual({
-      "--journal-saved-cell-today-text-color": "var(--text-normal)",
-      "--journal-saved-cell-today-color": "#111",
-      "--journal-saved-cell-active-text-color": "#fff",
-      "--journal-saved-cell-active-color": "transparent",
-      "--journal-saved-cell-selected-color": "var(--text-accent)",
+      [saved("journal-cell-cell-min-height")]: "40px",
+      [saved("journal-cell-cell-min-height", true)]: "26px",
     });
+  });
+
+  it("a ring style writes the ring width and zero strength", () => {
+    const state = fresh();
+    state.wide.active.style = "ring";
+    state.wide.active.ringWidth = 3;
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-active-ring-width")]: "3px",
+      [saved("journal-cell-active-strength")]: "0%",
+    });
+  });
+
+  it("a background style writes its strength and zero ring", () => {
+    const state = fresh();
+    state.wide.selected.style = "background";
+    state.wide.selected.strength = 40;
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-selected-ring-width")]: "0px",
+      [saved("journal-cell-selected-strength")]: "40%",
+    });
+  });
+
+  it("clamps a strength outside the schema range", () => {
+    const state = fresh();
+    state.wide.today.style = "background";
+    state.wide.today.strength = 250;
+
+    expect(appearanceVariables(state)[saved("journal-cell-today-strength")]).toBe("100%");
+  });
+
+  it("a none style writes zero ring, zero strength, and no text values", () => {
+    const state = fresh();
+    state.wide.selected.style = "none";
+    state.wide.selected.text = { color: { type: "custom", color: "#123456" }, weight: "bold", italic: true };
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-selected-ring-width")]: "0px",
+    });
+  });
+
+  it("a null text color writes nothing for that value", () => {
+    const state = fresh();
+    state.wide.today.text.color = null;
+    state.wide.today.text.weight = "semibold";
+    state.wide.today.text.italic = false;
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-today-text-weight")]: "var(--font-semibold)",
+      [saved("journal-cell-today-text-italic")]: "normal",
+    });
+  });
+
+  it("maps colors, layers, text and box values to CSS", () => {
+    const state = fresh();
+    state.wide.today = {
+      ...state.wide.today,
+      style: "background",
+      color: { type: "custom", color: "#111111" },
+      strength: 60,
+      over: true,
+    };
+    state.wide.heading = {
+      size: "1.2em",
+      weight: "bold",
+      italic: true,
+      color: { type: "theme", name: "text-normal" },
+      case: "upper",
+    };
+    state.wide.cell = { padding: 4, radius: "50%", gap: "2px", minHeight: 26 };
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-today-color")]: "#111111",
+      [saved("journal-cell-today-strength")]: "60%",
+      [saved("journal-cell-today-layer")]: "1",
+      [saved("journal-cell-heading-size")]: "1.2em",
+      [saved("journal-cell-heading-weight")]: "var(--font-bold)",
+      [saved("journal-cell-heading-italic")]: "italic",
+      [saved("journal-cell-heading-color")]: "var(--text-normal)",
+      [saved("journal-cell-heading-case")]: "uppercase",
+      [saved("journal-cell-cell-padding")]: "4px",
+      [saved("journal-cell-cell-radius")]: "50%",
+      [saved("journal-cell-cell-gap")]: "2px",
+    });
+  });
+
+  it("a narrow style resolves the narrow ring width and strength against the wide values", () => {
+    const state = fresh();
+    state.wide.today.ringWidth = 4;
+    state.narrow.today.style = "ring";
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-today-ring-width", true)]: "4px",
+      [saved("journal-cell-today-strength", true)]: "0%",
+      [saved("journal-cell-today-text-color", true)]: "var(--text-accent)",
+    });
+  });
+
+  it("a narrow text leaf overrides that leaf alone", () => {
+    const state = fresh();
+    state.narrow.outside.text.italic = true;
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-outside-text-italic", true)]: "italic" });
   });
 });
 
 const rootStyle = (harness: TestHarness) => harness.host.windowFor("main").document.body.style;
+const selectedColor = saved("journal-cell-selected-color");
+
+function withSelected(
+  harness: TestHarness,
+  color: { type: "custom"; color: string } | { type: "theme"; name: string },
+) {
+  const slice = harness.settings.getSlice(appearanceSlice);
+  const next = cloneFnJSON(slice.state);
+  next.wide.selected.color = color;
+  slice.state = next;
+}
 
 describe("AppearanceVariables", () => {
   it("sets the appearance variables on the main window body", async () => {
     const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
     const slice = harness.settings.getSlice(appearanceSlice);
-    slice.state = { ...slice.state, today: { ...slice.state.today, color: { type: "custom", color: "#123456" } } };
+    const next = cloneFnJSON(slice.state);
+    next.wide.today.text.color = { type: "custom", color: "#123456" };
+    slice.state = next;
     await nextTick();
     const expected = appearanceVariables(slice.state);
     expect(expected).not.toEqual({});
@@ -58,36 +182,33 @@ describe("AppearanceVariables", () => {
 
   it("updates the variables when the slice changes", async () => {
     const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
-    const slice = harness.settings.getSlice(appearanceSlice);
 
-    slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
+    withSelected(harness, { type: "custom", color: "#00ff00" });
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-color")).toBe("#00ff00");
+    expect(rootStyle(harness).getPropertyValue(selectedColor)).toBe("#00ff00");
   });
 
   it("removes a variable from the body when its color returns to the stock one", async () => {
     const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
-    const slice = harness.settings.getSlice(appearanceSlice);
 
-    slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
+    withSelected(harness, { type: "custom", color: "#00ff00" });
     await nextTick();
-    slice.state = { ...slice.state, selectedRing: { ...appearanceSlice.defaults.selectedRing } };
+    withSelected(harness, { type: "theme", name: "interactive-accent" });
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-color")).toBe("");
+    expect(rootStyle(harness).getPropertyValue(selectedColor)).toBe("");
   });
 
   it("removes its variables and stops watching on dispose", async () => {
     const harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarAppearanceStartupModule] });
-    const slice = harness.settings.getSlice(appearanceSlice);
-    slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
+    withSelected(harness, { type: "custom", color: "#00ff00" });
     await nextTick();
 
     harness.resolve(AppearanceVariables)[Symbol.dispose]();
-    slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#ff0000" } };
+    withSelected(harness, { type: "custom", color: "#ff0000" });
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-color")).toBe("");
+    expect(rootStyle(harness).getPropertyValue(selectedColor)).toBe("");
   });
 });

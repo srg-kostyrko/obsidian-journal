@@ -139,9 +139,9 @@ describe("appearance variables and CSS snippets", () => {
 
     it("a saved color changed while the popout is open reaches it", async () => {
       const settings = JSON.parse((await readRawSettings()) ?? "{}") as {
-        appearance: { today: { color: unknown } };
+        appearance: { wide: { today: { text: { color: unknown } } } };
       };
-      settings.appearance.today.color = { type: "custom", color: LIVE_MAGENTA };
+      settings.appearance.wide.today.text.color = { type: "custom", color: LIVE_MAGENTA };
       await writeRawSettings(JSON.stringify(settings));
       await triggerExternalSettingsChange();
       await waitForState(
