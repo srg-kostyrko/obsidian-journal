@@ -32,13 +32,19 @@ function inspectorHeading(container: Element): HTMLElement {
   return heading;
 }
 
-function todayOption(): HTMLOptionElement {
-  return within(partsList()).getByRole<HTMLOptionElement>("option", { name: new RegExp(`^${partName("today")}`) });
+function partOption(part: PartKey): HTMLOptionElement {
+  return within(partsList()).getByRole<HTMLOptionElement>("option", { name: new RegExp(`^${partName(part)}`) });
 }
 
 function todayCell(container: Element): HTMLElement {
   const cell = container.querySelector<HTMLElement>('[data-preview-part="date"][data-anchor="2026-05-13"]');
   if (!cell) throw new Error("no preview cell for today");
+  return cell;
+}
+
+function openNoteCell(container: Element): HTMLElement {
+  const cell = container.querySelector<HTMLElement>('[data-preview-part="date"][data-anchor="2026-05-15"]');
+  if (!cell) throw new Error("no preview cell for the open note");
   return cell;
 }
 
@@ -107,21 +113,44 @@ describe("AppearanceSubpage", () => {
     expect(within(header).getByRole("radiogroup", { name: m.calendar_appearance_width_label() })).toBeTruthy();
   });
 
-  it("a preview pick edits the first part and lists the others as also here", async () => {
+  it("a pick on today edits Today, with Date number and Cells also here", async () => {
     const { container } = mount();
 
     await userEvent.click(todayCell(container));
 
-    expect(partsList().value).toBe("selected");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["today", "date", "cell"] as const).map(partName));
-    expect(screen.getByText("--journal-cell-selected-ring-width")).toBeTruthy();
-
-    await userEvent.click(chips()[0]);
-
     expect(partsList().value).toBe("today");
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell"] as const).map(partName));
+    expect(screen.getByText("--journal-cell-today-text-color")).toBeTruthy();
+  });
+
+  it("a preview pick edits the first part and lists the others as also here", async () => {
+    const { container } = mount();
+
+    await userEvent.click(openNoteCell(container));
+
+    expect(partsList().value).toBe("active");
     expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
       (["selected", "date", "cell"] as const).map(partName),
     );
+
+    await userEvent.click(chips()[0]);
+
+    expect(partsList().value).toBe("selected");
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
+      (["active", "date", "cell"] as const).map(partName),
+    );
+    expect(screen.getByText("--journal-cell-selected-ring-width")).toBeTruthy();
+  });
+
+  it.each(["{Enter}", " "])("moves focus to the parts list once %j picks an also-here part", async (key) => {
+    const { container } = mount();
+    await userEvent.click(openNoteCell(container));
+
+    chips()[0].focus();
+    await userEvent.keyboard(key);
+
+    expect(partsList().value).toBe("selected");
+    expect(document.activeElement).toBe(partsList());
   });
 
   it("hides also here when the spot holds only the edited part", async () => {
@@ -246,23 +275,23 @@ describe("AppearanceSubpage", () => {
 
   it("a modified part carries the marker in the chips and the parts list, per width", async () => {
     const { container } = mount();
-    slice().state = withValue(slice().state, "wide", "today", ["ringWidth"], 3);
-    await userEvent.click(todayCell(container));
+    slice().state = withValue(slice().state, "wide", "selected", ["ringWidth"], 3);
+    await userEvent.click(openNoteCell(container));
 
-    const todayChip = () => chips()[0];
+    const selectedChip = () => chips()[0];
     const modified = m.calendar_appearance_modified();
-    expect(todayOption().textContent).toContain("•");
-    expect(todayOption().getAttribute("aria-label")).toContain(modified);
-    expect(todayChip().classList.contains("is-modified")).toBe(true);
-    expect(within(todayChip()).getByText(modified)).toBeTruthy();
+    expect(partOption("selected").textContent).toContain("•");
+    expect(partOption("selected").getAttribute("aria-label")).toContain(modified);
+    expect(selectedChip().classList.contains("is-modified")).toBe(true);
+    expect(within(selectedChip()).getByText(modified)).toBeTruthy();
     expect(chips()[1].textContent).not.toContain(modified);
 
     await switchTo("narrow");
 
-    expect(todayOption().textContent).not.toContain("•");
-    expect(todayOption().getAttribute("aria-label")).toBeNull();
-    expect(todayChip().classList.contains("is-modified")).toBe(false);
-    expect(todayChip().textContent).not.toContain(modified);
+    expect(partOption("selected").textContent).not.toContain("•");
+    expect(partOption("selected").getAttribute("aria-label")).toBeNull();
+    expect(selectedChip().classList.contains("is-modified")).toBe(false);
+    expect(selectedChip().textContent).not.toContain(modified);
   });
 
   it("Reset at Narrow clears only narrow", async () => {

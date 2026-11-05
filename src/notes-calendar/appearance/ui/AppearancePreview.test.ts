@@ -58,7 +58,7 @@ describe("AppearancePreview", () => {
     await userEvent.click(today);
 
     expect(emitted("pick")).toEqual([[partsAt(today), "2026-05-13"]]);
-    expect(partsAt(today)).toEqual(["selected", "today", "date", "cell"]);
+    expect(partsAt(today)).toEqual(["today", "date", "cell"]);
   });
 
   it.each(["{Enter}", " "])("emits the same parts for %j on a focused cell as for a click", async (key) => {
@@ -68,13 +68,23 @@ describe("AppearancePreview", () => {
     today.focus();
     await userEvent.keyboard(key);
 
-    expect(emitted("pick")).toEqual([[["selected", "today", "date", "cell"], "2026-05-13"]]);
+    expect(emitted("pick")).toEqual([[["today", "date", "cell"], "2026-05-13"]]);
   });
 
-  it("marks the open note two days after today", () => {
+  it("marks the open note two days after today, and selects that day alone", () => {
     const { container } = render(AppearancePreview, { props: { width: "wide" } });
     expect(cellAt(container, "2026-05-15").dataset.active).toBe("true");
     expect(container.querySelectorAll("[data-active]")).toHaveLength(1);
+    expect(cellAt(container, "2026-05-15").dataset.selected).toBe("true");
+    expect(container.querySelectorAll("[data-selected]")).toHaveLength(1);
+  });
+
+  it("leaves today a plain today: neither open nor selected", () => {
+    const { container } = render(AppearancePreview, { props: { width: "wide" } });
+    const today = cellAt(container, "2026-05-13");
+    expect(today.dataset.today).toBe("true");
+    expect(today.dataset.active).toBeUndefined();
+    expect(today.dataset.selected).toBeUndefined();
   });
 
   it("shows outside days as interactive cells", () => {
@@ -84,7 +94,7 @@ describe("AppearancePreview", () => {
     for (const cell of outside) expect(cell.dataset.inactive).toBeUndefined();
   });
 
-  it("decorates the selected day and one plain day with a background and a text color", () => {
+  it("decorates one plain day, neither today nor the open note's, with a background and a text color", () => {
     const { container } = render(AppearancePreview, {
       props: { width: "wide" },
       global: { stubs: { CellDecoration: DecorationProbe } },
@@ -93,9 +103,11 @@ describe("AppearancePreview", () => {
       probe.closest<HTMLElement>(".notes-calendar-cell")?.dataset.anchor,
       probe.dataset.decoration,
     ]);
-    expect(decorated).toHaveLength(2);
-    expect(decorated).toContainEqual(["2026-05-13", "background,color"]);
-    expect(decorated.map(([, styles]) => styles)).toEqual(["background,color", "background,color"]);
+    expect(decorated).toHaveLength(1);
+    const [anchor, styles] = decorated.at(0) ?? [];
+    expect(styles).toBe("background,color");
+    expect(anchor).not.toBe("2026-05-13");
+    expect(anchor).not.toBe("2026-05-15");
   });
 
   describe("outlines the part being edited", () => {

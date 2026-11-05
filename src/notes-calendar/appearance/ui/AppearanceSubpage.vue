@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, ref, useId, useTemplateRef } from "vue";
+import { computed, provide, ref, useId, useTemplateRef, type ComponentPublicInstance } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -71,6 +71,12 @@ function onList(value: string): void {
 }
 
 const others = computed(() => chips.value.filter((part) => part !== selected.value));
+// The picked chip leaves the row, taking keyboard focus with it, so focus lands on the list, which now names it.
+const list = useTemplateRef<ComponentPublicInstance>("list");
+function onChip(part: PartKey): void {
+  selected.value = part;
+  (list.value?.$el as HTMLElement | undefined)?.focus();
+}
 const listId = useId();
 const othersId = useId();
 
@@ -130,7 +136,7 @@ function reset(part: PartKey): void {
     <div class="appearance-subpage__selection">
       <div class="appearance-subpage__line">
         <label class="appearance-subpage__label" :for="listId">{{ m.calendar_appearance_part_label() }}</label>
-        <UiDropdown :id="listId" :model-value="selected ?? ''" @update:model-value="onList">
+        <UiDropdown :id="listId" ref="list" :model-value="selected ?? ''" @update:model-value="onList">
           <option value="">{{ m.calendar_appearance_part_placeholder() }}</option>
           <!-- An option holds text only, so the dot is the visible marker and the label carries the word. -->
           <option
@@ -151,7 +157,7 @@ function reset(part: PartKey): void {
           type="button"
           class="appearance-subpage__chip"
           :class="{ 'is-modified': modified(part) }"
-          @click="selected = part"
+          @click="onChip(part)"
         >
           {{ partName(part) }}
           <template v-if="modified(part)">

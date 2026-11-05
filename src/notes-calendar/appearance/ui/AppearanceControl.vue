@@ -98,6 +98,14 @@ function readVariable(name: string): string {
   const view = body?.ownerDocument.defaultView;
   return body && view ? view.getComputedStyle(body).getPropertyValue(name) : "";
 }
+// A theme can set the root font size, and a rem stock renders against it, not against 16px.
+function rootFontPx(): number | undefined {
+  const root = rowElement.value?.ownerDocument.documentElement;
+  const view = root?.ownerDocument.defaultView;
+  if (!root || !view) return;
+  const size = Number.parseFloat(view.getComputedStyle(root).fontSize);
+  return Number.isFinite(size) ? size : undefined;
+}
 
 // The preview root inherits what the calendar does under this theme, and no part's own setting
 // reaches it, so it is where an `inherit` stock is read.
@@ -125,7 +133,7 @@ watch(
 const sliderNumber = computed<number | undefined>(() => {
   if (typeof value.value === "number") return value.value;
   if (typeof value.value !== "string" || control.range === undefined) return;
-  return stockNumber(value.value, control.range.unit, readVariable);
+  return stockNumber(value.value, control.range.unit, readVariable, rootFontPx());
 });
 const atStock = computed(() => sourceAt(slice.state, width, part, control.path) === "stock");
 const writesString = computed(() => typeof valueAt(appearanceSlice.defaults, "wide", part, control.path) === "string");

@@ -19,14 +19,14 @@ function element(...chain: readonly Record<string, string>[]): Element {
 const CELL = "notes-calendar-cell";
 
 describe("sampleDays", () => {
-  it("shows today's month with today selected", () => {
-    const sample = sampleDays(date("2026-05-13"));
-    expect(sample.month.start.toAnchor()).toBe("2026-05-01");
-    expect(sample.selected).toBe("2026-05-13");
+  it("shows today's month", () => {
+    expect(sampleDays(date("2026-05-13")).month.start.toAnchor()).toBe("2026-05-01");
   });
 
-  it("opens the note two days after today", () => {
-    expect(sampleDays(date("2026-05-13")).active).toBe("2026-05-15");
+  it("opens the note two days after today, and selects the day it opens", () => {
+    const sample = sampleDays(date("2026-05-13"));
+    expect(sample.active).toBe("2026-05-15");
+    expect(sample.selected).toBe("2026-05-15");
   });
 
   it("clamps the open note to the month's last day", () => {
@@ -37,22 +37,26 @@ describe("sampleDays", () => {
     expect(sampleDays(date("2026-02-27")).active).toBe("2026-02-28");
   });
 
-  it("never opens the note on the selected day", () => {
-    const sample = sampleDays(date("2026-05-31"));
-    expect(sample.active).not.toBe(sample.selected);
-    expect(sample.month.contains(date(sample.active))).toBe(true);
-  });
-
   it.each(["2026-05-01", "2026-05-13", "2026-05-30", "2026-05-31", "2026-02-28"])(
-    "decorates the selected day and one plain day of the month (today %s)",
+    "leaves today alone: neither open, selected nor decorated (today %s)",
     (today) => {
       const sample = sampleDays(date(today));
-      expect(sample.decorated).toHaveLength(2);
-      expect(sample.decorated).toContain(sample.selected);
-      const plain = sample.decorated.find((anchor) => anchor !== sample.selected);
-      expect(plain).toBeDefined();
+      expect(sample.active).not.toBe(today);
+      expect(sample.selected).not.toBe(today);
+      expect(sample.decorated).not.toContain(today);
+      expect(sample.month.contains(date(sample.active))).toBe(true);
+    },
+  );
+
+  it.each(["2026-05-01", "2026-05-13", "2026-05-30", "2026-05-31", "2026-02-28"])(
+    "decorates one plain day of the month (today %s)",
+    (today) => {
+      const sample = sampleDays(date(today));
+      expect(sample.decorated).toHaveLength(1);
+      const plain = sample.decorated.at(0) ?? "";
       expect(plain).not.toBe(sample.active);
-      expect(sample.month.contains(date(plain ?? ""))).toBe(true);
+      expect(plain).not.toBe(sample.selected);
+      expect(sample.month.contains(date(plain))).toBe(true);
     },
   );
 });
@@ -84,6 +88,16 @@ describe("partsAt", () => {
   it("names an outside day", () => {
     const target = element({ class: CELL, "data-preview-part": "date", "data-outside": "true" });
     expect(partsAt(target)).toEqual(["outside", "date", "cell"]);
+  });
+
+  it("names the open note's day that is also selected, the open note first", () => {
+    const target = element({
+      class: CELL,
+      "data-preview-part": "date",
+      "data-active": "true",
+      "data-selected": "true",
+    });
+    expect(partsAt(target)).toEqual(["active", "selected", "date", "cell"]);
   });
 
   it("names the open note's day", () => {

@@ -9,19 +9,23 @@ export interface PreviewSample {
   readonly decorated: readonly AnchorString[];
 }
 
-/** Sample states relative to the real today, which the cell marks on its own through `useToday()`. */
+/**
+ * Sample states relative to the real today, which the cell marks on its own through `useToday()`.
+ * Today stands alone, so nothing layered over it hides an edit to Today. The open note's day is also
+ * the selected one, as in a view whose selected date follows the open note.
+ */
 export function sampleDays(today: CalendarDate): PreviewSample {
   const month = MonthPeriod.containing(today);
   const ahead = today.shift(2, "d");
   const clamped = month.contains(ahead) ? ahead : month.end;
-  // On the month's last day the clamp lands on today, which would merge the open note into Selected.
+  // On the month's last day the clamp lands on today, which would layer the open note over Today.
   const active = clamped.isSame(today) ? today.shift(-2, "d") : clamped;
   const plain = [...month.days()].find((day) => !day.isSame(today) && !day.isSame(active)) ?? month.start;
   return {
     month,
-    selected: today.toAnchor(),
+    selected: active.toAnchor(),
     active: active.toAnchor(),
-    decorated: [today.toAnchor(), plain.toAnchor()],
+    decorated: [plain.toAnchor()],
   };
 }
 

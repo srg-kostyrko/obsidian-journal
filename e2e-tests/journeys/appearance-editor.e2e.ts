@@ -318,6 +318,17 @@ describe("the appearance editor drives the rendered calendar", () => {
         `the view's today did not take the editor's ${TODAY_TEXT}`,
       );
     });
+
+    it("the preview's today shows today's color, with no other state over it", async () => {
+      const previewToday = ".appearance-preview .appearance-preview__day[data-today]";
+      expect(await $(previewToday).getAttribute("data-selected")).toBeNull();
+      expect(await $(previewToday).getAttribute("data-active")).toBeNull();
+      await expectRead(
+        () => labelHexOf(previewToday),
+        TODAY_TEXT,
+        `the preview's today did not take the editor's ${TODAY_TEXT}`,
+      );
+    });
   });
 
   describe("a narrow override", () => {

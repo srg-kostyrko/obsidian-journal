@@ -182,6 +182,22 @@ describe("AppearanceControl", () => {
     }
   });
 
+  it("converts a theme's rem stock at the document's root font size", async () => {
+    document.body.setCssProps({ "--radius-s": "0.25rem" });
+    const theme = new CSSStyleSheet();
+    theme.replaceSync("html { font-size: 20px; }");
+    document.adoptedStyleSheets = [theme];
+    try {
+      mount("cell", control("cell", "radius"));
+
+      await nextTick();
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("5");
+    } finally {
+      document.body.style.removeProperty("--radius-s");
+      document.adoptedStyleSheets = [];
+    }
+  });
+
   describe("names the value Default resolves to", () => {
     const theme = { "--font-normal": "400", "--font-semibold": "600", "--font-bold": "700", "--text-muted": "#999999" };
     beforeEach(() => {
