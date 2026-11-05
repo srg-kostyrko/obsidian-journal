@@ -88,8 +88,8 @@ Each cell shows whether a note exists and carries its [decorations](/decorations
 headings open that week's, month's, quarter's or year's note in whichever journal of that length is
 in scope.
 
-**Calendar highlighting**, on the main settings page, sets the colors for **Today** (today's date),
-**Active** (the note currently open) and **Selected date — ring**.
+How the grids look — today, the selected date, the open note, the text and the cells themselves — is
+set under [Calendar appearance](#calendar-appearance), on the main settings page.
 
 Example: [Week numbers after the weekdays](#week-numbers-after-the-weekdays).
 
@@ -176,6 +176,99 @@ A container for toolbar items such as buttons and the shelf selector. **Add tool
   Each has a **Label** and **Tooltip**.
 
 - **Spacer** — a flexible gap that pushes neighboring items apart.
+
+## Calendar appearance {#calendar-appearance}
+
+**Calendar appearance**, on the main settings page, opens an editor for how every calendar grid
+looks: the month and week calendars in views, and the calendars of timeline code blocks. It applies
+to all of them at once; there is no per-view appearance.
+
+At the top, **Width** switches between **Wide** and **Narrow**. A calendar counts as narrow when the
+calendar itself is narrower than about 28em, however wide the window is — a calendar in a slim
+sidebar, say. Changes made under **Wide** apply at every width. Changes made under **Narrow** apply
+only to narrow calendars, and take the place of the all-widths value there.
+
+Below it is a preview: a sample month around today, with today, the selected date, an open note,
+days from the months either side and a few decorated days, drawn at the width you are editing. Click
+a part of it to edit that part, or reach it with Tab and press Enter or Space. Where a click lands on
+more than one part — a day that is today is also a date number and a cell — **Parts at this spot**
+lists them all, the most specific first, and you choose the one you meant. **Part** lists every part too, so you
+can pick one without the preview:
+
+- **Month heading** — the month and year above the grid.
+- **Weekday header** — the row of weekday names.
+- **Week numbers**
+- **Date number** — the day's number in each cell.
+- **Today**, **Selected date** (the view's selected date), **Open note** (the note open in the
+  editor) and **Days outside the month** — the four highlights.
+- **Cells** — the size and spacing of every cell.
+
+A part you have changed carries a dot in **Part** and in **Parts at this spot**. When you edit
+**Narrow**, the dot means the part has a narrow-only value.
+
+### What each part offers
+
+The controls depend on the part. Every one but a highlight's **Style** shows, beneath its name, the
+CSS variable it sets, so a [CSS snippet](#changing-it-with-a-css-snippet) can set the same thing;
+while you edit **Narrow**, the name shown is the narrow one, ending in `-narrow`.
+
+The four highlights share one set:
+
+- **Style** — **Text only**, **Ring**, **Background** or **None**. Out of the box, today is
+  text only, the selected date a ring, the open note a background, and days outside the month text
+  only. **None** turns the highlight off.
+- **Highlight color** — the ring's or the background's color. Shown for **Ring** and **Background**.
+- **Ring width** — 1 to 4 pixels. Shown for **Ring**.
+- **Strength** — how strongly the background color fills the day, from 5% to 100%. Shown for
+  **Background**.
+- **Text color**, **Text weight** and **Text italic** — the day's text while this highlight applies.
+  Not shown for **None**.
+- **Over decorations** — whether the ring or background, and this highlight's text, are drawn over a
+  day's [decorations](/decorations) or under them. Shown for **Ring** and **Background**; out of the
+  box, only the selected date's ring is drawn over.
+
+The text parts — **Month heading**, **Weekday header**, **Week numbers** and **Date number** — offer
+**Size**, **Weight**, **Italic**, **Color** and **Case** (**As written**, **Uppercase**,
+**Lowercase** or **Title case**). **Weight**, **Italic**, **Color** and **Case** also offer
+**Default**, which leaves the value to the calendar's stock style. While you edit **Narrow**, a
+narrow-only value goes back to the all-widths one through its
+[**Narrow only**](#narrow-only-values-and-resetting) tag instead.
+
+**Cells** offers **Padding**, **Corner radius**, **Gap between cells** and **Row height**, the
+smallest height a row of cells takes. The decoration editor's style canvas draws its sample cell at
+this row height, so a style is previewed at the size it is shown.
+
+### Unchanged
+
+A highlight's **Text color**, **Text weight** and **Text italic** can be **Unchanged**: this highlight
+leaves that part of the text alone. A day that is several things at once then shows the next
+highlight's value instead, in this order — the open note, the selected date, today, then days outside
+the month — and, when none of them sets one, the part's own, such as the date number's. Out of the
+box, every highlight's weight and italic are **Unchanged**, as is the selected date's text color, so
+the ring changes nothing about the number inside it.
+
+**Unchanged** needs a WebView that supports CSS container style queries: Obsidian on desktop, iOS 18
+or later, or Android with WebView 111 or later. On older ones, an **Unchanged** text shows the
+part's own color and weight, never a lower highlight's, so a selected day that is also today shows
+the plain number color rather than today's accent.
+
+### Narrow-only values and resetting
+
+While you edit **Narrow**, a control that has a narrow-only value carries a **Narrow only** tag next
+to its name. Click the tag to remove that value, so the all-widths value applies at narrow width too.
+
+The button at the bottom of a part's controls resets that part for the width you are editing:
+**Reset to default** under **Wide** puts the part's all-widths values back to their defaults, and
+**Reset narrow overrides** under **Narrow** removes the part's narrow-only values and leaves the
+all-widths ones alone. Either is dimmed when there is nothing to reset.
+
+### Changing it with a CSS snippet
+
+Every control the editor shows a variable for sets a `--journal-cell-*` CSS variable, such as
+`--journal-cell-today-color`, and each has a narrow form ending in `-narrow`. A
+[CSS snippet](https://help.obsidian.md/snippets) that sets one, on `body` or anywhere else, wins over
+the value chosen in the editor, without `!important`, and the editor's preview shows it too. A
+snippet can also set a highlight's text color, weight or italic to `unchanged`.
 
 ## Examples
 
