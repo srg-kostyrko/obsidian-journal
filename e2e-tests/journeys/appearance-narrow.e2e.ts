@@ -76,6 +76,34 @@ async function expectMinHeight(blockSelector: string, width: string, expected: n
   });
 }
 
+// Stages a popover in the first month's last row and reports what the point just inside the next
+// month hits, or null while no laid-out quarter holds such a cell.
+async function probePopoverOverhang(blockSelector: string, width: string): Promise<string | undefined> {
+  const hit = await browser.execute(
+    (sel: string, forced: string) => {
+      const block = [...document.querySelectorAll<HTMLElement>(sel)].find((candidate) => candidate.clientWidth > 0);
+      const months = block ? [...block.querySelectorAll<HTMLElement>(".notes-month-view")] : [];
+      if (!block || months.length < 2) return null;
+      block.style.width = forced;
+      const lastRow = [...months[0].querySelectorAll(".notes-month-view__row")].at(-1);
+      const cell = lastRow?.querySelector<HTMLElement>('.notes-calendar-cell[role="gridcell"]');
+      if (!cell) return null;
+      const popover = document.createElement("div");
+      popover.className = "mark-overflow__popover";
+      popover.style.cssText = "position:absolute;top:100%;left:0;width:40px;height:300px;z-index:var(--layer-popover)";
+      cell.append(popover);
+      const x = popover.getBoundingClientRect().left + 10;
+      const y = months[1].getBoundingClientRect().top + 30;
+      const covered = document.elementFromPoint(x, y) !== popover;
+      popover.remove();
+      return covered ? "the next month covers the popover" : "popover";
+    },
+    blockSelector,
+    width,
+  );
+  return hit ?? undefined;
+}
+
 describe("calendar appearance by the calendar's own width", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-appearance-snippets", plugins: ["journals"] });
@@ -115,30 +143,18 @@ describe("calendar appearance by the calendar's own width", () => {
 
     // Chromium 120 makes a size container a stacking context, so the next month would cover the
     // overhang of a popover lifted inside the month before it. The popover is staged: the lift keys
-    // on its class alone, and a real one needs a decorated day in a month's last row.
+    // on its class alone, and a real one needs a decorated day in a month's last row. The note opens
+    // in a new leaf that renders on a later frame, so the probe polls until the quarter is laid out;
+    // the verdict stays outside the wait, so a covered popover fails instead of being waited out.
     it("an open mark popover overhangs the next month of a timeline", async () => {
-      const hit = await browser.execute(
-        (sel: string, width: string) => {
-          const block = [...document.querySelectorAll<HTMLElement>(sel)].find((candidate) => candidate.clientWidth > 0);
-          const months = block ? [...block.querySelectorAll<HTMLElement>(".notes-month-view")] : [];
-          if (!block || months.length < 2) return "no laid-out quarter";
-          block.style.width = width;
-          const lastRow = [...months[0].querySelectorAll(".notes-month-view__row")].at(-1);
-          const cell = lastRow?.querySelector<HTMLElement>('.notes-calendar-cell[role="gridcell"]');
-          if (!cell) return "no day cell in the first month's last row";
-          const popover = document.createElement("div");
-          popover.className = "mark-overflow__popover";
-          popover.style.cssText =
-            "position:absolute;top:100%;left:0;width:40px;height:300px;z-index:var(--layer-popover)";
-          cell.append(popover);
-          const x = popover.getBoundingClientRect().left + 10;
-          const y = months[1].getBoundingClientRect().top + 30;
-          const covered = document.elementFromPoint(x, y) !== popover;
-          popover.remove();
-          return covered ? "the next month covers the popover" : "popover";
+      let hit: string | undefined;
+      await waitForState(
+        async () => {
+          hit = await probePopoverOverhang(NOTE_BLOCK, BELOW_BREAKPOINT);
+          return hit;
         },
-        NOTE_BLOCK,
-        BELOW_BREAKPOINT,
+        () => true,
+        `${NOTE_BLOCK}: no laid-out quarter with a day cell in its first month's last row`,
       );
       expect(hit).toBe("popover");
     });
