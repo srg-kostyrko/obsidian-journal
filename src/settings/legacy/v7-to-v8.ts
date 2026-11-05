@@ -21,7 +21,7 @@ function isColor(color: unknown): color is ColorSettings {
 
 // A present but malformed color is still carried to its new place: the load repair then resets it
 // and logs the field, as it would have at v7. Only an absent one is left for the slice default.
-// A null text color is absent too: v8 reads null as "unchanged", but v7 repaired it to the stock.
+// A null text color is absent too: v8 reads null as an unreadable leaf, and v7 repaired it to the stock.
 function put(target: Raw, key: string, value: unknown): void {
   if (value !== undefined) target[key] = value;
 }

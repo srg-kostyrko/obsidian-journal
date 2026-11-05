@@ -13,11 +13,16 @@ export type Weight = v.InferOutput<typeof weightSchema>;
 export type HighlightStyle = v.InferOutput<typeof styleSchema>;
 export type TextCase = v.InferOutput<typeof caseSchema>;
 
-// A null text value is "as today": nothing is written for it, so whatever renders underneath shows.
+export const UNCHANGED = "unchanged";
+export type Unchanged = typeof UNCHANGED;
+
+// "unchanged" is an explicit value, not an absence: a narrow part's null means "no override", so the
+// wide value must be able to say "set nothing" without colliding with it.
+const unchangedSchema = v.literal(UNCHANGED);
 const highlightTextEntries = {
-  color: v.nullable(colorSchema),
-  weight: v.nullable(weightSchema),
-  italic: v.nullable(v.boolean()),
+  color: v.union([colorSchema, unchangedSchema]),
+  weight: v.union([weightSchema, unchangedSchema]),
+  italic: v.union([v.boolean(), unchangedSchema]),
 };
 
 const highlightEntries = {
@@ -124,7 +129,7 @@ function highlight(overrides: Partial<HighlightValues>): HighlightValues {
     color: transparent(),
     ringWidth: 2,
     strength: 100,
-    text: { color: null, weight: null, italic: null },
+    text: { color: UNCHANGED, weight: UNCHANGED, italic: UNCHANGED },
     over: false,
     ...overrides,
   };
@@ -135,14 +140,14 @@ function text(overrides: Partial<TextValues>): TextValues {
 }
 
 const wideDefaults = {
-  today: highlight({ text: { color: theme("text-accent"), weight: null, italic: null } }),
+  today: highlight({ text: { color: theme("text-accent"), weight: UNCHANGED, italic: UNCHANGED } }),
   selected: highlight({ style: "ring", color: theme("interactive-accent"), over: true }),
   active: highlight({
     style: "background",
     color: theme("interactive-accent"),
-    text: { color: theme("text-on-accent"), weight: null, italic: null },
+    text: { color: theme("text-on-accent"), weight: UNCHANGED, italic: UNCHANGED },
   }),
-  outside: highlight({ text: { color: theme("text-muted"), weight: null, italic: null } }),
+  outside: highlight({ text: { color: theme("text-muted"), weight: UNCHANGED, italic: UNCHANGED } }),
   heading: text({}),
   weekday: text({ size: "0.6em", color: theme("text-muted") }),
   weekNumber: text({ weight: "bold" }),

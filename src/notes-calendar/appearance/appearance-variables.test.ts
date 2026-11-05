@@ -94,7 +94,7 @@ describe("appearanceVariables", () => {
 
   it("a null text color cancels a stock text color with currentColor", () => {
     const state = fresh();
-    state.wide.today.text.color = null;
+    state.wide.today.text.color = "unchanged";
     state.wide.today.text.weight = "semibold";
     state.wide.today.text.italic = false;
 
@@ -107,7 +107,7 @@ describe("appearanceVariables", () => {
 
   it("a null text color writes nothing over an empty stock", () => {
     const state = fresh();
-    state.wide.selected.text = { color: null, weight: null, italic: null };
+    state.wide.selected.text = { color: "unchanged", weight: "unchanged", italic: "unchanged" };
 
     expect(appearanceVariables(state)).toEqual({});
   });

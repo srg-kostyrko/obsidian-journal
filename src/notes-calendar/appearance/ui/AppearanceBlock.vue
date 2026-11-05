@@ -34,9 +34,10 @@ function setTodayBackground(color: ColorSettings): void {
 }
 // "Unchanged" has no picker option yet, so it shows as the stock color it renders as.
 function textColor(state: Highlight): ColorSettings {
-  return (
-    slice.state.wide[state].text.color ?? appearanceSlice.defaults.wide[state].text.color ?? { type: "transparent" }
-  );
+  const own = slice.state.wide[state].text.color;
+  if (own !== "unchanged") return own;
+  const stock = appearanceSlice.defaults.wide[state].text.color;
+  return stock === "unchanged" ? { type: "transparent" } : stock;
 }
 </script>
 

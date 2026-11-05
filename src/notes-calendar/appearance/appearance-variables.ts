@@ -78,12 +78,16 @@ function styleValues(h: HighlightValues): { ring: number; strength: number; text
     .exhaustive();
 }
 
+const orNull = <T>(value: T | "unchanged"): T | null => (value === "unchanged" ? null : value);
+
 const textOf = (h: HighlightValues): HighlightValues["text"] | undefined => (styleValues(h).text ? h.text : undefined);
 
 // No custom property can carry `inherit`, and `normal` would un-bold the week numbers, so a
 // cancelled weight writes nothing and the value underneath still shows.
-const textColor = (h: HighlightValues): Css | Cancel => color(textOf(h)?.color ?? null) ?? { cancel: "currentColor" };
-const textItalic = (h: HighlightValues): Css | Cancel => italic(textOf(h)?.italic ?? null) ?? { cancel: "normal" };
+const textColor = (h: HighlightValues): Css | Cancel =>
+  color(orNull(textOf(h)?.color ?? null)) ?? { cancel: "currentColor" };
+const textItalic = (h: HighlightValues): Css | Cancel =>
+  italic(orNull(textOf(h)?.italic ?? null)) ?? { cancel: "normal" };
 
 function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighlight> {
   return {
@@ -93,7 +97,11 @@ function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighli
       { suffix: "ring-width", css: (h) => px(styleValues(h).ring), reads: (n) => [n.style, n.ringWidth] },
       { suffix: "strength", css: (h) => String(styleValues(h).strength / 100), reads: (n) => [n.style, n.strength] },
       { suffix: "text-color", css: textColor, reads: (n) => [n.style, n.text.color] },
-      { suffix: "text-weight", css: (h) => weight(textOf(h)?.weight ?? null), reads: (n) => [n.style, n.text.weight] },
+      {
+        suffix: "text-weight",
+        css: (h) => weight(orNull(textOf(h)?.weight ?? null)),
+        reads: (n) => [n.style, n.text.weight],
+      },
       { suffix: "text-italic", css: textItalic, reads: (n) => [n.style, n.text.italic] },
       { suffix: "layer", css: (h) => (h.over ? "1" : "-1"), reads: (n) => [n.over] },
     ],
