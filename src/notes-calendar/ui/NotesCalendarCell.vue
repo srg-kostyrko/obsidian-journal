@@ -17,6 +17,7 @@ const props = defineProps<{
   role?: "gridcell" | "rowheader";
   tabIndex?: number;
   selected?: boolean;
+  outside?: boolean;
 }>();
 
 const rawPeriod = computed(() => toRaw(props.period));
@@ -28,6 +29,20 @@ const resolvedRole = computed(() => props.role ?? (isControl.value ? "button" : 
 const resolvedTabIndex = computed(() => props.tabIndex ?? (isControl.value ? 0 : undefined));
 const today = useToday();
 const isToday = computed(() => rawPeriod.value.contains(today.value));
+const states = computed(() =>
+  (
+    [
+      ["outside", props.outside],
+      ["today", isToday.value],
+      ["selected", props.selected],
+      ["active", isActive.value],
+    ] as const
+  )
+    .filter(([, applies]) => applies)
+    .map(([state]) => state),
+);
+// The open note's fill replaces today's, as it did before layers existed; today's ring stays.
+const fills = computed(() => states.value.filter((state) => state !== "today" || !isActive.value));
 const accessibleName = computed(() =>
   isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
 );
@@ -47,6 +62,7 @@ const hover = useModifierHoverPreview();
     :data-anchor="rawPeriod.anchor.toAnchor()"
     :data-today="isToday || null"
     :data-selected="selected || null"
+    :data-outside="outside || null"
     @click="cell.open(rawPeriod, $event)"
     @auxclick.middle.prevent="cell.open(rawPeriod, $event)"
     @keydown.enter="cell.open(rawPeriod, $event)"
@@ -55,10 +71,21 @@ const hover = useModifierHoverPreview();
     @mouseenter="hover.enter($event, (event) => cell.openPreview(rawPeriod, event))"
     @mouseleave="hover.leave()"
   >
-    <!-- The open note's fill replaces today's, as it did before layers existed. -->
-    <span v-if="isToday && !isActive" class="notes-calendar-cell__layer" data-layer="today" aria-hidden="true" />
-    <span v-if="selected" class="notes-calendar-cell__layer" data-layer="selected" aria-hidden="true" />
-    <span v-if="isActive" class="notes-calendar-cell__layer" data-layer="active" aria-hidden="true" />
+    <!-- Every fill before every ring, so no state's fill can hide another state's ring. -->
+    <span
+      v-for="state in fills"
+      :key="`${state}-fill`"
+      class="notes-calendar-cell__layer"
+      :data-layer="`${state}-fill`"
+      aria-hidden="true"
+    />
+    <span
+      v-for="state in states"
+      :key="`${state}-ring`"
+      class="notes-calendar-cell__layer"
+      :data-layer="`${state}-ring`"
+      aria-hidden="true"
+    />
     <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
   </span>
 </template>
@@ -90,13 +117,48 @@ const hover = useModifierHoverPreview();
   outline: 2px solid var(--background-modifier-border-focus);
   outline-offset: -1px;
 }
-/* [data-active] follows [data-today] so a cell that is both the open note and today resolves
-   to the active colors — the note you're viewing wins over the today marker. */
+/* Text precedence, highest first: open note, selected, today, outside. Each applicable state sets its
+   private value with no fallback, so an unset value is guaranteed-invalid
+   and the chain falls through to the next. A state whose value is currentColor still wins: that is
+   how "unchanged" and "none" cancel a stock color, at the cost of blocking lower states. */
+.notes-calendar-cell[data-outside] {
+  --_text-outside: var(
+    --journal-cell-outside-text-color,
+    var(--journal-saved-cell-outside-text-color, var(--text-muted))
+  );
+  --_weight-outside: var(--journal-cell-outside-text-weight, var(--journal-saved-cell-outside-text-weight));
+  --_italic-outside: var(--journal-cell-outside-text-italic, var(--journal-saved-cell-outside-text-italic));
+  --_over-outside: calc(
+    clamp(0, var(--journal-cell-outside-layer, var(--journal-saved-cell-outside-layer, -1)), 1) * 100%
+  );
+}
 .notes-calendar-cell[data-today] {
-  color: var(--journal-cell-today-text-color, var(--journal-saved-cell-today-text-color, var(--text-accent)));
+  --_text-today: var(--journal-cell-today-text-color, var(--journal-saved-cell-today-text-color, var(--text-accent)));
+  --_weight-today: var(--journal-cell-today-text-weight, var(--journal-saved-cell-today-text-weight));
+  --_italic-today: var(--journal-cell-today-text-italic, var(--journal-saved-cell-today-text-italic));
+  --_over-today: calc(clamp(0, var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1)), 1) * 100%);
+}
+.notes-calendar-cell[data-selected] {
+  --_text-selected: var(--journal-cell-selected-text-color, var(--journal-saved-cell-selected-text-color));
+  --_weight-selected: var(--journal-cell-selected-text-weight, var(--journal-saved-cell-selected-text-weight));
+  --_italic-selected: var(--journal-cell-selected-text-italic, var(--journal-saved-cell-selected-text-italic));
+  --_over-selected: calc(
+    clamp(0, var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1)), 1) * 100%
+  );
 }
 .notes-calendar-cell[data-active] {
-  color: var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)));
+  --_text-active: var(
+    --journal-cell-active-text-color,
+    var(--journal-saved-cell-active-text-color, var(--text-on-accent))
+  );
+  --_weight-active: var(--journal-cell-active-text-weight, var(--journal-saved-cell-active-text-weight));
+  --_italic-active: var(--journal-cell-active-text-italic, var(--journal-saved-cell-active-text-italic));
+  --_over-active: calc(
+    clamp(0, var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1)), 1) * 100%
+  );
+}
+.notes-calendar-cell:is([data-outside], [data-today], [data-selected], [data-active]) {
+  color: var(--_text-active, var(--_text-selected, var(--_text-today, var(--_text-outside))));
 }
 /* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
    z-index in the shared decoration would leak into every other host's stacking context. The border
@@ -107,6 +169,33 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell :deep(.cell-decoration__content) {
   position: relative;
   z-index: 2;
+}
+/* A decoration paints its text color with !important on the element around the label, which beats
+   the cell's color, so a state set over decorations (its layer above 0) re-paints the label itself.
+   The layer clamps to a 0%/100% weight: under, the mix passes the inherited decoration color through;
+   over, it takes the state's text. States nest in text precedence, the highest outermost, and a state
+   with no text color passes the lower states' result through rather than blocking it. Weight and
+   italic are set here rather than on the cell, where an unset chain would unset the week number's
+   bold; here it only inherits. */
+.notes-calendar-cell:is([data-outside], [data-today], [data-selected], [data-active]) :deep(.cell-decoration__content) {
+  --_over-outside-text: color-mix(in srgb, var(--_text-outside, currentColor) var(--_over-outside, 0%), currentColor);
+  --_over-today-text: color-mix(
+    in srgb,
+    var(--_text-today, var(--_over-outside-text)) var(--_over-today, 0%),
+    var(--_over-outside-text)
+  );
+  --_over-selected-text: color-mix(
+    in srgb,
+    var(--_text-selected, var(--_over-today-text)) var(--_over-selected, 0%),
+    var(--_over-today-text)
+  );
+  color: color-mix(
+    in srgb,
+    var(--_text-active, var(--_over-selected-text)) var(--_over-active, 0%),
+    var(--_over-selected-text)
+  );
+  font-weight: var(--_weight-active, var(--_weight-selected, var(--_weight-today, var(--_weight-outside))));
+  font-style: var(--_italic-active, var(--_italic-selected, var(--_italic-today, var(--_italic-outside))));
 }
 .notes-calendar-cell :deep(.cell-marks),
 .notes-calendar-cell :deep(.decoration-corner) {
@@ -123,19 +212,36 @@ const hover = useModifierHoverPreview();
   border-radius: inherit;
   pointer-events: none;
 }
-.notes-calendar-cell__layer[data-layer="today"] {
-  background-color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent));
+.notes-calendar-cell__layer[data-layer^="outside-"] {
+  --_color: var(--journal-cell-outside-color, var(--journal-saved-cell-outside-color, transparent));
+  --_strength: var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0%));
+  --_ring-width: var(--journal-cell-outside-ring-width, var(--journal-saved-cell-outside-ring-width, 0px));
+  z-index: var(--journal-cell-outside-layer, var(--journal-saved-cell-outside-layer, -1));
+}
+.notes-calendar-cell__layer[data-layer^="today-"] {
+  --_color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent));
+  --_strength: var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0%));
+  --_ring-width: var(--journal-cell-today-ring-width, var(--journal-saved-cell-today-ring-width, 0px));
   z-index: var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1));
 }
-/* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear this ring;
-   widening it means widening that too. */
-.notes-calendar-cell__layer[data-layer="selected"] {
-  box-shadow: inset 0 0 0 2px
-    var(--journal-cell-selected-color, var(--journal-saved-cell-selected-color, var(--interactive-accent)));
+.notes-calendar-cell__layer[data-layer^="selected-"] {
+  --_color: var(--journal-cell-selected-color, var(--journal-saved-cell-selected-color, var(--interactive-accent)));
+  --_strength: var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0%));
+  --_ring-width: var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px));
   z-index: var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1));
 }
-.notes-calendar-cell__layer[data-layer="active"] {
-  background-color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)));
+.notes-calendar-cell__layer[data-layer^="active-"] {
+  --_color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)));
+  --_strength: var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 100%));
+  --_ring-width: var(--journal-cell-active-ring-width, var(--journal-saved-cell-active-ring-width, 0px));
   z-index: var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1));
+}
+.notes-calendar-cell__layer[data-layer$="-fill"] {
+  background-color: color-mix(in srgb, var(--_color) var(--_strength), transparent);
+}
+/* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear the stock selected
+   ring; widening it means widening that too. */
+.notes-calendar-cell__layer[data-layer$="-ring"] {
+  box-shadow: inset 0 0 0 var(--_ring-width) var(--_color);
 }
 </style>

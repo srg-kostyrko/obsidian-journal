@@ -223,7 +223,7 @@ const isSelected = (period: Period): boolean =>
           <NotesCalendarCell
             v-else
             class="notes-month-view__day"
-            :data-outside="day.isOutside || null"
+            :outside="day.isOutside"
             :period="day.period"
             :cell="inactiveOutside && day.isOutside ? inactiveDay : dayCell"
             role="gridcell"
@@ -298,8 +298,5 @@ const isSelected = (period: Period): boolean =>
 }
 .notes-month-view__week-number {
   font-weight: var(--font-bold);
-}
-.notes-month-view__day[data-outside] {
-  color: var(--text-muted);
 }
 </style>

@@ -3,7 +3,7 @@ import { browser, expect } from "@wdio/globals";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { borderTop, dayAnchor, decorationBackgroundHex, note } from "./decorations.js";
+import { borderTop, dayAnchor, decorationBackgroundHex, decorationTextHex, note } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
 
 import type { CellLocator } from "./calendar.js";
@@ -13,8 +13,11 @@ import type { CellLocator } from "./calendar.js";
 // resolves neither the cascade nor the stacking-relevant computed values.
 
 const DECORATED_BG = "#123456";
+const DECORATED_TEXT = "#cc3300";
 const RING_HEX = "#fedcba";
 const ACTIVE_BG_HEX = "#00aa55";
+// Set by each fixture's snippet; the selected state has no stock text color.
+const SELECTED_TEXT = "#00aa00";
 const DAY = 15;
 const PLAIN_DAY = 16;
 
@@ -48,6 +51,53 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
   return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
 }
 
+// The label's color goes through color-mix, which Chromium serializes as color(srgb …) and
+// WebDriver cannot parse to hex, so the page paints it on a canvas and reads the pixel back.
+async function labelHex(anchor: string): Promise<string | undefined> {
+  const hex = await browser.execute((cellAnchor: string) => {
+    const label = document.querySelector(
+      `.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"] .cell-decoration__content`,
+    );
+    const context = document.createElement("canvas").getContext("2d");
+    if (label === null || context === null) return null;
+    context.fillStyle = getComputedStyle(label).color;
+    context.fillRect(0, 0, 1, 1);
+    const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+  }, anchor);
+  return hex ?? undefined;
+}
+
+// The pixels of a 3px strip across the cell's left edge. The 2px ring renders narrower under
+// Obsidian's zoom and straddles pixel boundaries, so one sample can be part pane background;
+// across the strip at least one pixel is almost all ring.
+async function edgeHexes(anchor: string): Promise<string[]> {
+  const reply = await browser.execute(async (cellAnchor: string) => {
+    const box = document
+      .querySelector(`.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`)
+      ?.getBoundingClientRect();
+    const remote = (window as unknown as ElectronHost).electron?.remote;
+    if (box === undefined || remote === undefined) return null;
+    const image = await remote
+      .getCurrentWebContents()
+      .capturePage({ x: Math.floor(box.left), y: Math.round(box.top + box.height / 2), width: 3, height: 1 });
+    const bytes = image.toBitmap();
+    const pixels: number[][] = [];
+    for (let offset = 0; offset + 3 < bytes.length; offset += 4) {
+      pixels.push([bytes.readUInt8(offset + 2), bytes.readUInt8(offset + 1), bytes.readUInt8(offset)]);
+    }
+    return pixels;
+  }, anchor);
+  return (reply ?? []).map((pixel) => `#${pixel.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`);
+}
+
+// Near-magenta: the ring's #ff00ff over at most a sliver of anything else. Neither the open-note
+// fill (#00aa55) nor a light or dark pane background comes close on all three channels.
+function isRingPixel(hex: string): boolean {
+  const [r, g, b] = [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16));
+  return (r ?? 0) > 192 && (g ?? 255) < 64 && (b ?? 0) > 192;
+}
+
 async function px(cell: CellLocator, selector: string, property: string): Promise<string | undefined> {
   const prop = await cell.$(selector).getCSSProperty(property);
   // WebDriver parses a bare number (z-index "1") to a number despite the declared string.
@@ -55,7 +105,9 @@ async function px(cell: CellLocator, selector: string, property: string): Promis
   return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 }
 
-const layerZ = (cell: CellLocator, layer: "today" | "selected" | "active"): Promise<string | undefined> =>
+type Layer = `${"today" | "selected" | "active"}-${"fill" | "ring"}`;
+
+const layerZ = (cell: CellLocator, layer: Layer): Promise<string | undefined> =>
   px(cell, `[data-layer="${layer}"]`, "z-index");
 
 // A dispatched click, not a pointer click: the right sidebar is still settling when the view
@@ -108,9 +160,9 @@ describe("paint order of highlight states around a decoration", () => {
   after(closePopoutWindows);
 
   it("the selected ring sits above a decoration background", async () => {
-    expect(await layerZ(cell, "selected")).toBe("1");
+    expect(await layerZ(cell, "selected-ring")).toBe("1");
     // WebDriver strips the spaces from a shorthand, so the ring color is read from its parse.
-    const ring = await cell.$('[data-layer="selected"]').getCSSProperty("box-shadow");
+    const ring = await cell.$('[data-layer="selected-ring"]').getCSSProperty("box-shadow");
     expect((ring.parsed as { hex?: string }).hex?.toLowerCase()).toBe(RING_HEX);
     expect(await px(cell, '[data-testid="cell-decoration"]', "z-index")).toBe("auto");
     expect(await decorationBackgroundHex(cell)).toBe(DECORATED_BG);
@@ -121,17 +173,26 @@ describe("paint order of highlight states around a decoration", () => {
     const { width } = await borderTop(cell);
     expect(width).toBe("3px");
     expect(await px(cell, ".cell-decoration__border", "z-index")).toBe("auto");
-    expect(await layerZ(cell, "selected")).toBe("1");
+    expect(await layerZ(cell, "selected-ring")).toBe("1");
   });
 
   it("the open-note fill stays under the decoration", async () => {
-    expect(await layerZ(cell, "active")).toBe("-1");
+    expect(await layerZ(cell, "active-fill")).toBe("-1");
   });
 
   it("decoration marks stay above every state layer", async () => {
     await cell.$(".cell-marks").waitForExist({ timeoutMsg: "the decorated cell rendered no marks" });
     expect(await px(cell, ".cell-marks", "z-index")).toBe("3");
     expect(await px(cell, ".cell-decoration__content", "z-index")).toBe("2");
+  });
+
+  it("selected text over a decoration takes the selected color", async () => {
+    expect(await decorationTextHex(cell)).toBe(DECORATED_TEXT);
+    await waitForState(
+      () => labelHex(dayAnchor(DAY)),
+      (hex) => hex === SELECTED_TEXT,
+      `the selected label over the decoration did not take ${SELECTED_TEXT}`,
+    );
   });
 
   it("keeps the 2px focus-visible outline on a selected cell", async () => {
@@ -198,9 +259,57 @@ describe("paint order with a snippet", () => {
   it("a snippet can put the selected ring back under", async () => {
     const cell = await selectDecoratedOpenDay();
     await waitForState(
-      () => layerZ(cell, "selected"),
+      () => layerZ(cell, "selected-ring"),
       (z) => z === "-1",
       "the snippet's --journal-cell-selected-layer: -1 did not reach the selected layer",
+    );
+  });
+
+  it("selected text under a decoration keeps the decoration's color", async () => {
+    await waitForState(
+      () => labelHex(dayAnchor(DAY)),
+      (hex) => hex === DECORATED_TEXT,
+      `the selected label under the decoration did not keep ${DECORATED_TEXT}`,
+    );
+  });
+});
+
+describe("today's ring on the open note's day", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order-snippet", plugins: ["journals"] });
+  });
+
+  after(closePopoutWindows);
+
+  // The snippet gives today a #ff00ff 2px ring and the fixture an #00aa55 open-note fill. Both
+  // layers sit at -1, so only the fills-then-rings DOM order keeps the ring above the fill.
+  it("a today ring stays visible on the open note's day", async () => {
+    const day = new Date().getDate();
+    const anchor = dayAnchor(day);
+    await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
+    await openCalendarView();
+    await clickCell(anchor, false);
+    await waitForActiveNote(`day/${anchor}.md`);
+    await calendar.waitForActive(anchor);
+    const cell = calendar.cell(anchor);
+    // The view selects today, and the selected ring paints after today's at the same width. Move the
+    // selection to a neighbor so only today's ring is left at the edge.
+    await clickCell(dayAnchor(day === 1 ? 2 : day - 1), true);
+    await waitForState(
+      async () => (await cell.getAttribute("aria-selected")) ?? "false",
+      (selected) => selected === "false",
+      "today's cell stayed selected after the selection moved to its neighbor",
+    );
+    expect(await cell.$('[data-layer="today-fill"]').isExisting()).toBe(false);
+    await waitForState(
+      () => paintedHex(anchor),
+      (hex) => hex === ACTIVE_BG_HEX,
+      `the open note's cell did not paint ${ACTIVE_BG_HEX} inside the ring`,
+    );
+    await waitForState(
+      () => edgeHexes(anchor),
+      (hexes) => hexes.some(isRingPixel),
+      "today's #ff00ff ring did not show at the open note's edge over the #00aa55 fill",
     );
   });
 });

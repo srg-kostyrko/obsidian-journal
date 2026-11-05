@@ -49,6 +49,13 @@
               }
             },
             {
+              "type": "color",
+              "color": {
+                "type": "custom",
+                "color": "#cc3300"
+              }
+            },
+            {
               "type": "shape",
               "shape": "circle",
               "size": 0.4,

@@ -94,7 +94,7 @@ describe("appearance variables and CSS snippets", () => {
     const selected = viewCell(DEFAULT_VIEW, SELECTED_CELL);
     await $(selected).waitForExist({ timeoutMsg: "the default view has no selected cell" });
     // The ring is drawn by the cell's selected layer, not the cell itself.
-    const ring = `${selected} [data-layer="selected"]`;
+    const ring = `${selected} [data-layer="selected-ring"]`;
     await waitForState(
       () => ringHex(ring),
       (hex) => hex === "#ff0000",

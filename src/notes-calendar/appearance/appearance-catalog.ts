@@ -63,6 +63,8 @@ function layer(state: string, kind: "fill" | "ring"): string {
 function highlightEntries(): CatalogEntry[] {
   return HIGHLIGHT_STATES.flatMap(({ state, attribute, color, ring, strength, text, layer: z }) => {
     const cell = `.notes-calendar-cell[${attribute}]`;
+    // Weight and italic land on the label: on the cell, an unset chain would unset a host's own weight.
+    const label = `${cell} .cell-decoration__content`;
     const name = (value: string): string => `journal-cell-${state}-${value}`;
     // A stock color or strength that paints nothing would hide the variable under test, so the
     // companion pins the other half to something visible.
@@ -107,12 +109,12 @@ function highlightEntries(): CatalogEntry[] {
       {
         name: name("text-weight"),
         stock: "",
-        probe: { selector: cell, property: "font-weight", sample: "300", expect: "300" },
+        probe: { selector: label, property: "font-weight", sample: "300", expect: "300" },
       },
       {
         name: name("text-italic"),
         stock: "",
-        probe: { selector: cell, property: "font-style", sample: "italic", expect: "italic" },
+        probe: { selector: label, property: "font-style", sample: "italic", expect: "italic" },
       },
       {
         name: name("layer"),
