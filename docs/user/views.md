@@ -188,16 +188,16 @@ calendar itself is narrower than about 28em, however wide the window is — a ca
 sidebar, say. Changes made under **Wide** apply at every width. Changes made under **Narrow** apply
 only to narrow calendars, and take the place of the all-widths value there.
 
-Below the switch is the preview: a sample month around today, with today, a day whose note is open
-and which is also the selected date, as a view's selected date follows the open note, days from the
-months either side and a decorated day, drawn at the width you are
+Below the switch is the preview: a sample month around today, with today, a day whose note is open,
+a selected date that is also the decorated day (so the selected date's drawing over a decoration shows), days from the
+months either side, each state on a day of its own, drawn at the width you are
 editing: **Narrow** at the size of a slim sidebar calendar, **Wide** across the whole panel. The wide
 preview never gets narrow enough to count as a narrow calendar, so on a very narrow settings pane it
 scrolls sideways instead. Click a part of it to edit that part; a day, a week number or a heading can also be
 reached with Tab and picked with Enter or Space. Where a click lands on more than one part, one is
 edited and **Also here**, under the preview, lists the others so you can switch to the one you meant.
 On a day, its state comes first: today's date edits **Today**, with **Date number** and **Cells** under
-**Also here**; the open note's day edits **Open note**, with **Selected date**, **Date number** and
+**Also here**; the open note's day edits **Open note**, and the selected day **Selected date**, each with **Date number** and
 **Cells** under **Also here**. On the month name or a week number, that label comes first, and the **Today** it
 contains is under **Also here**. **Editing** lists every
 part too, so you can pick one without the preview:

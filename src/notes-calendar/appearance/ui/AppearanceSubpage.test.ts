@@ -48,6 +48,12 @@ function openNoteCell(container: Element): HTMLElement {
   return cell;
 }
 
+function selectedCell(container: Element): HTMLElement {
+  const cell = container.querySelector<HTMLElement>('[data-preview-part="date"][data-anchor="2026-05-01"]');
+  if (!cell) throw new Error("no preview cell for the selected day");
+  return cell;
+}
+
 function outlined(container: Element): Element[] {
   return [...container.querySelectorAll(".appearance-preview__picked")];
 }
@@ -126,30 +132,34 @@ describe("AppearanceSubpage", () => {
   it("a preview pick edits the first part and lists the others as also here", async () => {
     const { container } = mount();
 
-    await userEvent.click(openNoteCell(container));
+    await userEvent.click(selectedCell(container));
 
-    expect(partsList().value).toBe("active");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
-      (["selected", "date", "cell"] as const).map(partName),
-    );
+    expect(partsList().value).toBe("selected");
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell"] as const).map(partName));
 
     await userEvent.click(chips()[0]);
 
-    expect(partsList().value).toBe("selected");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
-      (["active", "date", "cell"] as const).map(partName),
-    );
-    expect(screen.getByText("--journal-cell-selected-ring-width")).toBeTruthy();
+    expect(partsList().value).toBe("date");
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["selected", "cell"] as const).map(partName));
+  });
+
+  it("a pick on the open note's day edits Open note, with Date number and Cells also here", async () => {
+    const { container } = mount();
+
+    await userEvent.click(openNoteCell(container));
+
+    expect(partsList().value).toBe("active");
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell"] as const).map(partName));
   });
 
   it.each(["{Enter}", " "])("moves focus to the parts list once %j picks an also-here part", async (key) => {
     const { container } = mount();
-    await userEvent.click(openNoteCell(container));
+    await userEvent.click(selectedCell(container));
 
     chips()[0].focus();
     await userEvent.keyboard(key);
 
-    expect(partsList().value).toBe("selected");
+    expect(partsList().value).toBe("date");
     expect(document.activeElement).toBe(partsList());
   });
 
@@ -276,7 +286,8 @@ describe("AppearanceSubpage", () => {
   it("a modified part carries the marker in the chips and the parts list, per width", async () => {
     const { container } = mount();
     slice().state = withValue(slice().state, "wide", "selected", ["ringWidth"], 3);
-    await userEvent.click(openNoteCell(container));
+    await userEvent.click(selectedCell(container));
+    await userEvent.click(chips()[0]);
 
     const selectedChip = () => chips()[0];
     const modified = m.calendar_appearance_modified();

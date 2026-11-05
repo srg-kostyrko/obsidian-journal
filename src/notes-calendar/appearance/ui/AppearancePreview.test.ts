@@ -71,11 +71,19 @@ describe("AppearancePreview", () => {
     expect(emitted("pick")).toEqual([[["today", "date", "cell"], "2026-05-13"]]);
   });
 
-  it("marks the open note two days after today, and selects that day alone", () => {
+  it("marks the open note two days after today, unselected", () => {
     const { container } = render(AppearancePreview, { props: { width: "wide" } });
-    expect(cellAt(container, "2026-05-15").dataset.active).toBe("true");
+    const open = cellAt(container, "2026-05-15");
+    expect(open.dataset.active).toBe("true");
+    expect(open.dataset.selected).toBeUndefined();
     expect(container.querySelectorAll("[data-active]")).toHaveLength(1);
-    expect(cellAt(container, "2026-05-15").dataset.selected).toBe("true");
+  });
+
+  it("selects the month's first day, which is not the open note's", () => {
+    const { container } = render(AppearancePreview, { props: { width: "wide" } });
+    const selected = cellAt(container, "2026-05-01");
+    expect(selected.dataset.selected).toBe("true");
+    expect(selected.dataset.active).toBeUndefined();
     expect(container.querySelectorAll("[data-selected]")).toHaveLength(1);
   });
 
@@ -94,7 +102,7 @@ describe("AppearancePreview", () => {
     for (const cell of outside) expect(cell.dataset.inactive).toBeUndefined();
   });
 
-  it("decorates one plain day, neither today nor the open note's, with a background and a text color", () => {
+  it("decorates the selected day alone, with a background and a text color", () => {
     const { container } = render(AppearancePreview, {
       props: { width: "wide" },
       global: { stubs: { CellDecoration: DecorationProbe } },
@@ -106,8 +114,7 @@ describe("AppearancePreview", () => {
     expect(decorated).toHaveLength(1);
     const [anchor, styles] = decorated.at(0) ?? [];
     expect(styles).toBe("background,color");
-    expect(anchor).not.toBe("2026-05-13");
-    expect(anchor).not.toBe("2026-05-15");
+    expect(anchor).toBe("2026-05-01");
   });
 
   describe("outlines the part being edited", () => {

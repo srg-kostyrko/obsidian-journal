@@ -23,10 +23,8 @@ describe("sampleDays", () => {
     expect(sampleDays(date("2026-05-13")).month.start.toAnchor()).toBe("2026-05-01");
   });
 
-  it("opens the note two days after today, and selects the day it opens", () => {
-    const sample = sampleDays(date("2026-05-13"));
-    expect(sample.active).toBe("2026-05-15");
-    expect(sample.selected).toBe("2026-05-15");
+  it("opens the note two days after today", () => {
+    expect(sampleDays(date("2026-05-13")).active).toBe("2026-05-15");
   });
 
   it("clamps the open note to the month's last day", () => {
@@ -37,26 +35,32 @@ describe("sampleDays", () => {
     expect(sampleDays(date("2026-02-27")).active).toBe("2026-02-28");
   });
 
-  it.each(["2026-05-01", "2026-05-13", "2026-05-30", "2026-05-31", "2026-02-28"])(
-    "leaves today alone: neither open, selected nor decorated (today %s)",
-    (today) => {
-      const sample = sampleDays(date(today));
-      expect(sample.active).not.toBe(today);
-      expect(sample.selected).not.toBe(today);
-      expect(sample.decorated).not.toContain(today);
-      expect(sample.month.contains(date(sample.active))).toBe(true);
-    },
-  );
+  it("selects the month's first day that is neither today nor the open note's", () => {
+    expect(sampleDays(date("2026-05-13")).selected).toBe("2026-05-01");
+    expect(sampleDays(date("2026-05-01")).selected).toBe("2026-05-02");
+    expect(sampleDays(date("2026-05-30")).selected).toBe("2026-05-01");
+  });
 
-  it.each(["2026-05-01", "2026-05-13", "2026-05-30", "2026-05-31", "2026-02-28"])(
-    "decorates one plain day of the month (today %s)",
+  it.each([
+    "2026-02-01",
+    "2026-02-02",
+    "2026-02-27",
+    "2026-02-28",
+    "2028-02-29",
+    "2026-05-01",
+    "2026-05-13",
+    "2026-05-30",
+    "2026-05-31",
+    "2026-04-30",
+  ])(
+    "gives today, the open note and the selected day a day each, and decorates only the selected (today %s)",
     (today) => {
       const sample = sampleDays(date(today));
-      expect(sample.decorated).toHaveLength(1);
-      const plain = sample.decorated.at(0) ?? "";
-      expect(plain).not.toBe(sample.active);
-      expect(plain).not.toBe(sample.selected);
-      expect(sample.month.contains(date(plain))).toBe(true);
+      expect(new Set([today, sample.active, sample.selected]).size).toBe(3);
+      for (const anchor of [today, sample.active, sample.selected]) {
+        expect(sample.month.contains(date(anchor))).toBe(true);
+      }
+      expect(sample.decorated).toEqual([sample.selected]);
     },
   );
 });
