@@ -5,3 +5,6 @@ body {
   --journal-cell-date-size: 21px;
   --journal-cell-date-color: #123456;
 }
+[data-text-precedence="public-today"] {
+  --journal-cell-today-text-color: #563412;
+}

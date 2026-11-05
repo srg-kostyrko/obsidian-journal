@@ -1,6 +1,10 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
+import { CURRENT_VERSION } from "../../src/settings/version.js";
+import { reloadObsidianOn } from "../support/clock.js";
+import { readRawSettings, writeRawSettings } from "../support/plugin-data.js";
+import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -54,11 +58,9 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
 
 // The label's color goes through color-mix, which Chromium serializes as color(srgb …) and
 // WebDriver cannot parse to hex, so the page paints it on a canvas and reads the pixel back.
-async function labelHex(anchor: string): Promise<string | undefined> {
-  const hex = await browser.execute((cellAnchor: string) => {
-    const label = document.querySelector(
-      `.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"] .cell-decoration__content`,
-    );
+async function labelHexOf(cellSelector: string): Promise<string | undefined> {
+  const hex = await browser.execute((selector: string) => {
+    const label = document.querySelector(`${selector} .cell-decoration__content`);
     const context = document.createElement("canvas").getContext("2d");
     if (label === null || context === null) return null;
     const color = getComputedStyle(label).color;
@@ -74,9 +76,12 @@ async function labelHex(anchor: string): Promise<string | undefined> {
     context.fillRect(0, 0, 1, 1);
     const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
     return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
-  }, anchor);
+  }, cellSelector);
   return hex ?? undefined;
 }
+
+const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
+const labelHex = (anchor: string): Promise<string | undefined> => labelHexOf(daySelector(anchor));
 
 // A theme variable's color as the cell would resolve it: a probe inside the cell's parent, so the
 // same body and view scoping apply, normalized the same way as labelHex.
@@ -483,5 +488,342 @@ describe("date text on days outside the month", () => {
     const muted = await themeHex(anchor, "--text-muted");
     expect(muted).not.toBe("#123456");
     expect(await labelHex(anchor)).toBe(muted);
+  });
+});
+
+// Text precedence and Unchanged pass-through, with the clock pinned so today lands on fixed days: the
+// 31st is in its own month for the base view and a leading outside day of April 2027 (which starts on
+// a Thursday under either week start) for the outside-days view. Each case saves its own appearance
+// alone, so no case inherits another's values.
+const PINNED_TODAY = "2027-03-31";
+const PINNED_DECORATED = "2027-03-15";
+const PINNED_PLAIN = "2027-03-16";
+const PINNED_DECORATED_UNOPENED = "2027-03-22";
+// In-month days with no note, to move the selection to; never the 1st, which shares the heading's anchor.
+const MARCH_SPARE = "2027-03-10";
+const APRIL_SPARE = "2027-04-12";
+const BASE_VIEW_ROOT = '[data-journal-view="b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c"]';
+const OPEN_NOTE_TEXT = "#00aa55";
+const OUTSIDE_TEXT = "#3a5f7d";
+const WEEK_NUMBER_TEXT = "#357a9b";
+const PUBLIC_TODAY_TEXT = "#563412";
+// The fixture snippet scopes its public today text color to a view root carrying this attribute.
+const PUBLIC_TODAY_ATTRIBUTE = "data-text-precedence";
+// The sidebar itself is below the breakpoint, so both widths are forced.
+const NARROW_WIDTH = "300px";
+const WIDE_WIDTH = "40em";
+// Obsidian's --font-normal, --font-semibold and --font-bold.
+const NORMAL = "400";
+const SEMIBOLD = "600";
+const BOLD = "700";
+
+type Json = Record<string, unknown>;
+
+function child(parent: Json, key: string): Json {
+  const existing = parent[key];
+  if (typeof existing === "object" && existing !== null) return existing as Json;
+  const created: Json = {};
+  parent[key] = created;
+  return created;
+}
+
+// Sets `value` at a dotted path under `appearance`, creating any missing level.
+function setAt(appearance: Json, path: string, value: unknown): void {
+  const keys = path.split(".");
+  const last = keys.pop() ?? "";
+  let at = appearance;
+  for (const key of keys) at = child(at, key);
+  at[last] = value;
+}
+
+const custom = (color: string): { type: "custom"; color: string } => ({ type: "custom", color });
+
+class SavedVariableError extends Error {
+  override name = "SavedVariableError";
+}
+
+class LabelMismatchError extends Error {
+  override name = "LabelMismatchError";
+}
+
+// Every save also writes a fresh cell min-height, which no case reads: the wait on it is the one sync
+// point that does not depend on how the writer encodes Unchanged, which the forced-fail runs change.
+let saveMarker = 26;
+
+// Writes the fixture's settings back the way a sync does, at the current version with an appearance
+// holding only `values` (the fixture is v7, and its migration persists only on a later save), then
+// waits for this save's marker on the body, so no read can see the previous case's variables.
+async function saveAppearance(baseline: string, values: Record<string, unknown>): Promise<void> {
+  saveMarker += 1;
+  const settings = JSON.parse(baseline) as Json;
+  settings.version = CURRENT_VERSION;
+  const appearance: Json = {};
+  settings.appearance = appearance;
+  const leaves = Object.entries({ ...values, "wide.cell.minHeight": saveMarker });
+  for (const [path, value] of leaves) setAt(appearance, path, value);
+  await writeRawSettings(JSON.stringify(settings));
+  await triggerExternalSettingsChange();
+  const expected = `${saveMarker}px`;
+  await waitForState(
+    () => browser.execute(() => document.body.style.getPropertyValue("--journal-saved-cell-cell-min-height").trim()),
+    (value) => value === expected,
+    `the writer did not put this save's ${expected} cell min-height on the body`,
+  ).catch((error: unknown) => {
+    throw new SavedVariableError(String(error));
+  });
+}
+
+async function labelWeight(cellSelector: string): Promise<string | undefined> {
+  const weight = await $(`${cellSelector} .cell-decoration__content`).getCSSProperty("font-weight");
+  // WebDriver parses a bare number to a number despite the declared string.
+  const value: unknown = weight.value;
+  return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
+}
+
+// The width goes on the laid-out block root; an empty width restores its own.
+async function forceBlockWidth(root: string, width: string): Promise<void> {
+  await browser.execute(
+    (selector: string, forced: string) => {
+      const block = [...document.querySelectorAll<HTMLElement>(`${selector} .journal-view-month-calendar`)].find(
+        (candidate) => candidate.clientWidth > 0 || candidate.style.width !== "",
+      );
+      if (block !== undefined) block.style.width = forced;
+    },
+    root,
+    width,
+  );
+}
+
+const isSelected = async (anchor: string): Promise<boolean> =>
+  (await calendar.cell(anchor).getAttribute("aria-selected")) === "true";
+
+async function selectDay(anchor: string): Promise<void> {
+  if (await isSelected(anchor)) return;
+  await clickCell(anchor, true);
+  await waitForState(
+    () => isSelected(anchor),
+    (selected) => selected,
+    `${anchor} did not become selected`,
+  );
+}
+
+async function openDay(anchor: string): Promise<void> {
+  await clickCell(anchor, false);
+  await waitForActiveNote(`day/${anchor}.md`);
+  await calendar.waitForActive(anchor);
+}
+
+// The fixture snippet's public selected text beats every lower state, so a case about today moves the
+// selection off it first.
+async function moveSelectionOff(anchor: string, spare: string): Promise<void> {
+  await selectDay(spare);
+  await waitForState(
+    () => isSelected(anchor),
+    (selected) => !selected,
+    `${anchor} stayed selected after the selection moved to ${spare}`,
+  );
+}
+
+async function expectLabelHex(cellSelector: string, expected: string, message: string): Promise<void> {
+  let last: string | undefined;
+  await waitForState(
+    async () => {
+      last = await labelHexOf(cellSelector);
+      return last;
+    },
+    (hex) => hex === expected,
+    message,
+  ).catch(() => {
+    throw new LabelMismatchError(`${message}: read ${String(last)}`);
+  });
+}
+
+async function expectLabelWeight(cellSelector: string, expected: string, message: string): Promise<void> {
+  let last: string | undefined;
+  await waitForState(
+    async () => {
+      last = await labelWeight(cellSelector);
+      return last;
+    },
+    (weight) => weight === expected,
+    message,
+  ).catch(() => {
+    throw new LabelMismatchError(`${message}: read ${String(last)}`);
+  });
+}
+
+describe("text precedence", () => {
+  let baseline: string;
+
+  describe("in the month", () => {
+    before(async () => {
+      await reloadObsidianOn(PINNED_TODAY, { vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
+      baseline = (await readRawSettings()) ?? "{}";
+      await seedNote(`day/${PINNED_DECORATED}.md`, note("daily", PINNED_DECORATED, "marker #layered"));
+      await seedNote(`day/${PINNED_PLAIN}.md`, note("daily", PINNED_PLAIN, "plain"));
+      await seedNote(
+        `day/${PINNED_DECORATED_UNOPENED}.md`,
+        note("daily", PINNED_DECORATED_UNOPENED, "marker #layered"),
+      );
+      await openCalendarView();
+      expect(await $$(".notes-month-view").length).toBe(1);
+      for (const anchor of [PINNED_DECORATED, PINNED_DECORATED_UNOPENED]) {
+        await waitForState(
+          () => decorationBackgroundHex(calendar.cell(anchor)),
+          (hex) => hex === DECORATED_BG,
+          `${anchor} did not take the ${DECORATED_BG} background`,
+        );
+      }
+    });
+
+    afterEach(async () => {
+      await forceBlockWidth(BASE_VIEW_ROOT, "");
+      await browser.execute(
+        (selector: string, attribute: string) => {
+          document.querySelector(selector)?.removeAttribute(attribute);
+        },
+        BASE_VIEW_ROOT,
+        PUBLIC_TODAY_ATTRIBUTE,
+      );
+    });
+
+    after(closePopoutWindows);
+
+    it("an under open note beats an over selected on a decorated day", async () => {
+      await saveAppearance(baseline, { "wide.active.text.color": custom(OPEN_NOTE_TEXT) });
+      await openDay(PINNED_DECORATED);
+      await selectDay(PINNED_DECORATED);
+      await expectLabelHex(
+        daySelector(PINNED_DECORATED),
+        DECORATED_TEXT,
+        `the decorated open note did not keep the decoration's ${DECORATED_TEXT} under the selected ${SELECTED_TEXT}`,
+      );
+      await openDay(PINNED_PLAIN);
+      await selectDay(PINNED_PLAIN);
+      await expectLabelHex(
+        daySelector(PINNED_PLAIN),
+        OPEN_NOTE_TEXT,
+        `the plain open note did not show its ${OPEN_NOTE_TEXT} over the selected ${SELECTED_TEXT}`,
+      );
+    });
+
+    it("a selected over-text shows on a decorated day that is not the open note", async () => {
+      await saveAppearance(baseline, { "wide.active.text.color": custom(OPEN_NOTE_TEXT) });
+      await openDay(PINNED_PLAIN);
+      await selectDay(PINNED_DECORATED_UNOPENED);
+      expect(await calendar.cell(PINNED_DECORATED_UNOPENED).getAttribute("data-active")).toBeNull();
+      await expectLabelHex(
+        daySelector(PINNED_DECORATED_UNOPENED),
+        SELECTED_TEXT,
+        `the selected decorated day did not paint its ${SELECTED_TEXT} over the decoration's ${DECORATED_TEXT}`,
+      );
+    });
+
+    it("an Unchanged open note lets the selected text show on its day", async () => {
+      await saveAppearance(baseline, { "wide.active.text.color": "unchanged" });
+      await openDay(PINNED_DECORATED);
+      await selectDay(PINNED_DECORATED);
+      await expectLabelHex(
+        daySelector(PINNED_DECORATED),
+        SELECTED_TEXT,
+        `the Unchanged open note did not let the selected ${SELECTED_TEXT} through`,
+      );
+    });
+
+    it("Unchanged today keeps the week number's weight and part color", async () => {
+      await saveAppearance(baseline, {
+        "wide.today.text.color": "unchanged",
+        "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
+        "wide.weekNumber.weight": "semibold",
+      });
+      const weekNumber = ".notes-month-view__week-number[data-today]";
+      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for today's week" });
+      expect(await $(weekNumber).getAttribute("data-active")).toBeNull();
+      await expectLabelHex(
+        weekNumber,
+        WEEK_NUMBER_TEXT,
+        `today's week number did not keep the part's ${WEEK_NUMBER_TEXT} under an Unchanged today`,
+      );
+      await expectLabelWeight(weekNumber, SEMIBOLD, "today's week number did not keep the part's semibold weight");
+    });
+
+    it("narrow none cancels a wide bold", async () => {
+      await saveAppearance(baseline, {
+        "wide.today.text.weight": "bold",
+        "narrow.today.style": "none",
+        "wide.date.weight": "semibold",
+      });
+      await forceBlockWidth(BASE_VIEW_ROOT, NARROW_WIDTH);
+      const today = `${daySelector(PINNED_TODAY)}[data-today]`;
+      await expectLabelWeight(today, SEMIBOLD, "a narrow none on today did not fall back to the date's semibold");
+      await forceBlockWidth(BASE_VIEW_ROOT, WIDE_WIDTH);
+      await expectLabelWeight(today, BOLD, "today at wide width did not keep its bold");
+    });
+
+    it("a public snippet text color beats a saved Unchanged", async () => {
+      await saveAppearance(baseline, { "wide.today.text.color": "unchanged" });
+      await moveSelectionOff(PINNED_TODAY, MARCH_SPARE);
+      await browser.execute(
+        (selector: string, attribute: string) => {
+          document.querySelector(selector)?.setAttribute(attribute, "public-today");
+        },
+        BASE_VIEW_ROOT,
+        PUBLIC_TODAY_ATTRIBUTE,
+      );
+      await expectLabelHex(
+        `${daySelector(PINNED_TODAY)}[data-today]`,
+        PUBLIC_TODAY_TEXT,
+        `the public today text ${PUBLIC_TODAY_TEXT} did not beat the saved Unchanged`,
+      );
+    });
+  });
+
+  describe("on a today outside the month", () => {
+    const today = `${OUTSIDE_VIEW_ROOT} ${daySelector(PINNED_TODAY)}[data-today][data-outside]`;
+
+    before(async () => {
+      await reloadObsidianOn(PINNED_TODAY, { vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
+      baseline = (await readRawSettings()) ?? "{}";
+      await openOutsideView();
+      expect(await $$(".notes-month-view").length).toBe(1);
+      const before = await firstDayAnchor();
+      await $(
+        `${OUTSIDE_VIEW_ROOT} [aria-label="${m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" })}"]`,
+      ).click();
+      await waitForState(firstDayAnchor, (anchor) => anchor !== before, "the outside-days view did not page to April");
+      await $(today).waitForExist({ timeoutMsg: `April 2027 did not show ${PINNED_TODAY} as an outside today` });
+      await moveSelectionOff(PINNED_TODAY, APRIL_SPARE);
+    });
+
+    afterEach(async () => {
+      await forceBlockWidth(OUTSIDE_VIEW_ROOT, "");
+    });
+
+    after(closePopoutWindows);
+
+    it("Unchanged today passes to the outside text", async () => {
+      await saveAppearance(baseline, {
+        "wide.today.text.color": "unchanged",
+        "wide.outside.text.color": custom(OUTSIDE_TEXT),
+      });
+      await expectLabelHex(today, OUTSIDE_TEXT, `an Unchanged today did not pass to the outside ${OUTSIDE_TEXT}`);
+    });
+
+    it("narrow none on today passes to the outside weight", async () => {
+      await saveAppearance(baseline, {
+        "wide.today.text.weight": "bold",
+        "narrow.today.style": "none",
+        "wide.outside.text.weight": "normal",
+        "wide.date.weight": "semibold",
+      });
+      await forceBlockWidth(OUTSIDE_VIEW_ROOT, NARROW_WIDTH);
+      await expectLabelWeight(
+        today,
+        NORMAL,
+        "a narrow none on an outside today did not pass to the outside state's normal weight",
+      );
+      await forceBlockWidth(OUTSIDE_VIEW_ROOT, WIDE_WIDTH);
+      await expectLabelWeight(today, BOLD, "an outside today at wide width did not keep its bold");
+    });
   });
 });
