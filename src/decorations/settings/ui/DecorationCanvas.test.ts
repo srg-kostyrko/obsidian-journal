@@ -8,6 +8,8 @@ import { defineComponent, h } from "vue";
 
 import { decorationSchema, type JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
+import { calendarAppearanceCoreModule } from "@/notes-calendar/appearance/module";
+import { appearanceSlice } from "@/notes-calendar/appearance/slice";
 import { testContainer } from "@/testing";
 
 import { STYLE_SLOT_KEYS, type StyleSlotKey } from "../../style-slots";
@@ -29,9 +31,13 @@ const createStyleIn: Record<StyleSlotKey, () => Promise<void>> = {
   corner: () => userEvent.click(screen.getByRole("button", { name: "Top left" })),
 };
 
-async function mount(styles: JournalDecoration["styles"] = []) {
+async function mount(styles: JournalDecoration["styles"] = [], minHeight?: number) {
   const exposed = {} as { values: JournalDecoration };
-  const harness = await testContainer();
+  const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+  if (minHeight !== undefined) {
+    const slice = harness.settings.getSlice(appearanceSlice);
+    slice.state = { ...slice.state, wide: { ...slice.state.wide, cell: { ...slice.state.wide.cell, minHeight } } };
+  }
   const Host = defineComponent({
     setup() {
       const form = useForm<JournalDecoration>({
@@ -47,6 +53,15 @@ async function mount(styles: JournalDecoration["styles"] = []) {
 }
 
 describe("DecorationCanvas", () => {
+  it("magnification uses the saved cell min-height", async () => {
+    await mount([], 40);
+    expect(
+      document
+        .querySelector<HTMLElement>("[style*='--cell-source-size']")
+        ?.style.getPropertyValue("--cell-source-size"),
+    ).toBe("40px");
+  });
+
   it("opens an existing decoration on its first occupied layer", async () => {
     await mount([{ type: "corner", placement: "top-left", color: { type: "theme", name: "text-accent" } }]);
     expect(screen.getByRole("tab", { name: layerChipLabel("corner", true) }).getAttribute("aria-selected")).toBe(
