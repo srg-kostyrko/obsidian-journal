@@ -55,6 +55,16 @@ describe("AppearancePreview", () => {
     expect(partsAt(today)).toEqual(["selected", "today", "date", "cell"]);
   });
 
+  it.each(["{Enter}", " "])("emits the same parts for %j on a focused cell as for a click", async (key) => {
+    const { container, emitted } = render(AppearancePreview, { props: { width: "wide" } });
+    const today = cellAt(container, "2026-05-13");
+
+    today.focus();
+    await userEvent.keyboard(key);
+
+    expect(emitted("pick")).toEqual([[["selected", "today", "date", "cell"]]]);
+  });
+
   it("marks the open note two days after today", () => {
     const { container } = render(AppearancePreview, { props: { width: "wide" } });
     expect(cellAt(container, "2026-05-15").dataset.active).toBe("true");

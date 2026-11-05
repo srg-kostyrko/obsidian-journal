@@ -33,6 +33,10 @@ describe("sampleDays", () => {
     expect(sampleDays(date("2026-05-30")).active).toBe("2026-05-31");
   });
 
+  it("clamps the open note to February's last day", () => {
+    expect(sampleDays(date("2026-02-27")).active).toBe("2026-02-28");
+  });
+
   it("never opens the note on the selected day", () => {
     const sample = sampleDays(date("2026-05-31"));
     expect(sample.active).not.toBe(sample.selected);

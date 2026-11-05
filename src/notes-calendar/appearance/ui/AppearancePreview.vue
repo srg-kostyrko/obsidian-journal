@@ -64,7 +64,7 @@ function isElement(target: EventTarget | null): target is Element {
   return target !== null && "closest" in target;
 }
 
-function onClick(event: MouseEvent): void {
+function onPick(event: Event): void {
   if (!isElement(event.target)) return;
   const parts = partsAt(event.target);
   if (parts.length > 0) emit("pick", parts);
@@ -72,7 +72,13 @@ function onClick(event: MouseEvent): void {
 </script>
 
 <template>
-  <div class="appearance-preview" :style="{ width: PIXELS[width] }" @click="onClick">
+  <div
+    class="appearance-preview"
+    :style="{ width: PIXELS[width] }"
+    @click="onPick"
+    @keydown.enter="onPick"
+    @keydown.space.prevent="onPick"
+  >
     <div class="appearance-preview__header" data-preview-part="heading">
       <NotesCalendarCell :period="month" :cell="cell" />
       <NotesCalendarCell :period="year" :cell="cell" />
