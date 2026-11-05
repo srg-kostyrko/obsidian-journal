@@ -19,7 +19,7 @@ describe("appearanceVariables", () => {
     const state = structuredClone(appearanceSlice.defaults);
     state.selectedRing = { type: "custom", color: "#00ff00" };
 
-    expect(appearanceVariables(state)).toEqual({ "--journal-saved-cell-selected-ring": "#00ff00" });
+    expect(appearanceVariables(state)).toEqual({ "--journal-saved-cell-selected-color": "#00ff00" });
   });
 
   it("maps every non-stock color", () => {
@@ -30,11 +30,11 @@ describe("appearanceVariables", () => {
     };
 
     expect(appearanceVariables(state)).toEqual({
-      "--journal-saved-cell-today-color": "var(--text-normal)",
-      "--journal-saved-cell-today-bg": "#111",
-      "--journal-saved-cell-active-color": "#fff",
-      "--journal-saved-cell-active-bg": "transparent",
-      "--journal-saved-cell-selected-ring": "var(--text-accent)",
+      "--journal-saved-cell-today-text-color": "var(--text-normal)",
+      "--journal-saved-cell-today-color": "#111",
+      "--journal-saved-cell-active-text-color": "#fff",
+      "--journal-saved-cell-active-color": "transparent",
+      "--journal-saved-cell-selected-color": "var(--text-accent)",
     });
   });
 });
@@ -63,7 +63,7 @@ describe("AppearanceVariables", () => {
     slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-ring")).toBe("#00ff00");
+    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-color")).toBe("#00ff00");
   });
 
   it("removes a variable from the body when its color returns to the stock one", async () => {
@@ -75,7 +75,7 @@ describe("AppearanceVariables", () => {
     slice.state = { ...slice.state, selectedRing: { ...appearanceSlice.defaults.selectedRing } };
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-ring")).toBe("");
+    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-color")).toBe("");
   });
 
   it("removes its variables and stops watching on dispose", async () => {
@@ -88,6 +88,6 @@ describe("AppearanceVariables", () => {
     slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#ff0000" } };
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-ring")).toBe("");
+    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-color")).toBe("");
   });
 });

@@ -93,10 +93,10 @@ const hover = useModifierHoverPreview();
 /* [data-active] follows [data-today] so a cell that is both the open note and today resolves
    to the active colors — the note you're viewing wins over the today marker. */
 .notes-calendar-cell[data-today] {
-  color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, var(--text-accent)));
+  color: var(--journal-cell-today-text-color, var(--journal-saved-cell-today-text-color, var(--text-accent)));
 }
 .notes-calendar-cell[data-active] {
-  color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--text-on-accent)));
+  color: var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)));
 }
 /* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
    z-index in the shared decoration would leak into every other host's stacking context. The border
@@ -124,18 +124,18 @@ const hover = useModifierHoverPreview();
   pointer-events: none;
 }
 .notes-calendar-cell__layer[data-layer="today"] {
-  background-color: var(--journal-cell-today-bg, var(--journal-saved-cell-today-bg, transparent));
+  background-color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent));
   z-index: var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1));
 }
 /* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear this ring;
    widening it means widening that too. */
 .notes-calendar-cell__layer[data-layer="selected"] {
   box-shadow: inset 0 0 0 2px
-    var(--journal-cell-selected-ring, var(--journal-saved-cell-selected-ring, var(--interactive-accent)));
+    var(--journal-cell-selected-color, var(--journal-saved-cell-selected-color, var(--interactive-accent)));
   z-index: var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1));
 }
 .notes-calendar-cell__layer[data-layer="active"] {
-  background-color: var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)));
+  background-color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)));
   z-index: var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1));
 }
 </style>

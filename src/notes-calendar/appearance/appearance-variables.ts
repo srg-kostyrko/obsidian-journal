@@ -18,11 +18,11 @@ function sameColor(a: ColorSettings, b: ColorSettings): boolean {
 /** Leaves out stock colors so they resolve through the calendar's own fallback, as before saved colors became variables. */
 export function appearanceVariables(state: AppearanceSliceState): Record<string, string> {
   const entries: [string, ColorSettings, ColorSettings][] = [
-    ["--journal-saved-cell-today-color", state.today.color, defaults.today.color],
-    ["--journal-saved-cell-today-bg", state.today.background, defaults.today.background],
-    ["--journal-saved-cell-active-color", state.active.color, defaults.active.color],
-    ["--journal-saved-cell-active-bg", state.active.background, defaults.active.background],
-    ["--journal-saved-cell-selected-ring", state.selectedRing, defaults.selectedRing],
+    ["--journal-saved-cell-today-text-color", state.today.color, defaults.today.color],
+    ["--journal-saved-cell-today-color", state.today.background, defaults.today.background],
+    ["--journal-saved-cell-active-text-color", state.active.color, defaults.active.color],
+    ["--journal-saved-cell-active-color", state.active.background, defaults.active.background],
+    ["--journal-saved-cell-selected-color", state.selectedRing, defaults.selectedRing],
   ];
   return Object.fromEntries(
     entries.filter(([, color, stock]) => !sameColor(color, stock)).map(([name, color]) => [name, colorToString(color)]),

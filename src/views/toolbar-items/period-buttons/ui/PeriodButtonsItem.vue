@@ -131,7 +131,7 @@ function openPreview(badge: Badge, event: MouseEvent): void {
    the configured active colors (CSS vars set on each window body by AppearanceVariables).
    The button[data-active] specificity clears the flat clickable-icon background. */
 button[data-active] {
-  color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--text-on-accent)));
-  background-color: var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)));
+  color: var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)));
+  background-color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)));
 }
 </style>
