@@ -26,16 +26,20 @@ type Css = string | undefined;
 
 /**
  * "Show nothing of mine": written only where something underneath would otherwise paint — a
- * non-empty stock, or at narrow width a wide value that was saved.
+ * non-empty stock, or at narrow width a wide value that was saved. The token is `unchanged`
+ * because the cell's style queries turn it into a pass-through, which no real CSS value can be.
  */
-interface Cancel {
-  readonly cancel: string;
+interface Pass {
+  readonly pass: true;
 }
+
+const PASS: Pass = { pass: true };
+const PASS_TOKEN = "unchanged";
 
 /** One catalog value of a part: its CSS from the part's values, and which narrow leaves feed it. */
 interface Value<Part, Narrow> {
   readonly suffix: string;
-  readonly css: (values: Part) => Css | Cancel;
+  readonly css: (values: Part) => Css | Pass;
   readonly reads: (narrow: Narrow) => readonly unknown[];
 }
 
@@ -82,12 +86,9 @@ const orNull = <T>(value: T | "unchanged"): T | null => (value === "unchanged" ?
 
 const textOf = (h: HighlightValues): HighlightValues["text"] | undefined => (styleValues(h).text ? h.text : undefined);
 
-// No custom property can carry `inherit`, and `normal` would un-bold the week numbers, so a
-// cancelled weight writes nothing and the value underneath still shows.
-const textColor = (h: HighlightValues): Css | Cancel =>
-  color(orNull(textOf(h)?.color ?? null)) ?? { cancel: "currentColor" };
-const textItalic = (h: HighlightValues): Css | Cancel =>
-  italic(orNull(textOf(h)?.italic ?? null)) ?? { cancel: "normal" };
+const textColor = (h: HighlightValues): Css | Pass => color(orNull(textOf(h)?.color ?? null)) ?? PASS;
+const textWeight = (h: HighlightValues): Css | Pass => weight(orNull(textOf(h)?.weight ?? null)) ?? PASS;
+const textItalic = (h: HighlightValues): Css | Pass => italic(orNull(textOf(h)?.italic ?? null)) ?? PASS;
 
 function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighlight> {
   return {
@@ -97,11 +98,7 @@ function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighli
       { suffix: "ring-width", css: (h) => px(styleValues(h).ring), reads: (n) => [n.style, n.ringWidth] },
       { suffix: "strength", css: (h) => String(styleValues(h).strength / 100), reads: (n) => [n.style, n.strength] },
       { suffix: "text-color", css: textColor, reads: (n) => [n.style, n.text.color] },
-      {
-        suffix: "text-weight",
-        css: (h) => weight(orNull(textOf(h)?.weight ?? null)),
-        reads: (n) => [n.style, n.text.weight],
-      },
+      { suffix: "text-weight", css: textWeight, reads: (n) => [n.style, n.text.weight] },
       { suffix: "text-italic", css: textItalic, reads: (n) => [n.style, n.text.italic] },
       { suffix: "layer", css: (h) => (h.over ? "1" : "-1"), reads: (n) => [n.over] },
     ],
@@ -204,13 +201,13 @@ function writePart<Part, Narrow>(
     const wideCss = value.css(wide);
     let written: string | undefined;
     if (typeof wideCss === "string") written = wideCss === entry.stock ? undefined : wideCss;
-    else if (wideCss !== undefined && entry.stock !== "") written = wideCss.cancel;
+    else if (wideCss !== undefined && entry.stock !== "") written = PASS_TOKEN;
     if (written !== undefined) out[savedName(entry)] = written;
     if (value.reads(narrow).every((leaf) => leaf === null)) continue;
     const narrowCss = value.css(merged);
     if (typeof narrowCss === "string") out[savedName(entry, true)] = narrowCss;
     else if (narrowCss !== undefined && (entry.stock !== "" || written !== undefined)) {
-      out[savedName(entry, true)] = narrowCss.cancel;
+      out[savedName(entry, true)] = PASS_TOKEN;
     }
   }
 }
