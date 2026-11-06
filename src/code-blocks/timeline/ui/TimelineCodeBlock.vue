@@ -7,6 +7,7 @@ import {
   advance,
   periodOfKind,
   window as periodWindow,
+  resolveOutsideDates,
   useResolvedStructure,
   type AnchorString,
   type Period,
@@ -86,6 +87,14 @@ const shelf = computed(() => config.shelf ?? derivedShelf.value);
 
 const weekPlacement = useResolvedStructure("weekPlacement", () => config.weeks);
 const navigation = useResolvedStructure("timelineNavigation", () => config.navigation);
+const showHeading = useResolvedStructure("showHeading", () => config.heading);
+const showWeekdays = useResolvedStructure("showWeekdays", () => config.weekdays);
+const outsideDays = useResolvedStructure("outsideDays", () => config.outside);
+const monthRows = useResolvedStructure("monthRows", () => config.rows);
+
+const monthOutside = computed(() => resolveOutsideDates(outsideDays.value, "active"));
+const gridOutside = computed(() => resolveOutsideDates(outsideDays.value, "blank"));
+const sixRows = computed(() => monthRows.value === "six");
 
 // The period one arrow press moves by, which is the one the mode is built around.
 const unit = computed<Exclude<PeriodKind, "day" | "decade">>(() =>
@@ -122,9 +131,12 @@ const visiblePeriods = computed<readonly Period[]>(() =>
 );
 
 // One grid means one heading, and that heading already names the period the label would.
+// A hidden heading leaves nothing to join, so the controls keep their own row.
 // The controls join it rather than taking a row of their own; every other shape — a padded
 // window, quarter, calendar — carries several headings and keeps the label row.
-const merged = computed(() => navigation.value && padded.value && visiblePeriods.value.length === 1);
+const merged = computed(
+  () => navigation.value && showHeading.value && padded.value && visiblePeriods.value.length === 1,
+);
 
 function step(steps: number): void {
   offset.value += steps;
@@ -151,6 +163,8 @@ function step(steps: number): void {
       :hidden-weekdays="config.hiddenWeekdays"
       :before="config.before"
       :after="config.after"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
     >
       <template v-if="merged" #header-start>
         <TimelineNavStep direction="prev" :unit @step="step" />
@@ -169,6 +183,10 @@ function step(steps: number): void {
       :hidden-weekdays="config.hiddenWeekdays"
       :before="config.before"
       :after="config.after"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
+      :outside-dates="monthOutside"
+      :six-rows="sixRows"
     >
       <template v-if="merged" #header-start>
         <TimelineNavStep direction="prev" :unit @step="step" />
@@ -185,6 +203,10 @@ function step(steps: number): void {
       :shelf="shelf"
       :weeks="weekPlacement"
       :hidden-weekdays="config.hiddenWeekdays"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
+      :outside-dates="gridOutside"
+      :six-rows="sixRows"
     />
     <TimelineCalendar
       v-else
@@ -192,6 +214,10 @@ function step(steps: number): void {
       :shelf="shelf"
       :weeks="weekPlacement"
       :hidden-weekdays="config.hiddenWeekdays"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
+      :outside-dates="gridOutside"
+      :six-rows="sixRows"
     />
   </div>
 </template>

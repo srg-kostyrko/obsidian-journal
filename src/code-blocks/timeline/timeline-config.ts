@@ -30,6 +30,21 @@ function asNavigation(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
+const outsideOptions = ["interactive", "inert", "hidden"] as const;
+const rowOptions = ["fit", "six"] as const;
+
+function asOutside(value: unknown): (typeof outsideOptions)[number] | undefined {
+  return typeof value === "string" && (outsideOptions as readonly string[]).includes(value)
+    ? (value as (typeof outsideOptions)[number])
+    : undefined;
+}
+
+function asRows(value: unknown): (typeof rowOptions)[number] | undefined {
+  return typeof value === "string" && (rowOptions as readonly string[]).includes(value)
+    ? (value as (typeof rowOptions)[number])
+    : undefined;
+}
+
 function asPadding(value: unknown): number | undefined {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined;
 }
@@ -56,6 +71,12 @@ const timelineBlockEntries = {
   // rather than an on/off word: YAML 1.2 (the `yaml` library Obsidian bundles) reads only
   // true/false as booleans, so `on` would arrive as the string "on" and degrade to unset.
   navigation: v.pipe(v.optional(v.unknown()), v.transform(asNavigation)),
+  // Booleans for the same YAML reason as `navigation`; unset follows the global structure default.
+  heading: v.pipe(v.optional(v.unknown()), v.transform(asNavigation)),
+  weekdays: v.pipe(v.optional(v.unknown()), v.transform(asNavigation)),
+  // `outside` and `rows` apply to the month-grid modes only; week mode has neither.
+  outside: v.pipe(v.optional(v.unknown()), v.transform(asOutside)),
+  rows: v.pipe(v.optional(v.unknown()), v.transform(asRows)),
 };
 
 export const timelineBlockSchema = v.pipe(v.unknown(), v.transform(asRecord), v.object(timelineBlockEntries));

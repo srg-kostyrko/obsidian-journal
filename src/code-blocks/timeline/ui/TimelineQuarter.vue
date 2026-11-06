@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { CalendarDate, QuarterPeriod, type AnchorString, type MonthPeriod } from "@/calendar";
+import { CalendarDate, QuarterPeriod, type AnchorString, type MonthPeriod, type OutsideDates } from "@/calendar";
 import { horizontalReservation, useCellPadding } from "@/decorations";
 import { NotesMonthView, useShelfScope } from "@/notes-calendar";
 
@@ -10,6 +10,10 @@ const props = defineProps<{
   shelf: string | null;
   weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
+  showHeader?: boolean;
+  showWeekdays?: boolean;
+  outsideDates?: OutsideDates;
+  sixRows?: boolean;
 }>();
 
 const months = computed<readonly MonthPeriod[]>(() => {
@@ -36,7 +40,10 @@ const gridStyle = computed(() => ({ "--journal-timeline-mark-reservation": horiz
       :month
       :weeks="weeks"
       :hidden-weekdays="hiddenWeekdays"
-      outside-dates="blank"
+      :outside-dates="outsideDates ?? 'blank'"
+      :six-rows="sixRows"
+      :show-header="showHeader"
+      :show-weekdays="showWeekdays"
     />
   </div>
 </template>
