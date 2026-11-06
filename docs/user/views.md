@@ -302,37 +302,44 @@ A Month calendar or Week calendar block and a
 
 ### Label
 
-Four text parts open with a **Label** section, after **Visibility**, that sets the
-[moment format](https://momentjs.com/docs/#/displaying/format/) of what they show:
+Four text parts have a **Label** section that sets the
+[moment format](https://momentjs.com/docs/#/displaying/format/) of what they show. On the **Month heading**, the
+**Weekday header** and **Week numbers** it comes after **Visibility**; the **Date number** has no **Visibility**
+section, so its **Label** section comes first.
 
-- **Month heading** — **Month format**, **Quarter format** and **Year format**, for the headings of month, quarter and year grids.
+- **Month heading** — **Month format**, **Quarter format** and **Year format**, each for its own cell in the
+  heading of every month and week grid. The quarter cell shows only when that grid shows it.
 - **Weekday header** — **Format**, for the weekday names.
 - **Week numbers** — **Format**, for the week numbers.
 - **Date number** — **Format**, for the number in each day.
 
-Each format is a text box. An empty box means the default, which the box shows as its placeholder; typing
-the default pattern, or choosing it from the suggestions, stores an empty box too, so the part still
-counts as unchanged. Beneath the box, **Suggestions** is a list of ready-made patterns, each shown as the
-pattern and a sample of today, such as `MMM — Nov`; choosing one fills the box. **Preview** shows
-today formatted with what is in the box, and a link opens the **moment.js format reference**.
+Each format is a text box. An empty box means the default, which the box shows as its placeholder. Beside
+the box, **Suggestions** is a list of ready-made patterns, each shown as the pattern and a sample of today,
+such as `MMM — Nov`; choosing one fills the box. Under the setting's name, **Preview:** shows today formatted
+with what is in the box, and a link opens the **moment.js format reference**. Under **Wide**, typing a
+format's default pattern, or choosing it from the suggestions, stores an empty box, so the part still counts
+as unchanged.
 
 The weekday's suggestions include **One letter**, which shows the locale's narrow weekday, such as
 `M` for Monday in English. It is a choice, not a pattern: the box stays empty, and no typed text can
 mean it.
 
 The weekday is the only label with a value of its own at narrow width. Under **Narrow**, its box and
-suggestions edit the format used by narrow calendars, and **Same as wide** in the list, or clearing the
-box, makes narrow calendars use the wide format again. Out of the box the narrow weekday is the same as
-wide. The other formats have a single value and carry an **All widths** note under both widths.
+suggestions edit the format used by narrow calendars. **Same as wide** in the list, or clearing the box,
+makes narrow calendars use the wide format again; typing a pattern, even the default `ddd`, sets a format for
+narrow calendars alone. Out of the box the narrow weekday is the same as wide. The other formats have a
+single value and carry an **All widths** note under both widths.
 
-The week numbers' **Format** warns when it contains the ISO week tokens `W` or `WW` and the week grid is
-not ISO, because those count ISO weeks, which can differ from the weeks the calendar's rows show. The
-suggestions leave them out; `w` and `ww` follow the grid.
+The week numbers' **Format** warns when it contains an ISO week token outside square brackets, such as `W`
+or `WW`, and the week grid is not ISO, because those count ISO weeks, which can differ from the weeks the
+calendar's rows show. The suggestions leave them out; `w` and `ww` follow the grid.
 
 A format applies wherever a calendar draws that period, in views, in
 [timelines](/reference/code-blocks) and in their headings. It changes only the text on screen: a screen
-reader still reads the full date, and the full weekday name. A day label too long for its cell is cut
-with an ellipsis rather than widening the grid. Formats are set here only; a block cannot override them.
+reader still reads each cell's full name — the full date for a day, the week number with its year, the
+month or quarter with its year — and the full weekday name for a weekday. A day label too long for its
+cell is cut with an ellipsis rather than widening the grid. Formats are set here only; a block cannot
+override them.
 
 ### Unchanged
 
