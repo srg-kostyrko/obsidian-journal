@@ -44,10 +44,11 @@ const weekOrder = computed(() => calendar.weekdaysShort().map((weekday) => weekd
 
 const resolvedWeekend = computed(() => resolveWeekend(displaySlice.state.weekend, activeLocale()));
 
+// Monday first whatever the grid, so a Sunday-start week still reads "Saturday and Sunday".
+const ISO_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
 const weekendDescription = computed(() => {
-  const days = weekOrder.value
-    .filter((day) => resolvedWeekend.value.has(day))
-    .map((day) => calendar.weekdays()[day] ?? "");
+  const days = ISO_ORDER.filter((day) => resolvedWeekend.value.has(day)).map((day) => calendar.weekdays()[day] ?? "");
   return m.calendar_weekend_description({
     mode: days.length === 0 ? "none" : displaySlice.state.weekend.type,
     days: formatConjunction(days),

@@ -1,8 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { WeekPresetApplierToken } from "@/calendar";
+import { Calendar } from "@/calendar/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { m } from "@/i18n";
 import { AsyncResult } from "@/infrastructure/result";
@@ -184,7 +186,7 @@ describe("CalendarWeekBlock", () => {
       harness.render(CalendarWeekBlock);
       await openSection();
       expect(screen.getByText(m.calendar_weekend_label())).toBeTruthy();
-      expect(screen.getByText("Sunday and Saturday")).toBeTruthy();
+      expect(screen.getByText("Saturday and Sunday")).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Friday" })).toBeNull();
     });
 
@@ -222,6 +224,22 @@ describe("CalendarWeekBlock", () => {
       await userEvent.click(within(group).getByRole("button", { name: "Saturday" }));
       expect(weekendState(harness)).toEqual({ type: "custom", days: [] });
       expect(screen.getByText("No weekend")).toBeTruthy();
+    });
+
+    it("reorders the day toggles when the week grid changes while open", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_locale()), "custom");
+      const names = () =>
+        within(screen.getByRole("group", { name: m.calendar_weekend_label() }))
+          .getAllByRole("button")
+          .map((b) => b.textContent?.trim());
+      expect(names()[0]).toBe("Sunday");
+      harness.resolve(Calendar).applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      await nextTick();
+      expect(names()[0]).toBe("Monday");
+      harness.resolve(Calendar).applyWeekConfig("locale", { propagateToGlobal: false });
     });
 
     it("returns to the locale weekend", async () => {
