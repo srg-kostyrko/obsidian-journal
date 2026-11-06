@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { computed, type ComputedRef } from "vue";
 
 import { useService } from "@/infrastructure/di";
@@ -29,18 +30,11 @@ export function useResolvedStructure<K extends StructureKey>(
 }
 
 export function resolveOutsideDates(choice: OutsideDays, automatic: OutsideDates): OutsideDates {
-  switch (choice) {
-    case "interactive": {
-      return "active";
-    }
-    case "inert": {
-      return "inactive";
-    }
-    case "hidden": {
-      return "blank";
-    }
-    case "automatic": {
-      return automatic;
-    }
-  }
+  return match(choice)
+    .returnType<OutsideDates>()
+    .with("interactive", () => "active")
+    .with("inert", () => "inactive")
+    .with("hidden", () => "blank")
+    .with("automatic", () => automatic)
+    .exhaustive();
 }

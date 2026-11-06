@@ -429,11 +429,13 @@ const isSelected = (period: Period): boolean =>
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
-/* A hidden outside day is no cell, so it reads the cell's row height itself; a padded week of blanks
-   would otherwise collapse when no week number holds the row open. */
+/* A hidden outside day is no cell, so it reads the cell's row height itself: the floor, or a date line
+   plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
+   short of its neighbours, when no week number holds the row open. */
 .notes-month-view__day--blank {
   --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
-  min-height: var(--_v-cell-min-height);
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
 }
 /* A 1fr track keeps a content-sized floor; giving it up lets a long label clip inside the cell. Stock labels
    keep the floor, so a short date beside marks never clips. */
@@ -453,6 +455,13 @@ const isSelected = (period: Period): boolean =>
       var(
         --journal-saved-cell-cell-min-height-narrow,
         var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
+      )
+    );
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
       )
     );
   }

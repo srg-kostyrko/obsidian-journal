@@ -11,10 +11,10 @@ const GRID_PARTS = ["heading", "weekday", "week-number", "date", "cell-gap"];
 // Each grid renders its own heading, weekday header, week numbers, dates and gaps, so each has to read
 // them — the editor's preview grid included; the highlights and the cell box live in the cell alone.
 // A month grid's blank (hidden outside) day is no cell, yet must hold a cell's row height, so the
-// month grids read the cell's min height for it too.
+// month grids read the cell's min height and label padding for it too.
 function renderers(entry: CatalogEntry): readonly Component[] {
   const part = entry.name.replace(/^journal-cell-/, "");
-  if (part === "cell-min-height") return ["cell", "monthView", "preview"];
+  if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix)
     ? ["monthView", "weekView", "preview"]
     : ["cell"];
@@ -43,7 +43,9 @@ describe("calendar appearance readers", () => {
     const rule = components[component].find(
       (candidate) => candidate.container === null && candidate.selector === selector,
     );
-    expect(rule?.declarations.get("min-height")).toBe("var(--_v-cell-min-height)");
+    expect(rule?.declarations.get("min-height")).toBe(
+      "max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)))",
+    );
   });
 
   // Where nested grid tracks are unsupported the weekday row falls back to `display: contents`, which has no box to clip.
