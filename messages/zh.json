@@ -1682,7 +1682,7 @@
   "view_block_config_weeks_left": "在星期列之前",
   "view_block_config_weeks_right": "在星期列之后",
   "view_block_config_show_weekdays_label": "显示星期标题行",
-  "view_block_config_visibility_default": "默认",
+  "view_block_config_visibility_default": "使用全局默认值",
   "view_block_config_visibility_shown": "显示",
   "view_block_config_visibility_hidden": "隐藏",
   "view_block_config_outside_days_label": "本月以外的日期",

@@ -1718,7 +1718,7 @@
   "view_block_config_weeks_left": "Перед днями тижня",
   "view_block_config_weeks_right": "Після днів тижня",
   "view_block_config_show_weekdays_label": "Показувати рядок днів тижня",
-  "view_block_config_visibility_default": "За замовчуванням",
+  "view_block_config_visibility_default": "Використовувати глобальне значення за замовчуванням",
   "view_block_config_visibility_shown": "Показано",
   "view_block_config_visibility_hidden": "Приховано",
   "view_block_config_outside_days_label": "Дні поза місяцем",

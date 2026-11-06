@@ -1682,7 +1682,7 @@
   "view_block_config_weeks_left": "曜日の前",
   "view_block_config_weeks_right": "曜日の後",
   "view_block_config_show_weekdays_label": "曜日の見出し行を表示",
-  "view_block_config_visibility_default": "既定",
+  "view_block_config_visibility_default": "グローバルデフォルトを使用",
   "view_block_config_visibility_shown": "表示",
   "view_block_config_visibility_hidden": "非表示",
   "view_block_config_outside_days_label": "月外の日",

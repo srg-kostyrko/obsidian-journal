@@ -1837,7 +1837,7 @@
   "view_block_config_weeks_left": "Vor den Wochentagen",
   "view_block_config_weeks_right": "Nach den Wochentagen",
   "view_block_config_show_weekdays_label": "Wochentagszeile anzeigen",
-  "view_block_config_visibility_default": "Standard",
+  "view_block_config_visibility_default": "Globalen Standard verwenden",
   "view_block_config_visibility_shown": "Angezeigt",
   "view_block_config_visibility_hidden": "Ausgeblendet",
   "view_block_config_outside_days_label": "Tage außerhalb des Monats",

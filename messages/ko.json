@@ -1827,7 +1827,7 @@
   "view_block_config_weeks_left": "요일 앞",
   "view_block_config_weeks_right": "요일 뒤",
   "view_block_config_show_weekdays_label": "요일 머리글 표시",
-  "view_block_config_visibility_default": "기본값",
+  "view_block_config_visibility_default": "전역 기본값 사용",
   "view_block_config_visibility_shown": "표시",
   "view_block_config_visibility_hidden": "숨김",
   "view_block_config_outside_days_label": "해당 월 밖의 날짜",

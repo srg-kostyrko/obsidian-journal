@@ -1835,7 +1835,7 @@
   "view_block_config_weeks_left": "Prima dei giorni della settimana",
   "view_block_config_weeks_right": "Dopo i giorni della settimana",
   "view_block_config_show_weekdays_label": "Mostra la riga dei giorni della settimana",
-  "view_block_config_visibility_default": "Predefinito",
+  "view_block_config_visibility_default": "Utilizza le impostazioni predefinite globali",
   "view_block_config_visibility_shown": "Mostrato",
   "view_block_config_visibility_hidden": "Nascosto",
   "view_block_config_outside_days_label": "Giorni fuori dal mese",

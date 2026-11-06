@@ -1873,7 +1873,7 @@
   "view_block_config_weeks_left": "Перед днями недели",
   "view_block_config_weeks_right": "После дней недели",
   "view_block_config_show_weekdays_label": "Показывать строку дней недели",
-  "view_block_config_visibility_default": "По умолчанию",
+  "view_block_config_visibility_default": "Использовать глобальное значение по умолчанию",
   "view_block_config_visibility_shown": "Показано",
   "view_block_config_visibility_hidden": "Скрыто",
   "view_block_config_outside_days_label": "Дни вне месяца",
