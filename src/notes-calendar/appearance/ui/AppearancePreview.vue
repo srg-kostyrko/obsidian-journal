@@ -92,7 +92,12 @@ const weekendBands = computed(() =>
     weekend.value,
   ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
 );
-const currentRow = computed(() => rows.value.findIndex((row) => row.week.contains(today.value)));
+// No band across a row whose today is a blank, as in the month view.
+const currentRow = computed(() => {
+  const index = rows.value.findIndex((row) => row.week.contains(today.value));
+  const day = rows.value[index]?.days.find(({ period }) => period.contains(today.value));
+  return day !== undefined && outsideDates.value === "blank" && day.outside ? -1 : index;
+});
 const currentWeekRow = computed(() =>
   currentRow.value < 0 ? undefined : `${currentRow.value + (props.display.showWeekdays ? 2 : 1)} / span 1`,
 );
@@ -338,7 +343,9 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Positioned, so it paints above an under weekend band, which is positioned and precedes it. */
 .appearance-preview__weekday {
+  position: relative;
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
   --_v-weekday-weight: var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit));
   --_v-weekday-italic: var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit));

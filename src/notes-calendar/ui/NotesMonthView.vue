@@ -125,9 +125,13 @@ const weekendBands = computed(() =>
     weekend.value,
   ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
 );
-const currentRow = computed(() =>
-  props.currentWeekBand ? rows.value.findIndex((row) => row.weekPeriod.contains(today.value)) : -1,
-);
+// No band across a row whose today is a blank: the band would mark a week with no today in it to see.
+const currentRow = computed(() => {
+  if (!props.currentWeekBand) return -1;
+  const index = rows.value.findIndex((row) => row.weekPeriod.contains(today.value));
+  const day = rows.value[index]?.days.find(({ period }) => period.contains(today.value));
+  return day !== undefined && blankOutside.value && day.isOutside ? -1 : index;
+});
 const currentWeekRow = computed(() =>
   currentRow.value < 0 ? undefined : `${currentRow.value + (props.showWeekdays ? 2 : 1)} / span 1`,
 );
@@ -412,7 +416,9 @@ const isSelected = (period: Period): boolean =>
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Positioned, so it paints above an under weekend band, which is positioned and precedes it. */
 .notes-month-view__weekday {
+  position: relative;
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
   --_v-weekday-weight: var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit));
   --_v-weekday-italic: var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit));

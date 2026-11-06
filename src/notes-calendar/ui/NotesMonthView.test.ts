@@ -985,6 +985,29 @@ describe("NotesMonthView bands", () => {
       expect(container.querySelector("[data-current-week]")).toBeNull();
     });
 
+    it("draws no current-week band across a row whose today is a hidden outside day", async () => {
+      vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
+      const july = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-07-15")));
+      const harness = await bootHarness(daily);
+      const blank = harness.render(NotesMonthView, { props: { shelf: null, month: july, outsideDates: "blank" } });
+      expect(bands(blank.container, "current-week")).toEqual([]);
+      expect(blank.container.querySelector("[data-current-week]")).toBeNull();
+      blank.unmount();
+
+      const padded = harness.render(NotesMonthView, {
+        props: { shelf: null, month: july, outsideDates: "blank", sixRows: true },
+      });
+      expect(bands(padded.container, "current-week")).toEqual([]);
+      padded.unmount();
+
+      // Shown outside days, inert or interactive, still carry the week.
+      for (const outsideDates of ["inactive", "active"] as const) {
+        const shown = harness.render(NotesMonthView, { props: { shelf: null, month: july, outsideDates } });
+        expect(bands(shown.container, "current-week").length).toBe(1);
+        shown.unmount();
+      }
+    });
+
     it("draws no current-week band when the caller opts out", async () => {
       const harness = await bootHarness(daily);
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, currentWeekBand: false } });
@@ -1029,6 +1052,19 @@ describe("NotesMonthView bands", () => {
       );
       expect(hidden.length).toBe(6);
       expect(new Set(hidden)).toEqual(new Set(["true"]));
+    });
+
+    // A non-positioned header paints before every positioned z-0 element, so an under band would cover its text.
+    it.each([
+      ["monthView", ".notes-month-view__weekday"],
+      ["weekView", ".notes-week-view__weekday"],
+      ["preview", ".appearance-preview__weekday"],
+    ] as const)("%s positions its weekday header above an under band, without a z-index", (component, selector) => {
+      const header = calendarStyleRules()[component].find(
+        (rule) => rule.container === null && rule.selector === selector,
+      );
+      expect(header?.declarations.get("position")).toBe("relative");
+      expect(header?.declarations.has("z-index")).toBe(false);
     });
 
     it("positions the grid for its bands without isolating it", () => {

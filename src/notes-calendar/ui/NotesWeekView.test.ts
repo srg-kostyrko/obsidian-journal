@@ -574,17 +574,21 @@ describe("NotesWeekView bands", () => {
     const rules = calendarStyleRules().weekView.filter((rule) => rule.container === null);
     const declarations = (selector: string) =>
       Object.fromEntries(rules.filter((rule) => rule.selector === selector).flatMap((rule) => [...rule.declarations]));
+    // The stock look of the flex rows it replaced: an equal share for the week number, the wider gap between rows.
     expect(declarations(".notes-week-view__grid")).toMatchObject({
       position: "relative",
       display: "grid",
       "grid-template-columns": "repeat(var(--day-columns, 7), 1fr)",
+      "row-gap": "var(--size-2-2)",
+      "column-gap": "var(--_v-cell-gap)",
     });
     expect(declarations('.notes-week-view__grid[data-weeks="left"]')).toMatchObject({
-      "grid-template-columns": "auto repeat(var(--day-columns, 7), 1fr)",
+      "grid-template-columns": "1fr repeat(var(--day-columns, 7), 1fr)",
     });
     expect(declarations('.notes-week-view__grid[data-weeks="right"]')).toMatchObject({
-      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) auto",
+      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) 1fr",
     });
+    expect(declarations(".notes-week-view__row > *")).toMatchObject({ "text-align": "center" });
     // The first rule laying out each row; the fallback for engines without nested grid tracks that follows it sits under `@supports`.
     for (const row of [".notes-week-view__weekdays", ".notes-week-view__row"]) {
       const layout = rules.find(

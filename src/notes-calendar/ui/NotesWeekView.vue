@@ -317,13 +317,15 @@ const isSelected = (period: Period): boolean =>
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--day-columns, 7), 1fr);
-  gap: var(--_v-cell-gap);
+  row-gap: var(--size-2-2);
+  column-gap: var(--_v-cell-gap);
 }
+/* The week number takes an equal share, as it did as a flex row; the month view sizes it to its content. */
 .notes-week-view__grid[data-weeks="left"] {
-  grid-template-columns: auto repeat(var(--day-columns, 7), 1fr);
+  grid-template-columns: 1fr repeat(var(--day-columns, 7), 1fr);
 }
 .notes-week-view__grid[data-weeks="right"] {
-  grid-template-columns: repeat(var(--day-columns, 7), 1fr) auto;
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr) 1fr;
 }
 .notes-week-view__weekdays,
 .notes-week-view__row {
@@ -359,7 +361,9 @@ const isSelected = (period: Period): boolean =>
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Positioned, so it paints above an under weekend band, which is positioned and precedes it. */
 .notes-week-view__weekday {
+  position: relative;
   font-size: var(--_v-weekday-size);
   font-weight: var(--_v-weekday-weight);
   font-style: var(--_v-weekday-italic);
@@ -399,6 +403,10 @@ const isSelected = (period: Period): boolean =>
 /* Both texts render, and the narrow query swaps which one shows. */
 .notes-week-view__weekday-narrow {
   display: none;
+}
+/* A label that wraps stays centred, as it did in the flex row. */
+.notes-week-view__row > * {
+  text-align: center;
 }
 /* Week numbers and dates are cells, whose color the cell's state precedence owns; `--_part-color` is
    the bottom of that chain, so a state with no text color of its own leaves the part's color. */
