@@ -9,6 +9,7 @@ import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
+import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -42,6 +43,10 @@ function bootHarness(journals: Record<string, JournalConfig>): Promise<TestHarne
 // extra item, whereas a shown menu carrying no items would be a bug a `?? []` fallback would hide.
 function menuItemTitles(): readonly string[] | undefined {
   return __testing.openMenus.at(-1)?.items.map((item) => item.title);
+}
+
+function dayRows(container: Element): HTMLElement[] {
+  return [...container.querySelectorAll<HTMLElement>('[role="grid"] > [role="row"]')].slice(1);
 }
 
 const month = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-08-15")));
@@ -364,6 +369,86 @@ describe("NotesMonthView", () => {
       );
       const expected = [...[...month.weeks()][0].days()].map((d) => d.format("ddd"));
       expect(labels).toEqual(expected);
+    });
+  });
+
+  describe("weekday header visibility", () => {
+    it("keeps the column headers but hides them visually when showWeekdays is false", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, showWeekdays: false } });
+      const row = container.querySelector('[role="grid"] > [role="row"]');
+      expect(row?.classList.contains("notes-month-view__row--visually-hidden")).toBe(true);
+      expect(row?.querySelectorAll('[role="columnheader"]').length).toBe(7);
+    });
+
+    it("shows the weekday row by default", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const row = container.querySelector('[role="grid"] > [role="row"]');
+      expect(row?.classList.contains("notes-month-view__row--visually-hidden")).toBe(false);
+    });
+  });
+
+  describe("sixRows", () => {
+    const february = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2027-02-10")));
+
+    it("pads a four-row month to six rows of outside days", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none" },
+      });
+      expect(dayRows(container)).toHaveLength(4);
+
+      const six = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true },
+      });
+      const rows = dayRows(six.container);
+      expect(rows).toHaveLength(6);
+      for (const row of rows.slice(4)) {
+        const days = row.querySelectorAll<HTMLElement>(".notes-month-view__day");
+        expect(days).toHaveLength(7);
+        for (const day of days) expect(day.dataset.outside).toBeDefined();
+      }
+    });
+
+    it("renders blank cells in the added rows and skips them in keyboard navigation", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true, outsideDates: "blank" },
+      });
+      const rows = dayRows(container);
+      expect(rows).toHaveLength(6);
+      for (const row of rows.slice(4)) {
+        expect(row.querySelectorAll(".notes-month-view__day--blank")).toHaveLength(7);
+      }
+      const last = container.querySelector<HTMLElement>('[data-grid-key="day:2027-02-22"]')!;
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowDown" });
+      expect(document.activeElement).toBe(last);
+    });
+
+    it("decorates and opens the added days when outside days are active", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const path = "daily/2027-03-08.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2027-03-08"), path });
+      harness.host.putFile(path);
+      const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true, outsideDates: "active" },
+      });
+      await nextTick();
+
+      const added = container.querySelector<HTMLElement>('[data-grid-key="day:2027-03-08"]')!;
+      expect(added.querySelector(".decoration-corner")).not.toBeNull();
+      await fireEvent.click(added, { button: 0 });
+      expect(invoke).toHaveBeenCalled();
     });
   });
 

@@ -2,11 +2,13 @@
 import { computed, toRaw, useSlots } from "vue";
 
 import {
+  advance,
   DayPeriod,
   QuarterPeriod,
   YearPeriod,
   type AnchorString,
   type MonthPeriod,
+  type OutsideDates,
   type Period,
   type WeekPeriod,
 } from "@/calendar";
@@ -27,10 +29,12 @@ const props = withDefaults(
   defineProps<{
     shelf: string | null;
     month: MonthPeriod;
-    outsideDates?: "active" | "inactive" | "blank";
+    outsideDates?: OutsideDates;
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
+    showWeekdays?: boolean;
+    sixRows?: boolean;
     selectedDate?: AnchorString;
     selectDate?: NotesDateSelect;
   }>(),
@@ -39,6 +43,8 @@ const props = withDefaults(
     weeks: undefined,
     hiddenWeekdays: undefined,
     showHeader: true,
+    showWeekdays: true,
+    sixRows: false,
     selectedDate: undefined,
     selectDate: undefined,
   },
@@ -63,9 +69,16 @@ interface WeekRow {
   readonly days: readonly { period: DayPeriod; isOutside: boolean }[];
 }
 
+const SIX_ROWS = 6;
+
 const rows = computed<readonly WeekRow[]>(() => {
   const out: WeekRow[] = [];
-  for (const week of rawMonth.value.weeks()) {
+  const weeks = [...rawMonth.value.weeks()];
+  const last = weeks.at(-1);
+  if (props.sixRows && last) {
+    for (let ahead = 1; weeks.length < SIX_ROWS; ahead += 1) weeks.push(advance(last, ahead));
+  }
+  for (const week of weeks) {
     const days = [...week.days()]
       .map((d) => ({
         period: DayPeriod.containing(d),
@@ -188,7 +201,11 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
-      <div class="notes-month-view__row" role="row">
+      <div
+        class="notes-month-view__row"
+        :class="{ 'notes-month-view__row--visually-hidden': !showWeekdays }"
+        role="row"
+      >
         <div
           v-if="showWeekNumber && weeksPos === 'left'"
           class="notes-month-view__weekday-spacer"
@@ -307,6 +324,15 @@ const isSelected = (period: Period): boolean =>
   .notes-month-view__row {
     display: contents;
   }
+}
+.notes-month-view__row--visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .notes-month-view__weekday {
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
