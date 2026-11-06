@@ -668,16 +668,24 @@ describe("TimelineCodeBlock", () => {
       expect(container.querySelector(".notes-week-view__weekdays--visually-hidden")).toBeTruthy();
     });
 
+    // The harness starts weeks on Sunday, where May 2026, the shared host month, already takes six
+    // weeks and February 2027 takes five; each count below includes the weekday row.
     it("the fence's rows: six pads a month grid to six rows, over a fit global", async () => {
-      const six = await renderTimeline({ rows: "six" }, monthScenario());
+      const february = { journals: monthly, entries: [journalEntry("monthly", "2027-02-10")] };
+      const fit = await renderTimeline({}, { ...february, monthRows: "fit" });
+      const six = await renderTimeline({ rows: "six" }, { ...february, monthRows: "fit" });
 
+      expect(rowCount(fit.container)).toBe(6);
       expect(rowCount(six.container)).toBe(7);
     });
 
+    // April and June 2026 take five weeks each, May six.
     it("the global rows setting reaches quarter mode", async () => {
-      const { container } = await renderTimeline({}, quarterScenario({ monthRows: "six" }));
+      const fit = await renderTimeline({}, quarterScenario({ monthRows: "fit" }));
+      const six = await renderTimeline({}, quarterScenario({ monthRows: "six" }));
 
-      expect(container.querySelectorAll(".notes-month-view__row")).toHaveLength(3 * 7);
+      expect(rowCount(fit.container)).toBe(6 + 7 + 6);
+      expect(rowCount(six.container)).toBe(3 * 7);
     });
   });
 });
