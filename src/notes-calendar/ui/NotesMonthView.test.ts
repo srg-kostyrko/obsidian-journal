@@ -985,27 +985,45 @@ describe("NotesMonthView bands", () => {
       expect(container.querySelector("[data-current-week]")).toBeNull();
     });
 
-    it("draws no current-week band across a row whose today is a hidden outside day", async () => {
-      vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
+    // 2026-11-01 is a Sunday, so its Monday-start week runs from 26 October.
+    it("draws the band in both months of a week that straddles them, over each one's real days", async () => {
+      vi.setSystemTime(new Date(2026, 10, 1, 12, 0, 0));
+      const october = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-10-15")));
+      const november = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-11-15")));
+      const harness = await bootHarness(daily);
+
+      const before = harness.render(NotesMonthView, {
+        props: { shelf: null, month: october, outsideDates: "blank", weeks: "left" },
+      });
+      expect(bands(before.container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "6 / span 1" }]);
+      expect(currentWeekAnchors(before.container).slice(1)).toEqual([
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-10-31",
+      ]);
+      before.unmount();
+
+      const after = harness.render(NotesMonthView, {
+        props: { shelf: null, month: november, outsideDates: "blank", weeks: "left" },
+      });
+      expect(bands(after.container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "2 / span 1" }]);
+      expect(currentWeekAnchors(after.container).slice(1)).toEqual(["2026-11-01"]);
+    });
+
+    it("draws no current-week band across a row of blanks alone", async () => {
+      // The sixth row of a six-row July is 3–9 August, all outside the month.
+      vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0));
       const july = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-07-15")));
       const harness = await bootHarness(daily);
-      const blank = harness.render(NotesMonthView, { props: { shelf: null, month: july, outsideDates: "blank" } });
-      expect(bands(blank.container, "current-week")).toEqual([]);
-      expect(blank.container.querySelector("[data-current-week]")).toBeNull();
-      blank.unmount();
-
-      const padded = harness.render(NotesMonthView, {
+      const { container } = harness.render(NotesMonthView, {
         props: { shelf: null, month: july, outsideDates: "blank", sixRows: true },
       });
-      expect(bands(padded.container, "current-week")).toEqual([]);
-      padded.unmount();
 
-      // Shown outside days, inert or interactive, still carry the week.
-      for (const outsideDates of ["inactive", "active"] as const) {
-        const shown = harness.render(NotesMonthView, { props: { shelf: null, month: july, outsideDates } });
-        expect(bands(shown.container, "current-week").length).toBe(1);
-        shown.unmount();
-      }
+      expect(bands(container, "current-week")).toEqual([]);
+      expect(container.querySelector("[data-current-week]")).toBeNull();
     });
 
     it("draws no current-week band when the caller opts out", async () => {

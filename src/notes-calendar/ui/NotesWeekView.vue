@@ -4,7 +4,6 @@ import { computed, toRaw, useSlots } from "vue";
 import {
   calendarDisplaySlice,
   DayPeriod,
-  weekendRuns,
   MonthPeriod,
   QuarterPeriod,
   YearPeriod,
@@ -18,6 +17,7 @@ import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 
+import { bandPlacement } from "../band-placement";
 import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
@@ -84,17 +84,16 @@ const weeksPos = computed(() => props.weeks ?? "left");
 const showWeekNumber = computed(() => weeksPos.value !== "none");
 
 const today = useToday();
-// Placed by grid lines, as in the month view: left week numbers take the first column, and a shown weekday
-// header the first row. A visually hidden header is absolutely positioned, so it takes no row.
-const firstDayColumn = computed(() => (showWeekNumber.value && weeksPos.value === "left" ? 2 : 1));
-const weekendBands = computed(() =>
-  weekendRuns(
-    days.value.map((day) => day.start.weekday()),
-    weekend.value,
-  ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
+const bands = computed(() =>
+  bandPlacement({
+    columns: days.value.map((day) => day.start.weekday()),
+    weekend: weekend.value,
+    weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
+    weekdayHeader: props.showWeekdays,
+    rows: [{ isCurrentWeek: props.currentWeekBand && rawWeek.value.contains(today.value), hasDay: true }],
+  }),
 );
-const isCurrentWeek = computed(() => props.currentWeekBand && rawWeek.value.contains(today.value));
-const currentWeekRow = computed(() => (props.showWeekdays ? "2 / span 1" : "1 / span 1"));
+const isCurrentWeek = computed(() => bands.value.currentWeekIndex === 0);
 const showQuarter = computed(() => scope.quarter.value.length > 0);
 
 const allPeriods = computed<readonly Period[]>(() => {
@@ -198,8 +197,14 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
-      <NotesCalendarBand v-for="band in weekendBands" :key="band.key" kind="weekend" :column="band.column" row="auto" />
-      <NotesCalendarBand v-if="isCurrentWeek" kind="currentWeek" column="1 / -1" :row="currentWeekRow" />
+      <NotesCalendarBand
+        v-for="band in bands.weekend"
+        :key="band.key"
+        kind="weekend"
+        :column="band.column"
+        row="auto"
+      />
+      <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
       <div
         class="notes-week-view__weekdays"
         :class="{ 'notes-week-view__weekdays--visually-hidden': !showWeekdays }"

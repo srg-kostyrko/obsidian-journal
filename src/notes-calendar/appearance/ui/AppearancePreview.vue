@@ -9,7 +9,6 @@ import {
   DayPeriod,
   resolveOutsideDates,
   resolveWeekend,
-  weekendRuns,
   type PeriodKind,
   YearPeriod,
   type CalendarDisplaySliceState,
@@ -20,6 +19,7 @@ import type { JournalDecorationStyle } from "@/decorations/config";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
 
+import { bandPlacement } from "../../band-placement";
 import { labelPattern, weekdayTexts } from "../../cell-format";
 import NotesCalendarBand from "../../ui/NotesCalendarBand.vue";
 import NotesCalendarCell from "../../ui/NotesCalendarCell.vue";
@@ -84,22 +84,18 @@ const weekdays = computed(() => {
   }));
 });
 
-// Placed by the month view's grid lines.
-const firstDayColumn = computed(() => (weeksPos.value === "left" ? 2 : 1));
-const weekendBands = computed(() =>
-  weekendRuns(
-    (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
-    weekend.value,
-  ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
-);
-// No band across a row whose today is a blank, as in the month view.
-const currentRow = computed(() => {
-  const index = rows.value.findIndex((row) => row.week.contains(today.value));
-  const day = rows.value[index]?.days.find(({ period }) => period.contains(today.value));
-  return day !== undefined && outsideDates.value === "blank" && day.outside ? -1 : index;
-});
-const currentWeekRow = computed(() =>
-  currentRow.value < 0 ? undefined : `${currentRow.value + (props.display.showWeekdays ? 2 : 1)} / span 1`,
+// Placed as the month view places them.
+const bands = computed(() =>
+  bandPlacement({
+    columns: (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
+    weekend: weekend.value,
+    weekNumbersLeft: weeksPos.value === "left",
+    weekdayHeader: props.display.showWeekdays,
+    rows: rows.value.map((row) => ({
+      isCurrentWeek: row.week.contains(today.value),
+      hasDay: row.days.some((day) => !(outsideDates.value === "blank" && day.outside)),
+    })),
+  }),
 );
 
 const root = useTemplateRef<HTMLElement>("root");
@@ -201,8 +197,14 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       :data-weeks="weeksPos === 'none' ? null : weeksPos"
       data-preview-grid
     >
-      <NotesCalendarBand v-for="band in weekendBands" :key="band.key" kind="weekend" :column="band.column" row="auto" />
-      <NotesCalendarBand v-if="currentWeekRow" kind="currentWeek" column="1 / -1" :row="currentWeekRow" />
+      <NotesCalendarBand
+        v-for="band in bands.weekend"
+        :key="band.key"
+        kind="weekend"
+        :column="band.column"
+        row="auto"
+      />
+      <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
       <div
         class="appearance-preview__row"
         :class="{ 'appearance-preview__row--visually-hidden': !display.showWeekdays }"
@@ -227,7 +229,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           class="appearance-preview__week-number"
           :class="pickedClass(picked === 'weekNumber')"
           data-preview-part="weekNumber"
-          :current-week="index === currentRow"
+          :current-week="index === bands.currentWeekIndex"
           :period="row.week"
           :cell="cell"
           :format="format('week')"
@@ -250,7 +252,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
             :format="format('day')"
             :outside="day.outside"
             :weekend="isWeekend(day.period)"
-            :current-week="index === currentRow"
+            :current-week="index === bands.currentWeekIndex"
             :selected="isSelected(day.period)"
           />
         </template>
@@ -259,7 +261,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           class="appearance-preview__week-number"
           :class="pickedClass(picked === 'weekNumber')"
           data-preview-part="weekNumber"
-          :current-week="index === currentRow"
+          :current-week="index === bands.currentWeekIndex"
           :period="row.week"
           :cell="cell"
           :format="format('week')"

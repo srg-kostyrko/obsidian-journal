@@ -5,7 +5,6 @@ import {
   advance,
   calendarDisplaySlice,
   DayPeriod,
-  weekendRuns,
   QuarterPeriod,
   YearPeriod,
   type AnchorString,
@@ -20,6 +19,7 @@ import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 
+import { bandPlacement } from "../band-placement";
 import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
@@ -116,24 +116,17 @@ const weekdays = computed(() => {
 });
 
 const today = useToday();
-// Bands are placed by grid lines: the week numbers on the left take the first column, and a shown weekday
-// header takes the first row. A visually hidden header is absolutely positioned, so it takes no row.
-const firstDayColumn = computed(() => (showWeekNumber.value && weeksPos.value === "left" ? 2 : 1));
-const weekendBands = computed(() =>
-  weekendRuns(
-    (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
-    weekend.value,
-  ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
-);
-// No band across a row whose today is a blank: the band would mark a week with no today in it to see.
-const currentRow = computed(() => {
-  if (!props.currentWeekBand) return -1;
-  const index = rows.value.findIndex((row) => row.weekPeriod.contains(today.value));
-  const day = rows.value[index]?.days.find(({ period }) => period.contains(today.value));
-  return day !== undefined && blankOutside.value && day.isOutside ? -1 : index;
-});
-const currentWeekRow = computed(() =>
-  currentRow.value < 0 ? undefined : `${currentRow.value + (props.showWeekdays ? 2 : 1)} / span 1`,
+const bands = computed(() =>
+  bandPlacement({
+    columns: (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
+    weekend: weekend.value,
+    weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
+    weekdayHeader: props.showWeekdays,
+    rows: rows.value.map((row) => ({
+      isCurrentWeek: props.currentWeekBand && row.weekPeriod.contains(today.value),
+      hasDay: row.days.some((day) => !(blankOutside.value && day.isOutside)),
+    })),
+  }),
 );
 
 const monthPeriod = computed(() => rawMonth.value);
@@ -250,8 +243,14 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
-      <NotesCalendarBand v-for="band in weekendBands" :key="band.key" kind="weekend" :column="band.column" row="auto" />
-      <NotesCalendarBand v-if="currentWeekRow" kind="currentWeek" column="1 / -1" :row="currentWeekRow" />
+      <NotesCalendarBand
+        v-for="band in bands.weekend"
+        :key="band.key"
+        kind="weekend"
+        :column="band.column"
+        row="auto"
+      />
+      <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
       <div
         class="notes-month-view__row"
         :class="{ 'notes-month-view__row--visually-hidden': !showWeekdays }"
@@ -290,7 +289,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
-          :current-week="index === currentRow"
+          :current-week="index === bands.currentWeekIndex"
         />
         <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
           <span
@@ -304,7 +303,7 @@ const isSelected = (period: Period): boolean =>
             outside
             disabled
             :weekend="isWeekend(day.period)"
-            :current-week="index === currentRow"
+            :current-week="index === bands.currentWeekIndex"
             :period="day.period"
             :cell="inertDay"
             :format="format('day')"
@@ -315,7 +314,7 @@ const isSelected = (period: Period): boolean =>
             class="notes-month-view__day"
             :outside="day.isOutside"
             :weekend="isWeekend(day.period)"
-            :current-week="index === currentRow"
+            :current-week="index === bands.currentWeekIndex"
             :period="day.period"
             :cell="dayCell"
             :format="format('day')"
@@ -335,7 +334,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
-          :current-week="index === currentRow"
+          :current-week="index === bands.currentWeekIndex"
         />
       </div>
     </div>
