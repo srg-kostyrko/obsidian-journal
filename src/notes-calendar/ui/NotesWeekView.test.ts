@@ -4,7 +4,8 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, WeekPeriod } from "@/calendar";
+import { CalendarDate, WeekPeriod, type CalendarDisplaySliceState } from "@/calendar";
+import { calendarDisplayCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -24,6 +25,7 @@ import { notesCalendarModule } from "../module";
 import NotesWeekView from "./NotesWeekView.vue";
 
 const MODULES = [
+  calendarDisplayCoreModule,
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
@@ -32,8 +34,11 @@ const MODULES = [
   tasksCoreModule,
 ];
 
-function bootHarness(journals: Record<string, JournalConfig>): Promise<TestHarness> {
-  return testContainer({ modules: MODULES, data: { journals } });
+function bootHarness(
+  journals: Record<string, JournalConfig>,
+  calendarDisplay: Partial<CalendarDisplaySliceState> = {},
+): Promise<TestHarness> {
+  return testContainer({ modules: MODULES, data: { journals, calendarDisplay } });
 }
 
 // The real WorkspaceService drives Obsidian's own Menu, so these assertions read the menu the
@@ -56,6 +61,13 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+const headerFor = (container: Element, name: string): Element | undefined =>
+  [...container.querySelectorAll('[role="columnheader"]')].find((header) => header.getAttribute("aria-label") === name);
+const texts = (header: Element | undefined) => ({
+  wide: header?.querySelector(".notes-week-view__weekday-wide")?.textContent?.trim(),
+  narrow: header?.querySelector(".notes-week-view__weekday-narrow")?.textContent?.trim(),
 });
 
 describe("NotesWeekView", () => {
@@ -222,11 +234,79 @@ describe("NotesWeekView", () => {
     it("orders weekday labels to match the weekdays of the rendered day cells", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
-      const labels = [...container.querySelectorAll(".notes-week-view__weekday")].map((element) =>
+      const labels = [...container.querySelectorAll(".notes-week-view__weekday-wide")].map((element) =>
         element.textContent?.trim(),
       );
       const expected = [...week.days()].map((d) => d.format("ddd"));
       expect(labels).toEqual(expected);
+    });
+  });
+
+  describe("label formats", () => {
+    const daily = { daily: fixedJournal("daily", { type: "day" }) };
+    // The attribute gates the rules that let a day shrink below its label, so stock grids keep their size floor.
+    it("marks the grid for clipping only when the day label is custom", async () => {
+      const stock = await bootHarness(daily);
+      const custom = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
+      const stockView = stock.render(NotesWeekView, { props: { shelf: null, week } }).container;
+      const customView = custom.render(NotesWeekView, { props: { shelf: null, week } }).container;
+
+      expect(stockView.querySelector("[data-custom-day-label]")).toBeNull();
+      expect(customView.querySelector(".notes-week-view")?.hasAttribute("data-custom-day-label")).toBe(true);
+    });
+
+    it("renders the day label in the user's format and keeps the full date as its name", async () => {
+      const harness = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+      const day = container.querySelector('.notes-week-view__day[data-anchor="2026-05-27"]');
+
+      expect(day?.textContent?.trim()).toBe("27th");
+      expect(day?.getAttribute("aria-label")).toBe("May 27, 2026");
+    });
+
+    it("renders the week number and the heading in the user's formats", async () => {
+      const harness = await bootHarness(daily, {
+        labels: { day: "", week: "w", month: "MMM", quarter: "", year: "YY" },
+      });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, weeks: "left" } });
+
+      expect(container.querySelector('[data-testid="week-number-cell"]')?.textContent?.trim()).toBe(week.format("w"));
+      // No monthly or yearly journal, so the heading cells are no controls: their visible text is hidden from
+      // screen readers, which read the full names instead.
+      const shown = (testId: string) =>
+        container.querySelector(`[data-testid="${CSS.escape(testId)}"] .cell-decoration__content [aria-hidden="true"]`)
+          ?.textContent;
+      expect([shown("header-month")?.trim(), shown("header-year")?.trim()]).toEqual(["May", "26"]);
+    });
+
+    it("renders each width's weekday text and names the column by the full weekday", async () => {
+      const harness = await bootHarness(daily, {
+        weekdayLabel: { type: "pattern", pattern: "ddd" },
+        weekdayLabelNarrow: { type: "letter" },
+      });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+      const monday = headerFor(container, "Monday");
+
+      expect(texts(monday)).toEqual({ wide: "Mon", narrow: "M" });
+      expect(monday?.querySelector(".notes-week-view__weekday-wide")?.getAttribute("aria-hidden")).toBe("true");
+      expect(monday?.querySelector(".notes-week-view__weekday-narrow")?.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("keeps each width's own text when the wide one is one letter", async () => {
+      const harness = await bootHarness(daily, {
+        weekdayLabel: { type: "letter" },
+        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+      });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+
+      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "M", narrow: "Mo" });
+    });
+
+    it("renders the wide text at both widths when the narrow one is unset", async () => {
+      const harness = await bootHarness(daily, { weekdayLabel: { type: "pattern", pattern: "dd" } });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+
+      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "Mo", narrow: "Mo" });
     });
   });
 
@@ -242,7 +322,7 @@ describe("NotesWeekView", () => {
     it("omits hidden weekdays from the header labels", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, hiddenWeekdays: [0, 6] } });
-      const labels = [...container.querySelectorAll(".notes-week-view__weekday")].map((element) =>
+      const labels = [...container.querySelectorAll(".notes-week-view__weekday-wide")].map((element) =>
         element.textContent?.trim(),
       );
       const expected = [...week.days()]

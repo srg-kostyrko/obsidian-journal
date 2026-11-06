@@ -60,6 +60,20 @@ describe("CalendarDate", () => {
     });
   });
 
+  describe("toJSDate", () => {
+    it("is local midnight of the same calendar day", () => {
+      const date = CalendarDate.fromAnchor(anchor("2025-03-14")).toJSDate();
+
+      expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()]).toEqual([2025, 2, 14, 0]);
+    });
+
+    it("keeps a year below 100 rather than reading it as 19xx", () => {
+      const date = CalendarDate.fromAnchor(anchor("0042-06-01")).toJSDate();
+
+      expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([42, 5, 1]);
+    });
+  });
+
   describe("field projection", () => {
     it("exposes the calendar year", () => {
       const result = CalendarDate.parse("2025-03-14");

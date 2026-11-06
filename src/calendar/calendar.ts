@@ -103,6 +103,11 @@ export class Calendar {
     });
   }
 
+  isIsoWeekGrid(): boolean {
+    const data = moment.localeData(weekLocale.value);
+    return data.firstDayOfWeek() === 1 && data.firstDayOfYear() === 4;
+  }
+
   months(): readonly string[] {
     return moment.localeData(CUSTOM_LOCALE).months();
   }
@@ -123,6 +128,10 @@ export function localeData(): moment.Locale {
 // The cast lives here so nothing outside this module has to reach into moment's internals.
 export function dayOfMonthOrdinalParse(): RegExp | undefined {
   return (moment.localeData() as unknown as MomentLocaleInternals)._config?.dayOfMonthOrdinalParse;
+}
+
+export function activeLocale(): string {
+  return moment.locale();
 }
 
 interface OrdinalLocale {

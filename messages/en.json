@@ -102,6 +102,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Visibility",
+        "family=label": "Label",
         "family=text": "Text",
         "family=highlight": "Highlight",
         "family=box": "Box"
@@ -118,6 +119,12 @@
         "control=visibility_week_placement": "Placement",
         "control=visibility_outside_days": "Days outside the month",
         "control=visibility_month_rows": "Rows",
+        "control=label_day": "Format",
+        "control=label_week": "Format",
+        "control=label_month": "Month format",
+        "control=label_quarter": "Quarter format",
+        "control=label_year": "Year format",
+        "control=label_weekday": "Format",
         "control=highlight_style": "Style",
         "control=highlight_color": "Highlight color",
         "control=highlight_ring_width": "Ring width",
@@ -180,6 +187,11 @@
   "calendar_appearance_narrow_only": "Narrow only",
   "calendar_appearance_narrow_only_clear": "Use the all-widths value",
   "calendar_appearance_all_widths": "All widths",
+  "calendar_appearance_format_suggestions": "Suggestions",
+  "calendar_appearance_format_preview": "Preview:",
+  "calendar_appearance_format_letter": "One letter",
+  "calendar_appearance_format_same_as_wide": "Same as wide",
+  "calendar_appearance_format_iso_warning": "W counts ISO weeks, which can differ from the week rows this calendar shows.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { calendarDisplayCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -15,6 +16,7 @@ import { testContainer } from "@/testing";
 import TimelineQuarter from "./TimelineQuarter.vue";
 
 const MODULES = [
+  calendarDisplayCoreModule,
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,

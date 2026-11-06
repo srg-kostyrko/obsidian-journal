@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Sichtbarkeit",
+        "family=label": "Beschriftung",
         "family=text": "Text",
         "family=highlight": "Hervorhebung",
         "family=box": "Box"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "Position",
         "control=visibility_outside_days": "Tage außerhalb des Monats",
         "control=visibility_month_rows": "Zeilen",
+        "control=label_day": "Format",
+        "control=label_week": "Format",
+        "control=label_month": "Monatsformat",
+        "control=label_quarter": "Quartalsformat",
+        "control=label_year": "Jahresformat",
+        "control=label_weekday": "Format",
         "control=highlight_style": "Stil",
         "control=highlight_color": "Hervorhebungsfarbe",
         "control=highlight_ring_width": "Ringbreite",
@@ -179,6 +186,11 @@
   "calendar_appearance_narrow_only": "Nur schmal",
   "calendar_appearance_narrow_only_clear": "Wert für alle Breiten verwenden",
   "calendar_appearance_all_widths": "Alle Breiten",
+  "calendar_appearance_format_suggestions": "Vorschläge",
+  "calendar_appearance_format_preview": "Vorschau:",
+  "calendar_appearance_format_letter": "Ein Buchstabe",
+  "calendar_appearance_format_same_as_wide": "Wie bei Breit",
+  "calendar_appearance_format_iso_warning": "W zählt ISO-Wochen, die von den Wochenzeilen dieses Kalenders abweichen können.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

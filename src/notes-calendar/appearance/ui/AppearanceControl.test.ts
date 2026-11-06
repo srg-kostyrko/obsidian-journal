@@ -11,6 +11,7 @@ import { themeColorGroupsFor } from "@/ui/theme-colors";
 
 import { isModified, withValue } from "../appearance-editing";
 import {
+  isFormat,
   isStructure,
   PARTS,
   type Control,
@@ -28,7 +29,8 @@ import { AppearancePreviewRootKey } from "./preview-root-key";
 
 function control(part: ValuePartKey, ...path: string[]): ValueControl {
   const found = PARTS[part].controls.find(
-    (candidate): candidate is ValueControl => !isStructure(candidate) && candidate.path.join(".") === path.join("."),
+    (candidate): candidate is ValueControl =>
+      !isStructure(candidate) && !isFormat(candidate) && candidate.path.join(".") === path.join("."),
   );
   if (!found) throw new Error(`no control ${path.join(".")}`);
   return found;
@@ -59,19 +61,20 @@ describe("AppearanceControl", () => {
     harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarSettingsCoreModule] });
   });
 
-  it.each(Object.entries(PARTS).flatMap(([part, { controls }]) => controls.map((c) => [part as PartKey, c] as const)))(
-    "labels %s %o and each of its options with real copy",
-    (part, target) => {
-      const { container } = mount(part, target);
-
-      const label = container.querySelector(".setting-item-name")?.textContent ?? "";
-      const options = [...container.querySelectorAll("option")].map((option) => option.textContent ?? "");
-      for (const text of [label, ...options]) {
-        expect(text.trim()).not.toBe("");
-        expect(text).not.toMatch(/calendar_appearance_/);
-      }
-    },
+  const every = Object.entries(PARTS).flatMap(([part, { controls }]) =>
+    controls.map((c) => [part as PartKey, c] as const),
   );
+
+  it.each(every)("labels %s %o and each of its options with real copy", (part, target) => {
+    const { container } = mount(part, target);
+
+    const label = container.querySelector(".setting-item-name")?.textContent ?? "";
+    const options = [...container.querySelectorAll("option")].map((option) => option.textContent ?? "");
+    for (const text of [label, ...options]) {
+      expect(text.trim()).not.toBe("");
+      expect(text).not.toMatch(/calendar_appearance_/);
+    }
+  });
 
   describe("a visibility control", () => {
     it.each(["wide", "narrow"] as const)("is a dropdown with no variable, noted for all widths at %s", (width) => {

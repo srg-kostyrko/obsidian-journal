@@ -1,6 +1,7 @@
 import { fireEvent } from "@testing-library/vue";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
+import { calendarDisplayCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -17,6 +18,7 @@ import { testContainer } from "@/testing";
 import TimelineMonth from "./TimelineMonth.vue";
 
 const MODULES = [
+  calendarDisplayCoreModule,
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,

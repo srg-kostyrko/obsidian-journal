@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Видимість",
+        "family=label": "Підпис",
         "family=text": "Текст",
         "family=highlight": "Виділення",
         "family=box": "Комірка"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "Розташування",
         "control=visibility_outside_days": "Дні поза місяцем",
         "control=visibility_month_rows": "Рядки",
+        "control=label_day": "Формат",
+        "control=label_week": "Формат",
+        "control=label_month": "Формат місяця",
+        "control=label_quarter": "Формат кварталу",
+        "control=label_year": "Формат року",
+        "control=label_weekday": "Формат",
         "control=highlight_style": "Стиль",
         "control=highlight_color": "Колір виділення",
         "control=highlight_ring_width": "Товщина контуру",
@@ -179,6 +186,11 @@
   "calendar_appearance_narrow_only": "Лише вузький",
   "calendar_appearance_narrow_only_clear": "Використати значення для всіх ширин",
   "calendar_appearance_all_widths": "Усі ширини",
+  "calendar_appearance_format_suggestions": "Варіанти",
+  "calendar_appearance_format_preview": "Попередній перегляд:",
+  "calendar_appearance_format_letter": "Одна літера",
+  "calendar_appearance_format_same_as_wide": "Як у широкому",
+  "calendar_appearance_format_iso_warning": "W рахує тижні за ISO, і вони можуть не збігатися з рядками тижнів у цьому календарі.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

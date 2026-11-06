@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "표시",
+        "family=label": "라벨",
         "family=text": "텍스트",
         "family=highlight": "강조",
         "family=box": "박스"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "위치",
         "control=visibility_outside_days": "해당 월 밖의 날짜",
         "control=visibility_month_rows": "행",
+        "control=label_day": "형식",
+        "control=label_week": "형식",
+        "control=label_month": "월 형식",
+        "control=label_quarter": "분기 형식",
+        "control=label_year": "연도 형식",
+        "control=label_weekday": "형식",
         "control=highlight_style": "스타일",
         "control=highlight_color": "강조 색상",
         "control=highlight_ring_width": "테두리 두께",
@@ -179,6 +186,11 @@
   "calendar_appearance_narrow_only": "좁은 너비만",
   "calendar_appearance_narrow_only_clear": "모든 너비 공통 값 사용",
   "calendar_appearance_all_widths": "모든 너비",
+  "calendar_appearance_format_suggestions": "제안",
+  "calendar_appearance_format_preview": "미리 보기:",
+  "calendar_appearance_format_letter": "한 글자",
+  "calendar_appearance_format_same_as_wide": "넓게와 동일",
+  "calendar_appearance_format_iso_warning": "W는 ISO 주를 세므로 이 캘린더에 표시되는 주 행과 다를 수 있습니다.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

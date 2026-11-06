@@ -17,7 +17,7 @@ import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { isModified, valueAt, withReset } from "../appearance-editing";
-import { familiesOf, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
+import { familiesOf, isFormat, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -95,8 +95,10 @@ const inspected = computed(() => {
   return { part, families: familiesOf(part, style) };
 });
 
-const controlKey = (part: PartKey, control: Control): string =>
-  `${part}.${isStructure(control) ? control.setting : control.path.join(".")}`;
+function controlKey(part: PartKey, control: Control): string {
+  if (isStructure(control)) return `${part}.${control.setting}`;
+  return `${part}.${isFormat(control) ? `label.${control.label}` : control.path.join(".")}`;
+}
 
 // Keyed by part, so collapsing a family on one part leaves the same family open on the next.
 const collapsed = ref(new Set<string>());

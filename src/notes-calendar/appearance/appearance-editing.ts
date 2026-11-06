@@ -1,13 +1,18 @@
 import * as v from "valibot";
 
-import { calendarDisplaySlice, type CalendarDisplaySliceState } from "@/calendar";
+import { calendarDisplaySlice, type CalendarDisplaySliceState, type WeekdayLabel } from "@/calendar";
+
+import { DEFAULT_WEEKDAY_PATTERN, defaultFormatPattern } from "../cell-format";
 
 import {
+  isFormat,
   isStructure,
   PARTS,
-  type Control,
+  type FormatControl,
+  type FormatValue,
   type PartKey,
   type StructureControl,
+  type ValueControl,
   type ValuePartKey,
   type Width,
 } from "./appearance-parts";
@@ -90,18 +95,21 @@ const BOOLEAN_OPTIONS: Readonly<Record<string, readonly [string, string]>> = {
   showWeekdays: ["shown", "hidden"],
 };
 
-function booleanOptions(control: Control): readonly [string, string] | undefined {
+// A format control has no select, so it never reaches these.
+type SelectControl = ValueControl | StructureControl;
+
+function booleanOptions(control: SelectControl): readonly [string, string] | undefined {
   const key = isStructure(control) ? control.setting : control.path.at(-1);
   return key === undefined ? undefined : BOOLEAN_OPTIONS[key];
 }
 
-export function toControlValue(control: Control, sliceValue: unknown): unknown {
+export function toControlValue(control: SelectControl, sliceValue: unknown): unknown {
   const names = booleanOptions(control);
   if (names === undefined || typeof sliceValue !== "boolean") return sliceValue;
   return sliceValue ? names[0] : names[1];
 }
 
-export function fromControlValue(control: Control, controlValue: unknown): unknown {
+export function fromControlValue(control: SelectControl, controlValue: unknown): unknown {
   const names = booleanOptions(control);
   if (names === undefined) return controlValue;
   if (controlValue === names[0]) return true;
@@ -125,12 +133,66 @@ export function withStructure(
   return next;
 }
 
+/** What an empty format renders. */
+export const defaultPattern = (control: FormatControl): string =>
+  control.label === "weekday" ? DEFAULT_WEEKDAY_PATTERN : defaultFormatPattern(control.label);
+
+/** A pattern string (`""` for the default), one letter, or null for a narrow weekday that follows wide. */
+export function formatAt(display: CalendarDisplaySliceState, control: FormatControl, width: Width): FormatValue | null {
+  if (control.label !== "weekday") return display.labels[control.label];
+  const label = width === "wide" ? display.weekdayLabel : display.weekdayLabelNarrow;
+  if (label === null) return null;
+  return label.type === "letter" ? { type: "letter" } : label.pattern;
+}
+
+// The default pattern is stored as "", so typing or picking it leaves the part unmodified.
+export function withFormat(
+  display: CalendarDisplaySliceState,
+  control: FormatControl,
+  width: Width,
+  value: FormatValue | null,
+): CalendarDisplaySliceState {
+  // An empty narrow box means "no override", as a narrow null does everywhere; a typed "ddd" there
+  // is still an override, so it is checked before the default folds into "".
+  const sameAsWide = control.label === "weekday" && width === "narrow";
+  if (sameAsWide && value === "") return { ...display, weekdayLabelNarrow: null };
+  if (value === null) {
+    if (sameAsWide) return { ...display, weekdayLabelNarrow: null };
+    throw new TypeError(`the ${control.label} format at ${width} has no "same as wide"`);
+  }
+  const pattern = typeof value === "string" && value === defaultPattern(control) ? "" : value;
+  if (control.label !== "weekday") {
+    if (typeof pattern !== "string") throw new TypeError(`the ${control.label} format has no one letter`);
+    return { ...display, labels: { ...display.labels, [control.label]: pattern } };
+  }
+  const label: WeekdayLabel = typeof pattern === "string" ? { type: "pattern", pattern } : { type: "letter" };
+  return width === "wide" ? { ...display, weekdayLabel: label } : { ...display, weekdayLabelNarrow: label };
+}
+
 function isValuePart(part: PartKey): part is ValuePartKey {
   return part !== "grid";
 }
 
 function structureOf(part: PartKey): readonly StructureControl[] {
   return PARTS[part].controls.filter((control) => isStructure(control));
+}
+
+function formatsOf(part: PartKey): readonly FormatControl[] {
+  return PARTS[part].controls.filter((control) => isFormat(control));
+}
+
+const hasWeekday = (part: PartKey): boolean => formatsOf(part).some(({ label }) => label === "weekday");
+
+// The wide weekday label and every period format are the part's Wide value; only the weekday has a Narrow one.
+function wideFormatsRestored(display: CalendarDisplaySliceState, part: PartKey): CalendarDisplaySliceState {
+  let next = display;
+  for (const { label } of formatsOf(part)) {
+    next =
+      label === "weekday"
+        ? { ...next, weekdayLabel: calendarDisplaySlice.defaults.weekdayLabel }
+        : { ...next, labels: { ...next.labels, [label]: calendarDisplaySlice.defaults.labels[label] } };
+  }
+  return next;
 }
 
 // Structure has no narrow value, so only Wide counts it.
@@ -140,11 +202,19 @@ export function isModified(
   width: Width,
   part: PartKey,
 ): boolean {
-  if (width === "narrow") return isValuePart(part) && hasOverride(state.narrow[part]);
+  if (width === "narrow") {
+    const narrowLabel = hasWeekday(part) && display.weekdayLabelNarrow !== null;
+    return narrowLabel || (isValuePart(part) && hasOverride(state.narrow[part]));
+  }
   const structureChanged = structureOf(part).some(
     ({ setting }) => display[setting] !== calendarDisplaySlice.defaults[setting],
   );
-  return structureChanged || (isValuePart(part) && !equal(state.wide[part], appearanceSlice.defaults.wide[part]));
+  const formatChanged = !equal(wideFormatsRestored(display, part), display);
+  return (
+    structureChanged ||
+    formatChanged ||
+    (isValuePart(part) && !equal(state.wide[part], appearanceSlice.defaults.wide[part]))
+  );
 }
 
 export function withReset(
@@ -156,11 +226,13 @@ export function withReset(
   const appearance = isValuePart(part)
     ? { ...state, [width]: { ...state[width], [part]: structuredClone(appearanceSlice.defaults[width][part]) } }
     : state;
-  if (width === "narrow") return { appearance, display };
+  if (width === "narrow") {
+    return { appearance, display: hasWeekday(part) ? { ...display, weekdayLabelNarrow: null } : display };
+  }
   const restored = Object.fromEntries(
     structureOf(part).map(({ setting }) => [setting, calendarDisplaySlice.defaults[setting]]),
   );
-  return { appearance, display: { ...display, ...restored } };
+  return { appearance, display: wideFormatsRestored({ ...display, ...restored }, part) };
 }
 
 export function withNarrowCleared(

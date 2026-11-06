@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Visibilità",
+        "family=label": "Etichetta",
         "family=text": "Testo",
         "family=highlight": "Evidenziazione",
         "family=box": "Riquadro"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "Posizione",
         "control=visibility_outside_days": "Giorni fuori dal mese",
         "control=visibility_month_rows": "Righe",
+        "control=label_day": "Formato",
+        "control=label_week": "Formato",
+        "control=label_month": "Formato del mese",
+        "control=label_quarter": "Formato del trimestre",
+        "control=label_year": "Formato dell'anno",
+        "control=label_weekday": "Formato",
         "control=highlight_style": "Stile",
         "control=highlight_color": "Colore di evidenziazione",
         "control=highlight_ring_width": "Spessore del contorno",
@@ -179,6 +186,11 @@
   "calendar_appearance_narrow_only": "Solo stretto",
   "calendar_appearance_narrow_only_clear": "Usa il valore per tutte le larghezze",
   "calendar_appearance_all_widths": "Tutte le larghezze",
+  "calendar_appearance_format_suggestions": "Suggerimenti",
+  "calendar_appearance_format_preview": "Anteprima:",
+  "calendar_appearance_format_letter": "Una lettera",
+  "calendar_appearance_format_same_as_wide": "Come in Largo",
+  "calendar_appearance_format_iso_warning": "W conta le settimane ISO, che possono differire dalle righe delle settimane mostrate da questo calendario.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

@@ -1,4 +1,4 @@
-export { Calendar, dayOfMonthOrdinalParse, localeData, localMoment, ordinalFor } from "./calendar";
+export { activeLocale, Calendar, dayOfMonthOrdinalParse, localeData, localMoment, ordinalFor } from "./calendar";
 export { CalendarDate } from "./calendar-date";
 export { Clock } from "./clock";
 export { Interval } from "./interval";
@@ -26,6 +26,9 @@ export { calendarSlice, type CalendarSliceState } from "./settings/slice";
 export {
   calendarDisplaySlice,
   type CalendarDisplaySliceState,
+  type LabelKind,
+  type Labels,
+  type WeekdayLabel,
   type MonthRows,
   type OutsideDates,
   type OutsideDays,

@@ -6,10 +6,18 @@ import { calendarDisplaySlice } from "./display-slice";
 import { calendarSlice } from "./slice";
 import { calendarSettingsUiModule } from "./ui-module";
 
+// The display settings alone, for a test that renders a calendar without the bridge installing the
+// vault's week grid over its own.
+export const calendarDisplayCoreModule: Module = {
+  register(c) {
+    c.register(SliceDefinitionToken).useValue(calendarDisplaySlice);
+  },
+};
+
 export const calendarSettingsCoreModule: Module = {
   register(c) {
     c.register(SliceDefinitionToken).useValue(calendarSlice);
-    c.register(SliceDefinitionToken).useValue(calendarDisplaySlice);
+    calendarDisplayCoreModule.register(c);
     c.register(CalendarSettingsBridge).useClass(CalendarSettingsBridge).eager();
   },
 };

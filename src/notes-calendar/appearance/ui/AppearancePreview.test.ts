@@ -50,6 +50,12 @@ const firstWeekRow = (container: Element): HTMLElement | undefined => rowsOf(con
 const partOf = (element: Element | null | undefined): string | undefined =>
   element instanceof HTMLElement ? element.dataset.previewPart : undefined;
 
+const weekdays = (container: Element) =>
+  [...container.querySelectorAll('[data-preview-part="weekday"]')].map((header) => ({
+    wide: header.querySelector(".appearance-preview__weekday-wide")?.textContent?.trim(),
+    narrow: header.querySelector(".appearance-preview__weekday-narrow")?.textContent?.trim(),
+  }));
+
 describe("AppearancePreview", () => {
   beforeEach(() => {
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
@@ -293,6 +299,47 @@ describe("AppearancePreview", () => {
       const { container } = withDisplay({ monthRows: "six" });
       expect(fitRows).toBeLessThan(6);
       expect(rowsOf(container).length - 1).toBe(6);
+    });
+  });
+
+  describe("renders the label formats", () => {
+    it("marks the grid for clipping only when the day label is custom", () => {
+      expect(withDisplay({}).container.querySelector("[data-custom-day-label]")).toBeNull();
+      const custom = withDisplay({ labels: { day: "Do", week: "", month: "", quarter: "", year: "" } }).container;
+      expect(custom.querySelector(".appearance-preview")?.hasAttribute("data-custom-day-label")).toBe(true);
+    });
+
+    it("renders the day, week and heading labels in the user's formats", () => {
+      const { container } = withDisplay({ labels: { day: "DD", week: "w", month: "MM", quarter: "", year: "YY" } });
+      const heading = container.querySelector('[data-preview-part="heading"]');
+
+      expect(cellAt(container, "2026-05-01").textContent?.trim()).toBe("01");
+      expect(cellAt(container, "2026-05-01").getAttribute("aria-label")).toBe("May 1, 2026");
+      expect(container.querySelector('[data-preview-part="weekNumber"]')?.textContent?.trim()).toMatch(/^\d+$/);
+      expect(
+        [...(heading?.querySelectorAll(".notes-calendar-cell") ?? [])].map((cell) => cell.textContent?.trim()),
+      ).toEqual(["05", "26"]);
+    });
+
+    it("renders each width's weekday text", () => {
+      const { container } = withDisplay({
+        weekdayLabel: { type: "pattern", pattern: "ddd" },
+        weekdayLabelNarrow: { type: "letter" },
+      });
+      expect(weekdays(container)).toContainEqual({ wide: "Mon", narrow: "M" });
+    });
+
+    it("keeps each width's own text when the wide one is one letter", () => {
+      const { container } = withDisplay({
+        weekdayLabel: { type: "letter" },
+        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+      });
+      expect(weekdays(container)).toContainEqual({ wide: "M", narrow: "Mo" });
+    });
+
+    it("renders the wide text at both widths when the narrow one is unset", () => {
+      const { container } = withDisplay({ weekdayLabel: { type: "pattern", pattern: "dd" }, weekdayLabelNarrow: null });
+      expect(weekdays(container)).toContainEqual({ wide: "Mo", narrow: "Mo" });
     });
   });
 

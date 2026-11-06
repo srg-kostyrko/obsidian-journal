@@ -1,4 +1,4 @@
-import type { StructureKey } from "@/calendar";
+import type { LabelKind, StructureKey, WeekdayLabel } from "@/calendar";
 import type { ThemeColorFieldRole } from "@/ui/theme-colors";
 
 import type { AppearanceParts, HighlightStyle } from "./slice";
@@ -6,12 +6,12 @@ import type { AppearanceParts, HighlightStyle } from "./slice";
 export type ValuePartKey = keyof AppearanceParts;
 export type PartKey = ValuePartKey | "grid";
 export type Width = "wide" | "narrow";
-export type Family = "visibility" | "text" | "highlight" | "box";
-export const FAMILY_ORDER: readonly Family[] = ["visibility", "text", "highlight", "box"];
+export type Family = "visibility" | "label" | "text" | "highlight" | "box";
+export const FAMILY_ORDER: readonly Family[] = ["visibility", "label", "text", "highlight", "box"];
 export type ControlKind = "color" | "slider" | "select";
 
 export interface ValueControl {
-  readonly family: Exclude<Family, "visibility">;
+  readonly family: Exclude<Family, "visibility" | "label">;
   readonly path: readonly string[];
   readonly kind: ControlKind;
   /** Catalog name of the variable the control feeds; absent for a style, which no single variable carries. */
@@ -40,10 +40,26 @@ export interface StructureControl {
   readonly options: readonly string[];
 }
 
-export type Control = ValueControl | StructureControl;
+export type OneLetter = Extract<WeekdayLabel, { type: "letter" }>;
+/** A string is always a moment pattern; one letter is an object so no typed pattern can mean it. */
+export type FormatValue = string | OneLetter;
+
+/** Writes the calendar display slice; a period's format has one value for every width, the weekday's has two. */
+export interface FormatControl {
+  readonly family: "label";
+  readonly kind: "format";
+  readonly label: LabelKind | "weekday";
+  readonly suggestions: readonly FormatValue[];
+}
+
+export type Control = ValueControl | StructureControl | FormatControl;
 
 export function isStructure(control: Control): control is StructureControl {
   return control.family === "visibility";
+}
+
+export function isFormat(control: Control): control is FormatControl {
+  return control.family === "label";
 }
 
 const WEIGHTS = ["normal", "semibold", "bold"] as const;
@@ -57,6 +73,10 @@ const SHOWN = ["shown", "hidden"] as const;
 
 function structure(setting: StructureKey, options: readonly string[]): StructureControl {
   return { family: "visibility", setting, kind: "select", options };
+}
+
+function format(label: FormatControl["label"], suggestions: readonly FormatValue[]): FormatControl {
+  return { family: "label", kind: "format", label, suggestions };
 }
 
 type WithoutFamily = Omit<ValueControl, "family">;
@@ -160,10 +180,31 @@ export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Contr
       ...highlightControls("outside"),
     ],
   },
-  heading: { controls: [structure("showHeading", SHOWN), ...textControls("heading")] },
-  weekday: { controls: [structure("showWeekdays", SHOWN), ...textControls("weekday")] },
-  weekNumber: { controls: [structure("weekPlacement", ["left", "right", "none"]), ...textControls("week-number")] },
-  date: { controls: textControls("date") },
+  heading: {
+    controls: [
+      structure("showHeading", SHOWN),
+      format("month", ["MMMM", "MMM", "MM"]),
+      format("quarter", ["[Q]Q", "Qo", "Q"]),
+      format("year", ["YYYY", "YY"]),
+      ...textControls("heading"),
+    ],
+  },
+  weekday: {
+    controls: [
+      structure("showWeekdays", SHOWN),
+      format("weekday", ["ddd", "dd", "dddd", { type: "letter" }]),
+      ...textControls("weekday"),
+    ],
+  },
+  weekNumber: {
+    controls: [
+      structure("weekPlacement", ["left", "right", "none"]),
+      // No ISO `W`: it disagrees with the week grid unless that grid is ISO.
+      format("week", ["[W]w", "w", "[W]ww", "wo"]),
+      ...textControls("week-number"),
+    ],
+  },
+  date: { controls: [format("day", ["D", "DD", "Do"]), ...textControls("date")] },
   cell: { controls: BOX_CONTROLS },
   grid: { controls: [structure("monthRows", ["fit", "six"])] },
 };
@@ -186,7 +227,8 @@ export function visibleControls(part: PartKey, style: HighlightStyle | undefined
   const { controls } = PARTS[part];
   if (style === undefined) return controls;
   return controls.filter(
-    (control) => isStructure(control) || control.shownFor === undefined || control.shownFor.includes(style),
+    (control) =>
+      isStructure(control) || isFormat(control) || control.shownFor === undefined || control.shownFor.includes(style),
   );
 }
 
