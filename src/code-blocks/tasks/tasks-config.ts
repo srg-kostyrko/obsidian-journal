@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import * as v from "valibot";
 
 import { STATUS_ALIASES, taskConditionSchema, type TaskCondition } from "@/tasks/conditions";
@@ -80,6 +81,16 @@ function normalizeTag(tag: string): string {
   return tag.startsWith("#") ? tag : `#${tag}`;
 }
 
+// `conditions:` is hand-typed too, so it takes both spellings the flat keys take (#604): left verbatim,
+// a bare tag matched nothing and `lacks` listed every task.
+function normalizeCondition(condition: TaskCondition): TaskCondition {
+  return match(condition)
+    .with({ type: "tag" }, (c) => ({ ...c, tags: c.tags.map(normalizeTag) }))
+    .with({ type: "heading" }, (c) => ({ ...c, headings: c.headings.map(normalizeHeading) }))
+    .with({ type: "status" }, (c) => c)
+    .exhaustive();
+}
+
 // Desugar order is fixed: scope keys (provider/source/depth) first — they set a scope field each,
 // never a condition — then `status`, then the selection-shaped keys `heading` and `tag`, in that
 // order. Each flat key desugars into exactly one condition or sets one scope field; that
@@ -99,7 +110,7 @@ export function toTaskQuery(raw: TasksFenceConfig): TaskQuery {
     conditions.push({ type: "heading", condition: "under", headings: raw.heading.map(normalizeHeading) });
   }
   if (raw.tag !== undefined) conditions.push({ type: "tag", condition: "has", tags: raw.tag.map(normalizeTag) });
-  conditions.push(...raw.conditions);
+  conditions.push(...raw.conditions.map(normalizeCondition));
 
   return {
     scope: { provider: raw.provider ?? [], source: raw.source, depth: raw.depth },

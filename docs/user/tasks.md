@@ -351,7 +351,7 @@ note](#which-date-places-a-task-note).
 | `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag. Case does not matter, and nested tags match: `work` shows `#Work` and `#work/client`, never `#workshop`.                                        |
 | `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                                             |
 | `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                                                 |
-| `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`.                         |
+| `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Headings and tags take the same spellings as `heading:` and `tag:`.                                                                                                                           |
 
 A **Tag** condition matches the way Obsidian's tag search does, wherever it is written — the `tag` key,
 a `conditions:` entry, a journal's **Listing filter**, a view block's or decoration's own filter: case
@@ -374,6 +374,19 @@ conditions:
       - Habits
 ```
 ````
+
+Each entry names its `type`, a `condition` that says how it compares, and the list it compares
+against. A task meets the first `condition` of each pair when it matches any item in the list, and the
+second when it matches none; leave `condition` out and the first applies.
+
+| `type`    | `condition`            | List       | Values                                                                   |
+| --------- | ---------------------- | ---------- | ------------------------------------------------------------------------ |
+| `tag`     | `has` or `lacks`       | `tags`     | with or without the leading `#`, as for `tag:`                           |
+| `heading` | `under` or `not-under` | `headings` | `## Tasks` or bare `Tasks`, as for `heading:`                            |
+| `status`  | `is` or `is-not`       | `statuses` | the names `status:` takes, the aliases `open`, `done` and `all` included |
+
+An entry with an empty list holds for every task. A `condition` the table does not name shows an error
+in the block rather than a list.
 
 All of a fence's conditions, however they got there, are combined with **and** — there is no `mode` key
 to switch a fence to matching any one condition instead.

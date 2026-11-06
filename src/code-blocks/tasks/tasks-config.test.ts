@@ -189,4 +189,20 @@ describe("toTaskQuery", () => {
       { type: "tag", condition: "lacks", tags: ["#waiting"] },
     ]);
   });
+
+  // #604: a bare tag under `conditions:` matched nothing, so `lacks` silently listed every task.
+  it("normalizes the spelling of tags and headings in the full-form conditions key as the flat keys do", () => {
+    const parsed = v.parse(tasksBlockSchema, {
+      conditions: [
+        { type: "tag", condition: "lacks", tags: ["routine", "#home"] },
+        { type: "heading", condition: "not-under", headings: ["## Habits", "#1 priority"] },
+        { type: "status", condition: "is-not", statuses: ["done"] },
+      ],
+    });
+    expect(toTaskQuery(parsed).filter.conditions).toEqual([
+      { type: "tag", condition: "lacks", tags: ["#routine", "#home"] },
+      { type: "heading", condition: "not-under", headings: ["Habits", "#1 priority"] },
+      { type: "status", condition: "is-not", statuses: ["done"] },
+    ]);
+  });
 });
