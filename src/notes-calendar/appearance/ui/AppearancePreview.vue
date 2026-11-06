@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { match } from "ts-pattern";
 import { computed, provide, shallowReactive, shallowRef, useTemplateRef, watchEffect } from "vue";
 
 import {
@@ -107,51 +108,24 @@ function onPick(event: Event): void {
 // spread over many takes a light one on each, or a grid of heavy boxes would bury the calendar.
 function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
   const anchor = day.period.anchor.toAnchor();
-  switch (props.picked) {
-    case "today": {
-      return anchor === today.value.toAnchor();
-    }
-    case "selected": {
-      return anchor === sample.value.selected;
-    }
-    case "active": {
-      return anchor === sample.value.active;
-    }
-    case "outside": {
-      return day.outside;
-    }
-    case "date":
-    case "cell": {
-      return props.spot === undefined || props.spot === anchor;
-    }
-    default: {
-      return false;
-    }
-  }
+  return match(props.picked)
+    .with("today", () => anchor === today.value.toAnchor())
+    .with("selected", () => anchor === sample.value.selected)
+    .with("active", () => anchor === sample.value.active)
+    .with("outside", () => day.outside)
+    .with("date", "cell", () => props.spot === undefined || props.spot === anchor)
+    .otherwise(() => false);
 }
 
-const pickedCount = computed(() => {
-  switch (props.picked) {
-    case undefined: {
-      return 0;
-    }
-    case "heading": {
-      return 2;
-    }
-    case "weekday": {
-      return weekdayNames.value.length;
-    }
-    case "weekNumber": {
-      return rows.value.length;
-    }
-    case "grid": {
-      return 1;
-    }
-    default: {
-      return rows.value.reduce((count, row) => count + row.days.filter(isPickedDay).length, 0);
-    }
-  }
-});
+const pickedCount = computed(() =>
+  match(props.picked)
+    .with(undefined, () => 0)
+    .with("heading", () => 2)
+    .with("weekday", () => weekdayNames.value.length)
+    .with("weekNumber", () => rows.value.length)
+    .with("grid", () => 1)
+    .otherwise(() => rows.value.reduce((count, row) => count + row.days.filter(isPickedDay).length, 0)),
+);
 
 function pickedClass(isPicked: boolean): Record<string, boolean> {
   return {
@@ -357,11 +331,13 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
-/* A hidden outside day is no cell, so it reads the cell's row height itself; a padded week of blanks
-   would otherwise collapse when no week number holds the row open. */
+/* A hidden outside day is no cell, so it reads the cell's row height itself: the floor, or a date line
+   plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
+   short of its neighbours, when no week number holds the row open. */
 .appearance-preview__day--blank {
   --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
-  min-height: var(--_v-cell-min-height);
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
 }
 @container journal-calendar (max-width: 28em) {
   .appearance-preview__day--blank {
@@ -370,6 +346,13 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       var(
         --journal-saved-cell-cell-min-height-narrow,
         var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
+      )
+    );
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
       )
     );
   }
