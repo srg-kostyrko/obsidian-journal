@@ -10,7 +10,7 @@ export function conditionValues(text: string, type: "tag" | "heading"): string[]
     .map((entry) =>
       entry
         .trim()
-        // Whitespace after the "#" run is optional here, unlike the fence's own normalizeHeading
+        // Whitespace after the "#" run is optional here, unlike the fence's own headingSpellings
         // (src/code-blocks/tasks/tasks-config.ts), which requires it. Two spellings of the same
         // coercion now disagree inside one feature, and this is the side with the bug: a heading
         // whose text legitimately begins with "#" and no space — "#1 priority" — is mangled to
