@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Видимость",
+        "family=label": "Подпись",
         "family=text": "Текст",
         "family=highlight": "Выделение",
         "family=box": "Ячейка"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "Расположение",
         "control=visibility_outside_days": "Дни вне месяца",
         "control=visibility_month_rows": "Строки",
+        "control=label_day": "Формат",
+        "control=label_week": "Формат",
+        "control=label_month": "Формат месяца",
+        "control=label_quarter": "Формат квартала",
+        "control=label_year": "Формат года",
+        "control=label_weekday": "Формат",
         "control=highlight_style": "Стиль",
         "control=highlight_color": "Цвет выделения",
         "control=highlight_ring_width": "Толщина контура",
@@ -179,6 +186,10 @@
   "calendar_appearance_narrow_only": "Только узкий",
   "calendar_appearance_narrow_only_clear": "Использовать значение для всех ширин",
   "calendar_appearance_all_widths": "Все ширины",
+  "calendar_appearance_format_suggestions": "Варианты",
+  "calendar_appearance_format_preview": "Предпросмотр:",
+  "calendar_appearance_format_letter": "Одна буква",
+  "calendar_appearance_format_same_as_wide": "Как в широком",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

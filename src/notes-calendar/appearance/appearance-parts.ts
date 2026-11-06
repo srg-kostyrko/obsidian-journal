@@ -1,4 +1,4 @@
-import type { LabelKind, StructureKey } from "@/calendar";
+import type { LabelKind, StructureKey, WeekdayLabel } from "@/calendar";
 import type { ThemeColorFieldRole } from "@/ui/theme-colors";
 
 import type { AppearanceParts, HighlightStyle } from "./slice";
@@ -40,13 +40,16 @@ export interface StructureControl {
   readonly options: readonly string[];
 }
 
+export type OneLetter = Extract<WeekdayLabel, { type: "letter" }>;
+/** A string is always a moment pattern; one letter is an object so no typed pattern can mean it. */
+export type FormatValue = string | OneLetter;
+
 /** Writes the calendar display slice; a period's format has one value for every width, the weekday's has two. */
 export interface FormatControl {
   readonly family: "label";
   readonly kind: "format";
   readonly label: LabelKind | "weekday";
-  /** For the weekday, `"letter"` stands for one letter, which no moment pattern renders. */
-  readonly suggestions: readonly string[];
+  readonly suggestions: readonly FormatValue[];
 }
 
 export type Control = ValueControl | StructureControl | FormatControl;
@@ -72,7 +75,7 @@ function structure(setting: StructureKey, options: readonly string[]): Structure
   return { family: "visibility", setting, kind: "select", options };
 }
 
-function format(label: FormatControl["label"], suggestions: readonly string[]): FormatControl {
+function format(label: FormatControl["label"], suggestions: readonly FormatValue[]): FormatControl {
   return { family: "label", kind: "format", label, suggestions };
 }
 
@@ -189,7 +192,7 @@ export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Contr
   weekday: {
     controls: [
       structure("showWeekdays", SHOWN),
-      format("weekday", ["ddd", "dd", "dddd", "letter"]),
+      format("weekday", ["ddd", "dd", "dddd", { type: "letter" }]),
       ...textControls("weekday"),
     ],
   },

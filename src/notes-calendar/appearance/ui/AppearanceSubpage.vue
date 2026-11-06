@@ -17,16 +17,7 @@ import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { isModified, valueAt, withReset } from "../appearance-editing";
-import {
-  familiesOf,
-  isFormat,
-  isStructure,
-  PARTS,
-  type Control,
-  type Family,
-  type PartKey,
-  type Width,
-} from "../appearance-parts";
+import { familiesOf, isFormat, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -101,11 +92,7 @@ const inspected = computed(() => {
   if (part === undefined) return;
   const highlighted = part !== "grid" && PARTS[part].controls.some((control) => control.family === "highlight");
   const style = highlighted ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
-  // The label family has no control UI yet, so it stays out of the inspector until it does.
-  const families = familiesOf(part, style).filter(
-    (group): group is { family: Exclude<Family, "label">; controls: readonly Control[] } => group.family !== "label",
-  );
-  return { part, families };
+  return { part, families: familiesOf(part, style) };
 });
 
 function controlKey(part: PartKey, control: Control): string {

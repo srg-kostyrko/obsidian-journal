@@ -61,12 +61,11 @@ describe("AppearanceControl", () => {
     harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarSettingsCoreModule] });
   });
 
-  // Format controls render nothing until their UI lands, so they have no copy to check yet.
-  const copied = Object.entries(PARTS).flatMap(([part, { controls }]) =>
-    controls.filter((c) => !isFormat(c)).map((c) => [part as PartKey, c] as const),
+  const every = Object.entries(PARTS).flatMap(([part, { controls }]) =>
+    controls.map((c) => [part as PartKey, c] as const),
   );
 
-  it.each(copied)("labels %s %o and each of its options with real copy", (part, target) => {
+  it.each(every)("labels %s %o and each of its options with real copy", (part, target) => {
     const { container } = mount(part, target);
 
     const label = container.querySelector(".setting-item-name")?.textContent ?? "";

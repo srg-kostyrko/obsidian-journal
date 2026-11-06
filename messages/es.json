@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Visibilidad",
+        "family=label": "Etiqueta",
         "family=text": "Texto",
         "family=highlight": "Resaltado",
         "family=box": "Caja"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "Posición",
         "control=visibility_outside_days": "Días fuera del mes",
         "control=visibility_month_rows": "Filas",
+        "control=label_day": "Formato",
+        "control=label_week": "Formato",
+        "control=label_month": "Formato del mes",
+        "control=label_quarter": "Formato del trimestre",
+        "control=label_year": "Formato del año",
+        "control=label_weekday": "Formato",
         "control=highlight_style": "Estilo",
         "control=highlight_color": "Color de resaltado",
         "control=highlight_ring_width": "Grosor del contorno",
@@ -179,6 +186,10 @@
   "calendar_appearance_narrow_only": "Solo estrecho",
   "calendar_appearance_narrow_only_clear": "Usar el valor de todos los anchos",
   "calendar_appearance_all_widths": "Todos los anchos",
+  "calendar_appearance_format_suggestions": "Sugerencias",
+  "calendar_appearance_format_preview": "Vista previa:",
+  "calendar_appearance_format_letter": "Una letra",
+  "calendar_appearance_format_same_as_wide": "Igual que en Ancho",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

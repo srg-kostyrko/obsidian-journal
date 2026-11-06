@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "可见性",
+        "family=label": "文字标签",
         "family=text": "文本",
         "family=highlight": "高亮",
         "family=box": "单元格框"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "位置",
         "control=visibility_outside_days": "本月以外的日期",
         "control=visibility_month_rows": "行数",
+        "control=label_day": "格式",
+        "control=label_week": "格式",
+        "control=label_month": "月份格式",
+        "control=label_quarter": "季度格式",
+        "control=label_year": "年份格式",
+        "control=label_weekday": "格式",
         "control=highlight_style": "样式",
         "control=highlight_color": "高亮颜色",
         "control=highlight_ring_width": "边框宽度",
@@ -179,6 +186,10 @@
   "calendar_appearance_narrow_only": "仅窄",
   "calendar_appearance_narrow_only_clear": "使用所有宽度通用的值",
   "calendar_appearance_all_widths": "所有宽度",
+  "calendar_appearance_format_suggestions": "建议",
+  "calendar_appearance_format_preview": "预览：",
+  "calendar_appearance_format_letter": "单字",
+  "calendar_appearance_format_same_as_wide": "与宽相同",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

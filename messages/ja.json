@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "表示",
+        "family=label": "ラベル",
         "family=text": "テキスト",
         "family=highlight": "ハイライト",
         "family=box": "ボックス"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "位置",
         "control=visibility_outside_days": "月外の日",
         "control=visibility_month_rows": "行数",
+        "control=label_day": "形式",
+        "control=label_week": "形式",
+        "control=label_month": "月の形式",
+        "control=label_quarter": "四半期の形式",
+        "control=label_year": "年の形式",
+        "control=label_weekday": "形式",
         "control=highlight_style": "スタイル",
         "control=highlight_color": "ハイライトの色",
         "control=highlight_ring_width": "枠線の幅",
@@ -179,6 +186,10 @@
   "calendar_appearance_narrow_only": "狭い幅のみ",
   "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",
   "calendar_appearance_all_widths": "すべての幅",
+  "calendar_appearance_format_suggestions": "候補",
+  "calendar_appearance_format_preview": "プレビュー:",
+  "calendar_appearance_format_letter": "1文字",
+  "calendar_appearance_format_same_as_wide": "広いと同じ",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

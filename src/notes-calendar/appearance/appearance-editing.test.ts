@@ -271,9 +271,9 @@ describe("formatAt", () => {
     expect(formatAt(stockDisplay(), format("day"), "wide")).toBe("");
   });
 
-  it("reads the weekday per width, one letter as its token and an unset narrow as null", () => {
+  it("reads the weekday per width, one letter as its object and an unset narrow as null", () => {
     const display = { ...stockDisplay(), weekdayLabel: { type: "letter" as const } };
-    expect(formatAt(display, format("weekday"), "wide")).toBe("letter");
+    expect(formatAt(display, format("weekday"), "wide")).toEqual({ type: "letter" });
     expect(formatAt(display, format("weekday"), "narrow")).toBeNull();
     const narrow = { ...display, weekdayLabelNarrow: { type: "pattern" as const, pattern: "dd" } };
     expect(formatAt(narrow, format("weekday"), "narrow")).toBe("dd");
@@ -295,9 +295,35 @@ describe("withFormat", () => {
   });
 
   it("writes one letter at narrow as the tagged shape and leaves the wide label alone", () => {
-    const next = withFormat(stockDisplay(), format("weekday"), "narrow", "letter");
+    const next = withFormat(stockDisplay(), format("weekday"), "narrow", { type: "letter" });
     expect(next.weekdayLabelNarrow).toEqual({ type: "letter" });
     expect(next.weekdayLabel).toEqual(calendarDisplaySlice.defaults.weekdayLabel);
+  });
+
+  it("writes the typed word letter as a pattern, never as one letter", () => {
+    const next = withFormat(stockDisplay(), format("weekday"), "wide", "letter");
+    expect(next.weekdayLabel).toEqual({ type: "pattern", pattern: "letter" });
+  });
+
+  it.each([
+    ["day", "D", "date"],
+    ["week", "[W]w", "weekNumber"],
+    ["month", "MMMM", "heading"],
+    ["quarter", "[Q]Q", "heading"],
+    ["year", "YYYY", "heading"],
+  ] as const)("stores the %s default pattern %s as empty, so %s does not read modified", (label, pattern, part) => {
+    const set = withFormat(stockDisplay(), format(label), "wide", "DD");
+    const next = withFormat(set, format(label), "wide", pattern);
+    expect(next.labels[label]).toBe("");
+    expect(isModified(fresh(), next, "wide", part)).toBe(false);
+  });
+
+  it("stores the weekday default pattern as empty at either width", () => {
+    const wide = withFormat(stockDisplay(), format("weekday"), "wide", "ddd");
+    expect(wide.weekdayLabel).toEqual({ type: "pattern", pattern: "" });
+    expect(isModified(fresh(), wide, "wide", "weekday")).toBe(false);
+    const narrow = withFormat(stockDisplay(), format("weekday"), "narrow", "ddd");
+    expect(narrow.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "" });
   });
 
   it("writes a wide weekday pattern and leaves narrow alone", () => {
@@ -307,7 +333,7 @@ describe("withFormat", () => {
   });
 
   it("clears the narrow weekday back to same as wide with null", () => {
-    const set = withFormat(stockDisplay(), format("weekday"), "narrow", "letter");
+    const set = withFormat(stockDisplay(), format("weekday"), "narrow", { type: "letter" });
     expect(withFormat(set, format("weekday"), "narrow", null).weekdayLabelNarrow).toBeNull();
   });
 
@@ -335,7 +361,7 @@ describe("label formats in modified and reset", () => {
     expect(isModified(fresh(), labelled(), "wide", "heading")).toBe(true);
     expect(isModified(fresh(), labelled(), "wide", "date")).toBe(true);
     expect(isModified(fresh(), labelled(), "wide", "weekNumber")).toBe(false);
-    const weekday = withFormat(stockDisplay(), format("weekday"), "wide", "letter");
+    const weekday = withFormat(stockDisplay(), format("weekday"), "wide", { type: "letter" });
     expect(isModified(fresh(), weekday, "wide", "weekday")).toBe(true);
   });
 
@@ -356,7 +382,7 @@ describe("label formats in modified and reset", () => {
 
   it("at wide restores the weekday label and keeps its narrow one", () => {
     let display = withFormat(stockDisplay(), format("weekday"), "wide", "dddd");
-    display = withFormat(display, format("weekday"), "narrow", "letter");
+    display = withFormat(display, format("weekday"), "narrow", { type: "letter" });
     const reset = withReset(fresh(), display, "wide", "weekday").display;
     expect(reset.weekdayLabel).toEqual(calendarDisplaySlice.defaults.weekdayLabel);
     expect(reset.weekdayLabelNarrow).toEqual({ type: "letter" });
@@ -364,7 +390,7 @@ describe("label formats in modified and reset", () => {
 
   it("at narrow clears only the narrow weekday", () => {
     let display = withFormat(stockDisplay(), format("weekday"), "wide", "dddd");
-    display = withFormat(display, format("weekday"), "narrow", "letter");
+    display = withFormat(display, format("weekday"), "narrow", { type: "letter" });
     display = { ...display, showWeekdays: false };
     const reset = withReset(fresh(), display, "narrow", "weekday").display;
     expect(reset).toEqual({ ...display, weekdayLabelNarrow: null });

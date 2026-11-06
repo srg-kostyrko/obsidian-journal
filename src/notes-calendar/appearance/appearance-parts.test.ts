@@ -113,7 +113,7 @@ describe("PARTS", () => {
       month: ["MMMM", "MMM", "MM"],
       quarter: ["[Q]Q", "Qo", "Q"],
       year: ["YYYY", "YY"],
-      weekday: ["ddd", "dd", "dddd", "letter"],
+      weekday: ["ddd", "dd", "dddd", { type: "letter" }],
     });
   });
 

@@ -2,11 +2,14 @@ import * as v from "valibot";
 
 import { calendarDisplaySlice, type CalendarDisplaySliceState, type WeekdayLabel } from "@/calendar";
 
+import { defaultFormatPattern } from "../cell-format";
+
 import {
   isFormat,
   isStructure,
   PARTS,
   type FormatControl,
+  type FormatValue,
   type PartKey,
   type StructureControl,
   type ValueControl,
@@ -130,31 +133,37 @@ export function withStructure(
   return next;
 }
 
-const LETTER = "letter";
+const DEFAULT_WEEKDAY_PATTERN = "ddd";
 
-function toFormat(label: WeekdayLabel): string {
-  return label.type === "letter" ? LETTER : label.pattern;
-}
+/** What an empty format renders. */
+export const defaultPattern = (control: FormatControl): string =>
+  control.label === "weekday" ? DEFAULT_WEEKDAY_PATTERN : defaultFormatPattern(control.label);
 
-/** A pattern string, `"letter"` for the weekday's one letter, or null for a narrow weekday that follows wide. */
-export function formatAt(display: CalendarDisplaySliceState, control: FormatControl, width: Width): string | null {
+/** A pattern string (`""` for the default), one letter, or null for a narrow weekday that follows wide. */
+export function formatAt(display: CalendarDisplaySliceState, control: FormatControl, width: Width): FormatValue | null {
   if (control.label !== "weekday") return display.labels[control.label];
-  if (width === "wide") return toFormat(display.weekdayLabel);
-  return display.weekdayLabelNarrow === null ? null : toFormat(display.weekdayLabelNarrow);
+  const label = width === "wide" ? display.weekdayLabel : display.weekdayLabelNarrow;
+  if (label === null) return null;
+  return label.type === "letter" ? { type: "letter" } : label.pattern;
 }
 
+// The default pattern is stored as "", so typing or picking it leaves the part unmodified.
 export function withFormat(
   display: CalendarDisplaySliceState,
   control: FormatControl,
   width: Width,
-  value: string | null,
+  value: FormatValue | null,
 ): CalendarDisplaySliceState {
   if (value === null) {
     if (control.label === "weekday" && width === "narrow") return { ...display, weekdayLabelNarrow: null };
     throw new TypeError(`the ${control.label} format at ${width} has no "same as wide"`);
   }
-  if (control.label !== "weekday") return { ...display, labels: { ...display.labels, [control.label]: value } };
-  const label: WeekdayLabel = value === LETTER ? { type: "letter" } : { type: "pattern", pattern: value };
+  const pattern = typeof value === "string" && value === defaultPattern(control) ? "" : value;
+  if (control.label !== "weekday") {
+    if (typeof pattern !== "string") throw new TypeError(`the ${control.label} format has no one letter`);
+    return { ...display, labels: { ...display.labels, [control.label]: pattern } };
+  }
+  const label: WeekdayLabel = typeof pattern === "string" ? { type: "pattern", pattern } : { type: "letter" };
   return width === "wide" ? { ...display, weekdayLabel: label } : { ...display, weekdayLabelNarrow: label };
 }
 

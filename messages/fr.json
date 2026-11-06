@@ -101,6 +101,7 @@
       "selectors": ["family"],
       "match": {
         "family=visibility": "Visibilité",
+        "family=label": "Libellé",
         "family=text": "Texte",
         "family=highlight": "Mise en évidence",
         "family=box": "Boîte"
@@ -117,6 +118,12 @@
         "control=visibility_week_placement": "Position",
         "control=visibility_outside_days": "Jours hors du mois",
         "control=visibility_month_rows": "Lignes",
+        "control=label_day": "Format",
+        "control=label_week": "Format",
+        "control=label_month": "Format du mois",
+        "control=label_quarter": "Format du trimestre",
+        "control=label_year": "Format de l’année",
+        "control=label_weekday": "Format",
         "control=highlight_style": "Style",
         "control=highlight_color": "Couleur de mise en évidence",
         "control=highlight_ring_width": "Épaisseur du contour",
@@ -179,6 +186,10 @@
   "calendar_appearance_narrow_only": "Étroit uniquement",
   "calendar_appearance_narrow_only_clear": "Utiliser la valeur commune à toutes les largeurs",
   "calendar_appearance_all_widths": "Toutes les largeurs",
+  "calendar_appearance_format_suggestions": "Suggestions",
+  "calendar_appearance_format_preview": "Aperçu :",
+  "calendar_appearance_format_letter": "Une lettre",
+  "calendar_appearance_format_same_as_wide": "Comme en Large",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

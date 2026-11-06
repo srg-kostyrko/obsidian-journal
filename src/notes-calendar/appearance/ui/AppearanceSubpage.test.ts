@@ -259,17 +259,32 @@ describe("AppearanceSubpage", () => {
   });
 
   describe("one section per family", () => {
-    it("shows Visibility then Text for the weekday header", async () => {
+    it("shows Visibility, Label, then Text for the weekday header", async () => {
       const { container } = mount();
       await userEvent.selectOptions(partsList(), "weekday");
 
       const triggers = [...container.querySelectorAll(".appearance-subpage__family .collapsible-trigger-text")];
       expect(triggers.map((trigger) => trigger.textContent?.trim())).toEqual(
-        (["visibility", "text"] as const).map((family) => m.calendar_appearance_family({ family })),
+        (["visibility", "label", "text"] as const).map((family) => m.calendar_appearance_family({ family })),
       );
       expect(
         screen.getByRole("combobox", { name: m.calendar_appearance_control({ control: "visibility_show_weekdays" }) }),
       ).toBeTruthy();
+      expect(
+        screen.getByRole("textbox", { name: m.calendar_appearance_control({ control: "label_weekday" }) }),
+      ).toBeTruthy();
+    });
+
+    it("lists the heading's month, quarter and year formats under Label", async () => {
+      mount();
+      await userEvent.selectOptions(partsList(), "heading");
+
+      const names = screen.getAllByRole("textbox").map((box) => box.getAttribute("aria-label"));
+      expect(names).toEqual(
+        (["label_month", "label_quarter", "label_year"] as const).map((control) =>
+          m.calendar_appearance_control({ control }),
+        ),
+      );
     });
 
     it("collapsing Visibility on one part leaves it open on the next", async () => {
