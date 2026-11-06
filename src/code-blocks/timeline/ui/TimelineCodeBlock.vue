@@ -7,8 +7,7 @@ import {
   advance,
   periodOfKind,
   window as periodWindow,
-  useResolvedTimelineNavigation,
-  useResolvedWeekPlacement,
+  useResolvedStructure,
   type AnchorString,
   type Period,
   type PeriodKind,
@@ -85,8 +84,8 @@ const derivedShelf = computed(() => {
 
 const shelf = computed(() => config.shelf ?? derivedShelf.value);
 
-const weekPlacement = useResolvedWeekPlacement(() => config.weeks);
-const navigation = useResolvedTimelineNavigation(() => config.navigation);
+const weekPlacement = useResolvedStructure("weekPlacement", () => config.weeks);
+const navigation = useResolvedStructure("timelineNavigation", () => config.navigation);
 
 // The period one arrow press moves by, which is the one the mode is built around.
 const unit = computed<Exclude<PeriodKind, "day" | "decade">>(() =>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useResolvedWeekPlacement } from "@/calendar";
+import { useResolvedStructure } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
 
@@ -30,7 +30,7 @@ const weeks = usePeriodWindow(
   () => props.config.after,
 );
 
-const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
+const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.weeks);
 </script>
 
 <template>

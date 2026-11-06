@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { useResolvedWeekPlacement } from "@/calendar";
+import { useResolvedStructure } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesMonthView from "@/notes-calendar/ui/NotesMonthView.vue";
 
@@ -36,7 +36,7 @@ const months = usePeriodWindow(
 // adjacent months' own cells aren't shadowed by dates duplicated across the stack.
 const outsideDates = computed<"active" | "blank">(() => (months.value.length > 1 ? "blank" : "active"));
 
-const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
+const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.weeks);
 </script>
 
 <template>
