@@ -500,6 +500,7 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell__text {
   display: flex;
   flex: 1;
+  min-width: 0;
   border-radius: inherit;
   color: var(--_text-active, var(--_text-selected, var(--_text-today, var(--_text-outside, var(--_part-color)))));
 }
@@ -509,11 +510,21 @@ const hover = useModifierHoverPreview();
    Marks and corners sit above the label, as positioned marks sat above the static label before
    layers existed: the content follows the marks in the DOM, so at an equal z-index the label would
    take the pointer from an overflow badge it overlaps. */
+/* A label longer than its cell clips there rather than widening the grid, once the view lets the cell
+   shrink below its content; a heading cell keeps its content width, so its label never clips. Only the
+   inline axis clips, because at `line-height: 1` descenders overflow the line box. */
+.notes-calendar-cell :deep(.cell-decoration) {
+  min-width: 0;
+}
 .notes-calendar-cell :deep(.cell-decoration__content) {
   position: relative;
   z-index: 2;
   /* Label padding: on top of the decoration's own mark reservation, and never shrinking its fill. */
   padding: var(--_v-cell-padding);
+  min-width: 0;
+  overflow-x: clip;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* A decoration paints its text color with !important on the element around the label, which beats
    the span's color, so the label re-resolves the winner itself. Each state's candidate is its text

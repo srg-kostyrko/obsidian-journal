@@ -6,6 +6,7 @@ import {
   calendarDisplaySlice,
   DayPeriod,
   resolveOutsideDates,
+  type PeriodKind,
   YearPeriod,
   type CalendarDisplaySliceState,
   type Period,
@@ -15,6 +16,7 @@ import type { JournalDecorationStyle } from "@/decorations/config";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
 
+import { formatWeekday, labelPattern } from "../../cell-format";
 import NotesCalendarCell from "../../ui/NotesCalendarCell.vue";
 
 import { partsAt, sampleDays } from "./preview-sample";
@@ -63,7 +65,16 @@ const rows = computed(() => {
     days: [...week.days()].map((day) => ({ period: DayPeriod.containing(day), outside: !month.value.contains(day) })),
   }));
 });
-const weekdayNames = computed(() => (rows.value[0]?.days ?? []).map((day) => day.period.start.format("ddd")));
+const format = (kind: PeriodKind): string => labelPattern(props.display.labels, kind);
+// Unlike the views' column headers, these spans have no role to name, so the visible text is what is read;
+// the hidden width's text is `display: none`, out of the tree.
+const weekdays = computed(() => {
+  const { weekdayLabel, weekdayLabelNarrow } = props.display;
+  return (rows.value[0]?.days ?? []).map(({ period }) => ({
+    wide: formatWeekday(period.start, weekdayLabel),
+    narrow: formatWeekday(period.start, weekdayLabelNarrow ?? weekdayLabel),
+  }));
+});
 
 const root = useTemplateRef<HTMLElement>("root");
 defineExpose({ root });
@@ -139,7 +150,7 @@ const pickedCount = computed(() => {
       return 2;
     }
     case "weekday": {
-      return weekdayNames.value.length;
+      return weekdays.value.length;
     }
     case "weekNumber": {
       return rows.value.length;
@@ -171,8 +182,18 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
     @keydown.space.prevent="onPick"
   >
     <div v-if="display.showHeading" class="appearance-preview__header" data-preview-part="heading">
-      <NotesCalendarCell :class="pickedClass(picked === 'heading')" :period="month" :cell="cell" />
-      <NotesCalendarCell :class="pickedClass(picked === 'heading')" :period="year" :cell="cell" />
+      <NotesCalendarCell
+        :class="pickedClass(picked === 'heading')"
+        :period="month"
+        :cell="cell"
+        :format="format('month')"
+      />
+      <NotesCalendarCell
+        :class="pickedClass(picked === 'heading')"
+        :period="year"
+        :cell="cell"
+        :format="format('year')"
+      />
     </div>
     <div
       class="appearance-preview__grid"
@@ -186,13 +207,14 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       >
         <div v-if="weeksPos === 'left'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
         <span
-          v-for="(name, i) in weekdayNames"
+          v-for="(day, i) in weekdays"
           :key="i"
           class="appearance-preview__weekday"
           :class="pickedClass(picked === 'weekday')"
           data-preview-part="weekday"
         >
-          {{ name }}
+          <span class="appearance-preview__weekday-wide">{{ day.wide }}</span>
+          <span class="appearance-preview__weekday-narrow">{{ day.narrow }}</span>
         </span>
         <div v-if="weeksPos === 'right'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
       </div>
@@ -204,6 +226,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           data-preview-part="weekNumber"
           :period="row.week"
           :cell="cell"
+          :format="format('week')"
         />
         <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
           <span
@@ -220,6 +243,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
             data-preview-part="date"
             :period="day.period"
             :cell="outsideDates === 'inactive' && day.outside ? inertCell : cell"
+            :format="format('day')"
             :outside="day.outside"
             :selected="isSelected(day.period)"
           />
@@ -231,6 +255,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           data-preview-part="weekNumber"
           :period="row.week"
           :cell="cell"
+          :format="format('week')"
         />
       </div>
     </div>
@@ -326,6 +351,9 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   justify-content: center;
   align-items: end;
 }
+.appearance-preview__weekday-narrow {
+  display: none;
+}
 /* Cells take their part's color through `--_part-color`, never `color`, as the month view does. */
 .appearance-preview__week-number {
   --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
@@ -352,6 +380,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
   --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
   --_part-color: var(--_v-date-color);
+  min-width: 0;
   font-size: var(--_v-date-size);
   font-weight: var(--_v-date-weight);
   font-style: var(--_v-date-italic);
@@ -364,6 +393,12 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   min-height: var(--_v-cell-min-height);
 }
 @container journal-calendar (max-width: 28em) {
+  .appearance-preview__weekday-wide {
+    display: none;
+  }
+  .appearance-preview__weekday-narrow {
+    display: inline;
+  }
   .appearance-preview__day--blank {
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,

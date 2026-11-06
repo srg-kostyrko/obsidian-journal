@@ -2,17 +2,21 @@
 import { computed, toRaw, useSlots } from "vue";
 
 import {
+  calendarDisplaySlice,
   DayPeriod,
   MonthPeriod,
   QuarterPeriod,
   YearPeriod,
   type AnchorString,
   type Period,
+  type PeriodKind,
   type WeekPeriod,
 } from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
+import { useService } from "@/infrastructure/di";
+import { SettingsService } from "@/settings";
 
-import { accessibleFormatPattern } from "../cell-format";
+import { accessibleFormatPattern, formatWeekday, labelPattern } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
@@ -54,7 +58,16 @@ const days = computed(() =>
     .map((d) => DayPeriod.containing(d))
     .filter((d) => !hiddenWeekdays.value.has(Number(d.start.format("d")))),
 );
-const weekdayNames = computed(() => days.value.map((d) => d.start.format("ddd")));
+const display = useService(SettingsService).getSlice(calendarDisplaySlice);
+const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
+const weekdays = computed(() => {
+  const { weekdayLabel, weekdayLabelNarrow } = display.state;
+  return days.value.map((day) => ({
+    name: day.start.format("dddd"),
+    wide: formatWeekday(day.start, weekdayLabel),
+    narrow: formatWeekday(day.start, weekdayLabelNarrow ?? weekdayLabel),
+  }));
+});
 // A week belongs to the period that owns it, which is the representative day's — not the
 // week start's, which for a cross-year week sits in the previous month and year.
 const monthPeriod = computed(() => MonthPeriod.containing(rawWeek.value.representative));
@@ -138,14 +151,20 @@ const isSelected = (period: Period): boolean =>
     <div v-if="showHeader" class="notes-week-view__header" :data-flanked="flanked || null">
       <slot name="header-start" />
       <slot name="header">
-        <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
+        <NotesCalendarCell
+          data-testid="header-month"
+          :period="monthPeriod"
+          :cell="monthCell"
+          :format="format('month')"
+        />
         <NotesCalendarCell
           v-if="showQuarter"
           data-testid="header-quarter"
           :period="quarterPeriod"
           :cell="quarterCell"
+          :format="format('quarter')"
         />
-        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
+        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" :format="format('year')" />
       </slot>
       <slot name="header-end" />
     </div>
@@ -168,8 +187,15 @@ const isSelected = (period: Period): boolean =>
           class="notes-week-view__weekday-spacer"
           aria-hidden="true"
         ></div>
-        <span v-for="(day, i) in weekdayNames" :key="i" class="notes-week-view__weekday" role="columnheader">
-          {{ day }}
+        <span
+          v-for="(day, i) in weekdays"
+          :key="i"
+          class="notes-week-view__weekday"
+          role="columnheader"
+          :aria-label="day.name"
+        >
+          <span class="notes-week-view__weekday-wide" aria-hidden="true">{{ day.wide }}</span>
+          <span class="notes-week-view__weekday-narrow" aria-hidden="true">{{ day.narrow }}</span>
         </span>
         <div
           v-if="showWeekNumber && weeksPos === 'right'"
@@ -184,6 +210,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-week-view__week-number"
           :period="rawWeek"
           :cell="weekCell"
+          :format="format('week')"
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
@@ -194,6 +221,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-week-view__day"
           :period="day"
           :cell="dayCell"
+          :format="format('day')"
           role="gridcell"
           :data-grid-key="`day:${day.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`day:${day.anchor.toAnchor()}`)"
@@ -205,6 +233,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-week-view__week-number"
           :period="rawWeek"
           :cell="weekCell"
+          :format="format('week')"
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
@@ -286,6 +315,10 @@ const isSelected = (period: Period): boolean =>
   color: var(--_v-weekday-color);
   text-transform: var(--_v-weekday-case);
 }
+/* Both texts render, and the narrow query swaps which one shows. */
+.notes-week-view__weekday-narrow {
+  display: none;
+}
 .notes-week-view__row {
   display: flex;
   gap: var(--_v-cell-gap);
@@ -321,12 +354,20 @@ const isSelected = (period: Period): boolean =>
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
   --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
   --_part-color: var(--_v-date-color);
+  /* A flex item keeps a content-sized floor; giving it up lets a long label clip inside the cell. */
+  min-width: 0;
   font-size: var(--_v-date-size);
   font-weight: var(--_v-date-weight);
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
 @container journal-calendar (max-width: 28em) {
+  .notes-week-view__weekday-wide {
+    display: none;
+  }
+  .notes-week-view__weekday-narrow {
+    display: inline;
+  }
   .notes-week-view__header {
     --_v-heading-size: var(
       --journal-cell-heading-size-narrow,

@@ -3,6 +3,7 @@ import { computed, toRaw, useSlots } from "vue";
 
 import {
   advance,
+  calendarDisplaySlice,
   DayPeriod,
   QuarterPeriod,
   YearPeriod,
@@ -10,11 +11,14 @@ import {
   type MonthPeriod,
   type OutsideDates,
   type Period,
+  type PeriodKind,
   type WeekPeriod,
 } from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
+import { useService } from "@/infrastructure/di";
+import { SettingsService } from "@/settings";
 
-import { accessibleFormatPattern } from "../cell-format";
+import { accessibleFormatPattern, formatWeekday, labelPattern } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
@@ -93,7 +97,16 @@ const rows = computed<readonly WeekRow[]>(() => {
   return out;
 });
 
-const weekdayNames = computed(() => (rows.value[0]?.days ?? []).map((d) => d.period.start.format("ddd")));
+const display = useService(SettingsService).getSlice(calendarDisplaySlice);
+const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
+const weekdays = computed(() => {
+  const { weekdayLabel, weekdayLabelNarrow } = display.state;
+  return (rows.value[0]?.days ?? []).map(({ period }) => ({
+    name: period.start.format("dddd"),
+    wide: formatWeekday(period.start, weekdayLabel),
+    narrow: formatWeekday(period.start, weekdayLabelNarrow ?? weekdayLabel),
+  }));
+});
 
 const monthPeriod = computed(() => rawMonth.value);
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawMonth.value.anchor));
@@ -182,14 +195,20 @@ const isSelected = (period: Period): boolean =>
     <div v-if="showHeader" class="notes-month-view__header" :data-flanked="flanked || null">
       <slot name="header-start" />
       <slot name="header">
-        <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
+        <NotesCalendarCell
+          data-testid="header-month"
+          :period="monthPeriod"
+          :cell="monthCell"
+          :format="format('month')"
+        />
         <NotesCalendarCell
           v-if="showQuarter"
           data-testid="header-quarter"
           :period="quarterPeriod"
           :cell="quarterCell"
+          :format="format('quarter')"
         />
-        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
+        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" :format="format('year')" />
       </slot>
       <slot name="header-end" />
     </div>
@@ -213,8 +232,15 @@ const isSelected = (period: Period): boolean =>
           class="notes-month-view__weekday-spacer"
           aria-hidden="true"
         ></div>
-        <span v-for="(day, i) in weekdayNames" :key="i" class="notes-month-view__weekday" role="columnheader">
-          {{ day }}
+        <span
+          v-for="(day, i) in weekdays"
+          :key="i"
+          class="notes-month-view__weekday"
+          role="columnheader"
+          :aria-label="day.name"
+        >
+          <span class="notes-month-view__weekday-wide" aria-hidden="true">{{ day.wide }}</span>
+          <span class="notes-month-view__weekday-narrow" aria-hidden="true">{{ day.narrow }}</span>
         </span>
         <div
           v-if="showWeekNumber && weeksPos === 'right'"
@@ -229,6 +255,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-month-view__week-number"
           :period="row.weekPeriod"
           :cell="weekCell"
+          :format="format('week')"
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
@@ -246,6 +273,7 @@ const isSelected = (period: Period): boolean =>
             disabled
             :period="day.period"
             :cell="inertDay"
+            :format="format('day')"
             role="gridcell"
           />
           <NotesCalendarCell
@@ -254,6 +282,7 @@ const isSelected = (period: Period): boolean =>
             :outside="day.isOutside"
             :period="day.period"
             :cell="dayCell"
+            :format="format('day')"
             role="gridcell"
             :data-grid-key="`day:${day.period.anchor.toAnchor()}`"
             :tab-index="navigation.tabIndex(`day:${day.period.anchor.toAnchor()}`)"
@@ -266,6 +295,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-month-view__week-number"
           :period="row.weekPeriod"
           :cell="weekCell"
+          :format="format('week')"
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
@@ -364,6 +394,10 @@ const isSelected = (period: Period): boolean =>
   justify-content: center;
   align-items: end;
 }
+/* Both texts render, and the narrow query swaps which one shows. */
+.notes-month-view__weekday-narrow {
+  display: none;
+}
 /* Week numbers and dates are cells, whose color the cell's state precedence owns; `--_part-color` is
    the bottom of that chain, so a state with no text color of its own leaves the part's color. Dates
    outside the month take the date values too; the outside highlight's text sits above `--_part-color`,
@@ -393,6 +427,8 @@ const isSelected = (period: Period): boolean =>
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
   --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
   --_part-color: var(--_v-date-color);
+  /* A 1fr track keeps a content-sized floor; giving it up lets a long label clip inside the cell. */
+  min-width: 0;
   font-size: var(--_v-date-size);
   font-weight: var(--_v-date-weight);
   font-style: var(--_v-date-italic);
@@ -405,6 +441,12 @@ const isSelected = (period: Period): boolean =>
   min-height: var(--_v-cell-min-height);
 }
 @container journal-calendar (max-width: 28em) {
+  .notes-month-view__weekday-wide {
+    display: none;
+  }
+  .notes-month-view__weekday-narrow {
+    display: inline;
+  }
   .notes-month-view__day--blank {
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,
