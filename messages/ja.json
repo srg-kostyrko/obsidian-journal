@@ -84,6 +84,8 @@
         "part=selected": "選択した日付",
         "part=active": "開いているノート",
         "part=outside": "月外の日",
+        "part=currentWeek": "今週",
+        "part=weekend": "週末",
         "part=heading": "月の見出し",
         "part=weekday": "曜日の見出し",
         "part=weekNumber": "週番号",

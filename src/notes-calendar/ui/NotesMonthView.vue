@@ -5,6 +5,7 @@ import {
   advance,
   calendarDisplaySlice,
   DayPeriod,
+  weekendRuns,
   QuarterPeriod,
   YearPeriod,
   type AnchorString,
@@ -14,6 +15,7 @@ import {
   type PeriodKind,
   type WeekPeriod,
 } from "@/calendar";
+import { useToday, useWeekend } from "@/calendar/ui";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
@@ -22,6 +24,7 @@ import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-for
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
+import NotesCalendarBand from "./NotesCalendarBand.vue";
 import NotesCalendarCell from "./NotesCalendarCell.vue";
 import {
   useCalendarGridNavigation,
@@ -41,6 +44,7 @@ const props = withDefaults(
     sixRows?: boolean;
     selectedDate?: AnchorString;
     selectDate?: NotesDateSelect;
+    currentWeekBand?: boolean;
   }>(),
   {
     outsideDates: "active",
@@ -51,6 +55,7 @@ const props = withDefaults(
     sixRows: false,
     selectedDate: undefined,
     selectDate: undefined,
+    currentWeekBand: true,
   },
 );
 
@@ -100,10 +105,32 @@ const rows = computed<readonly WeekRow[]>(() => {
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
 const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
+const weekend = useWeekend();
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(Number(day.start.format("d")));
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
-  return (rows.value[0]?.days ?? []).map(({ period }) => weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow));
+  return (rows.value[0]?.days ?? []).map(({ period }) => ({
+    ...weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow),
+    weekend: isWeekend(period),
+  }));
 });
+
+const today = useToday();
+// Bands are placed by grid lines: the week numbers on the left take the first column, and a shown weekday
+// header takes the first row. A visually hidden header is absolutely positioned, so it takes no row.
+const firstDayColumn = computed(() => (showWeekNumber.value && weeksPos.value === "left" ? 2 : 1));
+const weekendBands = computed(() =>
+  weekendRuns(
+    (rows.value[0]?.days ?? []).map(({ period }) => Number(period.start.format("d"))),
+    weekend.value,
+  ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
+);
+const currentRow = computed(() =>
+  props.currentWeekBand ? rows.value.findIndex((row) => row.weekPeriod.contains(today.value)) : -1,
+);
+const currentWeekRow = computed(() =>
+  currentRow.value < 0 ? undefined : `${currentRow.value + (props.showWeekdays ? 2 : 1)} / span 1`,
+);
 
 const monthPeriod = computed(() => rawMonth.value);
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawMonth.value.anchor));
@@ -219,6 +246,8 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
+      <NotesCalendarBand v-for="band in weekendBands" :key="band.key" kind="weekend" :column="band.column" row="auto" />
+      <NotesCalendarBand v-if="currentWeekRow" kind="currentWeek" column="1 / -1" :row="currentWeekRow" />
       <div
         class="notes-month-view__row"
         :class="{ 'notes-month-view__row--visually-hidden': !showWeekdays }"
@@ -235,6 +264,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-month-view__weekday"
           role="columnheader"
           :aria-label="day.name"
+          :data-weekend="day.weekend || null"
         >
           <span class="notes-month-view__weekday-wide" aria-hidden="true">{{ day.wide }}</span>
           <span class="notes-month-view__weekday-narrow" aria-hidden="true">{{ day.narrow }}</span>
@@ -245,7 +275,7 @@ const isSelected = (period: Period): boolean =>
           aria-hidden="true"
         ></div>
       </div>
-      <div v-for="row in rows" :key="row.key" class="notes-month-view__row" role="row">
+      <div v-for="(row, index) in rows" :key="row.key" class="notes-month-view__row" role="row">
         <NotesCalendarCell
           v-if="showWeekNumber && weeksPos === 'left'"
           data-testid="week-number-cell"
@@ -256,6 +286,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
+          :current-week="index === currentRow"
         />
         <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
           <span
@@ -268,6 +299,8 @@ const isSelected = (period: Period): boolean =>
             class="notes-month-view__day"
             outside
             disabled
+            :weekend="isWeekend(day.period)"
+            :current-week="index === currentRow"
             :period="day.period"
             :cell="inertDay"
             :format="format('day')"
@@ -277,6 +310,8 @@ const isSelected = (period: Period): boolean =>
             v-else
             class="notes-month-view__day"
             :outside="day.isOutside"
+            :weekend="isWeekend(day.period)"
+            :current-week="index === currentRow"
             :period="day.period"
             :cell="dayCell"
             :format="format('day')"
@@ -296,6 +331,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
+          :current-week="index === currentRow"
         />
       </div>
     </div>
@@ -340,8 +376,10 @@ const isSelected = (period: Period): boolean =>
 .notes-month-view__header[data-flanked] {
   justify-content: center;
 }
+/* Positioned for its bands, never isolated: a cell with an open mark popover lifts itself out of the grid. */
 .notes-month-view__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  position: relative;
   display: grid;
   grid-template-columns: repeat(var(--day-columns, 7), 1fr);
   gap: var(--_v-cell-gap);
@@ -390,6 +428,36 @@ const isSelected = (period: Period): boolean =>
   display: flex;
   justify-content: center;
   align-items: end;
+}
+/* A weekend column's header takes the weekend's text over the weekday part's own, since the band starts
+   there. Its values sit on the row, so the Unchanged queries below are answered by the header's parent. */
+.notes-month-view__row {
+  --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
+  --_v-weekend-text-weight: var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight));
+  --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
+}
+.notes-month-view__weekday[data-weekend] {
+  --_weekend-text: var(--_v-weekend-text-color);
+  --_weekend-weight: var(--_v-weekend-text-weight);
+  --_weekend-italic: var(--_v-weekend-text-italic);
+  color: var(--_weekend-text, var(--_v-weekday-color));
+  font-weight: var(--_weekend-weight, var(--_v-weekday-weight));
+  font-style: var(--_weekend-italic, var(--_v-weekday-italic));
+}
+@container style(--_v-weekend-text-color: unchanged) {
+  .notes-month-view__weekday[data-weekend] {
+    --_weekend-text: initial;
+  }
+}
+@container style(--_v-weekend-text-weight: unchanged) {
+  .notes-month-view__weekday[data-weekend] {
+    --_weekend-weight: initial;
+  }
+}
+@container style(--_v-weekend-text-italic: unchanged) {
+  .notes-month-view__weekday[data-weekend] {
+    --_weekend-italic: initial;
+  }
 }
 /* Both texts render, and the narrow query swaps which one shows. */
 .notes-month-view__weekday-narrow {
@@ -443,6 +511,29 @@ const isSelected = (period: Period): boolean =>
   min-width: 0;
 }
 @container journal-calendar (max-width: 28em) {
+  .notes-month-view__row {
+    --_v-weekend-text-color: var(
+      --journal-cell-weekend-text-color-narrow,
+      var(
+        --journal-saved-cell-weekend-text-color-narrow,
+        var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color))
+      )
+    );
+    --_v-weekend-text-weight: var(
+      --journal-cell-weekend-text-weight-narrow,
+      var(
+        --journal-saved-cell-weekend-text-weight-narrow,
+        var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight))
+      )
+    );
+    --_v-weekend-text-italic: var(
+      --journal-cell-weekend-text-italic-narrow,
+      var(
+        --journal-saved-cell-weekend-text-italic-narrow,
+        var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic))
+      )
+    );
+  }
   .notes-month-view__weekday-wide {
     display: none;
   }

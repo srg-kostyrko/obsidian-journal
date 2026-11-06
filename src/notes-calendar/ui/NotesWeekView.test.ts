@@ -1,3 +1,4 @@
+// cspell: ignore subgrid
 import userEvent from "@testing-library/user-event";
 import { fireEvent, screen } from "@testing-library/vue";
 import { __testing } from "obsidian";
@@ -21,6 +22,7 @@ import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { notesCalendarModule } from "../module";
+import { calendarStyleRules } from "../testing";
 
 import NotesWeekView from "./NotesWeekView.vue";
 
@@ -497,5 +499,103 @@ describe("NotesWeekView", () => {
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
       expect(container.querySelector(".notes-week-view__header")).not.toBeNull();
     });
+  });
+});
+
+const bands = (container: Element, kind: "weekend" | "current-week"): HTMLElement[] => [
+  ...container.querySelectorAll<HTMLElement>(`.notes-calendar-band[data-band="${CSS.escape(kind)}"]`),
+];
+const placement = (band: HTMLElement) => ({ column: band.style.gridColumn, row: band.style.gridRow });
+
+// Built under the test's Monday-start grid, unlike the module's `week`, built at import.
+const thisWeek = () => WeekPeriod.containing(CalendarDate.fromAnchor(anchor("2026-05-27")));
+
+describe("NotesWeekView bands", () => {
+  const daily = { daily: fixedJournal("daily", { type: "day" }) };
+
+  it("draws the weekend band down Saturday and Sunday and the current-week band across today's week", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek(), weeks: "left" } });
+
+    expect({
+      weekend: bands(container, "weekend").map(placement),
+      currentWeek: bands(container, "current-week").map(placement),
+    }).toEqual({
+      weekend: [{ column: "7 / span 2", row: "auto" }],
+      currentWeek: [{ column: "1 / -1", row: "2 / span 1" }],
+    });
+    expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
+    expect(container.querySelectorAll(".notes-week-view__day[data-weekend]").length).toBe(2);
+    expect(container.querySelectorAll(".notes-week-view__weekday[data-weekend]").length).toBe(2);
+  });
+
+  it("counts no header row when the weekday row is hidden", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), showWeekdays: false },
+    });
+
+    expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "1 / span 1" }]);
+  });
+
+  it("keeps the weekend band but drops the current week when the caller opts out", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), currentWeekBand: false },
+    });
+
+    expect(bands(container, "weekend").length).toBe(1);
+    expect(bands(container, "current-week")).toEqual([]);
+    expect(container.querySelector("[data-current-week]")).toBeNull();
+  });
+
+  it("draws no current-week band for a week without today", async () => {
+    const harness = await bootHarness(daily);
+    const other = WeekPeriod.containing(CalendarDate.fromAnchor(anchor("2026-06-10")));
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: other } });
+
+    expect(bands(container, "current-week")).toEqual([]);
+    expect(container.querySelector("[data-current-week]")).toBeNull();
+  });
+
+  it("places the bands ahead of the header row", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek() } });
+    const children = [...(container.querySelector('[role="grid"]')?.children ?? [])];
+
+    expect(children.slice(0, 2).map((child) => (child as HTMLElement).dataset.band)).toEqual([
+      "weekend",
+      "current-week",
+    ]);
+  });
+
+  // One band component serves the month and week views, so both lay their rows out on the same grid lines.
+  it("lays the header and the day row on the month view's grid", () => {
+    const rules = calendarStyleRules().weekView.filter((rule) => rule.container === null);
+    const declarations = (selector: string) =>
+      Object.fromEntries(rules.filter((rule) => rule.selector === selector).flatMap((rule) => [...rule.declarations]));
+    expect(declarations(".notes-week-view__grid")).toMatchObject({
+      position: "relative",
+      display: "grid",
+      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr)",
+    });
+    expect(declarations('.notes-week-view__grid[data-weeks="left"]')).toMatchObject({
+      "grid-template-columns": "auto repeat(var(--day-columns, 7), 1fr)",
+    });
+    expect(declarations('.notes-week-view__grid[data-weeks="right"]')).toMatchObject({
+      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) auto",
+    });
+    // The first rule laying out each row; the fallback for engines without nested grid tracks that follows it sits under `@supports`.
+    for (const row of [".notes-week-view__weekdays", ".notes-week-view__row"]) {
+      const layout = rules.find(
+        (rule) =>
+          rule.selector.split(",").some((part) => part.trim() === row) &&
+          rule.declarations.has("grid-template-columns"),
+      );
+      expect(Object.fromEntries(layout?.declarations ?? [])).toMatchObject({
+        display: "grid",
+        "grid-template-columns": "subgrid",
+      });
+    }
   });
 });

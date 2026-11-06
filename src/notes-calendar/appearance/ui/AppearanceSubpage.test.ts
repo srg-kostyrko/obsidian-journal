@@ -50,7 +50,7 @@ function openNoteCell(container: Element): HTMLElement {
 }
 
 function selectedCell(container: Element): HTMLElement {
-  const cell = container.querySelector<HTMLElement>('[data-preview-part="date"][data-anchor="2026-05-01"]');
+  const cell = container.querySelector<HTMLElement>('[data-preview-part="date"][data-selected]');
   if (!cell) throw new Error("no preview cell for the selected day");
   return cell;
 }

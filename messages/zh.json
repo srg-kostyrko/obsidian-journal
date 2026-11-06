@@ -84,6 +84,8 @@
         "part=selected": "所选日期",
         "part=active": "已打开的笔记",
         "part=outside": "本月以外的日期",
+        "part=currentWeek": "本周",
+        "part=weekend": "周末",
         "part=heading": "月份标题",
         "part=weekday": "星期标题",
         "part=weekNumber": "周数",

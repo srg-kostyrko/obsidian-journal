@@ -84,6 +84,8 @@
         "part=selected": "선택한 날짜",
         "part=active": "열린 노트",
         "part=outside": "이번 달 밖의 날짜",
+        "part=currentWeek": "이번 주",
+        "part=weekend": "주말",
         "part=heading": "월 제목",
         "part=weekday": "요일 머리글",
         "part=weekNumber": "주 번호",

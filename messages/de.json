@@ -84,6 +84,8 @@
         "part=selected": "Ausgewähltes Datum",
         "part=active": "Geöffnete Notiz",
         "part=outside": "Tage außerhalb des Monats",
+        "part=currentWeek": "Aktuelle Woche",
+        "part=weekend": "Wochenenden",
         "part=heading": "Monatsüberschrift",
         "part=weekday": "Wochentagszeile",
         "part=weekNumber": "Wochennummern",

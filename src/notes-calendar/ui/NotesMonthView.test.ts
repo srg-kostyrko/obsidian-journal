@@ -5,7 +5,7 @@ import { nextTick } from "vue";
 
 import { CalendarDate, MonthPeriod, type CalendarDisplaySliceState } from "@/calendar";
 import { calendarDisplayCoreModule } from "@/calendar/settings/module";
-import { anchor } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
@@ -863,6 +863,201 @@ describe("NotesMonthView", () => {
       });
       expect(container.querySelector('[data-testid="custom-header"]')).toBeTruthy();
       expect(container.querySelector('[data-testid="header-month"]')).toBeNull();
+    });
+  });
+});
+
+const bands = (container: Element, kind: "weekend" | "current-week"): HTMLElement[] => [
+  ...container.querySelectorAll<HTMLElement>(`.notes-calendar-band[data-band="${CSS.escape(kind)}"]`),
+];
+const placement = (band: HTMLElement) => ({ column: band.style.gridColumn, row: band.style.gridRow });
+const currentWeekAnchors = (container: Element): (string | undefined)[] =>
+  [...container.querySelectorAll<HTMLElement>("[data-current-week]")].map((cell) => cell.dataset.anchor);
+const daily = { daily: fixedJournal("daily", { type: "day" }) };
+
+describe("NotesMonthView bands", () => {
+  describe("weekend", () => {
+    it("draws one band down Saturday and Sunday in a Monday-start grid, after the week numbers", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "7 / span 2", row: "auto" }]);
+    });
+
+    it("splits the weekend into the first and last columns of a Sunday-start grid", async () => {
+      installTestCalendar({ dow: 0, doy: 6 });
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([
+        { column: "2 / span 1", row: "auto" },
+        { column: "8 / span 1", row: "auto" },
+      ]);
+    });
+
+    it("starts at the first column with week numbers on the right", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "right" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "6 / span 2", row: "auto" }]);
+    });
+
+    it("moves the band to a custom Friday and Saturday", async () => {
+      const harness = await bootHarness(daily, { weekend: { type: "custom", days: [5, 6] } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "6 / span 2", row: "auto" }]);
+      const weekendDays = [...container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-weekend]")];
+      expect(new Set(weekendDays.map((cell) => new Date(`${cell.dataset.anchor}T12:00`).getDay()))).toEqual(
+        new Set([5, 6]),
+      );
+    });
+
+    it("draws no band and marks no day for an empty custom weekend", async () => {
+      const harness = await bootHarness(daily, { weekend: { type: "custom", days: [] } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      expect(bands(container, "weekend")).toEqual([]);
+      expect(container.querySelector("[data-weekend]")).toBeNull();
+    });
+
+    it("marks every weekend day, outside days included, inert or interactive", async () => {
+      for (const outsideDates of ["active", "inactive"] as const) {
+        const harness = await bootHarness(daily);
+        const { container, unmount } = harness.render(NotesMonthView, { props: { shelf: null, month, outsideDates } });
+
+        // 2026-08-01 is a Saturday inside the month; 2026-09-06 a Sunday padding its last row.
+        expect(
+          [dayCell(container, "2026-08-01"), dayCell(container, "2026-09-06")].map((cell) => cell?.dataset.weekend),
+        ).toEqual(["true", "true"]);
+        expect(dayCell(container, "2026-08-03")?.hasAttribute("data-weekend")).toBe(false);
+        unmount();
+      }
+    });
+
+    it("marks the weekend's column headers alone", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      const marked = [...container.querySelectorAll<HTMLElement>('[role="columnheader"]')].map(
+        (header) => header.dataset.weekend !== undefined,
+      );
+      expect(marked).toEqual([false, false, false, false, false, true, true]);
+    });
+  });
+
+  describe("current week", () => {
+    it("draws one band across today's row, counting the weekday header", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      // Today, 2026-08-15, sits in the third week row; the header row is grid row 1.
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "4 / span 1" }]);
+    });
+
+    // A visually hidden header row is absolutely positioned, so it takes no grid row.
+    it("counts no header row when the weekday row is hidden", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, weeks: "left", showWeekdays: false },
+      });
+
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "3 / span 1" }]);
+    });
+
+    it("marks today's week number and its seven days, and nothing else", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      const row = dayRows(container)[2];
+      const marked = [...(row?.querySelectorAll<HTMLElement>("[data-current-week]") ?? [])];
+      expect(marked.length).toBe(8);
+      expect(marked[0]?.dataset.testid).toBe("week-number-cell");
+      expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
+    });
+
+    it("draws no current-week band in a month without today", async () => {
+      const harness = await bootHarness(daily);
+      const other = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-03-15")));
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month: other } });
+
+      expect(bands(container, "current-week")).toEqual([]);
+      expect(container.querySelector("[data-current-week]")).toBeNull();
+    });
+
+    it("draws no current-week band when the caller opts out", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, currentWeekBand: false } });
+
+      expect(bands(container, "current-week")).toEqual([]);
+      expect(container.querySelector("[data-current-week]")).toBeNull();
+    });
+
+    it("moves to the next row when midnight starts a new week", async () => {
+      vi.setSystemTime(new Date(2026, 7, 16, 23, 59, 0));
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "4 / span 1" }]);
+
+      await vi.advanceTimersByTimeAsync(61_000);
+
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "5 / span 1" }]);
+      expect(currentWeekAnchors(container).at(1)).toBe("2026-08-17");
+    });
+  });
+
+  describe("in the grid", () => {
+    it("places every band ahead of the header row, weekend bands first", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const grid = container.querySelector('[role="grid"]');
+      const children = [...(grid?.children ?? [])];
+      const firstRow = children.findIndex((child) => child.getAttribute("role") === "row");
+
+      expect(children.slice(0, firstRow).map((child) => (child as HTMLElement).dataset.band)).toEqual([
+        "weekend",
+        "current-week",
+      ]);
+    });
+
+    it("hides every band from assistive tech", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      const hidden = [...container.querySelectorAll(".notes-calendar-band, .notes-calendar-band *")].map((element) =>
+        element.getAttribute("aria-hidden"),
+      );
+      expect(hidden.length).toBe(6);
+      expect(new Set(hidden)).toEqual(new Set(["true"]));
+    });
+
+    it("positions the grid for its bands without isolating it", () => {
+      const grid = calendarStyleRules().monthView.find(
+        (rule) =>
+          rule.container === null && rule.selector === ".notes-month-view__grid" && rule.declarations.has("display"),
+      );
+      expect(grid?.declarations.get("position")).toBe("relative");
+      expect(grid?.declarations.has("isolation")).toBe(false);
+      expect(grid?.declarations.has("z-index")).toBe(false);
+    });
+
+    // jsdom does no hit testing, so this reads the rules that decide it: the pointer passes through every band
+    // layer, and an over band is z 1 at most while a cell with an open popover lifts to the popover layer.
+    it("lets the pointer through an over band and lifts a cell's open popover above it", () => {
+      const { band, cell } = calendarStyleRules();
+
+      expect(band.find((rule) => rule.selector === ".notes-calendar-band")?.declarations.get("pointer-events")).toBe(
+        "none",
+      );
+      const layers = band
+        .filter((rule) => rule.declarations.has("z-index"))
+        .map((rule) => rule.declarations.get("z-index"));
+      expect(layers).toEqual(["clamp(0, var(--_v-weekend-layer), 1)", "clamp(0, var(--_v-current-week-layer), 1)"]);
+      expect(
+        cell
+          .find((rule) => rule.selector === ".notes-calendar-cell:has(.mark-overflow__popover)")
+          ?.declarations.get("z-index"),
+      ).toBe("var(--layer-popover)");
     });
   });
 });

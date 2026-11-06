@@ -84,6 +84,8 @@
         "part=selected": "Data selezionata",
         "part=active": "Nota aperta",
         "part=outside": "Giorni fuori dal mese",
+        "part=currentWeek": "Settimana corrente",
+        "part=weekend": "Fine settimana",
         "part=heading": "Intestazione del mese",
         "part=weekday": "Intestazione dei giorni della settimana",
         "part=weekNumber": "Numeri di settimana",

@@ -84,6 +84,8 @@
         "part=selected": "Выбранная дата",
         "part=active": "Открытая заметка",
         "part=outside": "Дни вне месяца",
+        "part=currentWeek": "Текущая неделя",
+        "part=weekend": "Выходные",
         "part=heading": "Заголовок месяца",
         "part=weekday": "Заголовок дней недели",
         "part=weekNumber": "Номера недель",

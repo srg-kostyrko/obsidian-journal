@@ -3,10 +3,13 @@ import { match } from "ts-pattern";
 import { computed, provide, shallowReactive, shallowRef, useTemplateRef, watchEffect } from "vue";
 
 import {
+  activeLocale,
   advance,
   calendarDisplaySlice,
   DayPeriod,
   resolveOutsideDates,
+  resolveWeekend,
+  weekendRuns,
   type PeriodKind,
   YearPeriod,
   type CalendarDisplaySliceState,
@@ -18,6 +21,7 @@ import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
 
 import { labelPattern, weekdayTexts } from "../../cell-format";
+import NotesCalendarBand from "../../ui/NotesCalendarBand.vue";
 import NotesCalendarCell from "../../ui/NotesCalendarCell.vue";
 
 import { partsAt, sampleDays } from "./preview-sample";
@@ -44,7 +48,10 @@ const SAMPLE_DECORATION: readonly JournalDecorationStyle[] = [
 ];
 
 const today = useToday();
-const sample = computed(() => sampleDays(today.value));
+// From the display it is given, not the saved slice, so the preview reaches no service.
+const weekend = computed(() => resolveWeekend(props.display.weekend, activeLocale()));
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(Number(day.start.format("d")));
+const sample = computed(() => sampleDays(today.value, weekend.value));
 const month = computed(() => sample.value.month);
 const year = computed(() => YearPeriod.containing(month.value.anchor));
 
@@ -71,8 +78,24 @@ const format = (kind: PeriodKind): string => labelPattern(props.display.labels, 
 // the hidden width's text is `display: none`, out of the tree.
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = props.display;
-  return (rows.value[0]?.days ?? []).map(({ period }) => weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow));
+  return (rows.value[0]?.days ?? []).map(({ period }) => ({
+    ...weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow),
+    weekend: isWeekend(period),
+  }));
 });
+
+// Placed by the month view's grid lines.
+const firstDayColumn = computed(() => (weeksPos.value === "left" ? 2 : 1));
+const weekendBands = computed(() =>
+  weekendRuns(
+    (rows.value[0]?.days ?? []).map(({ period }) => Number(period.start.format("d"))),
+    weekend.value,
+  ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
+);
+const currentRow = computed(() => rows.value.findIndex((row) => row.week.contains(today.value)));
+const currentWeekRow = computed(() =>
+  currentRow.value < 0 ? undefined : `${currentRow.value + (props.display.showWeekdays ? 2 : 1)} / span 1`,
+);
 
 const root = useTemplateRef<HTMLElement>("root");
 defineExpose({ root });
@@ -173,6 +196,8 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       :data-weeks="weeksPos === 'none' ? null : weeksPos"
       data-preview-grid
     >
+      <NotesCalendarBand v-for="band in weekendBands" :key="band.key" kind="weekend" :column="band.column" row="auto" />
+      <NotesCalendarBand v-if="currentWeekRow" kind="currentWeek" column="1 / -1" :row="currentWeekRow" />
       <div
         class="appearance-preview__row"
         :class="{ 'appearance-preview__row--visually-hidden': !display.showWeekdays }"
@@ -184,18 +209,20 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           class="appearance-preview__weekday"
           :class="pickedClass(picked === 'weekday')"
           data-preview-part="weekday"
+          :data-weekend="day.weekend || null"
         >
           <span class="appearance-preview__weekday-wide">{{ day.wide }}</span>
           <span class="appearance-preview__weekday-narrow">{{ day.narrow }}</span>
         </span>
         <div v-if="weeksPos === 'right'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
       </div>
-      <div v-for="row in rows" :key="row.key" class="appearance-preview__row">
+      <div v-for="(row, index) in rows" :key="row.key" class="appearance-preview__row">
         <NotesCalendarCell
           v-if="weeksPos === 'left'"
           class="appearance-preview__week-number"
           :class="pickedClass(picked === 'weekNumber')"
           data-preview-part="weekNumber"
+          :current-week="index === currentRow"
           :period="row.week"
           :cell="cell"
           :format="format('week')"
@@ -217,6 +244,8 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
             :cell="outsideDates === 'inactive' && day.outside ? inertCell : cell"
             :format="format('day')"
             :outside="day.outside"
+            :weekend="isWeekend(day.period)"
+            :current-week="index === currentRow"
             :selected="isSelected(day.period)"
           />
         </template>
@@ -225,6 +254,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           class="appearance-preview__week-number"
           :class="pickedClass(picked === 'weekNumber')"
           data-preview-part="weekNumber"
+          :current-week="index === currentRow"
           :period="row.week"
           :cell="cell"
           :format="format('week')"
@@ -271,8 +301,10 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   color: var(--_v-heading-color);
   text-transform: var(--_v-heading-case);
 }
+/* Positioned for its bands, never isolated, as the month view's grid. */
 .appearance-preview__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  position: relative;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: var(--_v-cell-gap);
@@ -323,6 +355,36 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   justify-content: center;
   align-items: end;
 }
+/* A weekend column's header takes the weekend's text over the weekday part's own, since the band starts
+   there. Its values sit on the row, so the Unchanged queries below are answered by the header's parent. */
+.appearance-preview__row {
+  --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
+  --_v-weekend-text-weight: var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight));
+  --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
+}
+.appearance-preview__weekday[data-weekend] {
+  --_weekend-text: var(--_v-weekend-text-color);
+  --_weekend-weight: var(--_v-weekend-text-weight);
+  --_weekend-italic: var(--_v-weekend-text-italic);
+  color: var(--_weekend-text, var(--_v-weekday-color));
+  font-weight: var(--_weekend-weight, var(--_v-weekday-weight));
+  font-style: var(--_weekend-italic, var(--_v-weekday-italic));
+}
+@container style(--_v-weekend-text-color: unchanged) {
+  .appearance-preview__weekday[data-weekend] {
+    --_weekend-text: initial;
+  }
+}
+@container style(--_v-weekend-text-weight: unchanged) {
+  .appearance-preview__weekday[data-weekend] {
+    --_weekend-weight: initial;
+  }
+}
+@container style(--_v-weekend-text-italic: unchanged) {
+  .appearance-preview__weekday[data-weekend] {
+    --_weekend-italic: initial;
+  }
+}
 .appearance-preview__weekday-narrow {
   display: none;
 }
@@ -370,6 +432,29 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   min-width: 0;
 }
 @container journal-calendar (max-width: 28em) {
+  .appearance-preview__row {
+    --_v-weekend-text-color: var(
+      --journal-cell-weekend-text-color-narrow,
+      var(
+        --journal-saved-cell-weekend-text-color-narrow,
+        var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color))
+      )
+    );
+    --_v-weekend-text-weight: var(
+      --journal-cell-weekend-text-weight-narrow,
+      var(
+        --journal-saved-cell-weekend-text-weight-narrow,
+        var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight))
+      )
+    );
+    --_v-weekend-text-italic: var(
+      --journal-cell-weekend-text-italic-narrow,
+      var(
+        --journal-saved-cell-weekend-text-italic-narrow,
+        var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic))
+      )
+    );
+  }
   .appearance-preview__weekday-wide {
     display: none;
   }

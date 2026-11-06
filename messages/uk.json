@@ -84,6 +84,8 @@
         "part=selected": "Вибрана дата",
         "part=active": "Відкрита нотатка",
         "part=outside": "Дні поза місяцем",
+        "part=currentWeek": "Поточний тиждень",
+        "part=weekend": "Вихідні",
         "part=heading": "Заголовок місяця",
         "part=weekday": "Заголовок днів тижня",
         "part=weekNumber": "Номери тижнів",

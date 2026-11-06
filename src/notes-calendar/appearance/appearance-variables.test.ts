@@ -27,6 +27,25 @@ describe("appearanceVariables", () => {
     expect([...writtenEntryNames()].toSorted()).toEqual(appearanceCatalog.map((entry) => entry.name).toSorted());
   });
 
+  it("writes the weekend's strength for a background weekend", () => {
+    const state = fresh();
+    state.wide.weekend.style = "background";
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-weekend-strength")]: "1" });
+  });
+
+  it("writes an over current week's layer", () => {
+    const state = fresh();
+    state.wide.currentWeek.over = true;
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-current-week-layer")]: "1" });
+  });
+
+  it("writes all seven values of both bands", () => {
+    const bands = [...writtenEntryNames()].filter((name) => /^journal-cell-(weekend|current-week)-/.test(name));
+    expect(bands.length).toBe(14);
+  });
+
   it("writes the narrow name for a narrow override", () => {
     const state = fresh();
     state.narrow.cell.minHeight = 30;

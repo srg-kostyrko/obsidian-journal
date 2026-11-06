@@ -67,6 +67,17 @@ describe("appearanceSlice", () => {
     expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
   });
 
+  it.each(["weekend", "currentWeek"] as const)("the %s band draws nothing at stock", (part) => {
+    expect(appearanceSlice.defaults.wide[part]).toEqual({
+      style: "none",
+      color: transparent,
+      ringWidth: 2,
+      strength: 100,
+      text: unchangedText,
+      over: false,
+    });
+  });
+
   it("a highlight's text defaults to unchanged where the stock sets none", () => {
     expect(appearanceSlice.defaults.wide.selected.text).toEqual({
       color: "unchanged",
@@ -109,6 +120,8 @@ describe("appearance slice types", () => {
       selected: HighlightValues;
       active: HighlightValues;
       outside: HighlightValues;
+      weekend: HighlightValues;
+      currentWeek: HighlightValues;
       heading: TextValues;
       weekday: TextValues;
       weekNumber: TextValues;

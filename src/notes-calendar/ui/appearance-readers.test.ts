@@ -7,17 +7,29 @@ const components = calendarStyleRules();
 type Component = keyof typeof components;
 
 const GRID_PARTS = ["heading", "weekday", "week-number", "date", "cell-gap"];
+const GRIDS = ["monthView", "weekView", "preview"] as const;
+const BANDS = ["weekend", "current-week"];
 
 // Each grid renders its own heading, weekday header, week numbers, dates and gaps, so each has to read
 // them — the editor's preview grid included; the highlights and the cell box live in the cell alone.
 // A month grid's blank (hidden outside) day is no cell, yet must hold a cell's row height, so the
 // month grids read the cell's min height and label padding for it too.
+// A band draws its own fill and ring, so it reads them and the cell's corner radius; the cells under it
+// read its text and its layer, which decides whether that text paints over a decoration. A weekend
+// column's header takes the weekend's text too, so every grid reads that.
+function bandRenderers(state: string, value: string): readonly Component[] {
+  if (value === "layer") return ["band", "cell"];
+  if (!value.startsWith("text-")) return ["band"];
+  return state === "weekend" ? ["cell", ...GRIDS] : ["cell"];
+}
+
 function renderers(entry: CatalogEntry): readonly Component[] {
   const part = entry.name.replace(/^journal-cell-/, "");
+  const band = BANDS.find((state) => part.startsWith(`${state}-`));
+  if (band !== undefined) return bandRenderers(band, part.slice(band.length + 1));
   if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
-  return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix)
-    ? ["monthView", "weekView", "preview"]
-    : ["cell"];
+  if (part === "cell-radius") return ["cell", "band"];
+  return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix) ? GRIDS : ["cell"];
 }
 
 const cases = appearanceCatalog.flatMap((entry) =>
@@ -32,8 +44,9 @@ const cellDeclarations = (selector: string): Record<string, string> =>
   );
 
 describe("calendar appearance readers", () => {
-  it("assigns every catalog entry to the components that render it", () => {
-    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(21);
+  it("assigns every catalog entry to the components that render it, the weekend's text to every grid's headers", () => {
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(24);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("band")).length).toBe(9);
   });
 
   it.each([
@@ -155,7 +168,7 @@ describe("calendar appearance readers", () => {
   });
 });
 
-const STATES = ["outside", "today", "selected", "active"] as const;
+const STATES = ["outside", "today", "selected", "active", "weekend", "current-week"] as const;
 const TEXT_VALUES = [
   ["text-color", "text"],
   ["text-weight", "weight"],
@@ -173,5 +186,43 @@ describe("calendar appearance Unchanged pass-through", () => {
     expect(rules.map((rule) => ({ selector: rule.selector, value: rule.declarations.get(slot) }))).toEqual([
       { selector: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`, value: "initial" },
     ]);
+  });
+});
+
+const headerCases = GRIDS.flatMap((component) =>
+  TEXT_VALUES.map(([value, slot]) => [component, value, `--_weekend-${slot}`] as const),
+);
+const HEADER_SELECTORS: Readonly<Record<(typeof GRIDS)[number], string>> = {
+  monthView: ".notes-month-view__weekday[data-weekend]",
+  weekView: ".notes-week-view__weekday[data-weekend]",
+  preview: ".appearance-preview__weekday[data-weekend]",
+};
+
+describe("calendar appearance weekend column headers", () => {
+  // The query is answered by the header's parent, the weekday row, which is where the header's `--_v-*` lives.
+  it.each(headerCases)(
+    "%s clears the weekend %s (%s) on a weekend header when it reads unchanged",
+    (component, value, slot) => {
+      const container = `style(--_v-weekend-${value}: unchanged)`;
+      const rules = components[component].filter((rule) => rule.container === container);
+      expect(rules.map((rule) => ({ selector: rule.selector, value: rule.declarations.get(slot) }))).toEqual([
+        { selector: HEADER_SELECTORS[component], value: "initial" },
+      ]);
+    },
+  );
+
+  it.each(GRIDS)("%s puts the weekend's text over the weekday part's own on a weekend header", (component) => {
+    const rule = components[component].find(
+      (candidate) => candidate.container === null && candidate.selector === HEADER_SELECTORS[component],
+    );
+    expect({
+      color: rule?.declarations.get("color"),
+      weight: rule?.declarations.get("font-weight"),
+      italic: rule?.declarations.get("font-style"),
+    }).toEqual({
+      color: "var(--_weekend-text, var(--_v-weekday-color))",
+      weight: "var(--_weekend-weight, var(--_v-weekday-weight))",
+      italic: "var(--_weekend-italic, var(--_v-weekday-italic))",
+    });
   });
 });

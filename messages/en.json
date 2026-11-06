@@ -85,6 +85,8 @@
         "part=selected": "Selected date",
         "part=active": "Open note",
         "part=outside": "Days outside the month",
+        "part=currentWeek": "Current week",
+        "part=weekend": "Weekends",
         "part=heading": "Month heading",
         "part=weekday": "Weekday header",
         "part=weekNumber": "Week numbers",

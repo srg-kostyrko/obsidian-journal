@@ -1,4 +1,4 @@
-import { MonthPeriod, type AnchorString, type CalendarDate } from "@/calendar";
+import { MonthPeriod, WeekPeriod, type AnchorString, type CalendarDate } from "@/calendar";
 
 import { CHIP_ORDER, type PartKey } from "../appearance-parts";
 
@@ -10,7 +10,7 @@ export interface PreviewSample {
 }
 
 /** Sample states around the real today, each on a day of its own. */
-export function sampleDays(today: CalendarDate): PreviewSample {
+export function sampleDays(today: CalendarDate, weekend: ReadonlySet<number>): PreviewSample {
   const month = MonthPeriod.containing(today);
   const ahead = today.shift(2, "d");
   const clamped = month.contains(ahead) ? ahead : month.end;
@@ -18,7 +18,12 @@ export function sampleDays(today: CalendarDate): PreviewSample {
   const active = clamped.isSame(today) ? today.shift(-2, "d") : clamped;
   // A day of its own: the open note outranks Selected's text and fills under its accent ring, so a
   // shared day would hide edits to Selected. It carries the decoration, which Selected draws over.
-  const selected = [...month.days()].find((day) => !day.isSame(today) && !day.isSame(active)) ?? month.start;
+  // A weekend day in today's week where there is one, so this one day also shows Current week and Weekends.
+  const free = (day: CalendarDate): boolean => month.contains(day) && !day.isSame(today) && !day.isSame(active);
+  const selected =
+    [...WeekPeriod.containing(today).days()].find((day) => free(day) && weekend.has(Number(day.format("d")))) ??
+    [...month.days()].find(free) ??
+    month.start;
   return {
     month,
     selected: selected.toAnchor(),
