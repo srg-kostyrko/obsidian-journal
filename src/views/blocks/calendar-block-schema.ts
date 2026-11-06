@@ -10,4 +10,6 @@ export const calendarBlockBaseSchema = {
     climb("an empty list shows every weekday"),
   ),
   weeks: v.optional(v.picklist(["default", "none", "left", "right"]), "default"),
+  showHeading: v.optional(v.union([v.literal("default"), v.boolean()]), "default"),
+  showWeekdays: v.optional(v.union([v.literal("default"), v.boolean()]), "default"),
 };

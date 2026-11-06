@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, ref, useId, useTemplateRef, type ComponentPublicInstance } from "vue";
 
+import { calendarDisplaySlice } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
@@ -15,8 +16,8 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { isModified, valueAt, visibleControls, withReset } from "../appearance-editing";
-import { PARTS, type PartKey, type Width } from "../appearance-parts";
+import { isModified, valueAt, withReset } from "../appearance-editing";
+import { familiesOf, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -25,7 +26,9 @@ import { AppearancePreviewRootKey } from "./preview-root-key";
 
 const { nav } = defineProps<{ nav: SubpageNav }>();
 
-const slice = useService(SettingsService).getSlice(appearanceSlice);
+const settings = useService(SettingsService);
+const slice = settings.getSlice(appearanceSlice);
+const display = settings.getSlice(calendarDisplaySlice);
 
 // Reading order of the calendar, top to bottom, rather than the chips' most-specific-first order.
 const LIST_ORDER: readonly PartKey[] = [
@@ -38,6 +41,7 @@ const LIST_ORDER: readonly PartKey[] = [
   "active",
   "outside",
   "cell",
+  "grid",
 ];
 
 const width = ref<Width>("wide");
@@ -62,7 +66,7 @@ function isPart(value: string): value is PartKey {
 function onPick(parts: readonly PartKey[], at: string | undefined): void {
   chips.value = parts;
   spot.value = at;
-  selected.value = parts.at(0);
+  selected.value = chips.value.at(0);
 }
 function onList(value: string): void {
   selected.value = isPart(value) ? value : undefined;
@@ -81,16 +85,18 @@ const listId = useId();
 const othersId = useId();
 
 const partName = (part: PartKey): string => m.calendar_appearance_part({ part });
-const modified = (part: PartKey): boolean => isModified(slice.state, width.value, part);
+const modified = (part: PartKey): boolean => isModified(slice.state, display.state, width.value, part);
 
 const inspected = computed(() => {
   const part = selected.value;
   if (part === undefined) return;
-  const { family } = PARTS[part];
-  const style =
-    family === "highlight" ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
-  return { part, family, controls: visibleControls(part, style) };
+  const highlighted = part !== "grid" && PARTS[part].controls.some((control) => control.family === "highlight");
+  const style = highlighted ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
+  return { part, families: familiesOf(part, style) };
 });
+
+const controlKey = (part: PartKey, control: Control): string =>
+  `${part}.${isStructure(control) ? control.setting : control.path.join(".")}`;
 
 // Keyed by part, so collapsing a family on one part leaves the same family open on the next.
 const collapsed = ref(new Set<string>());
@@ -104,7 +110,9 @@ function setFamilyOpen(part: PartKey, family: string, open: boolean): void {
 }
 
 function reset(part: PartKey): void {
-  slice.state = withReset(slice.state, width.value, part);
+  const next = withReset(slice.state, display.state, width.value, part);
+  slice.state = next.appearance;
+  display.state = next.display;
 }
 </script>
 
@@ -128,7 +136,14 @@ function reset(part: PartKey): void {
       <!-- Wide keeps a floor above the breakpoint, so a pane narrower than that scrolls here, not the page. -->
       <div class="appearance-subpage__scroller">
         <div class="appearance-subpage__frame" :class="{ 'appearance-subpage__frame--fill': width === 'wide' }">
-          <AppearancePreview ref="preview" :width="width" :picked="selected" :spot="spot" @pick="onPick" />
+          <AppearancePreview
+            ref="preview"
+            :width="width"
+            :display="display.state"
+            :picked="selected"
+            :spot="spot"
+            @pick="onPick"
+          />
         </div>
       </div>
       <p class="appearance-subpage__caption">{{ m.calendar_appearance_editing({ width }) }}</p>
@@ -179,14 +194,16 @@ function reset(part: PartKey): void {
       </UiButton>
     </UiSettingRow>
     <UiCollapsibleBlock
+      v-for="group of inspected.families"
+      :key="familyKey(inspected.part, group.family)"
       class="appearance-subpage__family"
-      :expanded="familyOpen(inspected.part, inspected.family)"
-      @update:expanded="setFamilyOpen(inspected.part, inspected.family, $event === true)"
+      :expanded="familyOpen(inspected.part, group.family)"
+      @update:expanded="setFamilyOpen(inspected.part, group.family, $event === true)"
     >
-      <template #trigger>{{ m.calendar_appearance_family({ family: inspected.family }) }}</template>
+      <template #trigger>{{ m.calendar_appearance_family({ family: group.family }) }}</template>
       <AppearanceControl
-        v-for="control of inspected.controls"
-        :key="`${inspected.part}.${control.path.join('.')}`"
+        v-for="control of group.controls"
+        :key="controlKey(inspected.part, control)"
         :part="inspected.part"
         :control="control"
         :width="width"

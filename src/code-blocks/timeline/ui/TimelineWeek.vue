@@ -8,6 +8,8 @@ const props = defineProps<{
   shelf: string | null;
   weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
+  showHeader: boolean;
+  showWeekdays: boolean;
   before?: number;
   after?: number;
 }>();
@@ -29,6 +31,8 @@ const weekPeriods = usePeriodWindow(
       :week
       :weeks="weeks"
       :hidden-weekdays="hiddenWeekdays"
+      :show-header="showHeader"
+      :show-weekdays="showWeekdays"
     >
       <!-- Only ever filled when the block shows a single grid, so the controls cannot land in
            more than one heading. -->

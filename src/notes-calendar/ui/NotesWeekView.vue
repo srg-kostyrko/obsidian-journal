@@ -30,6 +30,7 @@ const props = withDefaults(
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
+    showWeekdays?: boolean;
     selectedDate?: AnchorString;
     selectDate?: NotesDateSelect;
   }>(),
@@ -37,6 +38,7 @@ const props = withDefaults(
     weeks: undefined,
     hiddenWeekdays: undefined,
     showHeader: true,
+    showWeekdays: true,
     selectedDate: undefined,
     selectDate: undefined,
   },
@@ -155,7 +157,12 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
-      <div class="notes-week-view__weekdays" role="row" :data-weeks="showWeekNumber ? weeksPos : null">
+      <div
+        class="notes-week-view__weekdays"
+        :class="{ 'notes-week-view__weekdays--visually-hidden': !showWeekdays }"
+        role="row"
+        :data-weeks="showWeekNumber ? weeksPos : null"
+      >
         <div
           v-if="showWeekNumber && weeksPos === 'left'"
           class="notes-week-view__weekday-spacer"
@@ -259,6 +266,15 @@ const isSelected = (period: Period): boolean =>
   --_v-weekday-case: var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit));
   display: flex;
   gap: var(--_v-cell-gap);
+}
+.notes-week-view__weekdays--visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .notes-week-view__weekdays > * {
   flex: 1;

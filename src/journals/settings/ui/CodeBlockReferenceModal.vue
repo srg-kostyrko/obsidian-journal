@@ -55,6 +55,10 @@ const noteletsConfig: NoteletsFenceConfig = { types: [] };
         <li><code>before</code> — {{ m.journal_edit_code_block_timeline_option_before() }}</li>
         <li><code>after</code> — {{ m.journal_edit_code_block_timeline_option_after() }}</li>
         <li><code>navigation</code> — {{ m.journal_edit_code_block_timeline_option_navigation() }}</li>
+        <li><code>heading</code> — {{ m.journal_edit_code_block_timeline_option_heading() }}</li>
+        <li><code>weekdays</code> — {{ m.journal_edit_code_block_timeline_option_weekdays() }}</li>
+        <li><code>outside</code> — {{ m.journal_edit_code_block_timeline_option_outside() }}</li>
+        <li><code>rows</code> — {{ m.journal_edit_code_block_timeline_option_rows() }}</li>
       </ul>
       <p>{{ m.journal_edit_code_block_timeline_navigation_lead() }}</p>
       <CodeBlockSnippet name="calendar-timeline" body="navigation: true" />

@@ -88,7 +88,8 @@
         "part=weekday": "Заголовок дней недели",
         "part=weekNumber": "Номера недель",
         "part=date": "Число дня",
-        "part=cell": "Ячейки"
+        "part=cell": "Ячейки",
+        "part=grid": "Сетка месяца"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Видимость",
         "family=text": "Текст",
         "family=highlight": "Выделение",
         "family=box": "Ячейка"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Заголовок",
+        "control=visibility_show_weekdays": "Заголовок дней недели",
+        "control=visibility_week_placement": "Расположение",
+        "control=visibility_outside_days": "Дни вне месяца",
+        "control=visibility_month_rows": "Строки",
         "control=highlight_style": "Стиль",
         "control=highlight_color": "Цвет выделения",
         "control=highlight_ring_width": "Толщина контура",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Показано",
+        "option=show_heading_hidden": "Скрыто",
+        "option=show_weekdays_shown": "Показано",
+        "option=show_weekdays_hidden": "Скрыто",
+        "option=week_placement_left": "Перед днями недели",
+        "option=week_placement_right": "После дней недели",
+        "option=week_placement_none": "Скрыты",
+        "option=outside_days_automatic": "Автоматически",
+        "option=outside_days_interactive": "Интерактивные",
+        "option=outside_days_inert": "Неактивные",
+        "option=outside_days_hidden": "Скрытые",
+        "option=month_rows_fit": "По необходимости",
+        "option=month_rows_six": "Всегда шесть",
         "option=style_ring": "Контур",
         "option=style_background": "Фон",
         "option=style_text": "Только текст",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Без изменений",
   "calendar_appearance_narrow_only": "Только узкий",
   "calendar_appearance_narrow_only_clear": "Использовать значение для всех ширин",
+  "calendar_appearance_all_widths": "Все ширины",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
@@ -1851,6 +1872,33 @@
   "view_block_config_weeks_none": "Скрыты",
   "view_block_config_weeks_left": "Перед днями недели",
   "view_block_config_weeks_right": "После дней недели",
+  "view_block_config_show_weekdays_label": "Показывать строку дней недели",
+  "view_block_config_visibility_default": "Использовать глобальное значение по умолчанию",
+  "view_block_config_visibility_shown": "Показано",
+  "view_block_config_visibility_hidden": "Скрыто",
+  "view_block_config_outside_days_label": "Дни вне месяца",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Интерактивные",
+        "option=inert": "Неактивные",
+        "option=hidden": "Скрытые"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Строки",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "По необходимости",
+        "option=six": "Всегда шесть"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Номера недель по умолчанию",
   "calendar_week_placement_description": "Где отображается столбец с номерами недель в блоках календаря, для которых выбрано «Использовать глобальное значение по умолчанию».",
   "calendar_timeline_navigation_label": "Навигация временной шкалы по умолчанию",
@@ -2180,6 +2228,10 @@
   "journal_edit_code_block_timeline_option_before": "добавляет указанное количество предыдущих периодов над текущим. Применяется только к режимам week и month.",
   "journal_edit_code_block_timeline_option_after": "добавляет указанное количество следующих периодов под текущим. Применяется только к режимам week и month.",
   "journal_edit_code_block_timeline_option_navigation": "показывает над временной шкалой кнопки перехода к предыдущему и следующему периоду, чтобы просматривать другие периоды, не открывая заметку. Поддерживаемые значения: true, false. Без этого параметра решает настройка календаря плагина.",
+  "journal_edit_code_block_timeline_option_heading": "показывает или скрывает заголовок месяца или года. Поддерживаемые значения: true, false. Без этого параметра решает раздел «Отображение календаря».",
+  "journal_edit_code_block_timeline_option_weekdays": "показывает или скрывает заголовок дней недели. Поддерживаемые значения: true, false. Без этого параметра решает раздел «Отображение календаря».",
+  "journal_edit_code_block_timeline_option_outside": "задаёт поведение дней вне месяца. Поддерживаемые значения: interactive, inert, hidden. Действует только в режимах month, quarter и calendar. Без этого параметра решает раздел «Отображение календаря».",
+  "journal_edit_code_block_timeline_option_rows": "задаёт, показывает ли месяц только нужные строки или всегда шесть. Поддерживаемые значения: fit, six. Действует только в режимах month, quarter и calendar. Без этого параметра решает раздел «Отображение календаря».",
   "journal_edit_code_block_timeline_navigation_lead": "С кнопками навигации он выглядит так:",
   "journal_edit_code_block_home_description": "Блок home отображает ссылки на текущие заметки в ваших журналах.",
   "journal_edit_code_block_home_default": "По умолчанию это выглядит так:",

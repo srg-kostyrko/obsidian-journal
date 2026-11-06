@@ -33,8 +33,8 @@ describe("weekCalendarBlock", () => {
     expect(result.success).toBe(false);
   });
 
-  it("defaults showHeading to true when omitted", () => {
+  it("defaults showHeading to 'default' when omitted", () => {
     const parsed = v.parse(weekCalendarBlock.schema, { before: 0, after: 0 });
-    expect(parsed.showHeading).toBe(true);
+    expect(parsed.showHeading).toBe("default");
   });
 });

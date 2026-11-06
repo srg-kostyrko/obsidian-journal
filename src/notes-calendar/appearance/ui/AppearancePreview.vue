@@ -1,7 +1,16 @@
 <script setup lang="ts">
+import { match } from "ts-pattern";
 import { computed, provide, shallowReactive, shallowRef, useTemplateRef, watchEffect } from "vue";
 
-import { DayPeriod, YearPeriod, type Period } from "@/calendar";
+import {
+  advance,
+  calendarDisplaySlice,
+  DayPeriod,
+  resolveOutsideDates,
+  YearPeriod,
+  type CalendarDisplaySliceState,
+  type Period,
+} from "@/calendar";
 import { useToday } from "@/calendar/ui";
 import type { JournalDecorationStyle } from "@/decorations/config";
 import { cellKey } from "@/decorations/engine";
@@ -15,7 +24,10 @@ import type { NotesCellApi } from "../../use-notes-cell";
 import type { PartKey, Width } from "../appearance-parts";
 
 /** `spot` is the anchor of the day a part was picked at, if it was picked at one. */
-const props = defineProps<{ width: Width; picked?: PartKey; spot?: string }>();
+const props = withDefaults(
+  defineProps<{ width: Width; display?: CalendarDisplaySliceState; picked?: PartKey; spot?: string }>(),
+  { display: () => calendarDisplaySlice.defaults, picked: undefined, spot: undefined },
+);
 const emit = defineEmits<{ pick: [parts: readonly PartKey[], spot: string | undefined] }>();
 
 // Wide fills what it is given, but never below the calendar's 28em breakpoint, where it would draw the narrow look.
@@ -34,13 +46,24 @@ const sample = computed(() => sampleDays(today.value));
 const month = computed(() => sample.value.month);
 const year = computed(() => YearPeriod.containing(month.value.anchor));
 
-const rows = computed(() =>
-  [...month.value.weeks()].map((week) => ({
+// One month shows, so Automatic resolves the way a lone month block does.
+const outsideDates = computed(() => resolveOutsideDates(props.display.outsideDays, "active"));
+const weeksPos = computed(() => props.display.weekPlacement);
+
+const SIX_ROWS = 6;
+
+const rows = computed(() => {
+  const weeks = [...month.value.weeks()];
+  const last = weeks.at(-1);
+  if (props.display.monthRows === "six" && last) {
+    for (let ahead = 1; weeks.length < SIX_ROWS; ahead += 1) weeks.push(advance(last, ahead));
+  }
+  return weeks.map((week) => ({
     key: week.anchor.toAnchor(),
     week,
     days: [...week.days()].map((day) => ({ period: DayPeriod.containing(day), outside: !month.value.contains(day) })),
-  })),
-);
+  }));
+});
 const weekdayNames = computed(() => (rows.value[0]?.days ?? []).map((day) => day.period.start.format("ddd")));
 
 const root = useTemplateRef<HTMLElement>("root");
@@ -57,6 +80,7 @@ const cell: NotesCellApi = {
   isActive: (period) => period.kind === "day" && period.anchor.toAnchor() === sample.value.active,
   isActionable: () => true,
 };
+const inertCell: NotesCellApi = { ...cell, isActive: () => false, isActionable: () => false };
 const isSelected = (period: Period): boolean => period.anchor.toAnchor() === sample.value.selected;
 
 // CellDecoration injects the map once, so the map itself stays and only its entries follow the day.
@@ -84,48 +108,24 @@ function onPick(event: Event): void {
 // spread over many takes a light one on each, or a grid of heavy boxes would bury the calendar.
 function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
   const anchor = day.period.anchor.toAnchor();
-  switch (props.picked) {
-    case "today": {
-      return anchor === today.value.toAnchor();
-    }
-    case "selected": {
-      return anchor === sample.value.selected;
-    }
-    case "active": {
-      return anchor === sample.value.active;
-    }
-    case "outside": {
-      return day.outside;
-    }
-    case "date":
-    case "cell": {
-      return props.spot === undefined || props.spot === anchor;
-    }
-    default: {
-      return false;
-    }
-  }
+  return match(props.picked)
+    .with("today", () => anchor === today.value.toAnchor())
+    .with("selected", () => anchor === sample.value.selected)
+    .with("active", () => anchor === sample.value.active)
+    .with("outside", () => day.outside)
+    .with("date", "cell", () => props.spot === undefined || props.spot === anchor)
+    .otherwise(() => false);
 }
 
-const pickedCount = computed(() => {
-  switch (props.picked) {
-    case undefined: {
-      return 0;
-    }
-    case "heading": {
-      return 2;
-    }
-    case "weekday": {
-      return weekdayNames.value.length;
-    }
-    case "weekNumber": {
-      return rows.value.length;
-    }
-    default: {
-      return rows.value.reduce((count, row) => count + row.days.filter(isPickedDay).length, 0);
-    }
-  }
-});
+const pickedCount = computed(() =>
+  match(props.picked)
+    .with(undefined, () => 0)
+    .with("heading", () => 2)
+    .with("weekday", () => weekdayNames.value.length)
+    .with("weekNumber", () => rows.value.length)
+    .with("grid", () => 1)
+    .otherwise(() => rows.value.reduce((count, row) => count + row.days.filter(isPickedDay).length, 0)),
+);
 
 function pickedClass(isPicked: boolean): Record<string, boolean> {
   return {
@@ -144,13 +144,21 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
     @keydown.enter="onPick"
     @keydown.space.prevent="onPick"
   >
-    <div class="appearance-preview__header" data-preview-part="heading">
+    <div v-if="display.showHeading" class="appearance-preview__header" data-preview-part="heading">
       <NotesCalendarCell :class="pickedClass(picked === 'heading')" :period="month" :cell="cell" />
       <NotesCalendarCell :class="pickedClass(picked === 'heading')" :period="year" :cell="cell" />
     </div>
-    <div class="appearance-preview__grid">
-      <div class="appearance-preview__row">
-        <div class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
+    <div
+      class="appearance-preview__grid"
+      :class="pickedClass(picked === 'grid')"
+      :data-weeks="weeksPos === 'none' ? null : weeksPos"
+      data-preview-grid
+    >
+      <div
+        class="appearance-preview__row"
+        :class="{ 'appearance-preview__row--visually-hidden': !display.showWeekdays }"
+      >
+        <div v-if="weeksPos === 'left'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
         <span
           v-for="(name, i) in weekdayNames"
           :key="i"
@@ -160,25 +168,43 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
         >
           {{ name }}
         </span>
+        <div v-if="weeksPos === 'right'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
       </div>
       <div v-for="row in rows" :key="row.key" class="appearance-preview__row">
         <NotesCalendarCell
+          v-if="weeksPos === 'left'"
           class="appearance-preview__week-number"
           :class="pickedClass(picked === 'weekNumber')"
           data-preview-part="weekNumber"
           :period="row.week"
           :cell="cell"
         />
+        <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
+          <span
+            v-if="outsideDates === 'blank' && day.outside"
+            class="appearance-preview__day appearance-preview__day--blank"
+            :class="pickedClass(picked === 'outside')"
+            data-preview-part="outside"
+            aria-hidden="true"
+          ></span>
+          <NotesCalendarCell
+            v-else
+            class="appearance-preview__day"
+            :class="pickedClass(isPickedDay(day))"
+            data-preview-part="date"
+            :period="day.period"
+            :cell="outsideDates === 'inactive' && day.outside ? inertCell : cell"
+            :outside="day.outside"
+            :selected="isSelected(day.period)"
+          />
+        </template>
         <NotesCalendarCell
-          v-for="day in row.days"
-          :key="day.period.anchor.toAnchor()"
-          class="appearance-preview__day"
-          :class="pickedClass(isPickedDay(day))"
-          data-preview-part="date"
-          :period="day.period"
+          v-if="weeksPos === 'right'"
+          class="appearance-preview__week-number"
+          :class="pickedClass(picked === 'weekNumber')"
+          data-preview-part="weekNumber"
+          :period="row.week"
           :cell="cell"
-          :outside="day.outside"
-          :selected="isSelected(day.period)"
         />
       </div>
     </div>
@@ -225,8 +251,14 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 .appearance-preview__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
   display: grid;
-  grid-template-columns: auto repeat(7, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: var(--_v-cell-gap);
+}
+.appearance-preview__grid[data-weeks="left"] {
+  grid-template-columns: auto repeat(7, 1fr);
+}
+.appearance-preview__grid[data-weeks="right"] {
+  grid-template-columns: repeat(7, 1fr) auto;
 }
 .appearance-preview__row {
   display: grid;
@@ -238,6 +270,18 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   .appearance-preview__row {
     display: contents;
   }
+}
+/* Hidden from view, not from the tree, as the month view hides it: screen readers keep the column names.
+   A block, over the no-subgrid `display: contents`, which would leave no box to clip. */
+.appearance-preview__row--visually-hidden {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .appearance-preview__weekday {
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
@@ -287,7 +331,31 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
+/* A hidden outside day is no cell, so it reads the cell's row height itself: the floor, or a date line
+   plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
+   short of its neighbours, when no week number holds the row open. */
+.appearance-preview__day--blank {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
+}
 @container journal-calendar (max-width: 28em) {
+  .appearance-preview__day--blank {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(
+        --journal-saved-cell-cell-min-height-narrow,
+        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
+      )
+    );
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
+      )
+    );
+  }
   .appearance-preview__header {
     --_v-heading-size: var(
       --journal-cell-heading-size-narrow,

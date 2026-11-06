@@ -2,11 +2,13 @@
 import { computed, toRaw, useSlots } from "vue";
 
 import {
+  advance,
   DayPeriod,
   QuarterPeriod,
   YearPeriod,
   type AnchorString,
   type MonthPeriod,
+  type OutsideDates,
   type Period,
   type WeekPeriod,
 } from "@/calendar";
@@ -27,10 +29,12 @@ const props = withDefaults(
   defineProps<{
     shelf: string | null;
     month: MonthPeriod;
-    outsideDates?: "active" | "inactive" | "blank";
+    outsideDates?: OutsideDates;
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
+    showWeekdays?: boolean;
+    sixRows?: boolean;
     selectedDate?: AnchorString;
     selectDate?: NotesDateSelect;
   }>(),
@@ -39,6 +43,8 @@ const props = withDefaults(
     weeks: undefined,
     hiddenWeekdays: undefined,
     showHeader: true,
+    showWeekdays: true,
+    sixRows: false,
     selectedDate: undefined,
     selectDate: undefined,
   },
@@ -46,6 +52,9 @@ const props = withDefaults(
 
 const blankOutside = computed(() => props.outsideDates === "blank");
 const inactiveOutside = computed(() => props.outsideDates === "inactive");
+const isInert = (day: { isOutside: boolean }): boolean => inactiveOutside.value && day.isOutside;
+// A blank or inert day offers nothing to act on, so it is neither marked nor reached by the keyboard.
+const isOutOfReach = (day: { isOutside: boolean }): boolean => props.outsideDates !== "active" && day.isOutside;
 
 const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 const dayColumns = computed(() => 7 - [0, 1, 2, 3, 4, 5, 6].filter((i) => hiddenWeekdays.value.has(i)).length);
@@ -63,9 +72,16 @@ interface WeekRow {
   readonly days: readonly { period: DayPeriod; isOutside: boolean }[];
 }
 
+const SIX_ROWS = 6;
+
 const rows = computed<readonly WeekRow[]>(() => {
   const out: WeekRow[] = [];
-  for (const week of rawMonth.value.weeks()) {
+  const weeks = [...rawMonth.value.weeks()];
+  const last = weeks.at(-1);
+  if (props.sixRows && last) {
+    for (let ahead = 1; weeks.length < SIX_ROWS; ahead += 1) weeks.push(advance(last, ahead));
+  }
+  for (const week of weeks) {
     const days = [...week.days()]
       .map((d) => ({
         period: DayPeriod.containing(d),
@@ -89,7 +105,7 @@ const visiblePeriods = computed<readonly Period[]>(() => {
   for (const row of rows.value) {
     if (showWeekNumber.value) periods.push(row.weekPeriod);
     for (const d of row.days) {
-      if (blankOutside.value && d.isOutside) continue;
+      if (isOutOfReach(d)) continue;
       periods.push(d.period);
     }
   }
@@ -106,12 +122,11 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const selection = { onSelect: () => props.selectDate };
 const dayCell = useNotesCell({
   journalNames: () => scope.day.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
+  onSelect: () => props.selectDate,
 });
 const weekCell = useNotesCell({
   journalNames: () => scope.week.value,
@@ -133,7 +148,7 @@ const yearCell = useNotesCell({
   decorations: cells,
   shelf: () => props.shelf,
 });
-const inactiveDay = useNotesCell({ journalNames: () => [], ...selection });
+const inertDay = useNotesCell({ journalNames: () => [] });
 
 const slots = useSlots();
 // The heading only stops spreading across the grid once something else shares the row
@@ -144,7 +159,7 @@ const flanked = computed(() => Boolean(slots["header-start"] ?? slots["header-en
 const navigationRows = computed<CalendarGridRows>(() =>
   rows.value.map((row) => {
     const items: (CalendarGridItem | null)[] = row.days.map((day) =>
-      blankOutside.value && day.isOutside ? null : { key: `day:${day.period.anchor.toAnchor()}`, period: day.period },
+      isOutOfReach(day) ? null : { key: `day:${day.period.anchor.toAnchor()}`, period: day.period },
     );
     if (showWeekNumber.value && weeksPos.value === "left") {
       items.unshift({ key: `week:${row.key}`, period: row.weekPeriod });
@@ -188,7 +203,11 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
-      <div class="notes-month-view__row" role="row">
+      <div
+        class="notes-month-view__row"
+        :class="{ 'notes-month-view__row--visually-hidden': !showWeekdays }"
+        role="row"
+      >
         <div
           v-if="showWeekNumber && weeksPos === 'left'"
           class="notes-month-view__weekday-spacer"
@@ -221,11 +240,20 @@ const isSelected = (period: Period): boolean =>
             aria-hidden="true"
           ></span>
           <NotesCalendarCell
+            v-else-if="isInert(day)"
+            class="notes-month-view__day"
+            outside
+            disabled
+            :period="day.period"
+            :cell="inertDay"
+            role="gridcell"
+          />
+          <NotesCalendarCell
             v-else
             class="notes-month-view__day"
             :outside="day.isOutside"
             :period="day.period"
-            :cell="inactiveOutside && day.isOutside ? inactiveDay : dayCell"
+            :cell="dayCell"
             role="gridcell"
             :data-grid-key="`day:${day.period.anchor.toAnchor()}`"
             :tab-index="navigation.tabIndex(`day:${day.period.anchor.toAnchor()}`)"
@@ -308,6 +336,17 @@ const isSelected = (period: Period): boolean =>
     display: contents;
   }
 }
+/* A block, over the no-subgrid `display: contents`: a row with no box of its own cannot be clipped. */
+.notes-month-view__row--visually-hidden {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .notes-month-view__weekday {
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
   --_v-weekday-weight: var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit));
@@ -359,7 +398,31 @@ const isSelected = (period: Period): boolean =>
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
+/* A hidden outside day is no cell, so it reads the cell's row height itself: the floor, or a date line
+   plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
+   short of its neighbours, when no week number holds the row open. */
+.notes-month-view__day--blank {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
+}
 @container journal-calendar (max-width: 28em) {
+  .notes-month-view__day--blank {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(
+        --journal-saved-cell-cell-min-height-narrow,
+        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
+      )
+    );
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
+      )
+    );
+  }
   .notes-month-view__header {
     --_v-heading-size: var(
       --journal-cell-heading-size-narrow,

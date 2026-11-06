@@ -34,6 +34,8 @@ const PREVIEW_PARTS: Readonly<Record<string, readonly PartKey[]>> = {
   weekNumber: ["weekNumber"],
   weekday: ["weekday"],
   heading: ["heading"],
+  // A hidden outside day leaves a blank, which is the only way back to the setting that hid it.
+  outside: ["outside"],
 };
 
 /** Every part the element belongs to, in the order a click should offer them. */
@@ -44,6 +46,7 @@ export function partsAt(target: Element): readonly PartKey[] {
   const part = target.closest<HTMLElement>("[data-preview-part]")?.dataset.previewPart;
   const keys = PREVIEW_PARTS[part ?? ""] ?? [];
   for (const key of keys) parts.add(key);
+  if (target.closest("[data-preview-grid]") !== null) parts.add("grid");
   const ordered = CHIP_ORDER.filter((key) => parts.has(key));
   // A day is mostly its state, so a state leads there; a label (the month name, a week number) is
   // what was clicked, so it leads and the today it contains follows.

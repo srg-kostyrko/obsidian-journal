@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AnchorString } from "@/calendar";
+import type { AnchorString, OutsideDates } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import { NotesMonthView } from "@/notes-calendar";
 
@@ -8,6 +8,10 @@ const props = defineProps<{
   shelf: string | null;
   weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
+  showHeader: boolean;
+  showWeekdays: boolean;
+  outsideDates?: OutsideDates;
+  sixRows?: boolean;
   before?: number;
   after?: number;
 }>();
@@ -31,7 +35,10 @@ const monthPeriods = usePeriodWindow(
       :month
       :weeks="weeks"
       :hidden-weekdays="hiddenWeekdays"
-      outside-dates="active"
+      :outside-dates="outsideDates ?? 'active'"
+      :six-rows="sixRows"
+      :show-header="showHeader"
+      :show-weekdays="showWeekdays"
     >
       <!-- Only ever filled when the block shows a single grid, so the controls cannot land in
            more than one heading. -->

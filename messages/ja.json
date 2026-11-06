@@ -88,7 +88,8 @@
         "part=weekday": "曜日の見出し",
         "part=weekNumber": "週番号",
         "part=date": "日付の数字",
-        "part=cell": "セル"
+        "part=cell": "セル",
+        "part=grid": "月のグリッド"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "表示",
         "family=text": "テキスト",
         "family=highlight": "ハイライト",
         "family=box": "ボックス"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "見出し",
+        "control=visibility_show_weekdays": "曜日の見出し",
+        "control=visibility_week_placement": "位置",
+        "control=visibility_outside_days": "月外の日",
+        "control=visibility_month_rows": "行数",
         "control=highlight_style": "スタイル",
         "control=highlight_color": "ハイライトの色",
         "control=highlight_ring_width": "枠線の幅",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "表示",
+        "option=show_heading_hidden": "非表示",
+        "option=show_weekdays_shown": "表示",
+        "option=show_weekdays_hidden": "非表示",
+        "option=week_placement_left": "曜日の前",
+        "option=week_placement_right": "曜日の後",
+        "option=week_placement_none": "非表示",
+        "option=outside_days_automatic": "自動",
+        "option=outside_days_interactive": "操作可能",
+        "option=outside_days_inert": "操作不可",
+        "option=outside_days_hidden": "非表示",
+        "option=month_rows_fit": "必要な分だけ",
+        "option=month_rows_six": "常に6行",
         "option=style_ring": "枠線",
         "option=style_background": "背景",
         "option=style_text": "テキストのみ",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "変更なし",
   "calendar_appearance_narrow_only": "狭い幅のみ",
   "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",
+  "calendar_appearance_all_widths": "すべての幅",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
@@ -1660,6 +1681,33 @@
   "view_block_config_weeks_none": "非表示",
   "view_block_config_weeks_left": "曜日の前",
   "view_block_config_weeks_right": "曜日の後",
+  "view_block_config_show_weekdays_label": "曜日の見出し行を表示",
+  "view_block_config_visibility_default": "グローバルデフォルトを使用",
+  "view_block_config_visibility_shown": "表示",
+  "view_block_config_visibility_hidden": "非表示",
+  "view_block_config_outside_days_label": "月外の日",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "操作可能",
+        "option=inert": "操作不可",
+        "option=hidden": "非表示"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "行数",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "必要な分だけ",
+        "option=six": "常に6行"
+      }
+    }
+  ],
   "calendar_week_placement_label": "デフォルトの週番号",
   "calendar_week_placement_description": "「グローバルデフォルトを使用」に設定されたカレンダーブロックで、週番号の列を表示する位置。",
   "calendar_timeline_navigation_label": "デフォルトのタイムラインナビゲーション",
@@ -1976,6 +2024,10 @@
   "journal_edit_code_block_timeline_option_before": "現在の期間の上に、指定した数だけ前の期間を追加します。week と month モードでのみ有効です。",
   "journal_edit_code_block_timeline_option_after": "現在の期間の下に、指定した数だけ後の期間を追加します。week と month モードでのみ有効です。",
   "journal_edit_code_block_timeline_option_navigation": "タイムラインの上に前後の期間へ移動するボタンを表示し、ノートを開かずに他の期間を確認できるようにします。対応する値: true、false。指定しない場合はプラグインのカレンダー設定に従います。",
+  "journal_edit_code_block_timeline_option_heading": "月または年の見出しを表示または非表示にします。対応する値: true、false。指定しない場合は「カレンダーの外観」に従います。",
+  "journal_edit_code_block_timeline_option_weekdays": "曜日の見出しを表示または非表示にします。対応する値: true、false。指定しない場合は「カレンダーの外観」に従います。",
+  "journal_edit_code_block_timeline_option_outside": "月外の日の動作を設定します。対応する値: interactive、inert、hidden。month、quarter、calendar モードでのみ有効です。指定しない場合は「カレンダーの外観」に従います。",
+  "journal_edit_code_block_timeline_option_rows": "月に必要な行だけを表示するか、常に6行表示するかを設定します。対応する値: fit、six。month、quarter、calendar モードでのみ有効です。指定しない場合は「カレンダーの外観」に従います。",
   "journal_edit_code_block_timeline_navigation_lead": "ナビゲーションボタンを表示すると、次のようになります:",
   "journal_edit_code_block_home_description": "ホームブロックには、各ジャーナルの現在のノートへのリンクが表示されます。",
   "journal_edit_code_block_home_default": "デフォルトでは次のように表示されます:",

@@ -3,21 +3,40 @@ import { fireEvent, screen, within } from "@testing-library/vue";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick, shallowRef } from "vue";
 
+import { calendarDisplaySlice } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 import { themeColorGroupsFor } from "@/ui/theme-colors";
 
 import { isModified, withValue } from "../appearance-editing";
-import { PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
+import {
+  isStructure,
+  PARTS,
+  type Control,
+  type PartKey,
+  type StructureControl,
+  type ValueControl,
+  type ValuePartKey,
+  type Width,
+} from "../appearance-parts";
 import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
 import { AppearancePreviewRootKey } from "./preview-root-key";
 
-function control(part: PartKey, ...path: string[]): Control {
-  const found = PARTS[part].controls.find((candidate) => candidate.path.join(".") === path.join("."));
+function control(part: ValuePartKey, ...path: string[]): ValueControl {
+  const found = PARTS[part].controls.find(
+    (candidate): candidate is ValueControl => !isStructure(candidate) && candidate.path.join(".") === path.join("."),
+  );
   if (!found) throw new Error(`no control ${path.join(".")}`);
+  return found;
+}
+
+function structure(part: PartKey): StructureControl {
+  const found = PARTS[part].controls.find((candidate): candidate is StructureControl => isStructure(candidate));
+  if (!found) throw new Error(`no visibility control on ${part}`);
   return found;
 }
 
@@ -32,11 +51,12 @@ beforeAll(() => initLocale("en"));
 describe("AppearanceControl", () => {
   let harness: TestHarness;
   const slice = () => harness.settings.getSlice(appearanceSlice);
+  const display = () => harness.settings.getSlice(calendarDisplaySlice);
   const mount = (part: PartKey, target: Control, width: Width = "wide") =>
     harness.render(AppearanceControl, { props: { part, control: target, width } });
 
   beforeEach(async () => {
-    harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarSettingsCoreModule] });
   });
 
   it.each(Object.entries(PARTS).flatMap(([part, { controls }]) => controls.map((c) => [part as PartKey, c] as const)))(
@@ -52,6 +72,39 @@ describe("AppearanceControl", () => {
       }
     },
   );
+
+  describe("a visibility control", () => {
+    it.each(["wide", "narrow"] as const)("is a dropdown with no variable, noted for all widths at %s", (width) => {
+      const { container } = mount("heading", structure("heading"), width);
+
+      expect(
+        screen.getByRole("combobox", { name: m.calendar_appearance_control({ control: "visibility_show_heading" }) }),
+      ).toBeTruthy();
+      expect(container.textContent).not.toContain("--journal");
+      expect(screen.getByText(m.calendar_appearance_all_widths())).toBeTruthy();
+      const offered = [...kindSelect(container).options].map((option) => option.value);
+      expect(offered).toEqual(["shown", "hidden"]);
+    });
+
+    it("writes the display slice and leaves the appearance slice alone", async () => {
+      const before = slice().state;
+      const { container } = mount("heading", structure("heading"));
+      expect(kindSelect(container).value).toBe("shown");
+
+      await userEvent.selectOptions(kindSelect(container), "hidden");
+
+      expect(display().state.showHeading).toBe(false);
+      expect(slice().state).toBe(before);
+      expect(kindSelect(container).value).toBe("hidden");
+    });
+
+    it("shows the stored setting", () => {
+      display().state = { ...display().state, weekPlacement: "right" };
+      const { container } = mount("weekNumber", structure("weekNumber"));
+
+      expect(kindSelect(container).value).toBe("right");
+    });
+  });
 
   it("shows its public variable name", () => {
     mount("today", control("today", "text", "color"));
@@ -225,12 +278,12 @@ describe("AppearanceControl", () => {
       await screen.findByRole("option", { name: label });
 
       expect(select.selectedOptions[0]?.textContent?.trim()).toBe(label);
-      expect(isModified(slice().state, "wide", "weekNumber")).toBe(false);
+      expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(false);
 
       await userEvent.selectOptions(select, "bold");
 
       expect(slice().state.wide.weekNumber.weight).toBe("bold");
-      expect(isModified(slice().state, "wide", "weekNumber")).toBe(true);
+      expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(true);
     });
 
     it("on a color, as a swatch beside Default", async () => {

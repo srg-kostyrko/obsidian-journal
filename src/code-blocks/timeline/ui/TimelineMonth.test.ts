@@ -37,7 +37,9 @@ describe("TimelineMonth", () => {
     });
     vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
 
-    const { container } = harness.render(TimelineMonth, { props: { refDate: anchor("2026-05-15"), shelf: null } });
+    const { container } = harness.render(TimelineMonth, {
+      props: { refDate: anchor("2026-05-15"), shelf: null, showHeader: true, showWeekdays: true },
+    });
 
     const outsideDay = container.querySelector<HTMLElement>(".notes-month-view__day[data-outside]");
     expect(outsideDay).not.toBeNull();
@@ -59,7 +61,9 @@ describe("TimelineMonth", () => {
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
     });
     vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
-    const { container } = harness.render(TimelineMonth, { props: { refDate: anchor("2026-05-15"), shelf: null } });
+    const { container } = harness.render(TimelineMonth, {
+      props: { refDate: anchor("2026-05-15"), shelf: null, showHeader: true, showWeekdays: true },
+    });
     const day = container.querySelector<HTMLElement>('.notes-month-view__day[data-anchor="2026-05-15"]');
 
     if (day) await fireEvent.click(day, { shiftKey: true, button: 0 });
@@ -68,5 +72,18 @@ describe("TimelineMonth", () => {
       OpenDateFlow,
       expect.objectContaining({ anchor: "2026-05-15", openMode: "active" }),
     );
+  });
+
+  it("renders the heading and a visible weekday row when stock visibility is passed", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { container } = harness.render(TimelineMonth, {
+      props: { refDate: anchor("2026-05-15"), shelf: null, showHeader: true, showWeekdays: true },
+    });
+
+    expect(container.querySelector(".notes-month-view__header")).not.toBeNull();
+    expect(container.querySelector(".notes-month-view__row--visually-hidden")).toBeNull();
   });
 });

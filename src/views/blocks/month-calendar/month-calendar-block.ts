@@ -12,7 +12,8 @@ import MonthCalendarBlockConfig from "./ui/MonthCalendarBlockConfig.vue";
 
 const schema = v.object({
   ...calendarBlockBaseSchema,
-  showHeading: v.optional(v.boolean(), true),
+  outsideDays: v.optional(v.picklist(["default", "interactive", "inert", "hidden"]), "default"),
+  monthRows: v.optional(v.picklist(["default", "fit", "six"]), "default"),
 });
 
 export type MonthCalendarConfig = v.InferOutput<typeof schema>;
@@ -29,7 +30,10 @@ export const monthCalendarBlock = defineViewBlock<MonthCalendarConfig>({
     after: 0,
     hiddenWeekdays: [],
     weeks: "default" as const,
-    showHeading: true,
+    showHeading: "default" as const,
+    showWeekdays: "default" as const,
+    outsideDays: "default" as const,
+    monthRows: "default" as const,
   },
   component: MonthCalendarBlock,
   configComponent: MonthCalendarBlockConfig,

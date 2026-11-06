@@ -102,11 +102,12 @@ Reached with **Configure** on a view's row, under **Views** on the main settings
 
 Reached with **Open** under **Calendar appearance**, on the main settings page.
 
-| Section                 | Settings                                                                                                           | Explained in                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| **Calendar appearance** | **Preview** — **Narrow**, **Wide**; the preview; **Editing**; **Also here**                                        | [Views](/views#calendar-appearance)              |
-|                         | the chosen part's controls, under **Text**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only** | [Views](/views#what-each-part-offers)            |
-|                         | beside the part's name: **Reset to default**, **Reset narrow overrides**                                           | [Views](/views#narrow-only-values-and-resetting) |
+| Section                 | Settings                                                                                                                           | Explained in                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **Calendar appearance** | **Preview** — **Narrow**, **Wide**; the preview; **Editing**; **Also here**                                                        | [Views](/views#calendar-appearance)              |
+|                         | the chosen part's controls, under **Visibility**, **Text**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only** | [Views](/views#what-each-part-offers)            |
+|                         | **Visibility** — **Heading**, **Weekday header**, **Placement**, **Days outside the month**, **Rows**                              | [Views](/views#visibility)                       |
+|                         | beside the part's name: **Reset to default**, **Reset narrow overrides**                                                           | [Views](/views#narrow-only-values-and-resetting) |
 
 ## Maintenance page
 

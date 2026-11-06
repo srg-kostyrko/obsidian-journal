@@ -204,6 +204,21 @@ describe("NotesWeekView", () => {
       expect(container.querySelectorAll(".notes-week-view__weekday").length).toBe(7);
     });
 
+    it("keeps the column headers but hides them visually when showWeekdays is false", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, showWeekdays: false } });
+      const row = container.querySelector(".notes-week-view__weekdays");
+      expect(row?.classList.contains("notes-week-view__weekdays--visually-hidden")).toBe(true);
+      expect(row?.querySelectorAll('[role="columnheader"]').length).toBe(7);
+    });
+
+    it("shows the weekday row by default", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+      const row = container.querySelector(".notes-week-view__weekdays");
+      expect(row?.classList.contains("notes-week-view__weekdays--visually-hidden")).toBe(false);
+    });
+
     it("orders weekday labels to match the weekdays of the rendered day cells", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });

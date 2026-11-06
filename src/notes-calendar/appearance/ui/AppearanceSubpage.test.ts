@@ -2,7 +2,8 @@ import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, calendarDisplaySlice } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { date } from "@/calendar/testing";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
@@ -80,6 +81,10 @@ function italicDefault(option: "on" | "off"): string {
   });
 }
 
+function familyButton(family: "visibility" | "text"): HTMLElement {
+  return screen.getByRole("button", { name: m.calendar_appearance_family({ family }) });
+}
+
 async function switchTo(width: "wide" | "narrow"): Promise<void> {
   await userEvent.click(screen.getByRole("radio", { name: m.calendar_appearance_width({ width }) }));
 }
@@ -89,13 +94,14 @@ beforeAll(() => initLocale("en"));
 describe("AppearanceSubpage", () => {
   let harness: TestHarness;
   const slice = () => harness.settings.getSlice(appearanceSlice);
+  const display = () => harness.settings.getSlice(calendarDisplaySlice);
   let nav: { back: Mock; push: Mock; replace: Mock };
   const mount = () => harness.render(AppearanceSubpage, { props: { nav } });
 
   beforeEach(async () => {
     nav = { back: vi.fn(), push: vi.fn(), replace: vi.fn() };
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
-    harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarSettingsCoreModule] });
   });
 
   afterEach(() => {
@@ -125,7 +131,7 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(todayCell(container));
 
     expect(partsList().value).toBe("today");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell", "grid"] as const).map(partName));
     expect(screen.getByText("--journal-cell-today-text-color")).toBeTruthy();
   });
 
@@ -135,12 +141,14 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(selectedCell(container));
 
     expect(partsList().value).toBe("selected");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell", "grid"] as const).map(partName));
 
     await userEvent.click(chips()[0]);
 
     expect(partsList().value).toBe("date");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["selected", "cell"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
+      (["selected", "cell", "grid"] as const).map(partName),
+    );
   });
 
   it("a pick on the open note's day edits Open note, with Date number and Cells also here", async () => {
@@ -149,7 +157,7 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(openNoteCell(container));
 
     expect(partsList().value).toBe("active");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell", "grid"] as const).map(partName));
   });
 
   it.each(["{Enter}", " "])("moves focus to the parts list once %j picks an also-here part", async (key) => {
@@ -165,12 +173,12 @@ describe("AppearanceSubpage", () => {
 
   it("hides also here when the spot holds only the edited part", async () => {
     const { container } = mount();
-    const weekNumber = container.querySelector<HTMLElement>('[data-preview-part="weekNumber"]');
-    if (!weekNumber) throw new Error("no week number in the preview");
+    const grid = container.querySelector<HTMLElement>(".appearance-preview__grid");
+    if (!grid) throw new Error("no grid in the preview");
 
-    await userEvent.click(weekNumber);
+    await userEvent.click(grid);
 
-    expect(partsList().value).toBe("weekNumber");
+    expect(partsList().value).toBe("grid");
     expect(screen.queryByRole("group", { name: m.calendar_appearance_also_here() })).toBeNull();
   });
 
@@ -250,11 +258,70 @@ describe("AppearanceSubpage", () => {
     ).toBe("true");
   });
 
+  describe("one section per family", () => {
+    it("shows Visibility then Text for the weekday header", async () => {
+      const { container } = mount();
+      await userEvent.selectOptions(partsList(), "weekday");
+
+      const triggers = [...container.querySelectorAll(".appearance-subpage__family .collapsible-trigger-text")];
+      expect(triggers.map((trigger) => trigger.textContent?.trim())).toEqual(
+        (["visibility", "text"] as const).map((family) => m.calendar_appearance_family({ family })),
+      );
+      expect(
+        screen.getByRole("combobox", { name: m.calendar_appearance_control({ control: "visibility_show_weekdays" }) }),
+      ).toBeTruthy();
+    });
+
+    it("collapsing Visibility on one part leaves it open on the next", async () => {
+      mount();
+      await userEvent.selectOptions(partsList(), "weekday");
+
+      await userEvent.click(familyButton("visibility"));
+      expect(familyButton("visibility").getAttribute("aria-expanded")).toBe("false");
+      expect(familyButton("text").getAttribute("aria-expanded")).toBe("true");
+
+      await userEvent.selectOptions(partsList(), "heading");
+
+      expect(familyButton("visibility").getAttribute("aria-expanded")).toBe("true");
+    });
+  });
+
+  it("Reset at Wide on Month grid restores its rows", async () => {
+    display().state = { ...display().state, monthRows: "six" };
+    mount();
+    await userEvent.selectOptions(partsList(), "grid");
+    expect(partOption("grid").textContent).toContain("•");
+
+    await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_reset({ width: "wide" }) }));
+
+    expect(display().state.monthRows).toBe("fit");
+  });
+
+  it("the preview follows the visibility settings", async () => {
+    const { container } = mount();
+    expect(container.querySelector('.appearance-preview [data-preview-part="heading"]')).not.toBeNull();
+
+    display().state = { ...display().state, showHeading: false };
+
+    await vi.waitFor(() =>
+      expect(container.querySelector('.appearance-preview [data-preview-part="heading"]')).toBeNull(),
+    );
+  });
+
+  it("a click in the preview grid offers Month grid last", async () => {
+    const { container } = mount();
+
+    await userEvent.click(plainDay(container));
+
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["cell", "grid"] as const).map(partName));
+  });
+
   it("the parts list reaches every part", async () => {
     mount();
 
     const offered = [...partsList().options].filter((option) => option.value !== "");
-    expect(offered).toHaveLength(9);
+    expect(offered).toHaveLength(10);
+    expect(offered.at(-1)?.value).toBe("grid");
 
     await userEvent.selectOptions(partsList(), "weekday");
 

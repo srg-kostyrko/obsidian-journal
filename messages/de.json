@@ -88,7 +88,8 @@
         "part=weekday": "Wochentagszeile",
         "part=weekNumber": "Wochennummern",
         "part=date": "Tageszahl",
-        "part=cell": "Zellen"
+        "part=cell": "Zellen",
+        "part=grid": "Monatsraster"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Sichtbarkeit",
         "family=text": "Text",
         "family=highlight": "Hervorhebung",
         "family=box": "Box"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Überschrift",
+        "control=visibility_show_weekdays": "Wochentagszeile",
+        "control=visibility_week_placement": "Position",
+        "control=visibility_outside_days": "Tage außerhalb des Monats",
+        "control=visibility_month_rows": "Zeilen",
         "control=highlight_style": "Stil",
         "control=highlight_color": "Hervorhebungsfarbe",
         "control=highlight_ring_width": "Ringbreite",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Angezeigt",
+        "option=show_heading_hidden": "Ausgeblendet",
+        "option=show_weekdays_shown": "Angezeigt",
+        "option=show_weekdays_hidden": "Ausgeblendet",
+        "option=week_placement_left": "Vor den Wochentagen",
+        "option=week_placement_right": "Nach den Wochentagen",
+        "option=week_placement_none": "Ausgeblendet",
+        "option=outside_days_automatic": "Automatisch",
+        "option=outside_days_interactive": "Interaktiv",
+        "option=outside_days_inert": "Inaktiv",
+        "option=outside_days_hidden": "Ausgeblendet",
+        "option=month_rows_fit": "Nach Bedarf",
+        "option=month_rows_six": "Immer sechs",
         "option=style_ring": "Ring",
         "option=style_background": "Hintergrund",
         "option=style_text": "Nur Text",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Unverändert",
   "calendar_appearance_narrow_only": "Nur schmal",
   "calendar_appearance_narrow_only_clear": "Wert für alle Breiten verwenden",
+  "calendar_appearance_all_widths": "Alle Breiten",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
@@ -1815,6 +1836,33 @@
   "view_block_config_weeks_none": "Ausgeblendet",
   "view_block_config_weeks_left": "Vor den Wochentagen",
   "view_block_config_weeks_right": "Nach den Wochentagen",
+  "view_block_config_show_weekdays_label": "Wochentagszeile anzeigen",
+  "view_block_config_visibility_default": "Globalen Standard verwenden",
+  "view_block_config_visibility_shown": "Angezeigt",
+  "view_block_config_visibility_hidden": "Ausgeblendet",
+  "view_block_config_outside_days_label": "Tage außerhalb des Monats",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interaktiv",
+        "option=inert": "Inaktiv",
+        "option=hidden": "Ausgeblendet"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Zeilen",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "Nach Bedarf",
+        "option=six": "Immer sechs"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Standard-Wochennummern",
   "calendar_week_placement_description": "Legt fest, wo die Spalte mit den Wochennummern in Kalenderblöcken erscheint, die auf „Globalen Standard verwenden“ eingestellt sind.",
   "calendar_timeline_navigation_label": "Standardnavigation der Zeitleiste",
@@ -2134,6 +2182,10 @@
   "journal_edit_code_block_timeline_option_before": "fügt so viele frühere Zeiträume oberhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
   "journal_edit_code_block_timeline_option_after": "fügt so viele spätere Zeiträume unterhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
   "journal_edit_code_block_timeline_option_navigation": "zeigt oberhalb der Zeitleiste Schaltflächen für den vorherigen und nächsten Zeitraum, sodass du andere Zeiträume ansehen kannst, ohne eine Notiz zu öffnen. Unterstützte Werte: true, false. Ohne diese Option entscheidet die Kalendereinstellung des Plugins.",
+  "journal_edit_code_block_timeline_option_heading": "zeigt oder verbirgt die Monats- bzw. Jahresüberschrift. Unterstützte Werte: true, false. Ohne diese Option entscheidet Kalenderdarstellung.",
+  "journal_edit_code_block_timeline_option_weekdays": "zeigt oder verbirgt die Wochentagszeile. Unterstützte Werte: true, false. Ohne diese Option entscheidet Kalenderdarstellung.",
+  "journal_edit_code_block_timeline_option_outside": "legt fest, wie sich Tage außerhalb des Monats verhalten. Unterstützte Werte: interactive, inert, hidden. Gilt nur für die Modi month, quarter und calendar. Ohne diese Option entscheidet Kalenderdarstellung.",
+  "journal_edit_code_block_timeline_option_rows": "legt fest, ob ein Monat nur die nötigen Zeilen oder immer sechs zeigt. Unterstützte Werte: fit, six. Gilt nur für die Modi month, quarter und calendar. Ohne diese Option entscheidet Kalenderdarstellung.",
   "journal_edit_code_block_timeline_navigation_lead": "Mit Navigationsschaltflächen sieht er so aus:",
   "journal_edit_code_block_home_description": "Der Home-Block zeigt Links zu den aktuellen Notizen in deinen Journalen an.",
   "journal_edit_code_block_home_default": "Standardmäßig sieht es so aus:",

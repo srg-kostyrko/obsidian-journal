@@ -21,7 +21,14 @@ function weekdayLabels(): string[] {
     .map((day) => day.textContent?.trim() ?? "");
 }
 
-const baseConfig: CalendarBlockFields = { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" };
+const baseConfig: CalendarBlockFields = {
+  before: 0,
+  after: 0,
+  hiddenWeekdays: [],
+  weeks: "left",
+  showHeading: "default",
+  showWeekdays: "default",
+};
 
 describe("CalendarBlockConfigFields", () => {
   it("emits a before patch when the before input changes", async () => {
@@ -71,7 +78,38 @@ describe("CalendarBlockConfigFields", () => {
   it("emits a weeks patch when the weeks dropdown changes", async () => {
     const onChange = vi.fn();
     await mountFields(baseConfig, onChange);
-    await userEvent.selectOptions(screen.getByRole("combobox"), "right");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "right");
     expect(onChange).toHaveBeenCalledWith({ weeks: "right" });
+  });
+
+  it("offers Use global default, Shown and Hidden for the heading and the weekday header", async () => {
+    await mountFields(baseConfig, vi.fn());
+    const [, heading, weekdays] = screen.getAllByRole("combobox");
+    for (const select of [heading, weekdays]) {
+      expect(
+        within(select)
+          .getAllByRole("option")
+          .map((option) => option.textContent),
+      ).toEqual(["Use global default", "Shown", "Hidden"]);
+    }
+  });
+
+  it("writes the literal boolean when the heading is picked as shown or hidden", async () => {
+    const onChange = vi.fn();
+    await mountFields(baseConfig, onChange);
+    const heading = screen.getAllByRole("combobox")[1];
+    await userEvent.selectOptions(heading, "Hidden");
+    expect(onChange).toHaveBeenLastCalledWith({ showHeading: false });
+    await userEvent.selectOptions(heading, "Shown");
+    expect(onChange).toHaveBeenLastCalledWith({ showHeading: true });
+  });
+
+  it("writes 'default' when the weekday header is returned to default", async () => {
+    const onChange = vi.fn();
+    await mountFields({ ...baseConfig, showWeekdays: false }, onChange);
+    const weekdays = screen.getAllByRole("combobox")[2];
+    expect((weekdays as HTMLSelectElement).value).toBe("hidden");
+    await userEvent.selectOptions(weekdays, "Use global default");
+    expect(onChange).toHaveBeenLastCalledWith({ showWeekdays: "default" });
   });
 });

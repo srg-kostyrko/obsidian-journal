@@ -1,9 +1,18 @@
 import * as v from "valibot";
 
+import { calendarDisplaySlice, type CalendarDisplaySliceState } from "@/calendar";
+
+import {
+  isStructure,
+  PARTS,
+  type Control,
+  type PartKey,
+  type StructureControl,
+  type ValuePartKey,
+  type Width,
+} from "./appearance-parts";
 import { mergedPart } from "./appearance-variables";
 import { appearanceSlice, appearanceSliceSchema, type AppearanceSliceState } from "./slice";
-
-import type { Control, PartKey, Width } from "./appearance-parts";
 
 export { visibleControls } from "./appearance-parts";
 
@@ -38,14 +47,19 @@ function hasOverride(narrowPart: unknown): boolean {
   return Object.values(narrowPart).some(hasOverride);
 }
 
-export function valueAt(state: AppearanceSliceState, width: Width, part: PartKey, path: readonly string[]): unknown {
+export function valueAt(
+  state: AppearanceSliceState,
+  width: Width,
+  part: ValuePartKey,
+  path: readonly string[],
+): unknown {
   return read(width === "wide" ? state.wide[part] : mergedPart(state, part), path);
 }
 
 export function sourceAt(
   state: AppearanceSliceState,
   width: Width,
-  part: PartKey,
+  part: ValuePartKey,
   path: readonly string[],
 ): "stock" | "user" | "narrow" {
   if (width === "narrow" && (read(state.narrow[part], path) ?? null) !== null) return "narrow";
@@ -56,7 +70,7 @@ export function sourceAt(
 export function withValue(
   state: AppearanceSliceState,
   width: Width,
-  part: PartKey,
+  part: ValuePartKey,
   path: readonly string[],
   value: unknown,
 ): AppearanceSliceState {
@@ -72,10 +86,12 @@ export function withValue(
 const BOOLEAN_OPTIONS: Readonly<Record<string, readonly [string, string]>> = {
   italic: ["on", "off"],
   over: ["over", "under"],
+  showHeading: ["shown", "hidden"],
+  showWeekdays: ["shown", "hidden"],
 };
 
 function booleanOptions(control: Control): readonly [string, string] | undefined {
-  const key = control.path.at(-1);
+  const key = isStructure(control) ? control.setting : control.path.at(-1);
   return key === undefined ? undefined : BOOLEAN_OPTIONS[key];
 }
 
@@ -92,18 +108,64 @@ export function fromControlValue(control: Control, controlValue: unknown): unkno
   return controlValue === names[1] ? false : controlValue;
 }
 
-export function isModified(state: AppearanceSliceState, width: Width, part: PartKey): boolean {
-  if (width === "narrow") return hasOverride(state.narrow[part]);
-  return !equal(state.wide[part], appearanceSlice.defaults.wide[part]);
+export function structureAt(display: CalendarDisplaySliceState, control: StructureControl): unknown {
+  return toControlValue(control, display[control.setting]);
 }
 
-export function withReset(state: AppearanceSliceState, width: Width, part: PartKey): AppearanceSliceState {
-  return { ...state, [width]: { ...state[width], [part]: structuredClone(appearanceSlice.defaults[width][part]) } };
+export function withStructure(
+  display: CalendarDisplaySliceState,
+  control: StructureControl,
+  controlValue: unknown,
+): CalendarDisplaySliceState {
+  const next = { ...display, [control.setting]: fromControlValue(control, controlValue) };
+  const named = typeof controlValue === "string" && control.options.includes(controlValue);
+  if (!named || !v.safeParse(calendarDisplaySlice.schema, next).success) {
+    throw new TypeError(`${control.setting} does not accept ${JSON.stringify(controlValue)}`);
+  }
+  return next;
+}
+
+function isValuePart(part: PartKey): part is ValuePartKey {
+  return part !== "grid";
+}
+
+function structureOf(part: PartKey): readonly StructureControl[] {
+  return PARTS[part].controls.filter((control) => isStructure(control));
+}
+
+// Structure has no narrow value, so only Wide counts it.
+export function isModified(
+  state: AppearanceSliceState,
+  display: CalendarDisplaySliceState,
+  width: Width,
+  part: PartKey,
+): boolean {
+  if (width === "narrow") return isValuePart(part) && hasOverride(state.narrow[part]);
+  const structureChanged = structureOf(part).some(
+    ({ setting }) => display[setting] !== calendarDisplaySlice.defaults[setting],
+  );
+  return structureChanged || (isValuePart(part) && !equal(state.wide[part], appearanceSlice.defaults.wide[part]));
+}
+
+export function withReset(
+  state: AppearanceSliceState,
+  display: CalendarDisplaySliceState,
+  width: Width,
+  part: PartKey,
+): { appearance: AppearanceSliceState; display: CalendarDisplaySliceState } {
+  const appearance = isValuePart(part)
+    ? { ...state, [width]: { ...state[width], [part]: structuredClone(appearanceSlice.defaults[width][part]) } }
+    : state;
+  if (width === "narrow") return { appearance, display };
+  const restored = Object.fromEntries(
+    structureOf(part).map(({ setting }) => [setting, calendarDisplaySlice.defaults[setting]]),
+  );
+  return { appearance, display: { ...display, ...restored } };
 }
 
 export function withNarrowCleared(
   state: AppearanceSliceState,
-  part: PartKey,
+  part: ValuePartKey,
   path: readonly string[],
 ): AppearanceSliceState {
   return withValue(state, "narrow", part, path, null);

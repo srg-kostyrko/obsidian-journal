@@ -22,6 +22,8 @@ const NotesWeekViewStub = defineComponent({
   props: {
     week: { type: Object, required: true },
     shelf: { type: [String, null], default: null },
+    showHeader: { type: Boolean, default: false },
+    showWeekdays: { type: Boolean, default: false },
     selectedDate: { type: String, default: undefined },
     selectDate: { type: Function as PropType<(date: AnchorString) => void>, default: undefined },
   },
@@ -32,6 +34,8 @@ const NotesWeekViewStub = defineComponent({
         "data-testid": "week-stub",
         "data-week": (p.week as unknown as WeekLike).start.toAnchor(),
         "data-shelf": p.shelf ?? "",
+        "data-show-header": String(p.showHeader),
+        "data-show-weekdays": String(p.showWeekdays),
         "data-selected-date": p.selectedDate,
       },
       h("button", {
@@ -41,8 +45,12 @@ const NotesWeekViewStub = defineComponent({
     ),
 });
 
-async function mountBlock(config: WeekCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
-  const harness = await testContainer({ modules: [calendarSettingsCoreModule] });
+async function mountBlock(
+  config: WeekCalendarConfig,
+  contextOverride: Partial<ViewContext> = {},
+  display: Record<string, unknown> = {},
+) {
+  const harness = await testContainer({ modules: [calendarSettingsCoreModule], data: { calendarDisplay: display } });
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(weekCalendarBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
   const Wrapper = defineComponent({
@@ -59,7 +67,8 @@ const baseConfig: WeekCalendarConfig = {
   after: 0,
   hiddenWeekdays: [],
   weeks: "left",
-  showHeading: true,
+  showHeading: "default",
+  showWeekdays: "default",
 };
 
 describe("WeekCalendarBlock", () => {
@@ -116,5 +125,22 @@ describe("WeekCalendarBlock", () => {
     await nextTick();
 
     expect(screen.getAllByTestId("week-stub")[0]?.dataset.week).not.toBe(start);
+  });
+
+  describe("visibility overrides", () => {
+    it("follows the global weekday header on default", async () => {
+      await mountBlock(baseConfig, {}, { showWeekdays: false });
+      expect(screen.getByTestId("week-stub").dataset.showWeekdays).toBe("false");
+    });
+
+    it("lets an explicit false override a shown global", async () => {
+      await mountBlock({ ...baseConfig, showWeekdays: false }, {}, { showWeekdays: true });
+      expect(screen.getByTestId("week-stub").dataset.showWeekdays).toBe("false");
+    });
+
+    it("follows the global heading on default and keeps an explicit false", async () => {
+      await mountBlock(baseConfig, {}, { showHeading: false });
+      expect(screen.getByTestId("week-stub").dataset.showHeader).toBe("false");
+    });
   });
 });

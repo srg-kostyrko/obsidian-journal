@@ -2,6 +2,7 @@ import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, nextTick, ref, type PropType } from "vue";
 
+import { calendarDisplaySlice } from "@/calendar/settings/display-slice";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
@@ -23,6 +24,9 @@ const NotesMonthViewStub = defineComponent({
     month: { type: Object, required: true },
     shelf: { type: [String, null], default: null },
     outsideDates: { type: String, default: "active" },
+    showHeader: { type: Boolean, default: false },
+    showWeekdays: { type: Boolean, default: false },
+    sixRows: { type: Boolean, default: false },
     selectedDate: { type: String, default: undefined },
     selectDate: { type: Function as PropType<(date: AnchorString) => void>, default: undefined },
   },
@@ -34,6 +38,9 @@ const NotesMonthViewStub = defineComponent({
         "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
         "data-shelf": p.shelf ?? "",
         "data-outside-dates": p.outsideDates,
+        "data-show-header": String(p.showHeader),
+        "data-show-weekdays": String(p.showWeekdays),
+        "data-six-rows": String(p.sixRows),
         "data-selected-date": p.selectedDate,
       },
       h("button", {
@@ -43,8 +50,12 @@ const NotesMonthViewStub = defineComponent({
     ),
 });
 
-async function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
-  const harness = await testContainer({ modules: [calendarSettingsCoreModule] });
+async function mountBlock(
+  config: MonthCalendarConfig,
+  contextOverride: Partial<ViewContext> = {},
+  display: Record<string, unknown> = {},
+) {
+  const harness = await testContainer({ modules: [calendarSettingsCoreModule], data: { calendarDisplay: display } });
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(monthCalendarBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
   const Wrapper = defineComponent({
@@ -53,7 +64,8 @@ async function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<
       return renderRoot;
     },
   });
-  return harness.render(Wrapper, { global: { stubs: { NotesMonthView: NotesMonthViewStub } } });
+  harness.render(Wrapper, { global: { stubs: { NotesMonthView: NotesMonthViewStub } } });
+  return harness;
 }
 
 const baseConfig: MonthCalendarConfig = {
@@ -61,8 +73,15 @@ const baseConfig: MonthCalendarConfig = {
   after: 0,
   hiddenWeekdays: [],
   weeks: "left",
-  showHeading: true,
+  showHeading: "default",
+  showWeekdays: "default",
+  outsideDays: "default",
+  monthRows: "default",
 };
+
+function outside(): (string | undefined)[] {
+  return screen.getAllByTestId("month-stub").map((s) => s.dataset.outsideDates);
+}
 
 describe("MonthCalendarBlock", () => {
   it("renders the calendar when the vault has no journals", async () => {
@@ -184,5 +203,65 @@ describe("MonthCalendarBlock", () => {
     await nextTick();
 
     expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
+  });
+
+  describe("visibility overrides", () => {
+    const refDate = { refDate: ref("2026-05-15" as AnchorString) };
+
+    it("keeps the automatic outside-days rule when the global is automatic", async () => {
+      await mountBlock(baseConfig, refDate, { outsideDays: "automatic" });
+      expect(outside()).toEqual(["active"]);
+    });
+
+    it("blanks outside days on automatic once the window holds several months", async () => {
+      await mountBlock({ ...baseConfig, before: 1 }, refDate, { outsideDays: "automatic" });
+      expect(outside()).toEqual(["blank", "blank"]);
+    });
+
+    it("lets an inert block override the automatic rule whatever the month count", async () => {
+      await mountBlock({ ...baseConfig, before: 1, outsideDays: "inert" }, refDate);
+      expect(outside()).toEqual(["inactive", "inactive"]);
+    });
+
+    it("follows a hidden global when the block says default", async () => {
+      await mountBlock(baseConfig, refDate, { outsideDays: "hidden" });
+      expect(outside()).toEqual(["blank"]);
+    });
+
+    it("re-renders a default heading when the global changes, without a remount", async () => {
+      const harness = await mountBlock(baseConfig, refDate);
+      expect(screen.getByTestId("month-stub").dataset.showHeader).toBe("true");
+
+      const slice = harness.settings.getSlice(calendarDisplaySlice);
+      slice.state = { ...slice.state, showHeading: false };
+      await nextTick();
+
+      expect(screen.getByTestId("month-stub").dataset.showHeader).toBe("false");
+    });
+
+    it("keeps an explicit heading over a hidden global", async () => {
+      await mountBlock({ ...baseConfig, showHeading: true }, refDate, { showHeading: false });
+      expect(screen.getByTestId("month-stub").dataset.showHeader).toBe("true");
+    });
+
+    it("keeps a legacy stored false hiding the heading", async () => {
+      await mountBlock({ ...baseConfig, showHeading: false }, refDate);
+      expect(screen.getByTestId("month-stub").dataset.showHeader).toBe("false");
+    });
+
+    it("passes the weekday header choice through", async () => {
+      await mountBlock({ ...baseConfig, showWeekdays: false }, refDate);
+      expect(screen.getByTestId("month-stub").dataset.showWeekdays).toBe("false");
+    });
+
+    it("passes always-six rows to the view as sixRows", async () => {
+      await mountBlock({ ...baseConfig, monthRows: "six" }, refDate);
+      expect(screen.getByTestId("month-stub").dataset.sixRows).toBe("true");
+    });
+
+    it("follows the global row rule on default", async () => {
+      await mountBlock(baseConfig, refDate, { monthRows: "six" });
+      expect(screen.getByTestId("month-stub").dataset.sixRows).toBe("true");
+    });
   });
 });

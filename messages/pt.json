@@ -88,7 +88,8 @@
         "part=weekday": "Cabeçalho dos dias da semana",
         "part=weekNumber": "Números da semana",
         "part=date": "Número do dia",
-        "part=cell": "Células"
+        "part=cell": "Células",
+        "part=grid": "Grade do mês"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Visibilidade",
         "family=text": "Texto",
         "family=highlight": "Destaque",
         "family=box": "Caixa"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Cabeçalho",
+        "control=visibility_show_weekdays": "Cabeçalho dos dias da semana",
+        "control=visibility_week_placement": "Posição",
+        "control=visibility_outside_days": "Dias fora do mês",
+        "control=visibility_month_rows": "Linhas",
         "control=highlight_style": "Estilo",
         "control=highlight_color": "Cor do destaque",
         "control=highlight_ring_width": "Espessura do contorno",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Exibido",
+        "option=show_heading_hidden": "Oculto",
+        "option=show_weekdays_shown": "Exibido",
+        "option=show_weekdays_hidden": "Oculto",
+        "option=week_placement_left": "Antes dos dias da semana",
+        "option=week_placement_right": "Depois dos dias da semana",
+        "option=week_placement_none": "Ocultos",
+        "option=outside_days_automatic": "Automático",
+        "option=outside_days_interactive": "Interativos",
+        "option=outside_days_inert": "Inertes",
+        "option=outside_days_hidden": "Ocultos",
+        "option=month_rows_fit": "Conforme necessário",
+        "option=month_rows_six": "Sempre seis",
         "option=style_ring": "Contorno",
         "option=style_background": "Fundo",
         "option=style_text": "Só texto",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Inalterado",
   "calendar_appearance_narrow_only": "Só estreito",
   "calendar_appearance_narrow_only_clear": "Usar o valor de todas as larguras",
+  "calendar_appearance_all_widths": "Todas as larguras",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
@@ -1813,6 +1834,33 @@
   "view_block_config_weeks_none": "Ocultos",
   "view_block_config_weeks_left": "Antes dos dias da semana",
   "view_block_config_weeks_right": "Depois dos dias da semana",
+  "view_block_config_show_weekdays_label": "Exibir a linha dos dias da semana",
+  "view_block_config_visibility_default": "Usar padrão global",
+  "view_block_config_visibility_shown": "Exibido",
+  "view_block_config_visibility_hidden": "Oculto",
+  "view_block_config_outside_days_label": "Dias fora do mês",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interativos",
+        "option=inert": "Inertes",
+        "option=hidden": "Ocultos"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Linhas",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "Conforme necessário",
+        "option=six": "Sempre seis"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Números de semana padrão",
   "calendar_week_placement_description": "Onde a coluna do número da semana aparece nos blocos de calendário definidos como \"Usar padrão global\".",
   "calendar_timeline_navigation_label": "Navegação padrão da linha do tempo",
@@ -2129,6 +2177,10 @@
   "journal_edit_code_block_timeline_option_before": "adiciona esta quantidade de períodos anteriores acima do atual. Aplica-se apenas aos modos week e month.",
   "journal_edit_code_block_timeline_option_after": "adiciona esta quantidade de períodos posteriores abaixo do atual. Aplica-se apenas aos modos week e month.",
   "journal_edit_code_block_timeline_option_navigation": "mostra os controles de período anterior e seguinte acima da linha do tempo, para você ver outros períodos sem abrir uma nota. Valores suportados: true, false. Sem essa opção, a configuração de calendário do plugin decide.",
+  "journal_edit_code_block_timeline_option_heading": "mostra ou oculta o cabeçalho do mês ou do ano. Valores suportados: true, false. Sem essa opção, Aparência do calendário decide.",
+  "journal_edit_code_block_timeline_option_weekdays": "mostra ou oculta o cabeçalho dos dias da semana. Valores suportados: true, false. Sem essa opção, Aparência do calendário decide.",
+  "journal_edit_code_block_timeline_option_outside": "define como os dias fora do mês se comportam. Valores suportados: interactive, inert, hidden. Aplica-se apenas aos modos month, quarter e calendar. Sem essa opção, Aparência do calendário decide.",
+  "journal_edit_code_block_timeline_option_rows": "define se um mês mostra apenas as linhas necessárias ou sempre seis. Valores suportados: fit, six. Aplica-se apenas aos modos month, quarter e calendar. Sem essa opção, Aparência do calendário decide.",
   "journal_edit_code_block_timeline_navigation_lead": "Com os controles de navegação, fica assim:",
   "journal_edit_code_block_home_description": "O bloco inicial exibe links para as notas atuais nos seus diários.",
   "journal_edit_code_block_home_default": "Por padrão, a aparência é esta:",

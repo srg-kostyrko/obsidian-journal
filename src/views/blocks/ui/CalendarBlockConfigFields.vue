@@ -26,6 +26,18 @@ const weekdayOptions = computed(() =>
 );
 const allWeekdayIndices = computed(() => orderedWeekdays.value.map((weekday) => weekday.index));
 
+type Visibility = boolean | "default";
+
+function visibilityValue(value: Visibility): string {
+  if (value === "default") return "default";
+  return value ? "shown" : "hidden";
+}
+
+function visibilityFrom(value: string): Visibility {
+  if (value === "shown") return true;
+  return value === "hidden" ? false : "default";
+}
+
 function setShownWeekdays(shown: number[]): void {
   const hiddenWeekdays = allWeekdayIndices.value.filter((index) => !shown.includes(index)).toSorted((a, b) => a - b);
   props.onChange({ hiddenWeekdays });
@@ -59,6 +71,28 @@ function setShownWeekdays(shown: number[]): void {
       <option value="none">{{ m.view_block_config_weeks_none() }}</option>
       <option value="left">{{ m.view_block_config_weeks_left() }}</option>
       <option value="right">{{ m.view_block_config_weeks_right() }}</option>
+    </UiDropdown>
+  </UiSettingRow>
+  <UiSettingRow>
+    <template #name>{{ m.view_block_config_show_heading_label() }}</template>
+    <UiDropdown
+      :model-value="visibilityValue(config.showHeading)"
+      @update:model-value="(v) => onChange({ showHeading: visibilityFrom(v) })"
+    >
+      <option value="default">{{ m.view_block_config_visibility_default() }}</option>
+      <option value="shown">{{ m.view_block_config_visibility_shown() }}</option>
+      <option value="hidden">{{ m.view_block_config_visibility_hidden() }}</option>
+    </UiDropdown>
+  </UiSettingRow>
+  <UiSettingRow>
+    <template #name>{{ m.view_block_config_show_weekdays_label() }}</template>
+    <UiDropdown
+      :model-value="visibilityValue(config.showWeekdays)"
+      @update:model-value="(v) => onChange({ showWeekdays: visibilityFrom(v) })"
+    >
+      <option value="default">{{ m.view_block_config_visibility_default() }}</option>
+      <option value="shown">{{ m.view_block_config_visibility_shown() }}</option>
+      <option value="hidden">{{ m.view_block_config_visibility_hidden() }}</option>
     </UiDropdown>
   </UiSettingRow>
 </template>

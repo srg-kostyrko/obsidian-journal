@@ -88,7 +88,8 @@
         "part=weekday": "星期标题",
         "part=weekNumber": "周数",
         "part=date": "日期数字",
-        "part=cell": "单元格"
+        "part=cell": "单元格",
+        "part=grid": "月份网格"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "可见性",
         "family=text": "文本",
         "family=highlight": "高亮",
         "family=box": "单元格框"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "标题",
+        "control=visibility_show_weekdays": "星期标题",
+        "control=visibility_week_placement": "位置",
+        "control=visibility_outside_days": "本月以外的日期",
+        "control=visibility_month_rows": "行数",
         "control=highlight_style": "样式",
         "control=highlight_color": "高亮颜色",
         "control=highlight_ring_width": "边框宽度",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "显示",
+        "option=show_heading_hidden": "隐藏",
+        "option=show_weekdays_shown": "显示",
+        "option=show_weekdays_hidden": "隐藏",
+        "option=week_placement_left": "在星期列之前",
+        "option=week_placement_right": "在星期列之后",
+        "option=week_placement_none": "隐藏",
+        "option=outside_days_automatic": "自动",
+        "option=outside_days_interactive": "可交互",
+        "option=outside_days_inert": "不可交互",
+        "option=outside_days_hidden": "隐藏",
+        "option=month_rows_fit": "按需",
+        "option=month_rows_six": "始终六行",
         "option=style_ring": "边框",
         "option=style_background": "背景",
         "option=style_text": "仅文本",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "不变",
   "calendar_appearance_narrow_only": "仅窄",
   "calendar_appearance_narrow_only_clear": "使用所有宽度通用的值",
+  "calendar_appearance_all_widths": "所有宽度",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
@@ -1660,6 +1681,33 @@
   "view_block_config_weeks_none": "隐藏",
   "view_block_config_weeks_left": "在星期列之前",
   "view_block_config_weeks_right": "在星期列之后",
+  "view_block_config_show_weekdays_label": "显示星期标题行",
+  "view_block_config_visibility_default": "使用全局默认值",
+  "view_block_config_visibility_shown": "显示",
+  "view_block_config_visibility_hidden": "隐藏",
+  "view_block_config_outside_days_label": "本月以外的日期",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "可交互",
+        "option=inert": "不可交互",
+        "option=hidden": "隐藏"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "行数",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "按需",
+        "option=six": "始终六行"
+      }
+    }
+  ],
   "calendar_week_placement_label": "默认周数",
   "calendar_week_placement_description": "在设置为“使用全局默认值”的日历块中，周数列的显示位置。",
   "calendar_timeline_navigation_label": "默认时间线导航",
@@ -1970,6 +2018,10 @@
   "journal_edit_code_block_timeline_option_before": "在当前时段上方添加指定数量的更早时段。仅适用于 week 和 month 模式。",
   "journal_edit_code_block_timeline_option_after": "在当前时段下方添加指定数量的更晚时段。仅适用于 week 和 month 模式。",
   "journal_edit_code_block_timeline_option_navigation": "在时间线上方显示上一个和下一个时段的按钮，让您无需打开笔记即可查看其他时段。支持的值：true、false。未设置时由插件的日历设置决定。",
+  "journal_edit_code_block_timeline_option_heading": "显示或隐藏月份或年份标题。支持的值：true、false。未设置时由“日历外观”决定。",
+  "journal_edit_code_block_timeline_option_weekdays": "显示或隐藏星期标题。支持的值：true、false。未设置时由“日历外观”决定。",
+  "journal_edit_code_block_timeline_option_outside": "设置本月以外的日期的行为。支持的值：interactive、inert、hidden。仅适用于 month、quarter 和 calendar 模式。未设置时由“日历外观”决定。",
+  "journal_edit_code_block_timeline_option_rows": "设置月份只显示所需的行还是始终显示六行。支持的值：fit、six。仅适用于 month、quarter 和 calendar 模式。未设置时由“日历外观”决定。",
   "journal_edit_code_block_timeline_navigation_lead": "显示导航按钮后，它看起来像这样：",
   "journal_edit_code_block_home_description": "主页块显示指向您日记中当前笔记的链接。",
   "journal_edit_code_block_home_default": "默认情况下，它看起来像这样：",

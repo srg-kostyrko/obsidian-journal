@@ -3,7 +3,7 @@ import { render } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, inject, type PropType } from "vue";
 
-import { CalendarDate, type Period } from "@/calendar";
+import { CalendarDate, calendarDisplaySlice, type CalendarDisplaySliceState, type Period } from "@/calendar";
 import { date } from "@/calendar/testing";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey } from "@/decorations/ui/cell-decoration-map-key";
@@ -41,6 +41,15 @@ function picked(container: Element): HTMLElement[] {
 
 const isLight = (element: Element): boolean => element.classList.contains("appearance-preview__picked--light");
 
+const withDisplay = (patch: Partial<CalendarDisplaySliceState>) =>
+  render(AppearancePreview, { props: { width: "wide", display: { ...calendarDisplaySlice.defaults, ...patch } } });
+const rowsOf = (container: Element): HTMLElement[] => [
+  ...container.querySelectorAll<HTMLElement>(".appearance-preview__grid > .appearance-preview__row"),
+];
+const firstWeekRow = (container: Element): HTMLElement | undefined => rowsOf(container).at(1);
+const partOf = (element: Element | null | undefined): string | undefined =>
+  element instanceof HTMLElement ? element.dataset.previewPart : undefined;
+
 describe("AppearancePreview", () => {
   beforeEach(() => {
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
@@ -58,7 +67,7 @@ describe("AppearancePreview", () => {
     await userEvent.click(today);
 
     expect(emitted("pick")).toEqual([[partsAt(today), "2026-05-13"]]);
-    expect(partsAt(today)).toEqual(["today", "date", "cell"]);
+    expect(partsAt(today)).toEqual(["today", "date", "cell", "grid"]);
   });
 
   it.each(["{Enter}", " "])("emits the same parts for %j on a focused cell as for a click", async (key) => {
@@ -68,7 +77,7 @@ describe("AppearancePreview", () => {
     today.focus();
     await userEvent.keyboard(key);
 
-    expect(emitted("pick")).toEqual([[["today", "date", "cell"], "2026-05-13"]]);
+    expect(emitted("pick")).toEqual([[["today", "date", "cell", "grid"], "2026-05-13"]]);
   });
 
   it("marks the open note two days after today, unselected", () => {
@@ -149,7 +158,7 @@ describe("AppearancePreview", () => {
 
       await userEvent.click(cellAt(container, "2026-05-20"));
 
-      expect(emitted("pick")).toEqual([[["date", "cell"], "2026-05-20"]]);
+      expect(emitted("pick")).toEqual([[["date", "cell", "grid"], "2026-05-20"]]);
     });
 
     it("outlines every weekday name", () => {
@@ -193,12 +202,109 @@ describe("AppearancePreview", () => {
       expect(picked(container)).toEqual(weekNumbers);
     });
 
+    it("outlines the month grid", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "grid" } });
+      expect(picked(container)).toEqual([container.querySelector(".appearance-preview__grid")]);
+    });
+
+    it("outlines hidden outside days through their blanks", () => {
+      const { container } = render(AppearancePreview, {
+        props: {
+          width: "wide",
+          picked: "outside",
+          display: { ...calendarDisplaySlice.defaults, outsideDays: "hidden" },
+        },
+      });
+      const blanks = [...container.querySelectorAll<HTMLElement>(".appearance-preview__day--blank")];
+      expect(blanks.length).toBeGreaterThan(0);
+      expect(picked(container)).toEqual(blanks);
+    });
+
     it("outlines both heading cells", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "heading" } });
       const heading = container.querySelector('[data-preview-part="heading"]');
       expect(picked(container)).toEqual([...(heading?.querySelectorAll<HTMLElement>(".notes-calendar-cell") ?? [])]);
       expect(picked(container)).toHaveLength(2);
     });
+  });
+
+  describe("follows the visibility settings", () => {
+    it("shows the heading, the weekday header and week numbers on the left by default", () => {
+      const { container } = withDisplay({});
+      expect(container.querySelector('[data-preview-part="heading"]')).not.toBeNull();
+      expect(rowsOf(container)[0]?.classList.contains("appearance-preview__row--visually-hidden")).toBe(false);
+      expect(partOf(firstWeekRow(container)?.firstElementChild)).toBe("weekNumber");
+    });
+
+    it("removes a hidden heading", () => {
+      const { container } = withDisplay({ showHeading: false });
+      expect(container.querySelector('[data-preview-part="heading"]')).toBeNull();
+    });
+
+    it("hides the weekday row from view but keeps its names", () => {
+      const { container } = withDisplay({ showWeekdays: false });
+      const header = rowsOf(container)[0];
+      expect(header?.classList.contains("appearance-preview__row--visually-hidden")).toBe(true);
+      expect(header?.querySelectorAll('[data-preview-part="weekday"]')).toHaveLength(7);
+    });
+
+    it("moves week numbers to the right", () => {
+      const { container } = withDisplay({ weekPlacement: "right" });
+      expect(partOf(firstWeekRow(container)?.lastElementChild)).toBe("weekNumber");
+      expect(partOf(firstWeekRow(container)?.firstElementChild)).toBe("date");
+      expect(container.querySelector<HTMLElement>(".appearance-preview__grid")?.dataset.weeks).toBe("right");
+    });
+
+    it("drops week numbers placed nowhere", () => {
+      const { container } = withDisplay({ weekPlacement: "none" });
+      expect(container.querySelector('[data-preview-part="weekNumber"]')).toBeNull();
+      expect(container.querySelector(".appearance-preview__weekday-spacer")).toBeNull();
+      expect(container.querySelector<HTMLElement>(".appearance-preview__grid")?.dataset.weeks).toBeUndefined();
+    });
+
+    it("blanks hidden outside days", () => {
+      const shown = withDisplay({});
+      const outsideCount = shown.container.querySelectorAll("[data-outside]").length;
+      shown.unmount();
+
+      const { container } = withDisplay({ outsideDays: "hidden" });
+      expect(container.querySelector("[data-outside]")).toBeNull();
+      const blanks = container.querySelectorAll(".appearance-preview__day--blank");
+      expect(outsideCount).toBeGreaterThan(0);
+      expect(blanks).toHaveLength(outsideCount);
+      for (const blank of blanks) expect(blank.textContent?.trim()).toBe("");
+    });
+
+    it("shows inert outside days without the open note's or a control's states", () => {
+      const { container } = withDisplay({ outsideDays: "inert" });
+      const outside = [...container.querySelectorAll<HTMLElement>('[data-preview-part="date"][data-outside]')];
+      expect(outside.length).toBeGreaterThan(0);
+      for (const cell of outside) {
+        expect(cell.dataset.inactive).toBe("true");
+        expect(cell.getAttribute("role")).toBeNull();
+      }
+    });
+
+    it("pads to six rows", () => {
+      const fit = withDisplay({});
+      const fitRows = rowsOf(fit.container).length - 1;
+      fit.unmount();
+
+      const { container } = withDisplay({ monthRows: "six" });
+      expect(fitRows).toBeLessThan(6);
+      expect(rowsOf(container).length - 1).toBe(6);
+    });
+  });
+
+  it("a click on a day offers Month grid last", () => {
+    const { container } = render(AppearancePreview, { props: { width: "wide" } });
+    expect(partsAt(cellAt(container, "2026-05-20")).at(-1)).toBe("grid");
+    const weekNumber = container.querySelector('[data-preview-part="weekNumber"]');
+    if (!weekNumber) throw new Error("no week number");
+    expect(partsAt(weekNumber).at(-1)).toBe("grid");
+    const heading = container.querySelector('[data-preview-part="heading"] .notes-calendar-cell');
+    if (!heading) throw new Error("no heading");
+    expect(partsAt(heading)).not.toContain("grid");
   });
 
   it("sizes the narrow preview to 260px", () => {

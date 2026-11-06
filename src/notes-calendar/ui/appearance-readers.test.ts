@@ -10,8 +10,11 @@ const GRID_PARTS = ["heading", "weekday", "week-number", "date", "cell-gap"];
 
 // Each grid renders its own heading, weekday header, week numbers, dates and gaps, so each has to read
 // them — the editor's preview grid included; the highlights and the cell box live in the cell alone.
+// A month grid's blank (hidden outside) day is no cell, yet must hold a cell's row height, so the
+// month grids read the cell's min height and label padding for it too.
 function renderers(entry: CatalogEntry): readonly Component[] {
   const part = entry.name.replace(/^journal-cell-/, "");
+  if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix)
     ? ["monthView", "weekView", "preview"]
     : ["cell"];
@@ -23,7 +26,31 @@ const cases = appearanceCatalog.flatMap((entry) =>
 
 describe("calendar appearance readers", () => {
   it("assigns every catalog entry to the components that render it", () => {
-    expect(appearanceCatalog.filter((entry) => renderers(entry).length === 3).length).toBe(21);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(21);
+  });
+
+  it.each([
+    ["monthView", ".notes-month-view__day--blank"],
+    ["preview", ".appearance-preview__day--blank"],
+  ] as const)("%s holds a blank day at a cell's row height", (component, selector) => {
+    const rule = components[component].find(
+      (candidate) => candidate.container === null && candidate.selector === selector,
+    );
+    expect(rule?.declarations.get("min-height")).toBe(
+      "max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)))",
+    );
+  });
+
+  // Where nested grid tracks are unsupported the weekday row falls back to `display: contents`, which has no box to clip.
+  it.each([
+    ["monthView", ".notes-month-view__row--visually-hidden"],
+    ["preview", ".appearance-preview__row--visually-hidden"],
+  ] as const)("%s gives a hidden weekday row a box over the display-contents fallback", (component, selector) => {
+    const rules = components[component];
+    const hidden = rules.findIndex((rule) => rule.selector === selector);
+    const fallback = rules.findIndex((rule) => rule.declarations.get("display") === "contents");
+    expect(rules[hidden]?.declarations.get("display")).toBe("block");
+    expect(hidden).toBeGreaterThan(fallback);
   });
 
   it.each(cases)(
