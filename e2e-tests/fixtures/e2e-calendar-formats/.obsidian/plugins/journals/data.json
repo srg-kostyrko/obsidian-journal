@@ -1,0 +1,69 @@
+{
+  "version": 8,
+  "logging": {
+    "level": "debug"
+  },
+  "calendar": {
+    "mode": "custom",
+    "dow": 0,
+    "doy": 6,
+    "global": false
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
+    }
+  },
+  "views": {
+    "5e1f8a3c-2b4d-4c6e-8f0a-1b2c3d4e5f60": {
+      "id": "5e1f8a3c-2b4d-4c6e-8f0a-1b2c3d4e5f60",
+      "name": "Formats target",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "6f2a9b4d-3c5e-4d7f-9a1b-2c3d4e5f6071",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "default",
+            "showHeading": "default",
+            "showWeekdays": "default",
+            "outsideDays": "default",
+            "monthRows": "default"
+          }
+        }
+      ]
+    }
+  }
+}
