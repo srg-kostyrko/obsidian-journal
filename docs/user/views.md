@@ -239,7 +239,7 @@ value.
 ### What each part offers
 
 The controls are headed by the part's name and the width they apply to, **All widths** or
-**Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Text**, **Highlight** or
+**Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Label**, **Text**, **Highlight** or
 **Box**), each open to start with and folded away by clicking its name. Every one but a highlight's **Style** shows, beneath its name, the
 CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
 **Narrow**, the name shown is the narrow one, ending in `-narrow`.
@@ -300,6 +300,40 @@ cannot be selected with **Shift**+click, and the keyboard skips them. Out of the
 A Month calendar or Week calendar block and a
 [timeline](/reference/code-blocks) can override these per block.
 
+### Label
+
+Four text parts open with a **Label** section, after **Visibility**, that sets the
+[moment format](https://momentjs.com/docs/#/displaying/format/) of what they show:
+
+- **Month heading** — **Month format**, **Quarter format** and **Year format**, for the headings of month, quarter and year grids.
+- **Weekday header** — **Format**, for the weekday names.
+- **Week numbers** — **Format**, for the week numbers.
+- **Date number** — **Format**, for the number in each day.
+
+Each format is a text box. An empty box means the default, which the box shows as its placeholder; typing
+the default pattern, or choosing it from the suggestions, stores an empty box too, so the part still
+counts as unchanged. Beneath the box, **Suggestions** is a list of ready-made patterns, each shown as the
+pattern and a sample of today, such as `MMM — Nov`; choosing one fills the box. **Preview** shows
+today formatted with what is in the box, and a link opens the **moment.js format reference**.
+
+The weekday's suggestions include **One letter**, which shows the locale's narrow weekday, such as
+`M` for Monday in English. It is a choice, not a pattern: the box stays empty, and no typed text can
+mean it.
+
+The weekday is the only label with a value of its own at narrow width. Under **Narrow**, its box and
+suggestions edit the format used by narrow calendars, and **Same as wide** in the list, or clearing the
+box, makes narrow calendars use the wide format again. Out of the box the narrow weekday is the same as
+wide. The other formats have a single value and carry an **All widths** note under both widths.
+
+The week numbers' **Format** warns when it contains the ISO week tokens `W` or `WW` and the week grid is
+not ISO, because those count ISO weeks, which can differ from the weeks the calendar's rows show. The
+suggestions leave them out; `w` and `ww` follow the grid.
+
+A format applies wherever a calendar draws that period, in views, in
+[timelines](/reference/code-blocks) and in their headings. It changes only the text on screen: a screen
+reader still reads the full date, and the full weekday name. A day label too long for its cell is cut
+with an ellipsis rather than widening the grid. Formats are set here only; a block cannot override them.
+
 ### Unchanged
 
 A highlight's **Text color**, **Text weight** and **Text italic** can be **Unchanged**: this highlight
@@ -322,7 +356,9 @@ to its name. Click the tag to remove that value, so the all-widths value applies
 The button beside the part's name, above its controls, resets that part for the width you are editing:
 **Reset to default** under **Wide** puts the part's all-widths values back to their defaults, and
 **Reset narrow overrides** under **Narrow** removes the part's narrow-only values and leaves the
-all-widths ones alone. Either is dimmed when there is nothing to reset.
+all-widths ones alone. Under **Narrow**, the **Weekday header** also clears its narrow weekday format, so
+it follows the wide one. Under **Wide**, **Reset to default** also puts the part's formats back to their
+defaults. Either is dimmed when there is nothing to reset.
 
 ### Changing it with a CSS snippet
 
