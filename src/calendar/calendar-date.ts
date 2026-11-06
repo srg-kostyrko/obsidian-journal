@@ -48,7 +48,10 @@ export class CalendarDate {
   }
 
   toJSDate(): Date {
-    return new Date(this.year, this.month - 1, this.day);
+    // The multi-argument constructor reads years 0–99 as 1900–1999; setFullYear takes the year as given.
+    const date = new Date(2000, 0, 1);
+    date.setFullYear(this.year, this.month - 1, this.day);
+    return date;
   }
 
   format(pattern: string): string {
