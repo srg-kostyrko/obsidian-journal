@@ -28,7 +28,10 @@ describe("tasksBlockSchema", () => {
 
   it("fails a status condition naming a status the status key would not take, rather than matching nothing", () => {
     const misspelled = { conditions: [{ type: "status", condition: "is-not", statuses: ["finished"] }] };
-    expect(v.safeParse(tasksBlockSchema, misspelled).success).toBe(false);
+    const result = v.safeParse(tasksBlockSchema, misspelled);
+    expect(result.success).toBe(false);
+    // The block lists each issue's message, so the misspelled name itself has to be in one.
+    expect(result.issues?.map((issue) => issue.message).join("\n")).toContain('"finished"');
     const known = { conditions: [{ type: "status", condition: "is", statuses: ["open", "on-hold"] }] };
     expect(v.safeParse(tasksBlockSchema, known).success).toBe(true);
   });
@@ -118,7 +121,7 @@ describe("toTaskQuery", () => {
     const parsed = v.parse(tasksBlockSchema, { heading: "## Tasks", status: "done" });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
-      { type: "heading", condition: "under", headings: ["Tasks"] },
+      { type: "heading", condition: "under", headings: ["## Tasks", "Tasks"] },
     ]);
   });
 
@@ -126,19 +129,33 @@ describe("toTaskQuery", () => {
     const parsed = v.parse(tasksBlockSchema, { tag: "#work", heading: "## Tasks", status: "done" });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
-      { type: "heading", condition: "under", headings: ["Tasks"] },
+      { type: "heading", condition: "under", headings: ["## Tasks", "Tasks"] },
       { type: "tag", condition: "has", tags: ["#work"] },
     ]);
   });
 
   // headingsOf() (src/tasks/note-structure.ts) compares against Obsidian's own HeadingCache.heading,
   // which never carries the markdown "#" — so `## Tasks`, the spelling a user's own note shows, must
-  // mean the same heading as `Tasks`, or it parses cleanly and matches nothing, silently.
-  it("normalizes a heading written with its ATX # prefix to the same condition as the bare text", () => {
-    const withHash = toTaskQuery(v.parse(tasksBlockSchema, { heading: "## Tasks" }));
-    const bare = toTaskQuery(v.parse(tasksBlockSchema, { heading: "Tasks" }));
-    expect(withHash.filter.conditions).toEqual(bare.filter.conditions);
-    expect(withHash.filter.conditions).toContainEqual({ type: "heading", condition: "under", headings: ["Tasks"] });
+  // also match the heading `Tasks`, or it parses cleanly and matches nothing, silently.
+  it("matches a heading written with its ATX # prefix as the bare text too", () => {
+    const parsed = v.parse(tasksBlockSchema, { heading: "## Tasks" });
+    expect(toTaskQuery(parsed).filter.conditions).toContainEqual({
+      type: "heading",
+      condition: "under",
+      headings: ["## Tasks", "Tasks"],
+    });
+  });
+
+  // A heading `## # Work` has the text `# Work`; stripping alone would make it unreachable.
+  it("keeps a heading as written beside its stripped spelling, so text that starts with '# ' still matches", () => {
+    const parsed = v.parse(tasksBlockSchema, {
+      heading: "# Work",
+      conditions: [{ type: "heading", condition: "not-under", headings: ["# Work"] }],
+    });
+    expect(toTaskQuery(parsed).filter.conditions).toEqual([
+      { type: "heading", condition: "under", headings: ["# Work", "Work"] },
+      { type: "heading", condition: "not-under", headings: ["# Work", "Work"] },
+    ]);
   });
 
   // metadataCache tags always carry the leading "#" — the fence must accept the spelling without
@@ -165,7 +182,7 @@ describe("toTaskQuery", () => {
   it("normalizes every entry of a heading or tag list, not just a lone value", () => {
     const parsed = v.parse(tasksBlockSchema, { heading: ["## Tasks", "# Personal"], tag: ["work", "#home"] });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
-      { type: "heading", condition: "under", headings: ["Tasks", "Personal"] },
+      { type: "heading", condition: "under", headings: ["## Tasks", "Tasks", "# Personal", "Personal"] },
       { type: "tag", condition: "has", tags: ["#work", "#home"] },
     ]);
   });
@@ -208,7 +225,7 @@ describe("toTaskQuery", () => {
     });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
       { type: "tag", condition: "lacks", tags: ["#routine", "#home"] },
-      { type: "heading", condition: "not-under", headings: ["Habits", "#1 priority"] },
+      { type: "heading", condition: "not-under", headings: ["## Habits", "Habits", "#1 priority"] },
       { type: "status", condition: "is-not", statuses: ["done"] },
     ]);
   });

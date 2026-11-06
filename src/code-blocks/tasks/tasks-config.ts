@@ -32,11 +32,14 @@ const statusList = v.pipe(fenceList, v.array(statusName));
 
 // The shared condition schema takes any status string, because stored settings must survive one a
 // later version adds. A fence has no such reader to protect, and a misspelled name there would
-// match nothing under `is` and everything under `is-not`, so it fails as the `status:` key does.
-const fenceCondition = v.pipe(
-  taskConditionSchema,
-  v.check((condition) => condition.type !== "status" || condition.statuses.every((name) => v.is(statusName, name))),
-);
+// match nothing under `is` and everything under `is-not`, so it fails as the `status:` key does —
+// per name, so the block's error quotes the name it could not read.
+const [tagCondition, headingCondition, statusCondition] = taskConditionSchema.options;
+const fenceCondition = v.variant("type", [
+  tagCondition,
+  headingCondition,
+  v.object({ ...statusCondition.entries, statuses: v.optional(v.array(statusName), []) }),
+]);
 
 // Raw and flat, one field per fence key, kept 1:1 with what the user writes — `tasksBlockKeys`
 // below is derived straight from this object, so a key added here is a key the fence recognizes.
@@ -73,12 +76,12 @@ export type TasksFenceConfig = v.InferOutput<typeof tasksBlockSchema>;
 
 // headingsOf() (src/tasks/note-structure.ts) compares against Obsidian's own HeadingCache.heading,
 // which never carries the markdown "#" — so `## Tasks`, the spelling a user's own note shows and the
-// one they will reach for first, must mean the same heading as `Tasks`, or it parses cleanly and
-// matches nothing, with no error to say why. Stripped only when a run of "#" is followed by
-// whitespace: that shape is unambiguously the ATX marker, so a heading whose own text starts with
-// "#" and no following space — not markdown syntax — survives untouched.
-function normalizeHeading(heading: string): string {
-  return heading.replace(/^#+\s+/, "");
+// one they will reach for first, must also match `Tasks`, or it parses cleanly and matches nothing,
+// with no error to say why. The written text is kept beside the stripped one rather than replaced:
+// a heading `## # Work` has the text `# Work`, which stripping alone would make unreachable.
+function headingSpellings(heading: string): string[] {
+  const bare = heading.replace(/^#+\s+/, "");
+  return bare === heading ? [heading] : [heading, bare];
 }
 
 // The mirror case: metadataCache tags always carry the leading "#", so a tag named without one must
@@ -94,7 +97,7 @@ function normalizeTag(tag: string): string {
 function normalizeCondition(condition: TaskCondition): TaskCondition {
   return match(condition)
     .with({ type: "tag" }, (c) => ({ ...c, tags: c.tags.map(normalizeTag) }))
-    .with({ type: "heading" }, (c) => ({ ...c, headings: c.headings.map(normalizeHeading) }))
+    .with({ type: "heading" }, (c) => ({ ...c, headings: c.headings.flatMap(headingSpellings) }))
     .with({ type: "status" }, (c) => c)
     .exhaustive();
 }
@@ -115,7 +118,7 @@ export function toTaskQuery(raw: TasksFenceConfig): TaskQuery {
   // condition on every fence, however bare.
   if (raw.status !== undefined) conditions.push({ type: "status", condition: "is", statuses: raw.status });
   if (raw.heading !== undefined) {
-    conditions.push({ type: "heading", condition: "under", headings: raw.heading.map(normalizeHeading) });
+    conditions.push({ type: "heading", condition: "under", headings: raw.heading.flatMap(headingSpellings) });
   }
   if (raw.tag !== undefined) conditions.push({ type: "tag", condition: "has", tags: raw.tag.map(normalizeTag) });
   conditions.push(...raw.conditions.map(normalizeCondition));
