@@ -38,7 +38,41 @@ describe("calendarDisplaySlice", () => {
       showWeekdays: true,
       outsideDays: "automatic",
       monthRows: "fit",
+      labels: { day: "", week: "", month: "", quarter: "", year: "" },
+      weekdayLabel: { type: "pattern", pattern: "" },
+      weekdayLabelNarrow: null,
     });
+  });
+
+  it("repairs a non-string label to empty and keeps the other labels", async () => {
+    const harness = await testContainer({
+      modules: [calendarSettingsCoreModule],
+      data: { calendarDisplay: { labels: { day: 42, week: "w" } } },
+      allow: { dataRepair: true },
+    });
+    const state = harness.settings.getSlice(calendarDisplaySlice).state;
+    expect(state.labels.day).toBe("");
+    expect(state.labels.week).toBe("w");
+  });
+
+  it("repairs an unknown weekdayLabel shape to the stock label", async () => {
+    const harness = await testContainer({
+      modules: [calendarSettingsCoreModule],
+      data: { calendarDisplay: { weekdayLabel: { type: "nope" }, weekPlacement: "right" } },
+      allow: { dataRepair: true },
+    });
+    const state = harness.settings.getSlice(calendarDisplaySlice).state;
+    expect(state.weekdayLabel).toEqual({ type: "pattern", pattern: "" });
+    expect(state.weekPlacement).toBe("right");
+  });
+
+  it("accepts the letter weekday label", () => {
+    const parsed = v.parse(calendarDisplaySliceSchema, {
+      weekdayLabel: { type: "letter" },
+      weekdayLabelNarrow: { type: "letter" },
+    });
+    expect(parsed.weekdayLabel).toEqual({ type: "letter" });
+    expect(parsed.weekdayLabelNarrow).toEqual({ type: "letter" });
   });
 
   it("repairs a stored unknown outsideDays to automatic and keeps the other fields", async () => {

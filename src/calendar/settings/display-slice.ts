@@ -5,7 +5,20 @@ import { defineSlice } from "@/settings";
 export type WeekPlacement = "none" | "left" | "right";
 export type OutsideDays = "automatic" | "interactive" | "inert" | "hidden";
 export type MonthRows = "fit" | "six";
+export type WeekdayLabel = { type: "pattern"; pattern: string } | { type: "letter" };
+export type LabelKind = "day" | "week" | "month" | "quarter" | "year";
+export type Labels = Record<LabelKind, string>;
 export type OutsideDates = "active" | "inactive" | "blank";
+
+const labelField = v.optional(v.string(), "");
+
+const weekdayLabelSchema = v.variant("type", [
+  v.object({ type: v.literal("pattern"), pattern: v.optional(v.string(), "") }),
+  v.object({ type: v.literal("letter") }),
+]);
+
+const STOCK_LABELS: Labels = { day: "", week: "", month: "", quarter: "", year: "" };
+const STOCK_WEEKDAY_LABEL: WeekdayLabel = { type: "pattern", pattern: "" };
 
 export const calendarDisplaySliceSchema = v.object({
   weekPlacement: v.optional(v.picklist(["none", "left", "right"]), "left"),
@@ -16,6 +29,14 @@ export const calendarDisplaySliceSchema = v.object({
   showWeekdays: v.optional(v.boolean(), true),
   outsideDays: v.optional(v.picklist(["automatic", "interactive", "inert", "hidden"]), "automatic"),
   monthRows: v.optional(v.picklist(["fit", "six"]), "fit"),
+  // An empty string is "the default pattern for that period kind".
+  labels: v.optional(
+    v.object({ day: labelField, week: labelField, month: labelField, quarter: labelField, year: labelField }),
+    STOCK_LABELS,
+  ),
+  weekdayLabel: v.optional(weekdayLabelSchema, STOCK_WEEKDAY_LABEL),
+  // null is "same as the wide label".
+  weekdayLabelNarrow: v.optional(v.nullable(weekdayLabelSchema), null),
 });
 
 export type CalendarDisplaySliceState = v.InferOutput<typeof calendarDisplaySliceSchema>;
@@ -30,5 +51,8 @@ export const calendarDisplaySlice = defineSlice<"calendarDisplay", typeof calend
     showWeekdays: true,
     outsideDays: "automatic",
     monthRows: "fit",
+    labels: STOCK_LABELS,
+    weekdayLabel: STOCK_WEEKDAY_LABEL,
+    weekdayLabelNarrow: null,
   },
 );

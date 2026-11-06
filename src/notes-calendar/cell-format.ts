@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 
-import type { PeriodKind } from "@/calendar";
+import { activeLocale, type CalendarDate, type Labels, type PeriodKind, type WeekdayLabel } from "@/calendar";
+import { formatHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 
 export function defaultFormatPattern(kind: PeriodKind): string {
   return match(kind)
@@ -25,4 +26,28 @@ export function accessibleFormatPattern(kind: PeriodKind): string {
     .with("year", () => "YYYY")
     .with("decade", () => "YYYY")
     .exhaustive();
+}
+
+export function labelPattern(labels: Labels, kind: PeriodKind): string {
+  const stored = labels[kind === "decade" ? "year" : kind];
+  return stored === "" ? defaultFormatPattern(kind) : stored;
+}
+
+export function formatWeekday(date: CalendarDate, label: WeekdayLabel): string {
+  if (label.type === "pattern") {
+    return date.format(label.pattern || "ddd");
+  }
+  const locale = activeLocale();
+  try {
+    return new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(date.toJSDate());
+  } catch (error) {
+    if (!(error instanceof RangeError)) {
+      throw error;
+    }
+    return new Intl.DateTimeFormat(undefined, { weekday: "narrow" }).format(date.toJSDate());
+  }
+}
+
+export function weekFormatNeedsIsoWarning(pattern: string, isIso: boolean): boolean {
+  return !isIso && formatHasWrongWeek(pattern);
 }

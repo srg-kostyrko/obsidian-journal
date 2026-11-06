@@ -47,6 +47,10 @@ export class CalendarDate {
     return this.#anchor;
   }
 
+  toJSDate(): Date {
+    return new Date(this.year, this.month - 1, this.day);
+  }
+
   format(pattern: string): string {
     return localMoment(this.#anchor, ANCHOR_FORMAT, true).format(pattern);
   }
