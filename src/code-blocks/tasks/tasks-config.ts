@@ -30,6 +30,14 @@ const fenceList = v.pipe(
 const statusName = v.picklist([...TASK_STATUSES, ...Object.keys(STATUS_ALIASES)]);
 const statusList = v.pipe(fenceList, v.array(statusName));
 
+// The shared condition schema takes any status string, because stored settings must survive one a
+// later version adds. A fence has no such reader to protect, and a misspelled name there would
+// match nothing under `is` and everything under `is-not`, so it fails as the `status:` key does.
+const fenceCondition = v.pipe(
+  taskConditionSchema,
+  v.check((condition) => condition.type !== "status" || condition.statuses.every((name) => v.is(statusName, name))),
+);
+
 // Raw and flat, one field per fence key, kept 1:1 with what the user writes — `tasksBlockKeys`
 // below is derived straight from this object, so a key added here is a key the fence recognizes.
 const rawEntries = {
@@ -41,7 +49,7 @@ const rawEntries = {
   tag: v.optional(fenceList),
   sort: sortEntry,
   date: dateEntry,
-  conditions: v.optional(v.array(taskConditionSchema), () => [] as TaskCondition[]),
+  conditions: v.optional(v.array(fenceCondition), () => [] as TaskCondition[]),
 };
 
 // Derived from the entries so the two can never drift: the block reports any other key as

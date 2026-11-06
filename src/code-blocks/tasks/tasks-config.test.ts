@@ -26,6 +26,13 @@ describe("tasksBlockSchema", () => {
     });
   });
 
+  it("fails a status condition naming a status the status key would not take, rather than matching nothing", () => {
+    const misspelled = { conditions: [{ type: "status", condition: "is-not", statuses: ["finished"] }] };
+    expect(v.safeParse(tasksBlockSchema, misspelled).success).toBe(false);
+    const known = { conditions: [{ type: "status", condition: "is", statuses: ["open", "on-hold"] }] };
+    expect(v.safeParse(tasksBlockSchema, known).success).toBe(true);
+  });
+
   it("reports its own keys, in desugar order", () => {
     expect(tasksBlockKeys).toEqual([
       "provider",

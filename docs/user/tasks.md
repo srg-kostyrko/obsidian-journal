@@ -376,8 +376,9 @@ conditions:
 ````
 
 Each entry names its `type`, a `condition` that says how it compares, and the list it compares
-against. A task meets the first `condition` of each pair when it matches any item in the list, and the
-second when it matches none; leave `condition` out and the first applies.
+against, written as a list even when it holds one item. A task meets the first `condition` of each pair
+when it matches any item in the list, and the second when it matches none; leave `condition` out and
+the first applies.
 
 | `type`    | `condition`            | List       | Values                                                                   |
 | --------- | ---------------------- | ---------- | ------------------------------------------------------------------------ |
@@ -385,8 +386,8 @@ second when it matches none; leave `condition` out and the first applies.
 | `heading` | `under` or `not-under` | `headings` | `## Tasks` or bare `Tasks`, as for `heading:`                            |
 | `status`  | `is` or `is-not`       | `statuses` | the names `status:` takes, the aliases `open`, `done` and `all` included |
 
-An entry with an empty list holds for every task. A `condition` the table does not name shows an error
-in the block rather than a list.
+A `condition` the table does not name, or a status name `status:` would not take, shows an error in the
+block rather than a list.
 
 All of a fence's conditions, however they got there, are combined with **and** — there is no `mode` key
 to switch a fence to matching any one condition instead.
