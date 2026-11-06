@@ -17,7 +17,7 @@ function presetUseButton(preset: string): string {
 
 // calendar.mode=custom with dow=1 calls moment.updateLocale(week.dow=1) at boot (CalendarSettingsBridge),
 // which rotates the weekday header so Monday leads. NotesMonthView builds its weekday labels from
-// moment's localeData via .format("ddd"); the first .notes-month-view__weekday must read "Mon". This
+// moment's localeData via .format("ddd"); the first weekday header must read "Mon". This
 // is a global moment-locale effect that a unit/component test cannot exercise through real rendering.
 describe("calendar locale", () => {
   before(async () => {
@@ -63,8 +63,9 @@ describe("calendar locale", () => {
     const grid = `${TIMELINE_BLOCK} .notes-month-view`;
     await renderBlock("timeline/week-preset.md", plainNote(TIMELINE_FENCE), grid);
     // Reading mode can mount the block in more than one render context; the first copy is
-    // offscreen, where getText() reads empty, so scope to one grid and read textContent.
-    const firstWeekday = $(`${grid} .notes-month-view__weekday`);
+    // offscreen, where getText() reads empty, so scope to one grid and read textContent. The header holds
+    // a wide and a narrow text, and textContent ignores which one shows, so read the wide one alone.
+    const firstWeekday = $(`${grid} .notes-month-view__weekday-wide`);
     await firstWeekday.waitForExist({ timeoutMsg: "the timeline weekday header did not render" });
     const weekdayLabel = async (): Promise<string> => String(await firstWeekday.getProperty("textContent")).trim();
     expect(await weekdayLabel()).toBe("Sun");
