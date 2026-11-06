@@ -202,6 +202,24 @@ describe("AppearancePreview", () => {
       expect(picked(container)).toEqual(weekNumbers);
     });
 
+    it("outlines the month grid", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "grid" } });
+      expect(picked(container)).toEqual([container.querySelector(".appearance-preview__grid")]);
+    });
+
+    it("outlines hidden outside days through their blanks", () => {
+      const { container } = render(AppearancePreview, {
+        props: {
+          width: "wide",
+          picked: "outside",
+          display: { ...calendarDisplaySlice.defaults, outsideDays: "hidden" },
+        },
+      });
+      const blanks = [...container.querySelectorAll<HTMLElement>(".appearance-preview__day--blank")];
+      expect(blanks.length).toBeGreaterThan(0);
+      expect(picked(container)).toEqual(blanks);
+    });
+
     it("outlines both heading cells", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "heading" } });
       const heading = container.querySelector('[data-preview-part="heading"]');

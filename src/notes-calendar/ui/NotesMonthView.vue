@@ -385,7 +385,22 @@ const isSelected = (period: Period): boolean =>
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
+/* A hidden outside day is no cell, so it reads the cell's row height itself; a padded week of blanks
+   would otherwise collapse when no week number holds the row open. */
+.notes-month-view__day--blank {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  min-height: var(--_v-cell-min-height);
+}
 @container journal-calendar (max-width: 28em) {
+  .notes-month-view__day--blank {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(
+        --journal-saved-cell-cell-min-height-narrow,
+        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
+      )
+    );
+  }
   .notes-month-view__header {
     --_v-heading-size: var(
       --journal-cell-heading-size-narrow,

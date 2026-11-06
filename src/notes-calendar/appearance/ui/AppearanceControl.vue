@@ -9,5 +9,6 @@ const { part, control, width } = defineProps<{ part: PartKey; control: Control; 
 
 <template>
   <AppearanceStructureControl v-if="isStructure(control)" :control="control" />
+  <!-- Narrows the part for the value control's props; the grid has no value control to reach here. -->
   <AppearanceValueControl v-else-if="part !== 'grid'" :part="part" :control="control" :width="width" />
 </template>
