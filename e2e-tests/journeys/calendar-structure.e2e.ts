@@ -8,6 +8,8 @@ import { waitForState } from "../support/wait.js";
 
 import { hostNote, openInReadingMode, VISIBLE_LEAF } from "./code-blocks.js";
 
+import type { EventRef } from "obsidian";
+
 // The fixture starts weeks on Monday. Today is pinned past every month the cases read, so no case
 // reads the current month: the view pages back to April 2027 (outside days at both ends: 29–31
 // March and 1–2 May) and then to February 2027 (four whole weeks, no outside day at all).
@@ -29,6 +31,7 @@ const PREVIOUS_MONTH = `${ROOT} [aria-label="Structure previous month"]`;
 // The view's two month blocks, in fixture order: the first follows every global (and shows no week
 // numbers), the second pins its heading shown and its outside days interactive.
 type Block = 0 | 1;
+// Block 0's fixture `weeks: "none"` is for the six-rows case: with no week number, only the blanks hold a padded row open.
 const DEFAULT_BLOCK: Block = 0;
 const OVERRIDE_BLOCK: Block = 1;
 const BLOCK = `${ROOT} .journal-view-month-calendar`;
@@ -48,8 +51,8 @@ interface GridRead {
   readonly headings: number;
 }
 
-class GridReadError extends Error {
-  override name = "GridReadError";
+class StructureReadError extends Error {
+  override name = "StructureReadError";
 }
 
 // One round trip per read, so every field describes the same frame.
@@ -88,7 +91,7 @@ async function waitForBlock(block: Block, accept: (read: GridRead) => boolean, m
     accept,
     message,
   ).catch((error: unknown) => {
-    throw new GridReadError(`${message}: read ${JSON.stringify(last)}`, { cause: error });
+    throw new StructureReadError(`${message}: read ${JSON.stringify(last)}`, { cause: error });
   });
   return last as unknown as GridRead;
 }
@@ -198,19 +201,40 @@ function weekRowHeights(block: Block): Promise<number[]> {
 const sameAnchors = (read: readonly string[], expected: readonly string[]): boolean =>
   read.length === expected.length && expected.every((anchor) => read.includes(anchor));
 
-function noLeafHolds(path: string): Promise<boolean> {
-  return browser.executeObsidian(
-    ({ app }, notePath) =>
-      app.workspace.getLeavesOfType("markdown").every((leaf) => {
-        const view = leaf.view as { file?: { path: string } | null };
-        return view.file?.path !== notePath;
-      }),
-    path,
-  );
+interface OpenRecorder {
+  e2eOpened?: string[];
+  e2eOpenRecorder?: EventRef;
 }
 
-// The cases build on one another's settings: the global outside days stay hidden from the first
-// case on, and the heading from the third, so running a single case with --grep is not supported.
+// Every file opened from here on, in order: a later open into the same leaf replaces an earlier
+// one, so the leaves alone cannot say whether a note was ever opened.
+async function recordOpens(): Promise<void> {
+  await browser.executeObsidian(({ app }) => {
+    const host = window as unknown as OpenRecorder;
+    host.e2eOpened = [];
+    host.e2eOpenRecorder = app.workspace.on("file-open", (file) => {
+      host.e2eOpened?.push(file?.path ?? "");
+    });
+  });
+}
+
+function openedSoFar(): Promise<string[]> {
+  return browser.execute(() => [...((window as unknown as OpenRecorder).e2eOpened ?? [])]);
+}
+
+async function stopRecordingOpens(): Promise<string[]> {
+  return browser.executeObsidian(({ app }) => {
+    const host = window as unknown as OpenRecorder;
+    if (host.e2eOpenRecorder !== undefined) app.workspace.offref(host.e2eOpenRecorder);
+    const opened = host.e2eOpened ?? [];
+    delete host.e2eOpened;
+    delete host.e2eOpenRecorder;
+    return opened;
+  });
+}
+
+// The timeline case reads the global outside days the first case hid, and every case pages one
+// view, so running a single case with --grep is not supported.
 describe("calendar structure: the global default and the overrides over it", () => {
   before(async () => {
     await reloadObsidianOn(PINNED_TODAY, {
@@ -276,11 +300,43 @@ describe("calendar structure: the global default and the overrides over it", () 
       expect(await $(`${TIMELINE} [data-anchor="${INSIDE_WITH_NOTE}"]`).getAttribute("data-inactive")).toBeNull();
 
       // An inert day opens nothing; the in-month click after it is the sentinel that the first
-      // click has been handled.
-      await domClick(`${TIMELINE} [data-anchor="${INERT_WITH_NOTE}"]`);
-      await domClick(`${TIMELINE} [data-anchor="${INSIDE_WITH_NOTE}"]`);
-      await waitForActiveNote(notePath(INSIDE_WITH_NOTE));
-      expect(await noLeafHolds(notePath(INERT_WITH_NOTE))).toBe(true);
+      // click has been handled. The inert click asks for a split, so a note it wrongly opened would
+      // sit beside the host instead of replacing it and taking the sentinel's cell with it.
+      await recordOpens();
+      const clicked = await browser.execute(
+        (root: string, inert: string, sentinel: string) => {
+          const cell = (anchor: string) =>
+            document.querySelector<HTMLElement>(`${root} [data-anchor="${CSS.escape(anchor)}"]`);
+          const inertCell = cell(inert);
+          inertCell?.dispatchEvent(
+            new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, ctrlKey: true, altKey: true }),
+          );
+          return inertCell !== null && cell(sentinel) !== null;
+        },
+        TIMELINE,
+        INERT_WITH_NOTE,
+        INSIDE_WITH_NOTE,
+      );
+      expect(clicked).toBe(true);
+      await browser.execute((selector: string) => {
+        document.querySelector<HTMLElement>(selector)?.click();
+      }, `${TIMELINE} [data-anchor="${INSIDE_WITH_NOTE}"]`);
+      let seen: string[] = [];
+      await waitForState(
+        async () => {
+          seen = await openedSoFar();
+          return seen;
+        },
+        (opened) => opened.includes(notePath(INSIDE_WITH_NOTE)),
+        "the in-month sentinel click opened nothing",
+      ).catch((error: unknown) => {
+        throw new StructureReadError(`the in-month sentinel click opened nothing: opened ${JSON.stringify(seen)}`, {
+          cause: error,
+        });
+      });
+      const opened = await stopRecordingOpens();
+      expect(opened).toContain(notePath(INSIDE_WITH_NOTE));
+      expect(opened).not.toContain(notePath(INERT_WITH_NOTE));
     });
   });
 
@@ -315,6 +371,11 @@ describe("calendar structure: the global default and the overrides over it", () 
     before(async () => {
       await pageBackTo("2027-03-01");
       await pageBackTo(FEBRUARY_FIRST_CELL);
+      if (await isSettingsOpen()) await closeSettings();
+      await openEditor();
+      // The height check needs the padded weeks blank, whatever the earlier cases left.
+      await chooseFromList("outside");
+      await chooseVisibility(OUTSIDE_VISIBILITY, "hidden");
     });
 
     it("Always six gives February 2027 six rows, its padded weeks as tall as a real one", async () => {
