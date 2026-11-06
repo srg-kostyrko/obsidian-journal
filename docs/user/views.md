@@ -287,19 +287,24 @@ of the grid, not a single day, and out of the box both are **None**: nothing cha
   weekend days and a button, **Change in calendar settings**, that takes you back there. Weekend days that
   are not next to each other each get a band: in a week that starts on Sunday, a Saturday and Sunday weekend
   gives one band at each edge of the grid. When a Month calendar or Week calendar block hides days with **Days of the week**, or a
-  [timeline](/reference/code-blocks) with `hiddenWeekdays`, runs are counted over the columns that remain, so with Saturday hidden, a Friday,
+  [timeline](/reference/code-blocks) with `hiddenWeekdays`, runs are counted over the columns that remain, so in a week that starts on Monday, with Saturday hidden, a Friday,
   Saturday and Sunday weekend is one band over Friday and Sunday. Hiding every weekend day leaves no band. The weekday names of a weekend column
   take the band's text color, weight and italic, but not its fill.
-- **Current week** draws one band across the row that holds today, the week number included, and its text
-  color, weight and italic apply to the week number too. There is no band when today is a day outside the
-  month that the grid hides, and a Week calendar block, which shows a single week, never draws one. A
-  timeline that shows a single week does.
+- **Current week** draws one band across the row that holds today, the week number included. Its text weight
+  and italic apply to the week number too. Its text color does not out of the box: the week number holds today,
+  so it is also today, and today's text color wins. Set **Today**'s **Text color** to **Unchanged** to let the
+  current week's color through; weight and italic need nothing, because today's are **Unchanged** out of the box.
+  In a grid that hides the days outside the month, any row of today's week that shows at least one day gets
+  the band, so a week split across two months of a timeline is marked in both; a row of hidden days alone
+  gets none. A Week calendar block, which shows a single week, never draws one. A timeline that shows a single
+  week does.
 
 A day that is several things at once takes its text from the order the [**Unchanged**](#unchanged)
 section lists. Like the other highlights, a band is drawn under the days by default, behind everything in them; with **Over decorations** on it is
 drawn above the whole day, so a background there also tints the day's number and its marks, not just the
-decorations.
-Because the weekend band sits below the current-week band, a day in both shows the current week's fill on top.
+decorations, and a weekend band also tints the weekday name at the head of its column.
+When both bands are under the days, or both over, the weekend band sits below the current-week band, so a day
+in both shows the current week's fill on top. A band drawn over the days sits above any band drawn under them.
 
 ### Visibility
 
