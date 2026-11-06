@@ -298,6 +298,9 @@ describe("calendar structure: the global default and the overrides over it", () 
       expect(timeline?.inertOutside).toEqual(APRIL_OUTSIDE);
       expect(timeline?.blanks).toBe(0);
       expect(await $(`${TIMELINE} [data-anchor="${INSIDE_WITH_NOTE}"]`).getAttribute("data-inactive")).toBeNull();
+      const inert = $(`${TIMELINE} [data-anchor="${INERT_WITH_NOTE}"]`);
+      expect(await inert.getAttribute("tabindex")).toBeNull();
+      expect(await inert.getAttribute("aria-disabled")).toBe("true");
 
       // An inert day opens nothing; the in-month click after it is the sentinel that the first
       // click has been handled. The inert click asks for a split, so a note it wrongly opened would
