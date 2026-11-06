@@ -82,7 +82,7 @@ describe("CalendarBlockConfigFields", () => {
     expect(onChange).toHaveBeenCalledWith({ weeks: "right" });
   });
 
-  it("offers Default, Shown and Hidden for the heading and the weekday header", async () => {
+  it("offers Use global default, Shown and Hidden for the heading and the weekday header", async () => {
     await mountFields(baseConfig, vi.fn());
     const [, heading, weekdays] = screen.getAllByRole("combobox");
     for (const select of [heading, weekdays]) {
@@ -90,7 +90,7 @@ describe("CalendarBlockConfigFields", () => {
         within(select)
           .getAllByRole("option")
           .map((option) => option.textContent),
-      ).toEqual(["Default", "Shown", "Hidden"]);
+      ).toEqual(["Use global default", "Shown", "Hidden"]);
     }
   });
 
@@ -109,7 +109,7 @@ describe("CalendarBlockConfigFields", () => {
     await mountFields({ ...baseConfig, showWeekdays: false }, onChange);
     const weekdays = screen.getAllByRole("combobox")[2];
     expect((weekdays as HTMLSelectElement).value).toBe("hidden");
-    await userEvent.selectOptions(weekdays, "Default");
+    await userEvent.selectOptions(weekdays, "Use global default");
     expect(onChange).toHaveBeenLastCalledWith({ showWeekdays: "default" });
   });
 });

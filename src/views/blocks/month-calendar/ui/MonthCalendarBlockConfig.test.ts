@@ -34,8 +34,8 @@ describe("MonthCalendarBlockConfig", () => {
   it("offers the four outside-days choices and the two row rules", async () => {
     await mountConfig(config, vi.fn());
     const [, , , outside, rows] = screen.getAllByRole("combobox");
-    expect(optionLabels(outside)).toEqual(["Default", "Interactive", "Inert", "Hidden"]);
-    expect(optionLabels(rows)).toEqual(["Default", "As needed", "Always six"]);
+    expect(optionLabels(outside)).toEqual(["Use global default", "Interactive", "Inert", "Hidden"]);
+    expect(optionLabels(rows)).toEqual(["Use global default", "As needed", "Always six"]);
   });
 
   it("writes the literal outside-days value into the full config", async () => {
