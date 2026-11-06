@@ -27,8 +27,28 @@ const WIDE = "40em";
 const V7_VIEW = "47e75fae-240a-410e-aecd-83797c50fc56";
 const V7_ROOT = `[data-journal-view="${V7_VIEW}"]`;
 
-const HIGHLIGHT_ATTRIBUTES = ["data-today", "data-selected", "data-active", "data-outside"] as const;
+const HIGHLIGHT_ATTRIBUTES = [
+  "data-today",
+  "data-selected",
+  "data-active",
+  "data-outside",
+  "data-weekend",
+  "data-current-week",
+] as const;
 type HighlightAttribute = (typeof HIGHLIGHT_ATTRIBUTES)[number];
+
+// Today always sits in the current week and may fall on a weekend, so a cell state is read on a
+// cell that may also carry a band below it: a lower state's text never wins over a higher one's.
+const BANDS_BELOW: Readonly<Partial<Record<HighlightAttribute, readonly HighlightAttribute[]>>> = {
+  "data-today": ["data-current-week", "data-weekend"],
+  "data-selected": ["data-current-week", "data-weekend"],
+  "data-active": ["data-current-week", "data-weekend"],
+  "data-current-week": ["data-weekend"],
+};
+
+function withBandsBelow(states: readonly HighlightAttribute[]): readonly HighlightAttribute[] {
+  return [...new Set(states.flatMap((state) => [state, ...(BANDS_BELOW[state] ?? [])]))];
+}
 
 class AppearanceGateError extends Error {
   override name = "AppearanceGateError";
@@ -54,13 +74,13 @@ interface ReadOptions {
 }
 
 function stateOf(entry: CatalogEntry): HighlightAttribute | undefined {
-  const state = /^journal-cell-(today|selected|active|outside)-/.exec(entry.name)?.[1];
+  const state = /^journal-cell-(today|selected|active|outside|weekend|current-week)-/.exec(entry.name)?.[1];
   return state === undefined ? undefined : (`data-${state}` as HighlightAttribute);
 }
 
 function probeOf(entry: CatalogEntry): Probe {
   const state = stateOf(entry);
-  return { ...entry.probe, allowed: state === undefined ? [] : [state] };
+  return { ...entry.probe, allowed: state === undefined ? [] : withBandsBelow([state]) };
 }
 
 // Reads each probe's computed value in the page, with every color in it, and the expected value
@@ -245,8 +265,9 @@ async function pageOffCurrentMonth(probes: readonly Probe[]): Promise<void> {
   throw new AppearanceGateError(`no month within ${MAX_MONTH_STEPS} steps has a cell for every probe`);
 }
 
-// The open note, the selection and today are staged on the current month; outside days and the
-// heading are read from a month paged off it, where nothing is today.
+// The open note, the selection, today and both bands are staged on the current month, the only one
+// with a current week; outside days and the heading are read from a month paged off it, where
+// nothing is today.
 const onCurrentMonth = (entry: CatalogEntry): boolean => {
   const state = stateOf(entry);
   return state !== undefined && state !== "data-outside";
@@ -310,7 +331,7 @@ function checkV7(
 ): Promise<void> {
   return expectProbe(
     V7_ROOT,
-    { selector, property, expect: expected, allowed },
+    { selector, property, expect: expected, allowed: withBandsBelow(allowed) },
     `${selector} ${property} is not ${expected}`,
   );
 }

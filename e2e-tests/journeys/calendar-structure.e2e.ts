@@ -1,8 +1,9 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
+import { chooseFromList, controlRowPath, openEditor } from "../support/appearance-editor.js";
 import { reloadObsidianOn } from "../support/clock.js";
-import { clickSectionButton, closeSettings, isSettingsOpen, openSettings } from "../support/settings.js";
+import { closeSettings, isSettingsOpen } from "../support/settings.js";
 import { seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -147,27 +148,6 @@ async function pageBackTo(firstCell: string): Promise<void> {
     `the view did not page to the month that starts its grid on ${firstCell}`,
   );
 }
-
-async function openEditor(): Promise<void> {
-  await openSettings();
-  await clickSectionButton(m.calendar_appearance_section_title(), m.calendar_appearance_open());
-  await $(".appearance-preview").waitForDisplayed({ timeoutMsg: "the appearance subpage showed no preview" });
-}
-
-const partsList = () => $(`//select[@id=//label[normalize-space(.)="${m.calendar_appearance_part_label()}"]/@for]`);
-
-async function chooseFromList(part: "outside" | "heading" | "grid" | "date"): Promise<void> {
-  await partsList().selectByAttribute("value", part);
-  await waitForState(
-    () => partsList().getValue(),
-    (value) => value === part,
-    `${part} did not become the edited part`,
-  );
-}
-
-// A visibility control's row, by its visible label; the "All widths" note follows it.
-const controlRowPath = (label: string): string =>
-  `//div[contains(@class,"appearance-control")][.//div[contains(@class,"setting-item-name")][starts-with(normalize-space(.), "${label}")]]`;
 
 const OUTSIDE_VISIBILITY = m.calendar_appearance_control({ control: "visibility_outside_days" });
 const HEADING_VISIBILITY = m.calendar_appearance_control({ control: "visibility_show_heading" });
