@@ -294,7 +294,7 @@ interactive ones; a timeline in `quarter` or `calendar` mode hides them. **Inert
 look but do nothing when clicked. Out of the box nothing changes.
 
 A Month calendar or Week calendar block and a
-[timeline](/reference/code-blocks#timeline-) can override these per block.
+[timeline](/reference/code-blocks) can override these per block.
 
 ### Unchanged
 
