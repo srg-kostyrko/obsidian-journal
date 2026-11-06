@@ -82,17 +82,18 @@ block shows the same span as week strips instead.
 - **Days of the week** — the days to show; turn weekends off to hide them.
 - **Week numbers** — **Use global default**, **Hidden**, **Before weekdays** or **After weekdays**. The
   global default is **Default week numbers** on the main settings page.
-- **Show month/year heading** and **Show weekday header** — **Default**, **Shown** or **Hidden**. **Default**
-  follows [Calendar appearance](#calendar-appearance), so changing the global choice there changes every
-  block left on **Default**.
-- **Days outside the month** (Month calendar only) — **Default**, **Interactive**, **Inert** or
-  **Hidden**: the neighboring months' days that fill a grid's first and last weeks are clickable and
-  decorated, shown but not clickable, or left blank.
-- **Rows** (Month calendar only) — **Default**, **As needed** or **Always six**.
+- **Show month/year heading** and **Show weekday header** — **Use global default**, **Shown** or
+  **Hidden**. **Use global default** follows [Calendar appearance](#calendar-appearance), so changing the
+  global choice there changes every block left on it.
+- **Days outside the month** (Month calendar only) — **Use global default**, **Interactive**, **Inert**
+  or **Hidden**: the neighboring months' days that fill a grid's first and last weeks are clickable and
+  decorated, shown but inert, or left blank. An inert day shows its date and nothing else: no
+  decorations, no response to a click, no selecting with **Shift**+click, and the keyboard skips it.
+- **Rows** (Month calendar only) — **Use global default**, **As needed** or **Always six**.
 
 A hidden weekday header stays available to screen readers, so the columns keep their names. A hidden
 heading is removed, since its cells have their own names. A block cannot pick **Automatic** for outside
-days itself; **Default** with the global **Automatic** is that.
+days itself; **Use global default** with the global **Automatic** is that.
 
 Each cell shows whether a note exists and carries its [decorations](/decorations). Week numbers and
 headings open that week's, month's, quarter's or year's note in whichever journal of that length is
@@ -224,14 +225,16 @@ or a week number, that label comes first, and the **Today** it contains is under
 - **Cells** — the size and spacing of every cell.
 
 An outline in the preview marks the part you are editing: every day a highlight applies to, the
-weekday names, the week numbers or the heading. **Date number** and **Cells** belong to every day, so
-they outline the day you clicked when you picked them there, by the click itself or from **Also
-here**, and every day when you chose them from **Editing**. A part that marks a single place, such as
+weekday names, the week numbers, the heading, or for **Month grid** the whole grid. **Date number**
+and **Cells** belong to every day, so they outline the day you clicked when you picked them there, by
+the click itself or from **Also here**, and every day when you chose them from **Editing**. A part that marks a single place, such as
 today, gets a bold dashed outline; a part spread over many, such as every day or the week numbers,
 gets a faint dotted one on each.
 
 A part you have changed carries a dot in **Editing** and in **Also here**. When you edit
-**Narrow**, the dot means the part has a narrow-only value.
+**Narrow**, the dot means the part has a narrow-only value. Under **Wide**, the dot on **Week
+numbers** also reflects **Default week numbers** on the main settings page, since that is the same
+value.
 
 ### What each part offers
 
@@ -274,7 +277,7 @@ narrow-only row height does not change the canvas.
 ### Visibility
 
 Some parts open with a **Visibility** section. Its choices decide what the calendar shows, not how it
-looks, so they apply at all widths: under **Narrow** they carry an **All widths** note, and
+looks, so they apply at all widths: they carry an **All widths** note under both widths, and
 **Reset to default** under **Wide** puts them back along with the part's values. They show no CSS
 variable.
 
@@ -285,13 +288,14 @@ variable.
 - **Days outside the month** — **Automatic**, **Interactive**, **Inert** or **Hidden**.
 - **Month grid** — **Rows**: **As needed** or **Always six**. A month then takes as many weeks as it
   spans, or always six, with the extra rows filled by the neighboring months' days. The extra days follow
-  **Days outside the month**: clickable and decorated when **Interactive**, shown but not clickable when
+  **Days outside the month**: clickable and decorated when **Interactive**, shown but inert when
   **Inert**, blank when **Hidden**.
 
 **Automatic** gives each calendar the behavior it has had: a Month calendar block that shows one month
 has interactive outside days; one that shows several months hides them; a timeline in `month` mode has
-interactive ones; a timeline in `quarter` or `calendar` mode hides them. **Inert** days keep their
-look but do nothing when clicked. Out of the box nothing changes.
+interactive ones; a timeline in `quarter` or `calendar` mode hides them. **Inert** days show their
+date in the outside-days style and nothing else: they carry no decorations, do nothing when clicked,
+cannot be selected with **Shift**+click, and the keyboard skips them. Out of the box nothing changes.
 
 A Month calendar or Week calendar block and a
 [timeline](/reference/code-blocks) can override these per block.

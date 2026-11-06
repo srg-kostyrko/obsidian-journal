@@ -104,9 +104,10 @@ hiddenWeekdays: [0, 6]
 `heading` and `weekdays` show or hide the headings above each grid and the row of weekday names; a
 hidden weekday header stays readable to screen readers. `outside` and `rows` apply to the grids of
 `month`, `quarter` and `calendar` modes and do nothing in `week` mode: `outside` chooses whether the
-neighboring months' days are clickable (`interactive`), shown but not clickable (`inert`) or blank
-(`hidden`), and `rows: six` gives every month six rows, `fit` only as many as it needs. A value that is
-not one of those is ignored, so the option follows Calendar appearance.
+neighboring months' days are clickable (`interactive`), shown with no decorations and no response to
+a click or the keyboard (`inert`) or blank (`hidden`), and `rows: six` gives every month six rows,
+`fit` only as many as it needs. A value that is not one of those is ignored, so the option follows
+Calendar appearance.
 
 A month grid with six rows and no days outside the month:
 
