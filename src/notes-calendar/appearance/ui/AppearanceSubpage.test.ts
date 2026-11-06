@@ -3,6 +3,7 @@ import { screen, within } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { CalendarDate } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { date } from "@/calendar/testing";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
@@ -13,9 +14,9 @@ import { appearanceSlice } from "../slice";
 
 import AppearanceSubpage from "./AppearanceSubpage.vue";
 
-import type { PartKey } from "../appearance-parts";
+import type { ValuePartKey } from "../appearance-parts";
 
-const partName = (part: PartKey): string => m.calendar_appearance_part({ part });
+const partName = (part: ValuePartKey): string => m.calendar_appearance_part({ part });
 
 function partsList(): HTMLSelectElement {
   return screen.getByRole<HTMLSelectElement>("combobox", { name: m.calendar_appearance_part_label() });
@@ -32,7 +33,7 @@ function inspectorHeading(container: Element): HTMLElement {
   return heading;
 }
 
-function partOption(part: PartKey): HTMLOptionElement {
+function partOption(part: ValuePartKey): HTMLOptionElement {
   return within(partsList()).getByRole<HTMLOptionElement>("option", { name: new RegExp(`^${partName(part)}`) });
 }
 
@@ -95,7 +96,7 @@ describe("AppearanceSubpage", () => {
   beforeEach(async () => {
     nav = { back: vi.fn(), push: vi.fn(), replace: vi.fn() };
     vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
-    harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarSettingsCoreModule] });
   });
 
   afterEach(() => {

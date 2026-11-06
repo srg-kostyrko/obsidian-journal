@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, ref, useId, useTemplateRef, type ComponentPublicInstance } from "vue";
 
+import { calendarDisplaySlice } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
@@ -16,7 +17,14 @@ import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { isModified, valueAt, visibleControls, withReset } from "../appearance-editing";
-import { PARTS, type PartKey, type Width } from "../appearance-parts";
+import {
+  isStructure,
+  PARTS,
+  type PartKey,
+  type ValueControl,
+  type ValuePartKey,
+  type Width,
+} from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -25,10 +33,12 @@ import { AppearancePreviewRootKey } from "./preview-root-key";
 
 const { nav } = defineProps<{ nav: SubpageNav }>();
 
-const slice = useService(SettingsService).getSlice(appearanceSlice);
+const settings = useService(SettingsService);
+const slice = settings.getSlice(appearanceSlice);
+const display = settings.getSlice(calendarDisplaySlice);
 
 // Reading order of the calendar, top to bottom, rather than the chips' most-specific-first order.
-const LIST_ORDER: readonly PartKey[] = [
+const LIST_ORDER: readonly ValuePartKey[] = [
   "heading",
   "weekday",
   "weekNumber",
@@ -51,18 +61,18 @@ const widthOptions = computed(() =>
   (["narrow", "wide"] as const).map((value) => ({ value, label: m.calendar_appearance_width({ width: value }) })),
 );
 
-const selected = ref<PartKey | undefined>(undefined);
-const chips = ref<readonly PartKey[]>([]);
+const selected = ref<ValuePartKey | undefined>(undefined);
+const chips = ref<readonly ValuePartKey[]>([]);
 // An "also here" chip keeps the spot, since its parts are the ones there; the list names no spot.
 const spot = ref<string | undefined>(undefined);
 
-function isPart(value: string): value is PartKey {
-  return Object.hasOwn(PARTS, value);
+function isPart(value: string): value is ValuePartKey {
+  return value !== "grid" && Object.hasOwn(PARTS, value);
 }
 function onPick(parts: readonly PartKey[], at: string | undefined): void {
-  chips.value = parts;
+  chips.value = parts.filter((part) => isPart(part));
   spot.value = at;
-  selected.value = parts.at(0);
+  selected.value = chips.value.at(0);
 }
 function onList(value: string): void {
   selected.value = isPart(value) ? value : undefined;
@@ -73,23 +83,25 @@ function onList(value: string): void {
 const others = computed(() => chips.value.filter((part) => part !== selected.value));
 // The picked chip leaves the row, taking keyboard focus with it, so focus lands on the list, which now names it.
 const list = useTemplateRef<ComponentPublicInstance>("list");
-function onChip(part: PartKey): void {
+function onChip(part: ValuePartKey): void {
   selected.value = part;
   (list.value?.$el as HTMLElement | undefined)?.focus();
 }
 const listId = useId();
 const othersId = useId();
 
-const partName = (part: PartKey): string => m.calendar_appearance_part({ part });
-const modified = (part: PartKey): boolean => isModified(slice.state, width.value, part);
+const partName = (part: ValuePartKey): string => m.calendar_appearance_part({ part });
+const modified = (part: ValuePartKey): boolean => isModified(slice.state, display.state, width.value, part);
 
 const inspected = computed(() => {
   const part = selected.value;
   if (part === undefined) return;
-  const { family } = PARTS[part];
+  const family =
+    PARTS[part].controls.find((control): control is ValueControl => !isStructure(control))?.family ?? "text";
   const style =
     family === "highlight" ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
-  return { part, family, controls: visibleControls(part, style) };
+  const controls = visibleControls(part, style).filter((control): control is ValueControl => !isStructure(control));
+  return { part, family, controls };
 });
 
 // Keyed by part, so collapsing a family on one part leaves the same family open on the next.
@@ -103,8 +115,10 @@ function setFamilyOpen(part: PartKey, family: string, open: boolean): void {
   collapsed.value = next;
 }
 
-function reset(part: PartKey): void {
-  slice.state = withReset(slice.state, width.value, part);
+function reset(part: ValuePartKey): void {
+  const next = withReset(slice.state, display.state, width.value, part);
+  slice.state = next.appearance;
+  display.state = next.display;
 }
 </script>
 

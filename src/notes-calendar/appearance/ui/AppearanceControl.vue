@@ -21,14 +21,14 @@ import {
   withNarrowCleared,
   withValue,
 } from "../appearance-editing";
-import { PARTS, roleFor, type Control, type PartKey, type Width } from "../appearance-parts";
+import { roleFor, type ValueControl, type ValuePartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, UNCHANGED, type HighlightStyle } from "../slice";
 
 import { AppearancePreviewRootKey } from "./preview-root-key";
 import { stockNumber } from "./stock-number";
 import { inheritedProperty, resolveStock, stockOption } from "./stock-value";
 
-const { part, control, width } = defineProps<{ part: PartKey; control: Control; width: Width }>();
+const { part, control, width } = defineProps<{ part: ValuePartKey; control: ValueControl; width: Width }>();
 
 const slice = useService(SettingsService).getSlice(appearanceSlice);
 
@@ -36,7 +36,7 @@ const slice = useService(SettingsService).getSlice(appearanceSlice);
 type ControlKey = Parameters<typeof m.calendar_appearance_control>[0]["control"];
 type OptionKey = Parameters<typeof m.calendar_appearance_option>[0]["option"];
 
-const family = computed(() => PARTS[part].family);
+const family = computed(() => control.family);
 const snake = (key: string): string => key.replaceAll(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 const label = computed(() =>
   m.calendar_appearance_control({ control: [family.value, ...control.path.map(snake)].join("_") as ControlKey }),

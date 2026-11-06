@@ -3,20 +3,23 @@ import { fireEvent, screen, within } from "@testing-library/vue";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick, shallowRef } from "vue";
 
+import { calendarDisplaySlice } from "@/calendar";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 import { themeColorGroupsFor } from "@/ui/theme-colors";
 
 import { isModified, withValue } from "../appearance-editing";
-import { PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
+import { isStructure, PARTS, type ValueControl, type ValuePartKey, type Width } from "../appearance-parts";
 import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
 import { AppearancePreviewRootKey } from "./preview-root-key";
 
-function control(part: PartKey, ...path: string[]): Control {
-  const found = PARTS[part].controls.find((candidate) => candidate.path.join(".") === path.join("."));
+function control(part: ValuePartKey, ...path: string[]): ValueControl {
+  const found = PARTS[part].controls.find(
+    (candidate): candidate is ValueControl => !isStructure(candidate) && candidate.path.join(".") === path.join("."),
+  );
   if (!found) throw new Error(`no control ${path.join(".")}`);
   return found;
 }
@@ -32,26 +35,28 @@ beforeAll(() => initLocale("en"));
 describe("AppearanceControl", () => {
   let harness: TestHarness;
   const slice = () => harness.settings.getSlice(appearanceSlice);
-  const mount = (part: PartKey, target: Control, width: Width = "wide") =>
+  const mount = (part: ValuePartKey, target: ValueControl, width: Width = "wide") =>
     harness.render(AppearanceControl, { props: { part, control: target, width } });
 
   beforeEach(async () => {
     harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
   });
 
-  it.each(Object.entries(PARTS).flatMap(([part, { controls }]) => controls.map((c) => [part as PartKey, c] as const)))(
-    "labels %s %o and each of its options with real copy",
-    (part, target) => {
-      const { container } = mount(part, target);
+  // A visibility control has no path to build a label key from.
+  it.each(
+    Object.entries(PARTS).flatMap(([part, { controls }]) =>
+      controls.filter((c) => !isStructure(c)).map((c) => [part as ValuePartKey, c] as const),
+    ),
+  )("labels %s %o and each of its options with real copy", (part, target) => {
+    const { container } = mount(part, target);
 
-      const label = container.querySelector(".setting-item-name")?.textContent ?? "";
-      const options = [...container.querySelectorAll("option")].map((option) => option.textContent ?? "");
-      for (const text of [label, ...options]) {
-        expect(text.trim()).not.toBe("");
-        expect(text).not.toMatch(/calendar_appearance_/);
-      }
-    },
-  );
+    const label = container.querySelector(".setting-item-name")?.textContent ?? "";
+    const options = [...container.querySelectorAll("option")].map((option) => option.textContent ?? "");
+    for (const text of [label, ...options]) {
+      expect(text.trim()).not.toBe("");
+      expect(text).not.toMatch(/calendar_appearance_/);
+    }
+  });
 
   it("shows its public variable name", () => {
     mount("today", control("today", "text", "color"));
@@ -225,12 +230,12 @@ describe("AppearanceControl", () => {
       await screen.findByRole("option", { name: label });
 
       expect(select.selectedOptions[0]?.textContent?.trim()).toBe(label);
-      expect(isModified(slice().state, "wide", "weekNumber")).toBe(false);
+      expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(false);
 
       await userEvent.selectOptions(select, "bold");
 
       expect(slice().state.wide.weekNumber.weight).toBe("bold");
-      expect(isModified(slice().state, "wide", "weekNumber")).toBe(true);
+      expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(true);
     });
 
     it("on a color, as a swatch beside Default", async () => {

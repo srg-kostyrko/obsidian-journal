@@ -1,19 +1,24 @@
 import { describe, expect, it } from "vitest";
 
+import { calendarDisplaySlice } from "@/calendar";
+
 import {
   fromControlValue,
   isModified,
   sourceAt,
+  structureAt,
   toControlValue,
   valueAt,
   withNarrowCleared,
   withReset,
+  withStructure,
   withValue,
 } from "./appearance-editing";
-import { PARTS, type Control } from "./appearance-parts";
+import { isStructure, PARTS, type PartKey, type StructureControl, type ValueControl } from "./appearance-parts";
 import { appearanceSlice } from "./slice";
 
 const fresh = () => structuredClone(appearanceSlice.defaults);
+const stockDisplay = () => structuredClone(calendarDisplaySlice.defaults);
 const custom = (hex: string) => ({ type: "custom" as const, color: hex });
 const TEXT_COLOR = ["text", "color"];
 
@@ -51,10 +56,10 @@ describe("withReset", () => {
   it("at wide keeps narrow overrides, and at narrow keeps wide values", () => {
     let state = withValue(fresh(), "wide", "cell", ["padding"], 5);
     state = withValue(state, "narrow", "cell", ["gap"], "2px");
-    const wideReset = withReset(state, "wide", "cell");
+    const wideReset = withReset(state, stockDisplay(), "wide", "cell").appearance;
     expect(wideReset.wide.cell).toEqual(appearanceSlice.defaults.wide.cell);
     expect(wideReset.narrow.cell.gap).toBe("2px");
-    const narrowReset = withReset(state, "narrow", "cell");
+    const narrowReset = withReset(state, stockDisplay(), "narrow", "cell").appearance;
     expect(narrowReset.narrow.cell.gap).toBeNull();
     expect(narrowReset.wide.cell.padding).toBe(5);
   });
@@ -62,7 +67,9 @@ describe("withReset", () => {
   it("restores a theme-expression stock", () => {
     const written = withValue(fresh(), "wide", "cell", ["radius"], "4px");
     expect(valueAt(written, "wide", "cell", ["radius"])).toBe("4px");
-    expect(valueAt(withReset(written, "wide", "cell"), "wide", "cell", ["radius"])).toBe("var(--radius-s)");
+    expect(valueAt(withReset(written, stockDisplay(), "wide", "cell").appearance, "wide", "cell", ["radius"])).toBe(
+      "var(--radius-s)",
+    );
   });
 });
 
@@ -79,10 +86,26 @@ describe("style round trip", () => {
 describe("isModified", () => {
   it("is false for defaults at both widths and true after any withValue", () => {
     const base = fresh();
-    expect(isModified(base, "wide", "cell")).toBe(false);
-    expect(isModified(base, "narrow", "cell")).toBe(false);
-    expect(isModified(withValue(base, "wide", "cell", ["padding"], 2), "wide", "cell")).toBe(true);
-    expect(isModified(withValue(base, "narrow", "today", TEXT_COLOR, custom("#222222")), "narrow", "today")).toBe(true);
+    const display = stockDisplay();
+    expect(isModified(base, display, "wide", "cell")).toBe(false);
+    expect(isModified(base, display, "narrow", "cell")).toBe(false);
+    expect(isModified(withValue(base, "wide", "cell", ["padding"], 2), display, "wide", "cell")).toBe(true);
+    expect(
+      isModified(withValue(base, "narrow", "today", TEXT_COLOR, custom("#222222")), display, "narrow", "today"),
+    ).toBe(true);
+  });
+
+  it("counts a part's structure at wide only", () => {
+    const display = { ...stockDisplay(), monthRows: "six" as const };
+    expect(isModified(fresh(), stockDisplay(), "wide", "grid")).toBe(false);
+    expect(isModified(fresh(), display, "wide", "grid")).toBe(true);
+    expect(isModified(fresh(), display, "narrow", "grid")).toBe(false);
+    expect(isModified(fresh(), { ...stockDisplay(), showWeekdays: false }, "wide", "weekday")).toBe(true);
+  });
+
+  it("ignores a structure setting no control of the part writes", () => {
+    expect(isModified(fresh(), { ...stockDisplay(), monthRows: "six" }, "wide", "weekday")).toBe(false);
+    expect(isModified(fresh(), { ...stockDisplay(), timelineNavigation: true }, "wide", "grid")).toBe(false);
   });
 });
 
@@ -105,9 +128,17 @@ describe("sourceAt with an absent narrow key", () => {
   });
 });
 
-const control = (part: keyof typeof PARTS, ...path: string[]): Control => {
-  const found = PARTS[part].controls.find((candidate) => candidate.path.join(".") === path.join("."));
+const control = (part: PartKey, ...path: string[]): ValueControl => {
+  const found = PARTS[part].controls.find(
+    (candidate): candidate is ValueControl => !isStructure(candidate) && candidate.path.join(".") === path.join("."),
+  );
   if (!found) throw new Error(`no control ${path.join(".")}`);
+  return found;
+};
+
+const structure = (part: PartKey): StructureControl => {
+  const found = PARTS[part].controls.find((candidate) => isStructure(candidate));
+  if (!found) throw new Error(`no visibility control on ${part}`);
   return found;
 };
 
@@ -147,5 +178,68 @@ describe("withValue validation", () => {
     expect(() => withValue(fresh(), "wide", "selected", ["over"], "over")).toThrow();
     expect(() => withValue(fresh(), "narrow", "heading", ["italic"], "on")).toThrow();
     expect(() => withValue(fresh(), "wide", "cell", ["padding"], "x")).toThrow();
+  });
+});
+
+describe("structure", () => {
+  it("speaks shown and hidden for a boolean setting", () => {
+    const heading = structure("heading");
+    expect(structureAt(stockDisplay(), heading)).toBe("shown");
+    const hidden = withStructure(stockDisplay(), heading, "hidden");
+    expect(hidden.showHeading).toBe(false);
+    expect(structureAt(hidden, heading)).toBe("hidden");
+    expect(withStructure(hidden, heading, "shown").showHeading).toBe(true);
+  });
+
+  it("passes a picklist setting through", () => {
+    const outside = structure("outside");
+    expect(structureAt(stockDisplay(), outside)).toBe("automatic");
+    expect(withStructure(stockDisplay(), outside, "inert").outsideDays).toBe("inert");
+  });
+
+  it("writes only its own setting", () => {
+    const base = stockDisplay();
+    const next = withStructure(base, structure("grid"), "six");
+    expect(next).toEqual({ ...base, monthRows: "six" });
+    expect(base.monthRows).toBe("fit");
+  });
+
+  it("rejects a value the setting does not accept", () => {
+    expect(() => withStructure(stockDisplay(), structure("grid"), "seven")).toThrow();
+    expect(() => withStructure(stockDisplay(), structure("heading"), true)).toThrow();
+  });
+});
+
+const changed = () => {
+  const appearance = withValue(fresh(), "wide", "outside", ["style"], "ring");
+  return {
+    appearance: withValue(appearance, "narrow", "outside", ["ringWidth"], 3),
+    display: { ...stockDisplay(), outsideDays: "hidden" as const, monthRows: "six" as const },
+  };
+};
+
+describe("withReset with structure", () => {
+  it("at wide restores the part's structure and highlight, and nothing else", () => {
+    const { appearance, display } = changed();
+    const reset = withReset(appearance, display, "wide", "outside");
+    expect(reset.display.outsideDays).toBe("automatic");
+    expect(reset.display.monthRows).toBe("six");
+    expect(reset.appearance.wide.outside).toEqual(appearanceSlice.defaults.wide.outside);
+    expect(reset.appearance.narrow.outside.ringWidth).toBe(3);
+  });
+
+  it("at narrow leaves structure alone", () => {
+    const { appearance, display } = changed();
+    const reset = withReset(appearance, display, "narrow", "outside");
+    expect(reset.display.outsideDays).toBe("hidden");
+    expect(reset.appearance.narrow.outside).toEqual(appearanceSlice.defaults.narrow.outside);
+    expect(reset.appearance.wide.outside.style).toBe("ring");
+  });
+
+  it("resets the month grid's rows and leaves the appearance untouched", () => {
+    const { appearance, display } = changed();
+    const reset = withReset(appearance, display, "wide", "grid");
+    expect(reset.display.monthRows).toBe("fit");
+    expect(reset.appearance).toBe(appearance);
   });
 });
