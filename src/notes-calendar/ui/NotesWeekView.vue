@@ -61,13 +61,13 @@ const rawWeek = computed(() => toRaw(props.week));
 const days = computed(() =>
   [...rawWeek.value.days()]
     .map((d) => DayPeriod.containing(d))
-    .filter((d) => !hiddenWeekdays.value.has(Number(d.start.format("d")))),
+    .filter((d) => !hiddenWeekdays.value.has(d.start.weekday())),
 );
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
 const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
 const weekend = useWeekend();
-const isWeekend = (day: DayPeriod): boolean => weekend.value.has(Number(day.start.format("d")));
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
   return days.value.map((day) => ({
@@ -89,7 +89,7 @@ const today = useToday();
 const firstDayColumn = computed(() => (showWeekNumber.value && weeksPos.value === "left" ? 2 : 1));
 const weekendBands = computed(() =>
   weekendRuns(
-    days.value.map((day) => Number(day.start.format("d"))),
+    days.value.map((day) => day.start.weekday()),
     weekend.value,
   ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
 );

@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - A day outside the month that is today now shows today's accent color instead of the muted outside color.
 - A day outside the month that is the open note now shows the open note's text color instead of muted text on the accent fill, which was hard to read.
 - A newly created journal note or notelet is now reported once, as created, including when its template takes a while to render or Obsidian takes up to ten seconds to index it. When Obsidian was busy indexing, for example just after it started, a note created from the calendar, a command or the plugin API could instead be reported twice: once as created, then removed, then added again as appeared. A plugin API listener on `noteAdded` saw both events, and for a journal with automatic rollover, a new note for the current period could start rollover a second time.
+- With Obsidian in a language that writes numbers in its own digits, such as Arabic or Persian, weekday decoration conditions now match, a timeline's `hiddenWeekdays` now hides its days, and the startup note's weekday overrides now apply. Each read the day of the week as a number that, written in those digits, never matched any day.
 
 ## [3.6.0] - 2026-11-01
 

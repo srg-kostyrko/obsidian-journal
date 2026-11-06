@@ -21,7 +21,7 @@ export function sampleDays(today: CalendarDate, weekend: ReadonlySet<number>): P
   // A weekend day in today's week where there is one, so this one day also shows Current week and Weekends.
   const free = (day: CalendarDate): boolean => month.contains(day) && !day.isSame(today) && !day.isSame(active);
   const selected =
-    [...WeekPeriod.containing(today).days()].find((day) => free(day) && weekend.has(Number(day.format("d")))) ??
+    [...WeekPeriod.containing(today).days()].find((day) => free(day) && weekend.has(day.weekday())) ??
     [...month.days()].find(free) ??
     month.start;
   return {

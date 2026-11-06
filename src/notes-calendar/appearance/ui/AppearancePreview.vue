@@ -50,7 +50,7 @@ const SAMPLE_DECORATION: readonly JournalDecorationStyle[] = [
 const today = useToday();
 // From the display it is given, not the saved slice, so the preview reaches no service.
 const weekend = computed(() => resolveWeekend(props.display.weekend, activeLocale()));
-const isWeekend = (day: DayPeriod): boolean => weekend.value.has(Number(day.start.format("d")));
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());
 const sample = computed(() => sampleDays(today.value, weekend.value));
 const month = computed(() => sample.value.month);
 const year = computed(() => YearPeriod.containing(month.value.anchor));
@@ -88,7 +88,7 @@ const weekdays = computed(() => {
 const firstDayColumn = computed(() => (weeksPos.value === "left" ? 2 : 1));
 const weekendBands = computed(() =>
   weekendRuns(
-    (rows.value[0]?.days ?? []).map(({ period }) => Number(period.start.format("d"))),
+    (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
     weekend.value,
   ).map(({ start, span }) => ({ key: String(start), column: `${start + firstDayColumn.value} / span ${span}` })),
 );
