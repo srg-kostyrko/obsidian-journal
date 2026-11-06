@@ -33,6 +33,10 @@ const SHORT_NAMES = SUNDAY_FIRST.map((name) => name.slice(0, 3));
 const ONE_LETTER = SUNDAY_FIRST.map((name) => name.slice(0, 1));
 
 const LONG_DAY_FORMAT = "dddd, MMMM Do YYYY";
+const TWO_DIGIT_DAY = "2027-05-28";
+// Stands in for the room marks reserve around a label: enough that a narrow 1fr track with no
+// content-sized floor would be narrower than "28" plus its padding.
+const CROWDED_PADDING = "12px";
 
 class FormatReadError extends Error {
   override name = "FormatReadError";
@@ -77,6 +81,20 @@ async function detachView(): Promise<void> {
 
 // Earlier leaves can keep zero-width copies of a block in the DOM, so every read and every forced
 // width goes to the laid-out one (or the one a width was already forced on).
+async function forceCellPadding(blockSelector: string, padding: string): Promise<void> {
+  await browser.execute(
+    (selector: string, forced: string) => {
+      const block = [...document.querySelectorAll<HTMLElement>(selector)].find(
+        (candidate) => candidate.clientWidth > 0 || candidate.style.width !== "",
+      );
+      if (forced === "") block?.style.removeProperty("--journal-cell-cell-padding");
+      else block?.style.setProperty("--journal-cell-cell-padding", forced);
+    },
+    blockSelector,
+    padding,
+  );
+}
+
 async function forceWidth(blockSelector: string, width: string): Promise<void> {
   await browser.execute(
     (selector: string, forced: string) => {
@@ -233,6 +251,7 @@ describe("calendar label formats", () => {
   });
 
   afterEach(async () => {
+    await forceCellPadding(TIMELINE_BLOCK, "");
     await forceWidth(VIEW_BLOCK, "");
     await forceWidth(TIMELINE_BLOCK, "");
   });
@@ -240,6 +259,17 @@ describe("calendar label formats", () => {
   after(async () => {
     if (await isSettingsOpen()) await closeSettings();
     await detachView();
+  });
+
+  // Clipping is for custom labels only: a stock grid keeps the content-sized floor every calendar had.
+  it("a stock two-digit date stays whole in a crowded narrow calendar", async () => {
+    await forceWidth(TIMELINE_BLOCK, NARROW_WIDTH);
+    await forceCellPadding(TIMELINE_BLOCK, CROWDED_PADDING);
+    await expectRead(
+      () => readDay(TIMELINE_BLOCK, TWO_DIGIT_DAY),
+      (read) => read.text === "28" && !read.clipped,
+      "the 28th clipped in a narrow calendar with stock labels",
+    );
   });
 
   it("a day format changes the date number and leaves its accessible name alone", async () => {
@@ -292,6 +322,10 @@ describe("calendar label formats", () => {
       (text) => text === "W18",
       "the first week did not start on this grid's own week number",
     );
+    // The warning renders with the box, so its absence only means something once the box is there.
+    await $(controlRowPath(WEEK_FORMAT))
+      .$('input[type="text"]')
+      .waitForExist({ timeoutMsg: `the inspector showed no ${WEEK_FORMAT} box` });
     await expect(isoWarning()).not.toBeExisting();
 
     await typeFormat(WEEK_FORMAT, "[W]W");
@@ -306,7 +340,7 @@ describe("calendar label formats", () => {
 
   it("a long day format clips inside the cell instead of widening it", async () => {
     await chooseFromList("date");
-    const before = await expectRead(
+    const short = await expectRead(
       () => readDay(VIEW_BLOCK, FIRST_IN_MONTH),
       (read) => read.text === "01",
       "the first of May did not keep the DD label",
@@ -319,7 +353,7 @@ describe("calendar label formats", () => {
       (read) => read.text === "Saturday, May 1st 2027",
       "the first of May did not take the long format",
     );
-    expect(long.width).toBe(before.width);
+    expect(long.width).toBe(short.width);
     expect(long.clipped).toBe(true);
   });
 });
