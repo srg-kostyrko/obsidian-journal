@@ -228,17 +228,17 @@ describe("NotesMonthView", () => {
       expect((selected[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-08-01");
     });
 
-    it("selects an inactive outside date on Shift+primary click without opening it", async () => {
+    it("does not select an inert outside date on Shift+primary click", async () => {
       const selectDate = vi.fn();
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, {
         props: { shelf: null, month, outsideDates: "inactive", selectDate },
       });
-      const outside = container.querySelector<HTMLElement>(".notes-month-view__day[data-outside]")!;
+      const outside = container.querySelector<HTMLElement>('.notes-month-view__day[data-anchor="2026-07-31"]')!;
 
       await fireEvent.click(outside, { shiftKey: true, button: 0 });
 
-      expect(selectDate).toHaveBeenCalledWith(outside.dataset.anchor);
+      expect(selectDate).not.toHaveBeenCalled();
     });
 
     it("leaves a header cell with no journal of its kind out of the tab order", async () => {
@@ -292,6 +292,61 @@ describe("NotesMonthView", () => {
       for (const element of outside) {
         expect(element.dataset.inactive).toBe("true");
       }
+    });
+
+    it("draws no mark on an inert outside day", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      for (const day of ["2026-07-31", "2026-08-03"]) {
+        const path = `daily/${day}.md` as VaultPath;
+        harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor(day), path });
+        harness.host.putFile(path);
+      }
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, outsideDates: "inactive" } });
+      await nextTick();
+
+      const cell = (day: string) =>
+        container.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(day)}"]`);
+      expect(cell("2026-08-03")?.querySelector(".decoration-corner")).not.toBeNull();
+      expect(cell("2026-07-31")?.querySelector(".decoration-corner")).toBeNull();
+    });
+
+    it("takes inert outside days out of the tab order and marks them disabled", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, outsideDates: "inactive" } });
+      const outside = container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-outside]");
+
+      expect(outside.length).toBeGreaterThan(0);
+      for (const element of outside) {
+        expect({
+          role: element.getAttribute("role"),
+          tabindex: element.getAttribute("tabindex"),
+          disabled: element.getAttribute("aria-disabled"),
+          gridKey: element.dataset.gridKey,
+        }).toEqual({ role: "gridcell", tabindex: null, disabled: "true", gridKey: undefined });
+      }
+    });
+
+    it("skips inert outside days in keyboard navigation", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, weeks: "none", outsideDates: "inactive" },
+      });
+      const first = container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-01"]')!;
+      const last = container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-31"]')!;
+
+      first.focus();
+      await fireEvent.keyDown(first, { key: "ArrowLeft" });
+      expect(document.activeElement).toBe(first);
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowRight" });
+      expect(document.activeElement).toBe(last);
     });
 
     it("keeps outside cells actionable by default", async () => {
@@ -449,6 +504,35 @@ describe("NotesMonthView", () => {
       expect(added.querySelector(".decoration-corner")).not.toBeNull();
       await fireEvent.click(added, { button: 0 });
       expect(invoke).toHaveBeenCalled();
+    });
+    it("keeps the added days inert, unmarked and out of navigation when outside days are inert", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const path = "daily/2027-03-08.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2027-03-08"), path });
+      harness.host.putFile(path);
+      const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true, outsideDates: "inactive" },
+      });
+      await nextTick();
+
+      const added = container.querySelector<HTMLElement>('.notes-month-view__day[data-anchor="2027-03-08"]')!;
+      expect(added.dataset.inactive).toBe("true");
+      expect(added.hasAttribute("tabindex")).toBe(false);
+      expect(added.querySelector(".decoration-corner")).toBeNull();
+      await fireEvent.click(added, { button: 0 });
+      expect(invoke).not.toHaveBeenCalled();
+      const last = container.querySelector<HTMLElement>('[data-grid-key="day:2027-02-22"]')!;
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowDown" });
+      expect(document.activeElement).toBe(last);
     });
   });
 

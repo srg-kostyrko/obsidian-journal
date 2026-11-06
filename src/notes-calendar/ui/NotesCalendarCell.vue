@@ -18,6 +18,7 @@ const props = defineProps<{
   tabIndex?: number;
   selected?: boolean;
   outside?: boolean;
+  disabled?: boolean;
 }>();
 
 const rawPeriod = computed(() => toRaw(props.period));
@@ -26,7 +27,10 @@ const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
 const isControl = computed(() => props.role !== undefined || !isInactive.value);
 const resolvedRole = computed(() => props.role ?? (isControl.value ? "button" : undefined));
-const resolvedTabIndex = computed(() => props.tabIndex ?? (isControl.value ? 0 : undefined));
+// A disabled cell keeps its grid role, so the columns still line up for a screen reader, but takes no tab stop.
+const resolvedTabIndex = computed(() =>
+  props.disabled ? undefined : (props.tabIndex ?? (isControl.value ? 0 : undefined)),
+);
 const today = useToday();
 const isToday = computed(() => rawPeriod.value.contains(today.value));
 const states = computed(() =>
@@ -57,6 +61,7 @@ const hover = useModifierHoverPreview();
     :tabindex="resolvedTabIndex"
     :aria-label="accessibleName"
     :aria-selected="selected || undefined"
+    :aria-disabled="disabled || undefined"
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"

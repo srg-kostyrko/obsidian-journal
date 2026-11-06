@@ -297,8 +297,10 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
     display: contents;
   }
 }
-/* Hidden from view, not from the tree, as the month view hides it: screen readers keep the column names. */
+/* Hidden from view, not from the tree, as the month view hides it: screen readers keep the column names.
+   A block, over the no-subgrid `display: contents`, which would leave no box to clip. */
 .appearance-preview__row--visually-hidden {
+  display: block;
   position: absolute;
   width: 1px;
   height: 1px;

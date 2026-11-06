@@ -39,6 +39,18 @@ describe("calendar appearance readers", () => {
     expect(rule?.declarations.get("min-height")).toBe("var(--_v-cell-min-height)");
   });
 
+  // Where nested grid tracks are unsupported the weekday row falls back to `display: contents`, which has no box to clip.
+  it.each([
+    ["monthView", ".notes-month-view__row--visually-hidden"],
+    ["preview", ".appearance-preview__row--visually-hidden"],
+  ] as const)("%s gives a hidden weekday row a box over the display-contents fallback", (component, selector) => {
+    const rules = components[component];
+    const hidden = rules.findIndex((rule) => rule.selector === selector);
+    const fallback = rules.findIndex((rule) => rule.declarations.get("display") === "contents");
+    expect(rules[hidden]?.declarations.get("display")).toBe("block");
+    expect(hidden).toBeGreaterThan(fallback);
+  });
+
   it.each(cases)(
     "%s is resolved by %s once per selector and re-resolved under the narrow query",
     (_name, component, entry) => {

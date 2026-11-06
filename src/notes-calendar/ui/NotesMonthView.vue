@@ -52,6 +52,9 @@ const props = withDefaults(
 
 const blankOutside = computed(() => props.outsideDates === "blank");
 const inactiveOutside = computed(() => props.outsideDates === "inactive");
+const isInert = (day: { isOutside: boolean }): boolean => inactiveOutside.value && day.isOutside;
+// A blank or inert day offers nothing to act on, so it is neither marked nor reached by the keyboard.
+const isOutOfReach = (day: { isOutside: boolean }): boolean => props.outsideDates !== "active" && day.isOutside;
 
 const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 const dayColumns = computed(() => 7 - [0, 1, 2, 3, 4, 5, 6].filter((i) => hiddenWeekdays.value.has(i)).length);
@@ -102,7 +105,7 @@ const visiblePeriods = computed<readonly Period[]>(() => {
   for (const row of rows.value) {
     if (showWeekNumber.value) periods.push(row.weekPeriod);
     for (const d of row.days) {
-      if (blankOutside.value && d.isOutside) continue;
+      if (isOutOfReach(d)) continue;
       periods.push(d.period);
     }
   }
@@ -119,12 +122,11 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const selection = { onSelect: () => props.selectDate };
 const dayCell = useNotesCell({
   journalNames: () => scope.day.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
+  onSelect: () => props.selectDate,
 });
 const weekCell = useNotesCell({
   journalNames: () => scope.week.value,
@@ -146,7 +148,7 @@ const yearCell = useNotesCell({
   decorations: cells,
   shelf: () => props.shelf,
 });
-const inactiveDay = useNotesCell({ journalNames: () => [], ...selection });
+const inertDay = useNotesCell({ journalNames: () => [] });
 
 const slots = useSlots();
 // The heading only stops spreading across the grid once something else shares the row
@@ -157,7 +159,7 @@ const flanked = computed(() => Boolean(slots["header-start"] ?? slots["header-en
 const navigationRows = computed<CalendarGridRows>(() =>
   rows.value.map((row) => {
     const items: (CalendarGridItem | null)[] = row.days.map((day) =>
-      blankOutside.value && day.isOutside ? null : { key: `day:${day.period.anchor.toAnchor()}`, period: day.period },
+      isOutOfReach(day) ? null : { key: `day:${day.period.anchor.toAnchor()}`, period: day.period },
     );
     if (showWeekNumber.value && weeksPos.value === "left") {
       items.unshift({ key: `week:${row.key}`, period: row.weekPeriod });
@@ -238,11 +240,20 @@ const isSelected = (period: Period): boolean =>
             aria-hidden="true"
           ></span>
           <NotesCalendarCell
+            v-else-if="isInert(day)"
+            class="notes-month-view__day"
+            outside
+            disabled
+            :period="day.period"
+            :cell="inertDay"
+            role="gridcell"
+          />
+          <NotesCalendarCell
             v-else
             class="notes-month-view__day"
             :outside="day.isOutside"
             :period="day.period"
-            :cell="inactiveOutside && day.isOutside ? inactiveDay : dayCell"
+            :cell="dayCell"
             role="gridcell"
             :data-grid-key="`day:${day.period.anchor.toAnchor()}`"
             :tab-index="navigation.tabIndex(`day:${day.period.anchor.toAnchor()}`)"
@@ -325,7 +336,9 @@ const isSelected = (period: Period): boolean =>
     display: contents;
   }
 }
+/* A block, over the no-subgrid `display: contents`: a row with no box of its own cannot be clipped. */
 .notes-month-view__row--visually-hidden {
+  display: block;
   position: absolute;
   width: 1px;
   height: 1px;
