@@ -1660,6 +1660,33 @@
   "view_block_config_weeks_none": "隐藏",
   "view_block_config_weeks_left": "在星期列之前",
   "view_block_config_weeks_right": "在星期列之后",
+  "view_block_config_show_weekdays_label": "显示星期标题行",
+  "view_block_config_visibility_default": "默认",
+  "view_block_config_visibility_shown": "显示",
+  "view_block_config_visibility_hidden": "隐藏",
+  "view_block_config_outside_days_label": "本月以外的日期",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "可交互",
+        "option=inert": "不可交互",
+        "option=hidden": "隐藏"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "行数",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "按需",
+        "option=six": "始终六行"
+      }
+    }
+  ],
   "calendar_week_placement_label": "默认周数",
   "calendar_week_placement_description": "在设置为“使用全局默认值”的日历块中，周数列的显示位置。",
   "calendar_timeline_navigation_label": "默认时间线导航",

@@ -1805,6 +1805,33 @@
   "view_block_config_weeks_none": "숨김",
   "view_block_config_weeks_left": "요일 앞",
   "view_block_config_weeks_right": "요일 뒤",
+  "view_block_config_show_weekdays_label": "요일 머리글 표시",
+  "view_block_config_visibility_default": "기본값",
+  "view_block_config_visibility_shown": "표시",
+  "view_block_config_visibility_hidden": "숨김",
+  "view_block_config_outside_days_label": "해당 월 밖의 날짜",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "상호작용 가능",
+        "option=inert": "상호작용 없음",
+        "option=hidden": "숨김"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "행",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "필요한 만큼",
+        "option=six": "항상 6행"
+      }
+    }
+  ],
   "calendar_week_placement_label": "기본 주 번호 위치",
   "calendar_week_placement_description": "\"전역 기본값 사용\"으로 설정된 달력 블록에서 주 번호 열이 표시되는 위치입니다.",
   "calendar_timeline_navigation_label": "기본 타임라인 탐색",

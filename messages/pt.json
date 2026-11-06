@@ -1813,6 +1813,33 @@
   "view_block_config_weeks_none": "Ocultos",
   "view_block_config_weeks_left": "Antes dos dias da semana",
   "view_block_config_weeks_right": "Depois dos dias da semana",
+  "view_block_config_show_weekdays_label": "Exibir a linha dos dias da semana",
+  "view_block_config_visibility_default": "Padrão",
+  "view_block_config_visibility_shown": "Exibido",
+  "view_block_config_visibility_hidden": "Oculto",
+  "view_block_config_outside_days_label": "Dias fora do mês",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interativos",
+        "option=inert": "Inertes",
+        "option=hidden": "Ocultos"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Linhas",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "Conforme necessário",
+        "option=six": "Sempre seis"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Números de semana padrão",
   "calendar_week_placement_description": "Onde a coluna do número da semana aparece nos blocos de calendário definidos como \"Usar padrão global\".",
   "calendar_timeline_navigation_label": "Navegação padrão da linha do tempo",

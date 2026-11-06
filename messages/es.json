@@ -1805,6 +1805,33 @@
   "view_block_config_weeks_none": "Oculto",
   "view_block_config_weeks_left": "Antes de los días de la semana",
   "view_block_config_weeks_right": "Después de los días de la semana",
+  "view_block_config_show_weekdays_label": "Mostrar la fila de días de la semana",
+  "view_block_config_visibility_default": "Predeterminado",
+  "view_block_config_visibility_shown": "Visible",
+  "view_block_config_visibility_hidden": "Oculto",
+  "view_block_config_outside_days_label": "Días fuera del mes",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interactivos",
+        "option=inert": "Inertes",
+        "option=hidden": "Ocultos"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Filas",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "Según se necesite",
+        "option=six": "Siempre seis"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Números de semana predeterminados",
   "calendar_week_placement_description": "Dónde aparece la columna del número de semana en los bloques de calendario configurados como «Usar el valor predeterminado global».",
   "calendar_timeline_navigation_label": "Navegación predeterminada de la línea de tiempo",

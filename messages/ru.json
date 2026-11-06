@@ -1851,6 +1851,33 @@
   "view_block_config_weeks_none": "Скрыты",
   "view_block_config_weeks_left": "Перед днями недели",
   "view_block_config_weeks_right": "После дней недели",
+  "view_block_config_show_weekdays_label": "Показывать строку дней недели",
+  "view_block_config_visibility_default": "По умолчанию",
+  "view_block_config_visibility_shown": "Показано",
+  "view_block_config_visibility_hidden": "Скрыто",
+  "view_block_config_outside_days_label": "Дни вне месяца",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Интерактивные",
+        "option=inert": "Неактивные",
+        "option=hidden": "Скрытые"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Строки",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "По необходимости",
+        "option=six": "Всегда шесть"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Номера недель по умолчанию",
   "calendar_week_placement_description": "Где отображается столбец с номерами недель в блоках календаря, для которых выбрано «Использовать глобальное значение по умолчанию».",
   "calendar_timeline_navigation_label": "Навигация временной шкалы по умолчанию",

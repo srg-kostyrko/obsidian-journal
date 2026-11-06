@@ -1696,6 +1696,33 @@
   "view_block_config_weeks_none": "Прихований",
   "view_block_config_weeks_left": "Перед днями тижня",
   "view_block_config_weeks_right": "Після днів тижня",
+  "view_block_config_show_weekdays_label": "Показувати рядок днів тижня",
+  "view_block_config_visibility_default": "За замовчуванням",
+  "view_block_config_visibility_shown": "Показано",
+  "view_block_config_visibility_hidden": "Приховано",
+  "view_block_config_outside_days_label": "Дні поза місяцем",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Інтерактивні",
+        "option=inert": "Неактивні",
+        "option=hidden": "Приховані"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Рядки",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "За потреби",
+        "option=six": "Завжди шість"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Номери тижнів за замовчуванням",
   "calendar_week_placement_description": "Де стовпець із номером тижня відображається в блоках календаря, для яких встановлено значення «Використовувати глобальне значення за замовчуванням».",
   "calendar_timeline_navigation_label": "Навігація часової шкали за замовчуванням",

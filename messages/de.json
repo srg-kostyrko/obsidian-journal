@@ -1815,6 +1815,33 @@
   "view_block_config_weeks_none": "Ausgeblendet",
   "view_block_config_weeks_left": "Vor den Wochentagen",
   "view_block_config_weeks_right": "Nach den Wochentagen",
+  "view_block_config_show_weekdays_label": "Wochentagszeile anzeigen",
+  "view_block_config_visibility_default": "Standard",
+  "view_block_config_visibility_shown": "Angezeigt",
+  "view_block_config_visibility_hidden": "Ausgeblendet",
+  "view_block_config_outside_days_label": "Tage außerhalb des Monats",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interaktiv",
+        "option=inert": "Inaktiv",
+        "option=hidden": "Ausgeblendet"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Zeilen",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "Nach Bedarf",
+        "option=six": "Immer sechs"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Standard-Wochennummern",
   "calendar_week_placement_description": "Legt fest, wo die Spalte mit den Wochennummern in Kalenderblöcken erscheint, die auf „Globalen Standard verwenden“ eingestellt sind.",
   "calendar_timeline_navigation_label": "Standardnavigation der Zeitleiste",

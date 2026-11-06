@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { useResolvedStructure } from "@/calendar";
+import { resolveOutsideDates, useResolvedStructure } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesMonthView from "@/notes-calendar/ui/NotesMonthView.vue";
 
@@ -34,9 +34,14 @@ const months = usePeriodWindow(
 
 // A lone month dims its adjacent-month days; a window of several months blanks them so the
 // adjacent months' own cells aren't shadowed by dates duplicated across the stack.
-const outsideDates = computed<"active" | "blank">(() => (months.value.length > 1 ? "blank" : "active"));
+const automaticOutsideDates = computed<"active" | "blank">(() => (months.value.length > 1 ? "blank" : "active"));
 
 const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.weeks);
+const showHeading = useResolvedStructure("showHeading", () => props.config.showHeading);
+const showWeekdays = useResolvedStructure("showWeekdays", () => props.config.showWeekdays);
+const monthRows = useResolvedStructure("monthRows", () => props.config.monthRows);
+const outsideDays = useResolvedStructure("outsideDays", () => props.config.outsideDays);
+const outsideDates = computed(() => resolveOutsideDates(outsideDays.value, automaticOutsideDates.value));
 </script>
 
 <template>
@@ -48,7 +53,9 @@ const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.w
       :shelf="viewContext.shelf.value"
       :weeks="weekPlacement"
       :hidden-weekdays="config.hiddenWeekdays"
-      :show-header="config.showHeading"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
+      :six-rows="monthRows === 'six'"
       :outside-dates="outsideDates"
       :selected-date="viewContext.refDate.value"
       :select-date="viewContext.selectRefDate"

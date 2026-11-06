@@ -33,8 +33,27 @@ describe("monthCalendarBlock", () => {
     expect(result.success).toBe(false);
   });
 
-  it("defaults showHeading to true when omitted", () => {
+  it("defaults every visibility override to 'default' when omitted", () => {
     const parsed = v.parse(monthCalendarBlock.schema, { before: 0, after: 0 });
-    expect(parsed.showHeading).toBe(true);
+    expect(parsed).toMatchObject({
+      showHeading: "default",
+      showWeekdays: "default",
+      outsideDays: "default",
+      monthRows: "default",
+    });
+  });
+
+  it("starts a new block with every visibility override on 'default'", () => {
+    expect(monthCalendarBlock.defaultConfig).toMatchObject({
+      showHeading: "default",
+      showWeekdays: "default",
+      outsideDays: "default",
+      monthRows: "default",
+    });
+  });
+
+  it("rejects an unknown outside-days value", () => {
+    const result = v.safeParse(monthCalendarBlock.schema, { before: 0, after: 0, outsideDays: "automatic" });
+    expect(result.success).toBe(false);
   });
 });

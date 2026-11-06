@@ -1819,6 +1819,33 @@
   "view_block_config_weeks_none": "Hidden",
   "view_block_config_weeks_left": "Before weekdays",
   "view_block_config_weeks_right": "After weekdays",
+  "view_block_config_show_weekdays_label": "Show weekday header",
+  "view_block_config_visibility_default": "Default",
+  "view_block_config_visibility_shown": "Shown",
+  "view_block_config_visibility_hidden": "Hidden",
+  "view_block_config_outside_days_label": "Days outside the month",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interactive",
+        "option=inert": "Inert",
+        "option=hidden": "Hidden"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Rows",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "As needed",
+        "option=six": "Always six"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
   "calendar_timeline_navigation_label": "Default timeline navigation",

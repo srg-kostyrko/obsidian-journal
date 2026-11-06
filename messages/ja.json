@@ -1660,6 +1660,33 @@
   "view_block_config_weeks_none": "非表示",
   "view_block_config_weeks_left": "曜日の前",
   "view_block_config_weeks_right": "曜日の後",
+  "view_block_config_show_weekdays_label": "曜日の見出し行を表示",
+  "view_block_config_visibility_default": "既定",
+  "view_block_config_visibility_shown": "表示",
+  "view_block_config_visibility_hidden": "非表示",
+  "view_block_config_outside_days_label": "月外の日",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "操作可能",
+        "option=inert": "操作不可",
+        "option=hidden": "非表示"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "行数",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "必要な分だけ",
+        "option=six": "常に6行"
+      }
+    }
+  ],
   "calendar_week_placement_label": "デフォルトの週番号",
   "calendar_week_placement_description": "「グローバルデフォルトを使用」に設定されたカレンダーブロックで、週番号の列を表示する位置。",
   "calendar_timeline_navigation_label": "デフォルトのタイムラインナビゲーション",

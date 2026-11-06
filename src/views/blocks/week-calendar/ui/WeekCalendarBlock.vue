@@ -31,6 +31,8 @@ const weeks = usePeriodWindow(
 );
 
 const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.weeks);
+const showHeading = useResolvedStructure("showHeading", () => props.config.showHeading);
+const showWeekdays = useResolvedStructure("showWeekdays", () => props.config.showWeekdays);
 </script>
 
 <template>
@@ -42,7 +44,8 @@ const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.w
       :shelf="viewContext.shelf.value"
       :weeks="weekPlacement"
       :hidden-weekdays="config.hiddenWeekdays"
-      :show-header="config.showHeading"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
       :selected-date="viewContext.refDate.value"
       :select-date="viewContext.selectRefDate"
     />
