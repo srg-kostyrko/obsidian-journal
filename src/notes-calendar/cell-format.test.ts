@@ -3,7 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
 
-import { defaultFormatPattern, formatWeekday, labelPattern, weekFormatNeedsIsoWarning } from "./cell-format";
+import {
+  DEFAULT_WEEKDAY_PATTERN,
+  defaultFormatPattern,
+  formatWeekday,
+  labelPattern,
+  weekdayTexts,
+  weekFormatNeedsIsoWarning,
+} from "./cell-format";
 
 const NO_LABELS = { day: "", week: "", month: "", quarter: "", year: "" };
 
@@ -51,6 +58,7 @@ describe("formatWeekday", () => {
   const monday = CalendarDate.fromAnchor("2027-02-01" as AnchorString);
 
   it("formats a pattern label, defaulting to ddd when empty", () => {
+    expect(DEFAULT_WEEKDAY_PATTERN).toBe("ddd");
     expect(formatWeekday(monday, { type: "pattern", pattern: "" })).toBe(monday.format("ddd"));
     expect(formatWeekday(monday, { type: "pattern", pattern: "dddd" })).toBe("Monday");
   });
@@ -64,7 +72,9 @@ describe("formatWeekday", () => {
     const original = moment.locale();
     const spy = vi.spyOn(moment, "locale").mockReturnValue("not a locale!!");
     try {
-      expect(formatWeekday(monday, { type: "letter" })).not.toBe("");
+      expect(formatWeekday(monday, { type: "letter" })).toBe(
+        new Intl.DateTimeFormat(undefined, { weekday: "narrow" }).format(monday.toJSDate()),
+      );
     } finally {
       spy.mockRestore();
       moment.locale(original);
@@ -72,7 +82,37 @@ describe("formatWeekday", () => {
   });
 
   it("returns moment's output for an unclosed bracket without throwing", () => {
-    expect(() => formatWeekday(monday, { type: "pattern", pattern: "[W" })).not.toThrow();
+    expect(formatWeekday(monday, { type: "pattern", pattern: "[W" })).not.toBe("");
+  });
+
+  it("builds one narrow formatter per locale, not one per label", () => {
+    const original = moment.locale();
+    const locale = vi.spyOn(moment, "locale").mockReturnValue("fr-CA");
+    const constructed = vi.spyOn(Intl, "DateTimeFormat");
+    try {
+      for (const day of [monday, monday.shift(1, "d"), monday.shift(2, "d")]) formatWeekday(day, { type: "letter" });
+      expect(constructed.mock.calls.filter(([id]) => id === "fr-CA").length).toBeLessThanOrEqual(1);
+    } finally {
+      constructed.mockRestore();
+      locale.mockRestore();
+      moment.locale(original);
+    }
+  });
+});
+
+describe("weekdayTexts", () => {
+  const monday = CalendarDate.fromAnchor("2027-02-01" as AnchorString);
+
+  it("names the day in full and renders each width's text", () => {
+    expect(weekdayTexts(monday, { type: "pattern", pattern: "ddd" }, { type: "pattern", pattern: "dd" })).toEqual({
+      name: "Monday",
+      wide: "Mon",
+      narrow: "Mo",
+    });
+  });
+
+  it("renders the wide text at narrow when the narrow one is unset", () => {
+    expect(weekdayTexts(monday, { type: "pattern", pattern: "dd" }, null)).toMatchObject({ wide: "Mo", narrow: "Mo" });
   });
 });
 

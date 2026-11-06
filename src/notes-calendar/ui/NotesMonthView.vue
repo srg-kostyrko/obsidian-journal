@@ -18,7 +18,7 @@ import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 
-import { accessibleFormatPattern, formatWeekday, labelPattern } from "../cell-format";
+import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
@@ -99,13 +99,10 @@ const rows = computed<readonly WeekRow[]>(() => {
 
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
 const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
+const customDayLabel = computed(() => display.state.labels.day !== "");
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
-  return (rows.value[0]?.days ?? []).map(({ period }) => ({
-    name: period.start.format("dddd"),
-    wide: formatWeekday(period.start, weekdayLabel),
-    narrow: formatWeekday(period.start, weekdayLabelNarrow ?? weekdayLabel),
-  }));
+  return (rows.value[0]?.days ?? []).map(({ period }) => weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow));
 });
 
 const monthPeriod = computed(() => rawMonth.value);
@@ -191,7 +188,7 @@ const isSelected = (period: Period): boolean =>
 </script>
 
 <template>
-  <div class="notes-month-view">
+  <div class="notes-month-view" :data-custom-day-label="customDayLabel || null">
     <div v-if="showHeader" class="notes-month-view__header" :data-flanked="flanked || null">
       <slot name="header-start" />
       <slot name="header">
@@ -427,8 +424,6 @@ const isSelected = (period: Period): boolean =>
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
   --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
   --_part-color: var(--_v-date-color);
-  /* A 1fr track keeps a content-sized floor; giving it up lets a long label clip inside the cell. */
-  min-width: 0;
   font-size: var(--_v-date-size);
   font-weight: var(--_v-date-weight);
   font-style: var(--_v-date-italic);
@@ -439,6 +434,11 @@ const isSelected = (period: Period): boolean =>
 .notes-month-view__day--blank {
   --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
   min-height: var(--_v-cell-min-height);
+}
+/* A 1fr track keeps a content-sized floor; giving it up lets a long label clip inside the cell. Stock labels
+   keep the floor, so a short date beside marks never clips. */
+[data-custom-day-label] .notes-month-view__day {
+  min-width: 0;
 }
 @container journal-calendar (max-width: 28em) {
   .notes-month-view__weekday-wide {

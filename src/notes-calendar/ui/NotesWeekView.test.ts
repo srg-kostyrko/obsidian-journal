@@ -244,6 +244,17 @@ describe("NotesWeekView", () => {
 
   describe("label formats", () => {
     const daily = { daily: fixedJournal("daily", { type: "day" }) };
+    // The attribute gates the rules that let a day shrink below its label, so stock grids keep their size floor.
+    it("marks the grid for clipping only when the day label is custom", async () => {
+      const stock = await bootHarness(daily);
+      const custom = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
+      const stockView = stock.render(NotesWeekView, { props: { shelf: null, week } }).container;
+      const customView = custom.render(NotesWeekView, { props: { shelf: null, week } }).container;
+
+      expect(stockView.querySelector("[data-custom-day-label]")).toBeNull();
+      expect(customView.querySelector(".notes-week-view")?.hasAttribute("data-custom-day-label")).toBe(true);
+    });
+
     it("renders the day label in the user's format and keeps the full date as its name", async () => {
       const harness = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
@@ -260,8 +271,12 @@ describe("NotesWeekView", () => {
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, weeks: "left" } });
 
       expect(container.querySelector('[data-testid="week-number-cell"]')?.textContent?.trim()).toBe(week.format("w"));
-      expect(container.querySelector('[data-testid="header-month"]')?.textContent?.trim()).toBe("May");
-      expect(container.querySelector('[data-testid="header-year"]')?.textContent?.trim()).toBe("26");
+      // No monthly or yearly journal, so the heading cells are no controls: their visible text is hidden from
+      // screen readers, which read the full names instead.
+      const shown = (testId: string) =>
+        container.querySelector(`[data-testid="${CSS.escape(testId)}"] .cell-decoration__content [aria-hidden="true"]`)
+          ?.textContent;
+      expect([shown("header-month")?.trim(), shown("header-year")?.trim()]).toEqual(["May", "26"]);
     });
 
     it("renders each width's weekday text and names the column by the full weekday", async () => {

@@ -16,7 +16,7 @@ import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 
-import { accessibleFormatPattern, formatWeekday, labelPattern } from "../cell-format";
+import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
@@ -60,13 +60,10 @@ const days = computed(() =>
 );
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
 const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
+const customDayLabel = computed(() => display.state.labels.day !== "");
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
-  return days.value.map((day) => ({
-    name: day.start.format("dddd"),
-    wide: formatWeekday(day.start, weekdayLabel),
-    narrow: formatWeekday(day.start, weekdayLabelNarrow ?? weekdayLabel),
-  }));
+  return days.value.map((day) => weekdayTexts(day.start, weekdayLabel, weekdayLabelNarrow));
 });
 // A week belongs to the period that owns it, which is the representative day's — not the
 // week start's, which for a cross-year week sits in the previous month and year.
@@ -147,7 +144,7 @@ const isSelected = (period: Period): boolean =>
 </script>
 
 <template>
-  <div class="notes-week-view">
+  <div class="notes-week-view" :data-custom-day-label="customDayLabel || null">
     <div v-if="showHeader" class="notes-week-view__header" :data-flanked="flanked || null">
       <slot name="header-start" />
       <slot name="header">
@@ -354,12 +351,15 @@ const isSelected = (period: Period): boolean =>
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
   --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
   --_part-color: var(--_v-date-color);
-  /* A flex item keeps a content-sized floor; giving it up lets a long label clip inside the cell. */
-  min-width: 0;
   font-size: var(--_v-date-size);
   font-weight: var(--_v-date-weight);
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
+}
+/* A flex item keeps a content-sized floor; giving it up lets a long label clip inside the cell. Stock labels
+   keep the floor, so a short date beside marks never clips. */
+[data-custom-day-label] .notes-week-view__day {
+  min-width: 0;
 }
 @container journal-calendar (max-width: 28em) {
   .notes-week-view__weekday-wide {

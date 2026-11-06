@@ -443,6 +443,17 @@ describe("NotesMonthView", () => {
 
   describe("label formats", () => {
     const daily = { daily: fixedJournal("daily", { type: "day" }) };
+    // The attribute gates the rules that let a day shrink below its label, so stock grids keep their size floor.
+    it("marks the grid for clipping only when the day label is custom", async () => {
+      const stock = await bootHarness(daily);
+      const custom = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
+      const stockView = stock.render(NotesMonthView, { props: { shelf: null, month } }).container;
+      const customView = custom.render(NotesMonthView, { props: { shelf: null, month } }).container;
+
+      expect(stockView.querySelector("[data-custom-day-label]")).toBeNull();
+      expect(customView.querySelector(".notes-month-view")?.hasAttribute("data-custom-day-label")).toBe(true);
+    });
+
     it("renders the day label in the user's format and keeps the full date as its name", async () => {
       const harness = await bootHarness(daily, { labels: { day: "DD", week: "", month: "", quarter: "", year: "" } });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
@@ -473,7 +484,37 @@ describe("NotesMonthView", () => {
       expect(container.querySelector('[data-testid="header-month"]')?.textContent?.trim()).toBe("Aug");
       expect(container.querySelector('[data-testid="header-month"]')?.getAttribute("aria-label")).toBe("August 2026");
       expect(container.querySelector('[data-testid="header-quarter"]')?.textContent?.trim()).toBe("3rd");
-      expect(container.querySelector('[data-testid="header-year"]')?.textContent?.trim()).toBe("26");
+      // No yearly journal, so the year is no control: its visible text is hidden and its name read instead.
+      const year = container.querySelector('[data-testid="header-year"]');
+      expect(year?.querySelector('.cell-decoration__content [aria-hidden="true"]')?.textContent?.trim()).toBe("26");
+      expect(year?.querySelector(".notes-calendar-cell__accessible-name")?.textContent?.trim()).toBe("2026");
+    });
+
+    // With no monthly journal the heading's month is no control, so no aria-label names it: its text would be read.
+    it("keeps a non-control heading cell's accessible text fixed whatever the format", async () => {
+      const harness = await bootHarness(daily, { labels: { day: "", week: "", month: "MM", quarter: "", year: "" } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const heading = container.querySelector<HTMLElement>('[data-testid="header-month"]');
+      const shown = heading?.querySelector('[aria-hidden="true"]:not(.notes-calendar-cell__layer)');
+      const named = [...(heading?.querySelectorAll(".notes-calendar-cell__accessible-name") ?? [])];
+
+      expect(heading?.hasAttribute("aria-label")).toBe(false);
+      expect(shown?.textContent?.trim()).toBe("08");
+      expect(named.map((element) => element.textContent?.trim())).toEqual(["August 2026"]);
+    });
+
+    it.each([
+      ["stock", { day: "", week: "", month: "", quarter: "", year: "" }],
+      ["typed as the default", { day: "", week: "", month: "MMMM", quarter: "", year: "" }],
+    ])("renders a non-control heading cell with a %s format as plain text", async (_name, labels) => {
+      const harness = await bootHarness(daily, { labels });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const heading = container.querySelector<HTMLElement>('[data-testid="header-month"]');
+      const text = heading?.querySelector(".cell-decoration__content");
+
+      expect(heading?.querySelector(".notes-calendar-cell__accessible-name")).toBeNull();
+      expect(text?.children.length).toBe(0);
+      expect(text?.textContent?.trim()).toBe("August");
     });
 
     it("renders each width's weekday text and names the column by the full weekday", async () => {

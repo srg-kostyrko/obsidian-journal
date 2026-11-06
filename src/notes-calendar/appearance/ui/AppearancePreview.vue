@@ -16,7 +16,7 @@ import type { JournalDecorationStyle } from "@/decorations/config";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
 
-import { formatWeekday, labelPattern } from "../../cell-format";
+import { labelPattern, weekdayTexts } from "../../cell-format";
 import NotesCalendarCell from "../../ui/NotesCalendarCell.vue";
 
 import { partsAt, sampleDays } from "./preview-sample";
@@ -70,10 +70,7 @@ const format = (kind: PeriodKind): string => labelPattern(props.display.labels, 
 // the hidden width's text is `display: none`, out of the tree.
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = props.display;
-  return (rows.value[0]?.days ?? []).map(({ period }) => ({
-    wide: formatWeekday(period.start, weekdayLabel),
-    narrow: formatWeekday(period.start, weekdayLabelNarrow ?? weekdayLabel),
-  }));
+  return (rows.value[0]?.days ?? []).map(({ period }) => weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow));
 });
 
 const root = useTemplateRef<HTMLElement>("root");
@@ -176,6 +173,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   <div
     ref="root"
     class="appearance-preview"
+    :data-custom-day-label="display.labels.day !== '' || null"
     :style="SIZES[width]"
     @click="onPick"
     @keydown.enter="onPick"
@@ -380,7 +378,6 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
   --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
   --_part-color: var(--_v-date-color);
-  min-width: 0;
   font-size: var(--_v-date-size);
   font-weight: var(--_v-date-weight);
   font-style: var(--_v-date-italic);
@@ -391,6 +388,10 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 .appearance-preview__day--blank {
   --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
   min-height: var(--_v-cell-min-height);
+}
+/* As the month view: only a custom day label gives up the day's content-sized floor. */
+[data-custom-day-label] .appearance-preview__day {
+  min-width: 0;
 }
 @container journal-calendar (max-width: 28em) {
   .appearance-preview__weekday-wide {

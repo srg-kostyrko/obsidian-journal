@@ -22,7 +22,8 @@ const props = defineProps<{
 }>();
 
 const rawPeriod = computed(() => toRaw(props.period));
-const label = computed(() => rawPeriod.value.format(props.format ?? defaultFormatPattern(rawPeriod.value.kind)));
+const pattern = computed(() => props.format ?? defaultFormatPattern(rawPeriod.value.kind));
+const label = computed(() => rawPeriod.value.format(pattern.value));
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
 const isControl = computed(() => props.role !== undefined || !isInactive.value);
@@ -49,6 +50,13 @@ const states = computed(() =>
 const fills = computed(() => states.value.filter((state) => state !== "today" || !isActive.value));
 const accessibleName = computed(() =>
   isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
+);
+// A non-control cell takes no aria-label, so its text is what is read; a custom format would change that
+// text, and the accessible name must not follow the user's format.
+const hiddenName = computed(() =>
+  isControl.value || pattern.value === defaultFormatPattern(rawPeriod.value.kind)
+    ? undefined
+    : rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)),
 );
 
 const hover = useModifierHoverPreview();
@@ -92,8 +100,12 @@ const hover = useModifierHoverPreview();
       aria-hidden="true"
     />
     <span class="notes-calendar-cell__text">
-      <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
+      <CellDecoration :period="rawPeriod">
+        <template v-if="hiddenName === undefined">{{ label }}</template>
+        <span v-else aria-hidden="true">{{ label }}</span>
+      </CellDecoration>
     </span>
+    <span v-if="hiddenName !== undefined" class="notes-calendar-cell__accessible-name">{{ hiddenName }}</span>
   </span>
 </template>
 
@@ -496,11 +508,19 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell {
   color: var(--_part-color);
 }
+.notes-calendar-cell__accessible-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 /* Not positioned, so the layers, the content and the marks still stack in the cell's own context. */
 .notes-calendar-cell__text {
   display: flex;
   flex: 1;
-  min-width: 0;
   border-radius: inherit;
   color: var(--_text-active, var(--_text-selected, var(--_text-today, var(--_text-outside, var(--_part-color)))));
 }
@@ -510,17 +530,23 @@ const hover = useModifierHoverPreview();
    Marks and corners sit above the label, as positioned marks sat above the static label before
    layers existed: the content follows the marks in the DOM, so at an equal z-index the label would
    take the pointer from an overflow badge it overlaps. */
-/* A label longer than its cell clips there rather than widening the grid, once the view lets the cell
-   shrink below its content; a heading cell keeps its content width, so its label never clips. Only the
-   inline axis clips, because at `line-height: 1` descenders overflow the line box. */
-.notes-calendar-cell :deep(.cell-decoration) {
-  min-width: 0;
-}
 .notes-calendar-cell :deep(.cell-decoration__content) {
   position: relative;
   z-index: 2;
   /* Label padding: on top of the decoration's own mark reservation, and never shrinking its fill. */
   padding: var(--_v-cell-padding);
+}
+/* A label longer than its cell clips there rather than widening the grid, once the view lets the cell
+   shrink below its content; a heading cell keeps its content width, so its label never clips. Only the
+   inline axis clips, because at `line-height: 1` descenders overflow the line box. Gated on the grid
+   rendering a custom day label, so stock grids keep the content-sized floor they always had. */
+[data-custom-day-label] .notes-calendar-cell__text {
+  min-width: 0;
+}
+[data-custom-day-label] .notes-calendar-cell :deep(.cell-decoration) {
+  min-width: 0;
+}
+[data-custom-day-label] .notes-calendar-cell :deep(.cell-decoration__content) {
   min-width: 0;
   overflow-x: clip;
   text-overflow: ellipsis;

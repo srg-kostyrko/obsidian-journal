@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 import { calendarDisplaySlice, type CalendarDisplaySliceState, type WeekdayLabel } from "@/calendar";
 
-import { defaultFormatPattern } from "../cell-format";
+import { DEFAULT_WEEKDAY_PATTERN, defaultFormatPattern } from "../cell-format";
 
 import {
   isFormat,
@@ -132,8 +132,6 @@ export function withStructure(
   }
   return next;
 }
-
-const DEFAULT_WEEKDAY_PATTERN = "ddd";
 
 /** What an empty format renders. */
 export const defaultPattern = (control: FormatControl): string =>

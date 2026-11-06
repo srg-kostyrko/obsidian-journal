@@ -303,6 +303,12 @@ describe("AppearancePreview", () => {
   });
 
   describe("renders the label formats", () => {
+    it("marks the grid for clipping only when the day label is custom", () => {
+      expect(withDisplay({}).container.querySelector("[data-custom-day-label]")).toBeNull();
+      const custom = withDisplay({ labels: { day: "Do", week: "", month: "", quarter: "", year: "" } }).container;
+      expect(custom.querySelector(".appearance-preview")?.hasAttribute("data-custom-day-label")).toBe(true);
+    });
+
     it("renders the day, week and heading labels in the user's formats", () => {
       const { container } = withDisplay({ labels: { day: "DD", week: "w", month: "MM", quarter: "", year: "YY" } });
       const heading = container.querySelector('[data-preview-part="heading"]');

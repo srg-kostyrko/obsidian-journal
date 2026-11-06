@@ -76,29 +76,40 @@ describe("calendar appearance readers", () => {
     }).toEqual({ wide: undefined, narrow: "none", wideUnderQuery: "none", narrowUnderQuery: "inline" });
   });
 
+  // Stock labels keep the content-sized floor every calendar had before label formats, so a short date with marks
+  // never clips; the floor goes only under a grid root that renders a custom day label.
   it.each([
     ["monthView", ".notes-month-view__day"],
     ["weekView", ".notes-week-view__day"],
     ["preview", ".appearance-preview__day"],
-  ] as const)("%s lets a day shrink below its label, so a long label clips", (component, selector) => {
-    const rule = components[component].find(
-      (candidate) =>
-        candidate.container === null && candidate.selector === selector && candidate.declarations.has("min-width"),
-    );
-    expect(rule?.declarations.get("min-width")).toBe("0");
+  ] as const)("%s lets a day shrink below its label only under a custom day label", (component, selector) => {
+    const minWidths = components[component]
+      .filter((rule) => rule.container === null && rule.declarations.has("min-width"))
+      .map((rule) => [rule.selector, rule.declarations.get("min-width")]);
+    expect(minWidths).toContainEqual([`[data-custom-day-label] ${selector}`, "0"]);
+    expect(minWidths.filter(([found]) => found === selector)).toEqual([]);
   });
 
   // A grid track of 1fr keeps a content-sized floor, so every box between the day and its text gives that
   // floor up and the text clips; vertical overflow stays visible so descenders under `line-height: 1` survive.
-  it("clips a cell's label inside the cell instead of widening it", () => {
-    expect(cellDeclarations(".notes-calendar-cell__text")).toMatchObject({ "min-width": "0" });
-    expect(cellDeclarations(".notes-calendar-cell .cell-decoration")).toMatchObject({ "min-width": "0" });
-    expect(cellDeclarations(".notes-calendar-cell .cell-decoration__content")).toMatchObject({
+  it("clips a cell's label inside the cell only under a custom day label", () => {
+    expect(cellDeclarations("[data-custom-day-label] .notes-calendar-cell__text")).toMatchObject({ "min-width": "0" });
+    expect(cellDeclarations("[data-custom-day-label] .notes-calendar-cell .cell-decoration")).toMatchObject({
+      "min-width": "0",
+    });
+    expect(cellDeclarations("[data-custom-day-label] .notes-calendar-cell .cell-decoration__content")).toMatchObject({
       "min-width": "0",
       "overflow-x": "clip",
       "text-overflow": "ellipsis",
       "white-space": "nowrap",
     });
+    const unguarded = components.cell.filter(
+      (rule) =>
+        !rule.selector.includes("[data-custom-day-label]") &&
+        rule.selector !== ".notes-calendar-cell__accessible-name" &&
+        ["min-width", "overflow-x", "text-overflow", "white-space"].some((property) => rule.declarations.has(property)),
+    );
+    expect(unguarded.map((rule) => rule.selector)).toEqual([]);
   });
 
   it.each(cases)(
