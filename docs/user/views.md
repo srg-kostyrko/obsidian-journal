@@ -222,6 +222,8 @@ or a week number, that label comes first, and the **Today** it contains is under
 - **Date number** — the day's number in each cell.
 - **Today**, **Selected date** (the view's selected date), **Open note** (the note open in the
   editor) and **Days outside the month** — the four highlights.
+- **Current week** and **Weekends** — two more highlights, drawn as
+  [bands](#weekends-and-the-current-week) across the grid.
 - **Cells** — the size and spacing of every cell.
 
 An outline in the preview marks the part you are editing: every day a highlight applies to, the
@@ -244,7 +246,7 @@ The controls are headed by the part's name and the width they apply to, **All wi
 CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
 **Narrow**, the name shown is the narrow one, ending in `-narrow`.
 
-The four highlights share one set:
+The highlights share one set:
 
 - **Style** — **Text only**, **Ring**, **Background** or **None**. Out of the box, today is
   text only, the selected date a ring, the open note a background, and days outside the month text
@@ -273,6 +275,31 @@ narrow-only value goes back to the all-widths one through its
 smallest height a row of cells takes. The decoration editor's style canvas draws its sample cell at
 the all-widths row height, so a style is previewed at the size a wide calendar shows it; a
 narrow-only row height does not change the canvas.
+
+### Weekends and the current week {#weekends-and-the-current-week}
+
+**Current week** and **Weekends** have the same controls as the other highlights, but they color a stretch
+of the grid, not a single day, and out of the box both are **None**: nothing changes until you style them.
+
+- **Weekends** draws one band down each run of adjacent weekend columns, from the weekday header to the
+  last row, gaps between cells included. Which days are the weekend is the **Weekend days** setting in the
+  Calendar block of the main settings page — see [Weeks](/periods#weeks). The editor shows the current
+  weekend days and a button, **Change in calendar settings**, that takes you back there. Weekend days that
+  are not next to each other each get a band: in a week that starts on Sunday, a Saturday and Sunday weekend
+  gives one band at each edge of the grid. When a [timeline](/reference/code-blocks) hides weekdays with
+  `hiddenWeekdays`, runs are counted over the columns that remain, so with Saturday hidden, a Friday,
+  Saturday and Sunday weekend is one band over Friday and Sunday. The weekday names of a weekend column
+  take the band's text color, weight and italic, but not its fill.
+- **Current week** draws one band across the row that holds today, the week number included, and its text
+  color, weight and italic apply to the week number too. There is no band when today is a day outside the
+  month that the grid hides, and a Week calendar block, which shows a single week, never draws one. A
+  timeline that shows a single week does.
+
+A day that is several things at once takes its text from the order the [**Unchanged**](#unchanged)
+section lists. Like the other highlights, a band is drawn under the days by default, behind everything in them; with **Over decorations** on it is
+drawn above the whole day, so a background there also tints the day's number and its marks, not just the
+decorations.
+Because the weekend band sits below the current-week band, a day in both shows the current week's fill on top.
 
 ### Visibility
 
@@ -345,8 +372,8 @@ override them.
 
 A highlight's **Text color**, **Text weight** and **Text italic** can be **Unchanged**: this highlight
 leaves that part of the text alone. A day that is several things at once then shows the next
-highlight's value instead, in this order — the open note, the selected date, today, then days outside
-the month — and, when none of them sets one, the part's own, such as the date number's. Out of the
+highlight's value instead, in this order — the open note, the selected date, today, the current week,
+the weekend, then days outside the month — and, when none of them sets one, the part's own, such as the date number's. Out of the
 box, every highlight's weight and italic are **Unchanged**, as is the selected date's text color, so
 the ring changes nothing about the number inside it.
 
