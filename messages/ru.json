@@ -1913,6 +1913,20 @@
   ],
   "calendar_week_placement_label": "Номера недель по умолчанию",
   "calendar_week_placement_description": "Где отображается столбец с номерами недель в блоках календаря, для которых выбрано «Использовать глобальное значение по умолчанию».",
+  "calendar_weekend_label": "Выходные дни",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Без выходных"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Выходные по локали",
+  "calendar_weekend_custom": "Свои",
   "calendar_timeline_navigation_label": "Навигация временной шкалы по умолчанию",
   "calendar_timeline_navigation_description": "Показывает кнопки перехода к предыдущему и следующему периоду в блоках кода calendar-timeline. Блок может переопределить это параметром navigation.",
   "view_block_config_show_heading_label": "Показывать заголовок месяца/года",

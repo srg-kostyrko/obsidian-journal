@@ -1875,6 +1875,20 @@
   ],
   "calendar_week_placement_label": "Numéros de semaine par défaut",
   "calendar_week_placement_description": "Emplacement de la colonne des numéros de semaine dans les blocs de calendrier réglés sur « Utiliser la valeur par défaut globale ».",
+  "calendar_weekend_label": "Jours du week-end",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Pas de week-end"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Week-end des paramètres régionaux",
+  "calendar_weekend_custom": "Personnalisé",
   "calendar_timeline_navigation_label": "Navigation par défaut de la chronologie",
   "calendar_timeline_navigation_description": "Affiche les contrôles de période précédente et suivante dans les blocs de code calendar-timeline. Un bloc peut le remplacer avec son option navigation.",
   "view_block_config_show_heading_label": "Afficher l’en-tête mois/année",

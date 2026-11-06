@@ -1722,6 +1722,20 @@
   ],
   "calendar_week_placement_label": "デフォルトの週番号",
   "calendar_week_placement_description": "「グローバルデフォルトを使用」に設定されたカレンダーブロックで、週番号の列を表示する位置。",
+  "calendar_weekend_label": "週末の曜日",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "週末なし"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "ロケールの週末",
+  "calendar_weekend_custom": "カスタム",
   "calendar_timeline_navigation_label": "デフォルトのタイムラインナビゲーション",
   "calendar_timeline_navigation_description": "calendar-timeline コードブロックに前後の期間へ移動するボタンを表示します。ブロックの navigation オプションで上書きできます。",
   "view_block_config_show_heading_label": "月／年の見出しを表示",

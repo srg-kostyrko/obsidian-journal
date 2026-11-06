@@ -1722,6 +1722,20 @@
   ],
   "calendar_week_placement_label": "默认周数",
   "calendar_week_placement_description": "在设置为“使用全局默认值”的日历块中，周数列的显示位置。",
+  "calendar_weekend_label": "周末日",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "无周末"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "区域设置的周末",
+  "calendar_weekend_custom": "自定义",
   "calendar_timeline_navigation_label": "默认时间线导航",
   "calendar_timeline_navigation_description": "在 calendar-timeline 代码块中显示上一个和下一个时段的按钮。块可以通过其 navigation 选项覆盖此设置。",
   "view_block_config_show_heading_label": "显示月份/年份标题",

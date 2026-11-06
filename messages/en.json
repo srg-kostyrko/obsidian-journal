@@ -1881,6 +1881,20 @@
   ],
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
+  "calendar_weekend_label": "Weekend days",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "No weekend"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Locale's weekend",
+  "calendar_weekend_custom": "Custom",
   "calendar_timeline_navigation_label": "Default timeline navigation",
   "calendar_timeline_navigation_description": "Show previous and next controls on calendar-timeline code blocks. A block can override this with its navigation option.",
   "view_block_config_show_heading_label": "Show month/year heading",

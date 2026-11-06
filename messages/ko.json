@@ -1867,6 +1867,20 @@
   ],
   "calendar_week_placement_label": "기본 주 번호 위치",
   "calendar_week_placement_description": "\"전역 기본값 사용\"으로 설정된 달력 블록에서 주 번호 열이 표시되는 위치입니다.",
+  "calendar_weekend_label": "주말 요일",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "주말 없음"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "로캘의 주말",
+  "calendar_weekend_custom": "사용자 지정",
   "calendar_timeline_navigation_label": "기본 타임라인 탐색",
   "calendar_timeline_navigation_description": "calendar-timeline 코드 블록에 이전/다음 기간 이동 버튼을 표시합니다. 블록의 navigation 옵션으로 재정의할 수 있습니다.",
   "view_block_config_show_heading_label": "월/연도 제목 표시",

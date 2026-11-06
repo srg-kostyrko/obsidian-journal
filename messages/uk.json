@@ -1758,6 +1758,20 @@
   ],
   "calendar_week_placement_label": "Номери тижнів за замовчуванням",
   "calendar_week_placement_description": "Де стовпець із номером тижня відображається в блоках календаря, для яких встановлено значення «Використовувати глобальне значення за замовчуванням».",
+  "calendar_weekend_label": "Вихідні дні",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Без вихідних"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Вихідні за локаллю",
+  "calendar_weekend_custom": "Власні",
   "calendar_timeline_navigation_label": "Навігація часової шкали за замовчуванням",
   "calendar_timeline_navigation_description": "Показує кнопки переходу до попереднього та наступного періоду в блоках коду calendar-timeline. Блок може перевизначити це параметром navigation.",
   "view_block_config_show_heading_label": "Показати заголовок місяць/рік",

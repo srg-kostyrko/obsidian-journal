@@ -1875,6 +1875,20 @@
   ],
   "calendar_week_placement_label": "Numeri di settimana predefiniti",
   "calendar_week_placement_description": "Dove appare la colonna del numero della settimana nei blocchi calendario impostati su \"Utilizza le impostazioni predefinite globali\".",
+  "calendar_weekend_label": "Giorni del fine settimana",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Nessun fine settimana"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Fine settimana delle impostazioni locali",
+  "calendar_weekend_custom": "Personalizzato",
   "calendar_timeline_navigation_label": "Navigazione predefinita della cronologia",
   "calendar_timeline_navigation_description": "Mostra i controlli per il periodo precedente e successivo nei blocchi di codice calendar-timeline. Un blocco può ignorarlo con la sua opzione navigation.",
   "view_block_config_show_heading_label": "Mostra l'intestazione del mese/anno",
