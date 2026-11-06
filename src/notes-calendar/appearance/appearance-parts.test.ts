@@ -8,10 +8,12 @@ import { fromControlValue } from "./appearance-editing";
 import {
   CHIP_ORDER,
   familiesOf,
+  isFormat,
   isStructure,
   PARTS,
   roleFor,
   visibleControls,
+  type FormatControl,
   type StructureControl,
   type ValueControl,
   type ValuePartKey,
@@ -19,7 +21,13 @@ import {
 import { writtenEntryNames } from "./appearance-variables";
 
 const names = (part: ValuePartKey, style?: Parameters<typeof visibleControls>[1]) =>
-  visibleControls(part, style).map((control) => (isStructure(control) ? control.setting : control.path.join(".")));
+  visibleControls(part, style).map((control) => {
+    if (isStructure(control)) return control.setting;
+    return isFormat(control) ? control.label : control.path.join(".");
+  });
+
+const formatControls = (): readonly FormatControl[] =>
+  Object.values(PARTS).flatMap(({ controls }) => controls.filter((control) => isFormat(control)));
 
 const structureControls = (): readonly StructureControl[] =>
   Object.values(PARTS).flatMap(({ controls }) => controls.filter((control) => isStructure(control)));
@@ -30,7 +38,7 @@ describe("PARTS", () => {
     const reached = new Set<string>();
     for (const { controls } of Object.values(PARTS)) {
       for (const control of controls) {
-        if (isStructure(control) || control.entry === undefined) continue;
+        if (isStructure(control) || isFormat(control) || control.entry === undefined) continue;
         expect(written.has(control.entry)).toBe(true);
         reached.add(control.entry);
       }
@@ -39,13 +47,16 @@ describe("PARTS", () => {
   });
 
   it("gives the style select no variable name", () => {
-    const style = PARTS.today.controls.find((control) => !isStructure(control) && control.path[0] === "style");
-    expect(style && !isStructure(style) ? style.entry : "missing").toBeUndefined();
+    const style = PARTS.today.controls.find(
+      (control): control is ValueControl => !isStructure(control) && !isFormat(control) && control.path[0] === "style",
+    );
+    expect(style ? style.entry : "missing").toBeUndefined();
   });
 
   it("gives every control a family", () => {
     for (const { controls } of Object.values(PARTS)) {
-      for (const control of controls) expect(["visibility", "text", "highlight", "box"]).toContain(control.family);
+      for (const control of controls)
+        expect(["visibility", "label", "text", "highlight", "box"]).toContain(control.family);
     }
   });
 
@@ -72,6 +83,40 @@ describe("PARTS", () => {
     expect(PARTS.grid.controls.map((control) => control.family)).toEqual(["visibility"]);
   });
 
+  it("gives no format control a variable name", () => {
+    for (const control of formatControls()) expect(Object.hasOwn(control, "entry")).toBe(false);
+  });
+
+  it("gives each period kind and the weekday exactly one format control", () => {
+    expect(
+      formatControls()
+        .map((control) => control.label)
+        .toSorted(),
+    ).toEqual(["day", "week", "month", "quarter", "year", "weekday"].toSorted());
+  });
+
+  it("places each format on the part that renders it, after visibility", () => {
+    const labels = (part: keyof typeof PARTS) =>
+      PARTS[part].controls.filter((control) => isFormat(control)).map((control) => control.label);
+    expect(labels("heading")).toEqual(["month", "quarter", "year"]);
+    expect(labels("weekday")).toEqual(["weekday"]);
+    expect(labels("weekNumber")).toEqual(["week"]);
+    expect(labels("date")).toEqual(["day"]);
+    expect(PARTS.weekday.controls.map((control) => control.family).slice(0, 2)).toEqual(["visibility", "label"]);
+  });
+
+  it("suggests the ruled patterns, with no ISO week token", () => {
+    const suggestions = Object.fromEntries(formatControls().map((control) => [control.label, control.suggestions]));
+    expect(suggestions).toEqual({
+      day: ["D", "DD", "Do"],
+      week: ["[W]w", "w", "[W]ww", "wo"],
+      month: ["MMMM", "MMM", "MM"],
+      quarter: ["[Q]Q", "Qo", "Q"],
+      year: ["YYYY", "YY"],
+      weekday: ["ddd", "dd", "dddd", "letter"],
+    });
+  });
+
   it("orders every part once, most specific first", () => {
     expect(CHIP_ORDER.toSorted()).toEqual(Object.keys(PARTS).toSorted());
     expect(CHIP_ORDER[0]).toBe("active");
@@ -81,7 +126,16 @@ describe("PARTS", () => {
 
 describe("familiesOf", () => {
   it("groups a text part's controls visibility first", () => {
-    expect(familiesOf("weekday", undefined).map((group) => group.family)).toEqual(["visibility", "text"]);
+    expect(familiesOf("weekday", undefined).map((group) => group.family)).toEqual(["visibility", "label", "text"]);
+  });
+
+  it("gives the heading three label controls, month then quarter then year", () => {
+    const label = familiesOf("heading", undefined).find((group) => group.family === "label");
+    expect(label?.controls.map((control) => (isFormat(control) ? control.label : "other"))).toEqual([
+      "month",
+      "quarter",
+      "year",
+    ]);
   });
 
   it("gives the month grid only visibility", () => {
@@ -124,7 +178,8 @@ describe("visibleControls", () => {
 
 describe("roleFor", () => {
   const color = PARTS.selected.controls.find(
-    (control): control is ValueControl => !isStructure(control) && control.path.join(".") === "color",
+    (control): control is ValueControl =>
+      !isStructure(control) && !isFormat(control) && control.path.join(".") === "color",
   );
   const offered = (style: Parameters<typeof roleFor>[1]) =>
     color === undefined ? [] : themeColorGroupsFor(roleFor(color, style)).flatMap((group) => group.names);
@@ -139,7 +194,7 @@ describe("roleFor", () => {
 
   it("leaves a control without a style-dependent role on its own role", () => {
     const text = PARTS.heading.controls.find(
-      (control): control is ValueControl => !isStructure(control) && control.kind === "color",
+      (control): control is ValueControl => !isStructure(control) && !isFormat(control) && control.kind === "color",
     );
     expect(text && roleFor(text, undefined)).toBe("text");
   });

@@ -17,7 +17,16 @@ import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { isModified, valueAt, withReset } from "../appearance-editing";
-import { familiesOf, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
+import {
+  familiesOf,
+  isFormat,
+  isStructure,
+  PARTS,
+  type Control,
+  type Family,
+  type PartKey,
+  type Width,
+} from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -92,11 +101,17 @@ const inspected = computed(() => {
   if (part === undefined) return;
   const highlighted = part !== "grid" && PARTS[part].controls.some((control) => control.family === "highlight");
   const style = highlighted ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
-  return { part, families: familiesOf(part, style) };
+  // The label family has no control UI yet, so it stays out of the inspector until it does.
+  const families = familiesOf(part, style).filter(
+    (group): group is { family: Exclude<Family, "label">; controls: readonly Control[] } => group.family !== "label",
+  );
+  return { part, families };
 });
 
-const controlKey = (part: PartKey, control: Control): string =>
-  `${part}.${isStructure(control) ? control.setting : control.path.join(".")}`;
+function controlKey(part: PartKey, control: Control): string {
+  if (isStructure(control)) return `${part}.${control.setting}`;
+  return `${part}.${isFormat(control) ? `label.${control.label}` : control.path.join(".")}`;
+}
 
 // Keyed by part, so collapsing a family on one part leaves the same family open on the next.
 const collapsed = ref(new Set<string>());
