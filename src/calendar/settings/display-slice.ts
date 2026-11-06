@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
+import { climb } from "@/settings/repair";
 
 export type WeekPlacement = "none" | "left" | "right";
 export type OutsideDays = "automatic" | "interactive" | "inert" | "hidden";
@@ -13,8 +14,8 @@ export type OutsideDates = "active" | "inactive" | "blank";
 const labelField = v.optional(v.string(), "");
 
 const weekdayLabelSchema = v.variant("type", [
-  v.object({ type: v.literal("pattern"), pattern: v.optional(v.string(), "") }),
-  v.object({ type: v.literal("letter") }),
+  v.object({ type: v.pipe(v.literal("pattern"), climb("discriminant")), pattern: v.optional(v.string(), "") }),
+  v.object({ type: v.pipe(v.literal("letter"), climb("discriminant")) }),
 ]);
 
 const STOCK_LABELS: Labels = { day: "", week: "", month: "", quarter: "", year: "" };

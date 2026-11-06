@@ -66,6 +66,17 @@ describe("calendarDisplaySlice", () => {
     expect(state.weekPlacement).toBe("right");
   });
 
+  it("repairs an unknown weekdayLabelNarrow shape to null, not to a widened override", async () => {
+    const harness = await testContainer({
+      modules: [calendarSettingsCoreModule],
+      data: { calendarDisplay: { weekdayLabelNarrow: { type: "nope" }, weekdayLabel: { type: "letter" } } },
+      allow: { dataRepair: true },
+    });
+    const state = harness.settings.getSlice(calendarDisplaySlice).state;
+    expect(state.weekdayLabelNarrow).toBeNull();
+    expect(state.weekdayLabel).toEqual({ type: "letter" });
+  });
+
   it("accepts the letter weekday label", () => {
     const parsed = v.parse(calendarDisplaySliceSchema, {
       weekdayLabel: { type: "letter" },
