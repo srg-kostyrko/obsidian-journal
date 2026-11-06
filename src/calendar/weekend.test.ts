@@ -61,6 +61,10 @@ describe("weekendRuns", () => {
     expect(weekendRuns([1, 2, 3, 4, 5, 0], new Set([5, 6, 0]))).toEqual([{ start: 4, span: 2 }]);
   });
 
+  it("joins weekend days a hidden weekday separates, since runs count visible columns", () => {
+    expect(weekendRuns([1, 2, 3, 4, 5, 0], new Set([5, 0]))).toEqual([{ start: 4, span: 2 }]);
+  });
+
   it("gives no run for an empty weekend", () => {
     expect(weekendRuns([1, 2, 3, 4, 5, 6, 0], new Set())).toEqual([]);
   });

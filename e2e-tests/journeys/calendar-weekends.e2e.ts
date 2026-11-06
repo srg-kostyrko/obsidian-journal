@@ -415,5 +415,34 @@ describe("weekend and current-week bands", () => {
         columnsOf(day(layout, TIMELINE_FRIDAY), day(layout, TIMELINE_SUNDAY)),
       );
     });
+
+    // Saturday is no weekend day here, so only counting runs over the visible columns joins Friday and
+    // Sunday; a run broken at the hidden calendar day would give two bands.
+    it("a timeline that hides Saturday joins a Friday and Sunday weekend into one band", async () => {
+      await openCalendarSettings();
+      await toggleWeekendDay(6);
+      const month = await waitForGrid(
+        MONTH,
+        FRIDAY,
+        (read) => read.weekendBands.length === 2,
+        "the month block did not split a Friday and Sunday weekend into two bands",
+      );
+      expect(month.weekendBands.map(horizontal)).toEqual([
+        columnsOf(day(month, FRIDAY), day(month, FRIDAY)),
+        columnsOf(day(month, SUNDAY), day(month, SUNDAY)),
+      ]);
+      await closeSettings();
+
+      const timeline = await waitForGrid(
+        TIMELINE,
+        TIMELINE_FRIDAY,
+        (read) => read.weekendHeaders.length === 2,
+        "the timeline did not take the Friday and Sunday weekend",
+      );
+      expect(timeline.days[TIMELINE_SATURDAY]).toBeUndefined();
+      expect(timeline.weekendBands.map(horizontal)).toEqual([
+        columnsOf(day(timeline, TIMELINE_FRIDAY), day(timeline, TIMELINE_SUNDAY)),
+      ]);
+    });
   });
 });
