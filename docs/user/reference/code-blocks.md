@@ -66,15 +66,19 @@ A calendar grid for the period around the note it sits in. Without `mode`, a dai
 its week, a monthly note its month, a quarterly note its quarter and a yearly note its year. A custom
 interval note shows its week, and a note in no journal shows the current week.
 
-| Option           | Values                                            | Default                                          |
-| ---------------- | ------------------------------------------------- | ------------------------------------------------ |
-| `mode`           | `week`, `month`, `quarter`, `calendar`            | from the note's journal, as above                |
-| `shelf`          | a shelf's name                                    | the shelf of the note's journal, or all journals |
-| `weeks`          | `default`, `left`, `right`, `none`                | `default` — **Default week numbers**             |
-| `hiddenWeekdays` | a list of day numbers, `0` Sunday to `6` Saturday | none hidden                                      |
-| `before`         | a number of extra periods above                   | `0`; `week` and `month` modes only               |
-| `after`          | a number of extra periods below                   | `0`; `week` and `month` modes only               |
-| `navigation`     | `true`, `false`                                   | **Default timeline navigation**                  |
+| Option           | Values                                            | Default                                           |
+| ---------------- | ------------------------------------------------- | ------------------------------------------------- |
+| `mode`           | `week`, `month`, `quarter`, `calendar`            | from the note's journal, as above                 |
+| `shelf`          | a shelf's name                                    | the shelf of the note's journal, or all journals  |
+| `weeks`          | `default`, `left`, `right`, `none`                | `default` — **Default week numbers**              |
+| `hiddenWeekdays` | a list of day numbers, `0` Sunday to `6` Saturday | none hidden                                       |
+| `before`         | a number of extra periods above                   | `0`; `week` and `month` modes only                |
+| `after`          | a number of extra periods below                   | `0`; `week` and `month` modes only                |
+| `navigation`     | `true`, `false`                                   | **Default timeline navigation**                   |
+| `heading`        | `true`, `false`                                   | **Month heading** in Calendar appearance          |
+| `weekdays`       | `true`, `false`                                   | **Weekday header** in Calendar appearance         |
+| `outside`        | `interactive`, `inert`, `hidden`                  | **Days outside the month** in Calendar appearance |
+| `rows`           | `fit`, `six`                                      | **Month grid** in Calendar appearance             |
 
 `calendar` shows the whole year as twelve months; `quarter` shows three.
 
@@ -97,11 +101,29 @@ hiddenWeekdays: [0, 6]
 ```
 ````
 
+`heading` and `weekdays` show or hide the headings above each grid and the row of weekday names; a
+hidden weekday header stays readable to screen readers. `outside` and `rows` apply to the grids of
+`month`, `quarter` and `calendar` modes and do nothing in `week` mode: `outside` chooses whether the
+neighboring months' days are clickable (`interactive`), shown but not clickable (`inert`) or blank
+(`hidden`), and `rows: six` gives every month six rows, `fit` only as many as it needs. A value that is
+not one of those is ignored, so the option follows Calendar appearance.
+
+A month grid with six rows and no days outside the month:
+
+````markdown
+```calendar-timeline
+mode: month
+rows: six
+outside: hidden
+```
+````
+
 With `navigation: true`, arrows page through periods without opening or creating a note — a week at a
 time in `week` mode, a month in `month`, a quarter in `quarter`, a year in `calendar`. A reset control
 appears once you have moved, and the block returns to the note's own period whenever Obsidian redraws
 it. When the block shows a single grid — `week` or `month` with no `before` or `after` — the arrows sit
-beside the grid's own headings, which still open their notes.
+beside the grid's own headings, which still open their notes. With `heading: false` there is no heading
+to join, so the arrows keep a row of their own.
 
 ![Week timeline](/assets/code-blocks-timeline-week-light.png){.light-only}
 ![Week timeline](/assets/code-blocks-timeline-week-dark.png){.dark-only}

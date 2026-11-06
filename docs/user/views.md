@@ -82,7 +82,17 @@ block shows the same span as week strips instead.
 - **Days of the week** — the days to show; turn weekends off to hide them.
 - **Week numbers** — **Use global default**, **Hidden**, **Before weekdays** or **After weekdays**. The
   global default is **Default week numbers** on the main settings page.
-- **Show month/year heading** — the heading above each grid.
+- **Show month/year heading** and **Show weekday header** — **Default**, **Shown** or **Hidden**. **Default**
+  follows [Calendar appearance](#calendar-appearance), so changing the global choice there changes every
+  block left on **Default**.
+- **Days outside the month** (Month calendar only) — **Default**, **Interactive**, **Inert** or
+  **Hidden**: the neighboring months' days that fill a grid's first and last weeks are clickable and
+  decorated, shown but not clickable, or left blank.
+- **Rows** (Month calendar only) — **Default**, **As needed** or **Always six**.
+
+A hidden weekday header stays available to screen readers, so the columns keep their names. A hidden
+heading is removed, since its cells have their own names. A block cannot pick **Automatic** for outside
+days itself; **Default** with the global **Automatic** is that.
 
 Each cell shows whether a note exists and carries its [decorations](/decorations). Week numbers and
 headings open that week's, month's, quarter's or year's note in whichever journal of that length is
@@ -206,6 +216,8 @@ or a week number, that label comes first, and the **Today** it contains is under
 - **Month heading** — the month and year above the grid.
 - **Weekday header** — the row of weekday names.
 - **Week numbers**
+- **Month grid** — how many rows a month takes. It has no look of its own to edit, so it is reached from
+  **Editing**, or as the last part under **Also here** after a click inside the grid.
 - **Date number** — the day's number in each cell.
 - **Today**, **Selected date** (the view's selected date), **Open note** (the note open in the
   editor) and **Days outside the month** — the four highlights.
@@ -224,7 +236,7 @@ A part you have changed carries a dot in **Editing** and in **Also here**. When 
 ### What each part offers
 
 The controls are headed by the part's name and the width they apply to, **All widths** or
-**Narrow**, and depend on the part. They are grouped in sections by kind (**Text**, **Highlight** or
+**Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Text**, **Highlight** or
 **Box**), each open to start with and folded away by clicking its name. Every one but a highlight's **Style** shows, beneath its name, the
 CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
 **Narrow**, the name shown is the narrow one, ending in `-narrow`.
@@ -258,6 +270,31 @@ narrow-only value goes back to the all-widths one through its
 smallest height a row of cells takes. The decoration editor's style canvas draws its sample cell at
 the all-widths row height, so a style is previewed at the size a wide calendar shows it; a
 narrow-only row height does not change the canvas.
+
+### Visibility
+
+Some parts open with a **Visibility** section. Its choices decide what the calendar shows, not how it
+looks, so they apply at all widths: under **Narrow** they carry an **All widths** note, and
+**Reset to default** under **Wide** puts them back along with the part's values. They show no CSS
+variable.
+
+- **Month heading** — **Heading**: **Shown** or **Hidden**.
+- **Weekday header** — **Weekday header**: **Shown** or **Hidden**.
+- **Week numbers** — **Placement**: **Before weekdays**, **After weekdays** or **Hidden**. It is the same
+  value as **Default week numbers** on the main settings page, edited from two places.
+- **Days outside the month** — **Automatic**, **Interactive**, **Inert** or **Hidden**.
+- **Month grid** — **Rows**: **As needed** or **Always six**. A month then takes as many weeks as it
+  spans, or always six, with the extra rows filled by the neighboring months' days. The extra days follow
+  **Days outside the month**: clickable and decorated when **Interactive**, shown but not clickable when
+  **Inert**, blank when **Hidden**.
+
+**Automatic** gives each calendar the behavior it has had: a Month calendar block that shows one month
+has interactive outside days; one that shows several months hides them; a timeline in `month` mode has
+interactive ones; a timeline in `quarter` or `calendar` mode hides them. **Inert** days keep their
+look but do nothing when clicked. Out of the box nothing changes.
+
+A Month calendar or Week calendar block and a
+[timeline](/reference/code-blocks#timeline-) can override these per block.
 
 ### Unchanged
 
