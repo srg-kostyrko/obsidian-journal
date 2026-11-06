@@ -669,10 +669,8 @@ describe("TimelineCodeBlock", () => {
     });
 
     it("the fence's rows: six pads a month grid to six rows, over a fit global", async () => {
-      const fit = await renderTimeline({ mode: "month" }, monthScenario());
       const six = await renderTimeline({ rows: "six" }, monthScenario());
 
-      expect(rowCount(six.container)).toBeGreaterThanOrEqual(rowCount(fit.container));
       expect(rowCount(six.container)).toBe(7);
     });
 

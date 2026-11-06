@@ -10,8 +10,8 @@ const props = defineProps<{
   shelf: string | null;
   weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
-  showHeader?: boolean;
-  showWeekdays?: boolean;
+  showHeader: boolean;
+  showWeekdays: boolean;
   outsideDates?: OutsideDates;
   sixRows?: boolean;
 }>();
