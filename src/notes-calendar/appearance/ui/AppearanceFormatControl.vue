@@ -109,7 +109,7 @@ const isoWarning = computed(
     <template #description>
       <div v-if="!isWeekday">{{ m.calendar_appearance_all_widths() }}</div>
       <div>
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
+        <a target="_blank" rel="noopener" href="https://momentjs.com/docs/#/displaying/format/">
           {{ m.common_moment_format_reference() }}
         </a>
       </div>

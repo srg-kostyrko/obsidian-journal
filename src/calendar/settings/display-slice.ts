@@ -18,8 +18,8 @@ const weekdayLabelSchema = v.variant("type", [
   v.object({ type: v.pipe(v.literal("letter"), climb("discriminant")) }),
 ]);
 
-const STOCK_LABELS: Labels = { day: "", week: "", month: "", quarter: "", year: "" };
-const STOCK_WEEKDAY_LABEL: WeekdayLabel = { type: "pattern", pattern: "" };
+const stockLabels = (): Labels => ({ day: "", week: "", month: "", quarter: "", year: "" });
+const stockWeekdayLabel = (): WeekdayLabel => ({ type: "pattern", pattern: "" });
 
 export const calendarDisplaySliceSchema = v.object({
   weekPlacement: v.optional(v.picklist(["none", "left", "right"]), "left"),
@@ -33,9 +33,9 @@ export const calendarDisplaySliceSchema = v.object({
   // An empty string is "the default pattern for that period kind".
   labels: v.optional(
     v.object({ day: labelField, week: labelField, month: labelField, quarter: labelField, year: labelField }),
-    STOCK_LABELS,
+    stockLabels,
   ),
-  weekdayLabel: v.optional(weekdayLabelSchema, STOCK_WEEKDAY_LABEL),
+  weekdayLabel: v.optional(weekdayLabelSchema, stockWeekdayLabel),
   // null is "same as the wide label".
   weekdayLabelNarrow: v.optional(v.nullable(weekdayLabelSchema), null),
 });
@@ -52,8 +52,8 @@ export const calendarDisplaySlice = defineSlice<"calendarDisplay", typeof calend
     showWeekdays: true,
     outsideDays: "automatic",
     monthRows: "fit",
-    labels: STOCK_LABELS,
-    weekdayLabel: STOCK_WEEKDAY_LABEL,
+    labels: stockLabels(),
+    weekdayLabel: stockWeekdayLabel(),
     weekdayLabelNarrow: null,
   },
 );

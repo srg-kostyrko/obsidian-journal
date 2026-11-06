@@ -1,3 +1,4 @@
+// cspell: ignore noopener
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -70,7 +71,7 @@ describe("AppearanceFormatControl", () => {
     expect(box().placeholder).toBe("D");
     expect(suggestions()).toBeTruthy();
     expect(preview()).toBe(`${m.calendar_appearance_format_preview()} 4`);
-    expect(screen.getByRole("link", { name: m.common_moment_format_reference() })).toBeTruthy();
+    expect(screen.getByRole("link", { name: m.common_moment_format_reference() }).getAttribute("rel")).toBe("noopener");
   });
 
   it("writes a typed pattern and previews it on today", async () => {

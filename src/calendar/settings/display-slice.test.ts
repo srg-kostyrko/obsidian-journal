@@ -7,6 +7,19 @@ import { calendarDisplaySlice, calendarDisplaySliceSchema } from "./display-slic
 import { calendarSettingsCoreModule } from "./module";
 
 describe("calendarDisplaySlice", () => {
+  it("fills the label fields from fresh objects, so filling one in place leaves the stock untouched", () => {
+    const first = v.parse(calendarDisplaySliceSchema, {});
+    const second = v.parse(calendarDisplaySliceSchema, {});
+    first.labels.day = "DD";
+    if (first.weekdayLabel.type === "pattern") first.weekdayLabel.pattern = "dd";
+    expect([second.labels.day, calendarDisplaySlice.defaults.labels.day]).toEqual(["", ""]);
+    expect([second.weekdayLabel, calendarDisplaySlice.defaults.weekdayLabel]).toEqual([
+      { type: "pattern", pattern: "" },
+      { type: "pattern", pattern: "" },
+    ]);
+    expect(second.labels).not.toBe(calendarDisplaySlice.defaults.labels);
+  });
+
   it("defaults weekPlacement to left", () => {
     expect(calendarDisplaySlice.defaults.weekPlacement).toBe("left");
   });
