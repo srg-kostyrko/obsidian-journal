@@ -44,4 +44,4 @@ export {
   type StructureKey,
   type StructureValue,
 } from "./structure";
-export { localeWeekend, resolveWeekend, weekendRuns } from "./weekend";
+export { localeWeekend, resolveWeekend, weekendDayNames, weekendRuns } from "./weekend";

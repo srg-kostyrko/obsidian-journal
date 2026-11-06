@@ -29,6 +29,13 @@ export function resolveWeekend(setting: WeekendSetting, locale: string): Readonl
   return new Set(setting.type === "custom" ? setting.days : localeWeekend(locale));
 }
 
+const MONDAY_FIRST = [1, 2, 3, 4, 5, 6, 0];
+
+/** The weekend's day names Monday first whatever the grid, so a Sunday-start week still reads "Saturday and Sunday". */
+export function weekendDayNames(weekend: ReadonlySet<number>, weekdayNames: readonly string[]): string[] {
+  return MONDAY_FIRST.filter((day) => weekend.has(day)).map((day) => weekdayNames[day] ?? "");
+}
+
 /** Maximal runs of adjacent weekend columns, as indexes among the visible day columns. */
 export function weekendRuns(
   columns: readonly number[],

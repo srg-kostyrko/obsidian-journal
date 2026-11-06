@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "将周配置应用于库中的所有日期",
   "calendar_appearance_section_title": "日历外观",
   "calendar_appearance_open": "打开",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "周末：{days}",
+        "mode=none": "无周末"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "在日历设置中更改",
   "calendar_appearance_preview": "预览",
   "calendar_appearance_width_label": "宽度",
   "calendar_appearance_width": [

@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "保管庫内のすべての日付に週の設定を適用",
   "calendar_appearance_section_title": "カレンダーの外観",
   "calendar_appearance_open": "開く",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "週末: {days}",
+        "mode=none": "週末なし"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "カレンダー設定で変更",
   "calendar_appearance_preview": "プレビュー",
   "calendar_appearance_width_label": "幅",
   "calendar_appearance_width": [

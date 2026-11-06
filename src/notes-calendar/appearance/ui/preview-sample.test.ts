@@ -89,6 +89,36 @@ describe("partsAt", () => {
     expect(partsAt(target)).toEqual(["weekNumber", "today"]);
   });
 
+  it("lists a multi-state day in chip order, with Current week and Weekends among the states", () => {
+    const target = element({
+      class: CELL,
+      "data-preview-part": "date",
+      "data-selected": "true",
+      "data-today": "true",
+      "data-current-week": "true",
+      "data-weekend": "true",
+      "data-outside": "true",
+    });
+    expect(partsAt(target)).toEqual(["selected", "today", "currentWeek", "weekend", "outside", "date", "cell"]);
+  });
+
+  it("names the current week's number cell by its week before the today it contains", () => {
+    const target = element({
+      class: CELL,
+      "data-preview-part": "weekNumber",
+      "data-today": "true",
+      "data-current-week": "true",
+    });
+    expect(partsAt(target)).toEqual(["weekNumber", "today", "currentWeek"]);
+  });
+
+  it("names a weekend column's header Weekends first, then Weekday header", () => {
+    expect(partsAt(element({ "data-preview-part": "weekday", "data-weekend": "true" }))).toEqual([
+      "weekend",
+      "weekday",
+    ]);
+  });
+
   it("names a weekday header", () => {
     expect(partsAt(element({ "data-preview-part": "weekday" }))).toEqual(["weekday"]);
   });

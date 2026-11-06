@@ -33,6 +33,9 @@ function inspectorHeading(container: Element): HTMLElement {
   return heading;
 }
 
+const summary = (): HTMLElement | null =>
+  screen.queryByText(m.calendar_appearance_weekend_summary({ mode: "some", days: "Saturday and Sunday" }));
+
 function partOption(part: PartKey): HTMLOptionElement {
   return within(partsList()).getByRole<HTMLOptionElement>("option", { name: new RegExp(`^${partName(part)}`) });
 }
@@ -131,7 +134,9 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(todayCell(container));
 
     expect(partsList().value).toBe("today");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell", "grid"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
+      (["currentWeek", "date", "cell", "grid"] as const).map(partName),
+    );
     expect(screen.getByText("--journal-cell-today-text-color")).toBeTruthy();
   });
 
@@ -141,13 +146,15 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(selectedCell(container));
 
     expect(partsList().value).toBe("selected");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell", "grid"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
+      (["currentWeek", "weekend", "date", "cell", "grid"] as const).map(partName),
+    );
 
-    await userEvent.click(chips()[0]);
+    await userEvent.click(chips()[2]);
 
     expect(partsList().value).toBe("date");
     expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
-      (["selected", "cell", "grid"] as const).map(partName),
+      (["selected", "currentWeek", "weekend", "cell", "grid"] as const).map(partName),
     );
   });
 
@@ -157,14 +164,16 @@ describe("AppearanceSubpage", () => {
     await userEvent.click(openNoteCell(container));
 
     expect(partsList().value).toBe("active");
-    expect(chips().map((chip) => chip.textContent?.trim())).toEqual((["date", "cell", "grid"] as const).map(partName));
+    expect(chips().map((chip) => chip.textContent?.trim())).toEqual(
+      (["currentWeek", "date", "cell", "grid"] as const).map(partName),
+    );
   });
 
   it.each(["{Enter}", " "])("moves focus to the parts list once %j picks an also-here part", async (key) => {
     const { container } = mount();
     await userEvent.click(selectedCell(container));
 
-    chips()[0].focus();
+    chips()[2].focus();
     await userEvent.keyboard(key);
 
     expect(partsList().value).toBe("date");
@@ -335,13 +344,32 @@ describe("AppearanceSubpage", () => {
     mount();
 
     const offered = [...partsList().options].filter((option) => option.value !== "");
-    expect(offered).toHaveLength(10);
+    expect(offered).toHaveLength(12);
     expect(offered.at(-1)?.value).toBe("grid");
 
     await userEvent.selectOptions(partsList(), "weekday");
 
     expect(screen.getByText("--journal-cell-weekday-size")).toBeTruthy();
     expect(chips()).toEqual([]);
+  });
+
+  it.each([
+    ["weekend", "Weekends"],
+    ["currentWeek", "Current week"],
+  ] as const)("the parts list names %s", (part, name) => {
+    mount();
+
+    expect(partOption(part).textContent?.trim()).toBe(name);
+  });
+
+  it("shows the weekend summary under Weekends alone", async () => {
+    mount();
+
+    await userEvent.selectOptions(partsList(), "weekend");
+    expect(summary()).toBeTruthy();
+
+    await userEvent.selectOptions(partsList(), "currentWeek");
+    expect(summary()).toBeNull();
   });
 
   it("says how to pick a part beside the preview's title, captions the width, and shows no controls until one is", () => {

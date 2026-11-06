@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "보관함의 모든 날짜에 주 구성 적용",
   "calendar_appearance_section_title": "달력 모양",
   "calendar_appearance_open": "열기",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "주말: {days}",
+        "mode=none": "주말 없음"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "캘린더 설정에서 변경",
   "calendar_appearance_preview": "미리 보기",
   "calendar_appearance_width_label": "너비",
   "calendar_appearance_width": [

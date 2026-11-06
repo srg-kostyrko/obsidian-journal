@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { localeWeekend, resolveWeekend, weekendRuns } from "./weekend";
+import { localeWeekend, resolveWeekend, weekendDayNames, weekendRuns } from "./weekend";
 
 describe("localeWeekend", () => {
   it("reads Saturday and Sunday for en-US", () => {
@@ -63,5 +63,18 @@ describe("weekendRuns", () => {
 
   it("gives no run for an empty weekend", () => {
     expect(weekendRuns([1, 2, 3, 4, 5, 6, 0], new Set())).toEqual([]);
+  });
+});
+
+describe("weekendDayNames", () => {
+  const NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  it("lists the days Monday first, so Sunday comes last", () => {
+    expect(weekendDayNames(new Set([0, 6]), NAMES)).toEqual(["Saturday", "Sunday"]);
+    expect(weekendDayNames(new Set([5, 6]), NAMES)).toEqual(["Friday", "Saturday"]);
+  });
+
+  it("lists nothing for no weekend", () => {
+    expect(weekendDayNames(new Set(), NAMES)).toEqual([]);
   });
 });

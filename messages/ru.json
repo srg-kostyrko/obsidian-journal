@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Применять конфигурацию недели ко всем датам в хранилище",
   "calendar_appearance_section_title": "Отображение календаря",
   "calendar_appearance_open": "Открыть",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Выходные: {days}",
+        "mode=none": "Без выходных"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "Изменить в настройках календаря",
   "calendar_appearance_preview": "Предпросмотр",
   "calendar_appearance_width_label": "Ширина",
   "calendar_appearance_width": [

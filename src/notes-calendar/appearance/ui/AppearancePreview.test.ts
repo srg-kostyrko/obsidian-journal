@@ -73,7 +73,7 @@ describe("AppearancePreview", () => {
     await userEvent.click(today);
 
     expect(emitted("pick")).toEqual([[partsAt(today), "2026-05-13"]]);
-    expect(partsAt(today)).toEqual(["today", "date", "cell", "grid"]);
+    expect(partsAt(today)).toEqual(["today", "currentWeek", "date", "cell", "grid"]);
   });
 
   it.each(["{Enter}", " "])("emits the same parts for %j on a focused cell as for a click", async (key) => {
@@ -83,7 +83,7 @@ describe("AppearancePreview", () => {
     today.focus();
     await userEvent.keyboard(key);
 
-    expect(emitted("pick")).toEqual([[["today", "date", "cell", "grid"], "2026-05-13"]]);
+    expect(emitted("pick")).toEqual([[["today", "currentWeek", "date", "cell", "grid"], "2026-05-13"]]);
   });
 
   it("marks the open note two days after today, unselected", () => {

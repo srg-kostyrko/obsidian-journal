@@ -32,7 +32,14 @@ export function sampleDays(today: CalendarDate, weekend: ReadonlySet<number>): P
   };
 }
 
-const STATES = ["active", "selected", "today", "outside"] as const;
+const STATES = [
+  ["active", "data-active"],
+  ["selected", "data-selected"],
+  ["today", "data-today"],
+  ["currentWeek", "data-current-week"],
+  ["weekend", "data-weekend"],
+  ["outside", "data-outside"],
+] as const;
 
 const PREVIEW_PARTS: Readonly<Record<string, readonly PartKey[]>> = {
   date: ["date", "cell"],
@@ -46,8 +53,9 @@ const PREVIEW_PARTS: Readonly<Record<string, readonly PartKey[]>> = {
 /** Every part the element belongs to, in the order a click should offer them. */
 export function partsAt(target: Element): readonly PartKey[] {
   const parts = new Set<PartKey>();
-  const cell = target.closest(".notes-calendar-cell");
-  for (const state of STATES) if (cell?.hasAttribute(`data-${state}`) === true) parts.add(state);
+  // A weekend column's header is no cell but carries the band's state all the same.
+  const cell = target.closest(".notes-calendar-cell, [data-preview-part='weekday']");
+  for (const [state, attribute] of STATES) if (cell?.hasAttribute(attribute) === true) parts.add(state);
   const part = target.closest<HTMLElement>("[data-preview-part]")?.dataset.previewPart;
   const keys = PREVIEW_PARTS[part ?? ""] ?? [];
   for (const key of keys) parts.add(key);
@@ -55,5 +63,5 @@ export function partsAt(target: Element): readonly PartKey[] {
   const ordered = CHIP_ORDER.filter((key) => parts.has(key));
   // A day is mostly its state, so a state leads there; a label (the month name, a week number) is
   // what was clicked, so it leads and the today it contains follows.
-  return part === "date" ? ordered : [...keys, ...ordered.filter((key) => !keys.includes(key))];
+  return part === "date" || part === "weekday" ? ordered : [...keys, ...ordered.filter((key) => !keys.includes(key))];
 }
