@@ -187,7 +187,7 @@ describe("AppearanceFormatControl", () => {
       display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: "dddd" } };
       mount("weekday", "narrow");
       expect(optionTexts()).toContain(m.calendar_appearance_format_same_as_wide());
-      expect(box().placeholder).toBe(m.calendar_appearance_format_same_as_wide());
+      expect(box().placeholder).toBe("dddd");
       expect(preview()).toBe(`${m.calendar_appearance_format_preview()} Monday`);
 
       await pick(m.calendar_appearance_format_letter());
@@ -196,6 +196,23 @@ describe("AppearanceFormatControl", () => {
 
       await pick(m.calendar_appearance_format_same_as_wide());
       expect(display().state.weekdayLabelNarrow).toBeNull();
+    });
+
+    it("clears the narrow box back to same as wide, showing the wide value as placeholder", async () => {
+      display().state = {
+        ...display().state,
+        weekdayLabel: { type: "letter" },
+        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+      };
+      mount("weekday", "narrow");
+      expect(box().value).toBe("dd");
+
+      await type("");
+
+      expect(display().state.weekdayLabelNarrow).toBeNull();
+      expect(box().value).toBe("");
+      expect(box().placeholder).toBe(m.calendar_appearance_format_letter());
+      expect(preview()).toBe(`${m.calendar_appearance_format_preview()} M`);
     });
 
     it("has no All widths note, since it has a value per width", () => {
@@ -219,11 +236,11 @@ describe("AppearanceFormatControl", () => {
       await type("[W]W");
 
       expect(display().state.labels.week).toBe("[W]W");
-      expect(screen.getByText(m.journal_edit_wrong_week_warning())).toBeTruthy();
+      expect(screen.getByText(m.calendar_appearance_format_iso_warning())).toBeTruthy();
 
       testCalendar().applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
       await nextTick();
-      expect(screen.queryByText(m.journal_edit_wrong_week_warning())).toBeNull();
+      expect(screen.queryByText(m.calendar_appearance_format_iso_warning())).toBeNull();
     });
 
     it("does not show for W on an ISO grid", async () => {
@@ -232,7 +249,7 @@ describe("AppearanceFormatControl", () => {
 
       await type("[W]W");
 
-      expect(screen.queryByText(m.journal_edit_wrong_week_warning())).toBeNull();
+      expect(screen.queryByText(m.calendar_appearance_format_iso_warning())).toBeNull();
     });
 
     it("does not show for the week-grid w", async () => {
@@ -241,7 +258,7 @@ describe("AppearanceFormatControl", () => {
 
       await type("[W]w");
 
-      expect(screen.queryByText(m.journal_edit_wrong_week_warning())).toBeNull();
+      expect(screen.queryByText(m.calendar_appearance_format_iso_warning())).toBeNull();
     });
   });
 });

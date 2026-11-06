@@ -154,8 +154,12 @@ export function withFormat(
   width: Width,
   value: FormatValue | null,
 ): CalendarDisplaySliceState {
+  // An empty narrow box means "no override", as a narrow null does everywhere; a typed "ddd" there
+  // is still an override, so it is checked before the default folds into "".
+  const sameAsWide = control.label === "weekday" && width === "narrow";
+  if (sameAsWide && value === "") return { ...display, weekdayLabelNarrow: null };
   if (value === null) {
-    if (control.label === "weekday" && width === "narrow") return { ...display, weekdayLabelNarrow: null };
+    if (sameAsWide) return { ...display, weekdayLabelNarrow: null };
     throw new TypeError(`the ${control.label} format at ${width} has no "same as wide"`);
   }
   const pattern = typeof value === "string" && value === defaultPattern(control) ? "" : value;

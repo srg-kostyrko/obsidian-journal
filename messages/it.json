@@ -190,6 +190,7 @@
   "calendar_appearance_format_preview": "Anteprima:",
   "calendar_appearance_format_letter": "Una lettera",
   "calendar_appearance_format_same_as_wide": "Come in Largo",
+  "calendar_appearance_format_iso_warning": "W conta le settimane ISO, che possono differire dalle righe delle settimane mostrate da questo calendario.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

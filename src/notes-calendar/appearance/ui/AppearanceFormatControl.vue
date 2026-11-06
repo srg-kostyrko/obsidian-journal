@@ -5,7 +5,6 @@ import { Calendar, calendarDisplaySlice, type WeekdayLabel } from "@/calendar";
 import { useToday } from "@/calendar/ui/use-today";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import WrongWeekWarning from "@/journals/settings/ui/WrongWeekWarning.vue";
 import { SettingsService } from "@/settings";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -44,19 +43,27 @@ function sample(value: FormatValue | null): string {
 
 const boxText = (value: FormatValue | null): string => (typeof value === "string" ? value : "");
 
-const placeholder = computed(() => {
-  const value = stored.value;
-  if (value === null) return m.calendar_appearance_format_same_as_wide();
+function placeholderFor(value: FormatValue): string {
   if (typeof value !== "string") return m.calendar_appearance_format_letter();
-  return defaultPattern(control);
-});
+  return value === "" ? defaultPattern(control) : value;
+}
+
+// A narrow weekday that follows wide shows what wide renders, so the empty box reads as that value.
+const placeholder = computed(() =>
+  placeholderFor(stored.value ?? formatAt(display.state, control, "wide") ?? defaultPattern(control)),
+);
+
+function sameFormat(a: FormatValue | null, b: FormatValue | null): boolean {
+  if (typeof a === "string" || typeof b === "string" || a === null || b === null) return a === b;
+  return a.type === b.type;
+}
 
 // The box keeps what was typed: a typed default is stored as "", and echoing that back would
 // empty the box under the cursor. It follows the store only when the store says something else.
 const text = ref(boxText(stored.value));
 watch(stored, (next) => {
   const typed = formatAt(withFormat(display.state, control, width, text.value), control, width);
-  if (JSON.stringify(typed) !== JSON.stringify(next)) text.value = boxText(next);
+  if (!sameFormat(typed, next)) text.value = boxText(next);
 });
 
 function onType(next: string): void {
@@ -110,7 +117,9 @@ const isoWarning = computed(
         {{ m.calendar_appearance_format_preview() }}
         <b class="u-pop">{{ shown }}</b>
       </div>
-      <WrongWeekWarning v-if="isoWarning" />
+      <div v-if="isoWarning" class="appearance-format-control__warning">
+        {{ m.calendar_appearance_format_iso_warning() }}
+      </div>
     </template>
     <UiTextInput :model-value="text" :placeholder="placeholder" :aria-label="label" @update:model-value="onType" />
     <UiDropdown
@@ -123,3 +132,9 @@ const isoWarning = computed(
     </UiDropdown>
   </UiSettingRow>
 </template>
+
+<style scoped>
+.appearance-format-control__warning {
+  color: var(--text-warning);
+}
+</style>

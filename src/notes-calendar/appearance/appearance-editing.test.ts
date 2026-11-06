@@ -326,6 +326,17 @@ describe("withFormat", () => {
     expect(narrow.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "" });
   });
 
+  it("reads an empty narrow weekday as same as wide, so narrow is not modified", () => {
+    const set = withFormat(stockDisplay(), format("weekday"), "narrow", "dd");
+    const cleared = withFormat(set, format("weekday"), "narrow", "");
+    expect(cleared.weekdayLabelNarrow).toBeNull();
+    expect(isModified(fresh(), cleared, "narrow", "weekday")).toBe(false);
+    expect(withFormat(stockDisplay(), format("weekday"), "wide", "").weekdayLabel).toEqual({
+      type: "pattern",
+      pattern: "",
+    });
+  });
+
   it("writes a wide weekday pattern and leaves narrow alone", () => {
     const next = withFormat(stockDisplay(), format("weekday"), "wide", "dddd");
     expect(next.weekdayLabel).toEqual({ type: "pattern", pattern: "dddd" });

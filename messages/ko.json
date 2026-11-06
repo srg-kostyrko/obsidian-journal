@@ -190,6 +190,7 @@
   "calendar_appearance_format_preview": "미리 보기:",
   "calendar_appearance_format_letter": "한 글자",
   "calendar_appearance_format_same_as_wide": "넓게와 동일",
+  "calendar_appearance_format_iso_warning": "W는 ISO 주를 세므로 이 캘린더에 표시되는 주 행과 다를 수 있습니다.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

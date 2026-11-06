@@ -190,6 +190,7 @@
   "calendar_appearance_format_preview": "预览：",
   "calendar_appearance_format_letter": "单字",
   "calendar_appearance_format_same_as_wide": "与宽相同",
+  "calendar_appearance_format_iso_warning": "W 按 ISO 周计数，可能与此日历显示的周行不同。",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

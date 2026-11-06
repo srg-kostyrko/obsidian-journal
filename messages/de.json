@@ -190,6 +190,7 @@
   "calendar_appearance_format_preview": "Vorschau:",
   "calendar_appearance_format_letter": "Ein Buchstabe",
   "calendar_appearance_format_same_as_wide": "Wie bei Breit",
+  "calendar_appearance_format_iso_warning": "W zählt ISO-Wochen, die von den Wochenzeilen dieses Kalenders abweichen können.",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
