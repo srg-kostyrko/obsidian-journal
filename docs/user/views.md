@@ -286,9 +286,9 @@ of the grid, not a single day, and out of the box both are **None**: nothing cha
   Calendar block of the main settings page — see [Weeks](/periods#weeks). The editor shows the current
   weekend days and a button, **Change in calendar settings**, that takes you back there. Weekend days that
   are not next to each other each get a band: in a week that starts on Sunday, a Saturday and Sunday weekend
-  gives one band at each edge of the grid. When a [timeline](/reference/code-blocks) hides weekdays with
-  `hiddenWeekdays`, runs are counted over the columns that remain, so with Saturday hidden, a Friday,
-  Saturday and Sunday weekend is one band over Friday and Sunday. The weekday names of a weekend column
+  gives one band at each edge of the grid. When a Month calendar or Week calendar block hides days with **Days of the week**, or a
+  [timeline](/reference/code-blocks) with `hiddenWeekdays`, runs are counted over the columns that remain, so with Saturday hidden, a Friday,
+  Saturday and Sunday weekend is one band over Friday and Sunday. Hiding every weekend day leaves no band. The weekday names of a weekend column
   take the band's text color, weight and italic, but not its fill.
 - **Current week** draws one band across the row that holds today, the week number included, and its text
   color, weight and italic apply to the week number too. There is no band when today is a day outside the
