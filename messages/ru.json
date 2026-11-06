@@ -88,7 +88,8 @@
         "part=weekday": "Заголовок дней недели",
         "part=weekNumber": "Номера недель",
         "part=date": "Число дня",
-        "part=cell": "Ячейки"
+        "part=cell": "Ячейки",
+        "part=grid": "Сетка месяца"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Видимость",
         "family=text": "Текст",
         "family=highlight": "Выделение",
         "family=box": "Ячейка"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Заголовок",
+        "control=visibility_show_weekdays": "Заголовок дней недели",
+        "control=visibility_week_placement": "Расположение",
+        "control=visibility_outside_days": "Дни вне месяца",
+        "control=visibility_month_rows": "Строки",
         "control=highlight_style": "Стиль",
         "control=highlight_color": "Цвет выделения",
         "control=highlight_ring_width": "Толщина контура",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Показано",
+        "option=show_heading_hidden": "Скрыто",
+        "option=show_weekdays_shown": "Показано",
+        "option=show_weekdays_hidden": "Скрыто",
+        "option=week_placement_left": "Перед днями недели",
+        "option=week_placement_right": "После дней недели",
+        "option=week_placement_none": "Скрыты",
+        "option=outside_days_automatic": "Автоматически",
+        "option=outside_days_interactive": "Интерактивные",
+        "option=outside_days_inert": "Неактивные",
+        "option=outside_days_hidden": "Скрытые",
+        "option=month_rows_fit": "По необходимости",
+        "option=month_rows_six": "Всегда шесть",
         "option=style_ring": "Контур",
         "option=style_background": "Фон",
         "option=style_text": "Только текст",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Без изменений",
   "calendar_appearance_narrow_only": "Только узкий",
   "calendar_appearance_narrow_only_clear": "Использовать значение для всех ширин",
+  "calendar_appearance_all_widths": "Все ширины",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

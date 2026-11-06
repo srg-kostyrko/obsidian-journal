@@ -88,7 +88,8 @@
         "part=weekday": "星期标题",
         "part=weekNumber": "周数",
         "part=date": "日期数字",
-        "part=cell": "单元格"
+        "part=cell": "单元格",
+        "part=grid": "月份网格"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "可见性",
         "family=text": "文本",
         "family=highlight": "高亮",
         "family=box": "单元格框"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "标题",
+        "control=visibility_show_weekdays": "星期标题",
+        "control=visibility_week_placement": "位置",
+        "control=visibility_outside_days": "本月以外的日期",
+        "control=visibility_month_rows": "行数",
         "control=highlight_style": "样式",
         "control=highlight_color": "高亮颜色",
         "control=highlight_ring_width": "边框宽度",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "显示",
+        "option=show_heading_hidden": "隐藏",
+        "option=show_weekdays_shown": "显示",
+        "option=show_weekdays_hidden": "隐藏",
+        "option=week_placement_left": "在星期列之前",
+        "option=week_placement_right": "在星期列之后",
+        "option=week_placement_none": "隐藏",
+        "option=outside_days_automatic": "自动",
+        "option=outside_days_interactive": "可交互",
+        "option=outside_days_inert": "不可交互",
+        "option=outside_days_hidden": "隐藏",
+        "option=month_rows_fit": "按需",
+        "option=month_rows_six": "始终六行",
         "option=style_ring": "边框",
         "option=style_background": "背景",
         "option=style_text": "仅文本",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "不变",
   "calendar_appearance_narrow_only": "仅窄",
   "calendar_appearance_narrow_only_clear": "使用所有宽度通用的值",
+  "calendar_appearance_all_widths": "所有宽度",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

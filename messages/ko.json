@@ -88,7 +88,8 @@
         "part=weekday": "요일 머리글",
         "part=weekNumber": "주 번호",
         "part=date": "날짜 숫자",
-        "part=cell": "셀"
+        "part=cell": "셀",
+        "part=grid": "월 그리드"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "표시",
         "family=text": "텍스트",
         "family=highlight": "강조",
         "family=box": "박스"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "제목",
+        "control=visibility_show_weekdays": "요일 머리글",
+        "control=visibility_week_placement": "위치",
+        "control=visibility_outside_days": "해당 월 밖의 날짜",
+        "control=visibility_month_rows": "행",
         "control=highlight_style": "스타일",
         "control=highlight_color": "강조 색상",
         "control=highlight_ring_width": "테두리 두께",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "표시",
+        "option=show_heading_hidden": "숨김",
+        "option=show_weekdays_shown": "표시",
+        "option=show_weekdays_hidden": "숨김",
+        "option=week_placement_left": "요일 앞",
+        "option=week_placement_right": "요일 뒤",
+        "option=week_placement_none": "숨김",
+        "option=outside_days_automatic": "자동",
+        "option=outside_days_interactive": "상호작용 가능",
+        "option=outside_days_inert": "상호작용 없음",
+        "option=outside_days_hidden": "숨김",
+        "option=month_rows_fit": "필요한 만큼",
+        "option=month_rows_six": "항상 6행",
         "option=style_ring": "테두리",
         "option=style_background": "배경",
         "option=style_text": "텍스트만",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "변경 없음",
   "calendar_appearance_narrow_only": "좁은 너비만",
   "calendar_appearance_narrow_only_clear": "모든 너비 공통 값 사용",
+  "calendar_appearance_all_widths": "모든 너비",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

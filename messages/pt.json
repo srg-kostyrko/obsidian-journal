@@ -88,7 +88,8 @@
         "part=weekday": "Cabeçalho dos dias da semana",
         "part=weekNumber": "Números da semana",
         "part=date": "Número do dia",
-        "part=cell": "Células"
+        "part=cell": "Células",
+        "part=grid": "Grade do mês"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Visibilidade",
         "family=text": "Texto",
         "family=highlight": "Destaque",
         "family=box": "Caixa"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Cabeçalho",
+        "control=visibility_show_weekdays": "Cabeçalho dos dias da semana",
+        "control=visibility_week_placement": "Posição",
+        "control=visibility_outside_days": "Dias fora do mês",
+        "control=visibility_month_rows": "Linhas",
         "control=highlight_style": "Estilo",
         "control=highlight_color": "Cor do destaque",
         "control=highlight_ring_width": "Espessura do contorno",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Exibido",
+        "option=show_heading_hidden": "Oculto",
+        "option=show_weekdays_shown": "Exibido",
+        "option=show_weekdays_hidden": "Oculto",
+        "option=week_placement_left": "Antes dos dias da semana",
+        "option=week_placement_right": "Depois dos dias da semana",
+        "option=week_placement_none": "Ocultos",
+        "option=outside_days_automatic": "Automático",
+        "option=outside_days_interactive": "Interativos",
+        "option=outside_days_inert": "Inertes",
+        "option=outside_days_hidden": "Ocultos",
+        "option=month_rows_fit": "Conforme necessário",
+        "option=month_rows_six": "Sempre seis",
         "option=style_ring": "Contorno",
         "option=style_background": "Fundo",
         "option=style_text": "Só texto",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Inalterado",
   "calendar_appearance_narrow_only": "Só estreito",
   "calendar_appearance_narrow_only_clear": "Usar o valor de todas as larguras",
+  "calendar_appearance_all_widths": "Todas as larguras",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

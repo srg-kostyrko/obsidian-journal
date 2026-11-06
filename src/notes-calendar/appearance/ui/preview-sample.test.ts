@@ -109,6 +109,22 @@ describe("partsAt", () => {
     expect(partsAt(target)).toEqual(["active", "date", "cell"]);
   });
 
+  it("names the month grid last for anything inside it", () => {
+    const day = element(
+      { "data-preview-grid": "" },
+      { class: CELL, "data-preview-part": "date", "data-today": "true" },
+    );
+    expect(partsAt(day)).toEqual(["today", "date", "cell", "grid"]);
+    const weekNumber = element({ "data-preview-grid": "" }, { class: CELL, "data-preview-part": "weekNumber" });
+    expect(partsAt(weekNumber)).toEqual(["weekNumber", "grid"]);
+    expect(partsAt(element({ "data-preview-grid": "" }))).toEqual(["grid"]);
+  });
+
+  it("names a hidden outside day by its blank", () => {
+    const blank = element({ "data-preview-grid": "" }, { "data-preview-part": "outside" });
+    expect(partsAt(blank)).toEqual(["outside", "grid"]);
+  });
+
   it("names nothing outside every part", () => {
     expect(partsAt(element({}))).toEqual([]);
   });

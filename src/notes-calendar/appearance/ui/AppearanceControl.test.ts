@@ -4,12 +4,22 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick, shallowRef } from "vue";
 
 import { calendarDisplaySlice } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 import { themeColorGroupsFor } from "@/ui/theme-colors";
 
 import { isModified, withValue } from "../appearance-editing";
-import { isStructure, PARTS, type ValueControl, type ValuePartKey, type Width } from "../appearance-parts";
+import {
+  isStructure,
+  PARTS,
+  type Control,
+  type PartKey,
+  type StructureControl,
+  type ValueControl,
+  type ValuePartKey,
+  type Width,
+} from "../appearance-parts";
 import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
 
@@ -24,6 +34,12 @@ function control(part: ValuePartKey, ...path: string[]): ValueControl {
   return found;
 }
 
+function structure(part: PartKey): StructureControl {
+  const found = PARTS[part].controls.find((candidate): candidate is StructureControl => isStructure(candidate));
+  if (!found) throw new Error(`no visibility control on ${part}`);
+  return found;
+}
+
 function kindSelect(container: Element): HTMLSelectElement {
   const select = container.querySelector("select");
   if (!(select instanceof HTMLSelectElement)) throw new TypeError("no select");
@@ -35,27 +51,59 @@ beforeAll(() => initLocale("en"));
 describe("AppearanceControl", () => {
   let harness: TestHarness;
   const slice = () => harness.settings.getSlice(appearanceSlice);
-  const mount = (part: ValuePartKey, target: ValueControl, width: Width = "wide") =>
+  const display = () => harness.settings.getSlice(calendarDisplaySlice);
+  const mount = (part: PartKey, target: Control, width: Width = "wide") =>
     harness.render(AppearanceControl, { props: { part, control: target, width } });
 
   beforeEach(async () => {
-    harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+    harness = await testContainer({ modules: [calendarAppearanceCoreModule, calendarSettingsCoreModule] });
   });
 
-  // A visibility control has no path to build a label key from.
-  it.each(
-    Object.entries(PARTS).flatMap(([part, { controls }]) =>
-      controls.filter((c) => !isStructure(c)).map((c) => [part as ValuePartKey, c] as const),
-    ),
-  )("labels %s %o and each of its options with real copy", (part, target) => {
-    const { container } = mount(part, target);
+  it.each(Object.entries(PARTS).flatMap(([part, { controls }]) => controls.map((c) => [part as PartKey, c] as const)))(
+    "labels %s %o and each of its options with real copy",
+    (part, target) => {
+      const { container } = mount(part, target);
 
-    const label = container.querySelector(".setting-item-name")?.textContent ?? "";
-    const options = [...container.querySelectorAll("option")].map((option) => option.textContent ?? "");
-    for (const text of [label, ...options]) {
-      expect(text.trim()).not.toBe("");
-      expect(text).not.toMatch(/calendar_appearance_/);
-    }
+      const label = container.querySelector(".setting-item-name")?.textContent ?? "";
+      const options = [...container.querySelectorAll("option")].map((option) => option.textContent ?? "");
+      for (const text of [label, ...options]) {
+        expect(text.trim()).not.toBe("");
+        expect(text).not.toMatch(/calendar_appearance_/);
+      }
+    },
+  );
+
+  describe("a visibility control", () => {
+    it.each(["wide", "narrow"] as const)("is a dropdown with no variable, noted for all widths at %s", (width) => {
+      const { container } = mount("heading", structure("heading"), width);
+
+      expect(
+        screen.getByRole("combobox", { name: m.calendar_appearance_control({ control: "visibility_show_heading" }) }),
+      ).toBeTruthy();
+      expect(container.textContent).not.toContain("--journal");
+      expect(screen.getByText(m.calendar_appearance_all_widths())).toBeTruthy();
+      const offered = [...kindSelect(container).options].map((option) => option.value);
+      expect(offered).toEqual(["shown", "hidden"]);
+    });
+
+    it("writes the display slice and leaves the appearance slice alone", async () => {
+      const before = slice().state;
+      const { container } = mount("heading", structure("heading"));
+      expect(kindSelect(container).value).toBe("shown");
+
+      await userEvent.selectOptions(kindSelect(container), "hidden");
+
+      expect(display().state.showHeading).toBe(false);
+      expect(slice().state).toBe(before);
+      expect(kindSelect(container).value).toBe("hidden");
+    });
+
+    it("shows the stored setting", () => {
+      display().state = { ...display().state, weekPlacement: "right" };
+      const { container } = mount("weekNumber", structure("weekNumber"));
+
+      expect(kindSelect(container).value).toBe("right");
+    });
   });
 
   it("shows its public variable name", () => {

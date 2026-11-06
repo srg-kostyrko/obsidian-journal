@@ -88,7 +88,8 @@
         "part=weekday": "Wochentagszeile",
         "part=weekNumber": "Wochennummern",
         "part=date": "Tageszahl",
-        "part=cell": "Zellen"
+        "part=cell": "Zellen",
+        "part=grid": "Monatsraster"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Sichtbarkeit",
         "family=text": "Text",
         "family=highlight": "Hervorhebung",
         "family=box": "Box"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Überschrift",
+        "control=visibility_show_weekdays": "Wochentagszeile",
+        "control=visibility_week_placement": "Position",
+        "control=visibility_outside_days": "Tage außerhalb des Monats",
+        "control=visibility_month_rows": "Zeilen",
         "control=highlight_style": "Stil",
         "control=highlight_color": "Hervorhebungsfarbe",
         "control=highlight_ring_width": "Ringbreite",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Angezeigt",
+        "option=show_heading_hidden": "Ausgeblendet",
+        "option=show_weekdays_shown": "Angezeigt",
+        "option=show_weekdays_hidden": "Ausgeblendet",
+        "option=week_placement_left": "Vor den Wochentagen",
+        "option=week_placement_right": "Nach den Wochentagen",
+        "option=week_placement_none": "Ausgeblendet",
+        "option=outside_days_automatic": "Automatisch",
+        "option=outside_days_interactive": "Interaktiv",
+        "option=outside_days_inert": "Inaktiv",
+        "option=outside_days_hidden": "Ausgeblendet",
+        "option=month_rows_fit": "Nach Bedarf",
+        "option=month_rows_six": "Immer sechs",
         "option=style_ring": "Ring",
         "option=style_background": "Hintergrund",
         "option=style_text": "Nur Text",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Unverändert",
   "calendar_appearance_narrow_only": "Nur schmal",
   "calendar_appearance_narrow_only_clear": "Wert für alle Breiten verwenden",
+  "calendar_appearance_all_widths": "Alle Breiten",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

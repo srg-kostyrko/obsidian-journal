@@ -88,7 +88,8 @@
         "part=weekday": "曜日の見出し",
         "part=weekNumber": "週番号",
         "part=date": "日付の数字",
-        "part=cell": "セル"
+        "part=cell": "セル",
+        "part=grid": "月のグリッド"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "表示",
         "family=text": "テキスト",
         "family=highlight": "ハイライト",
         "family=box": "ボックス"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "見出し",
+        "control=visibility_show_weekdays": "曜日の見出し",
+        "control=visibility_week_placement": "位置",
+        "control=visibility_outside_days": "月外の日",
+        "control=visibility_month_rows": "行数",
         "control=highlight_style": "スタイル",
         "control=highlight_color": "ハイライトの色",
         "control=highlight_ring_width": "枠線の幅",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "表示",
+        "option=show_heading_hidden": "非表示",
+        "option=show_weekdays_shown": "表示",
+        "option=show_weekdays_hidden": "非表示",
+        "option=week_placement_left": "曜日の前",
+        "option=week_placement_right": "曜日の後",
+        "option=week_placement_none": "非表示",
+        "option=outside_days_automatic": "自動",
+        "option=outside_days_interactive": "操作可能",
+        "option=outside_days_inert": "操作不可",
+        "option=outside_days_hidden": "非表示",
+        "option=month_rows_fit": "必要な分だけ",
+        "option=month_rows_six": "常に6行",
         "option=style_ring": "枠線",
         "option=style_background": "背景",
         "option=style_text": "テキストのみ",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "変更なし",
   "calendar_appearance_narrow_only": "狭い幅のみ",
   "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",
+  "calendar_appearance_all_widths": "すべての幅",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

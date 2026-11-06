@@ -16,15 +16,8 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { isModified, valueAt, visibleControls, withReset } from "../appearance-editing";
-import {
-  isStructure,
-  PARTS,
-  type PartKey,
-  type ValueControl,
-  type ValuePartKey,
-  type Width,
-} from "../appearance-parts";
+import { isModified, valueAt, withReset } from "../appearance-editing";
+import { familiesOf, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -38,7 +31,7 @@ const slice = settings.getSlice(appearanceSlice);
 const display = settings.getSlice(calendarDisplaySlice);
 
 // Reading order of the calendar, top to bottom, rather than the chips' most-specific-first order.
-const LIST_ORDER: readonly ValuePartKey[] = [
+const LIST_ORDER: readonly PartKey[] = [
   "heading",
   "weekday",
   "weekNumber",
@@ -48,6 +41,7 @@ const LIST_ORDER: readonly ValuePartKey[] = [
   "active",
   "outside",
   "cell",
+  "grid",
 ];
 
 const width = ref<Width>("wide");
@@ -61,16 +55,16 @@ const widthOptions = computed(() =>
   (["narrow", "wide"] as const).map((value) => ({ value, label: m.calendar_appearance_width({ width: value }) })),
 );
 
-const selected = ref<ValuePartKey | undefined>(undefined);
-const chips = ref<readonly ValuePartKey[]>([]);
+const selected = ref<PartKey | undefined>(undefined);
+const chips = ref<readonly PartKey[]>([]);
 // An "also here" chip keeps the spot, since its parts are the ones there; the list names no spot.
 const spot = ref<string | undefined>(undefined);
 
-function isPart(value: string): value is ValuePartKey {
-  return value !== "grid" && Object.hasOwn(PARTS, value);
+function isPart(value: string): value is PartKey {
+  return Object.hasOwn(PARTS, value);
 }
 function onPick(parts: readonly PartKey[], at: string | undefined): void {
-  chips.value = parts.filter((part) => isPart(part));
+  chips.value = parts;
   spot.value = at;
   selected.value = chips.value.at(0);
 }
@@ -83,26 +77,26 @@ function onList(value: string): void {
 const others = computed(() => chips.value.filter((part) => part !== selected.value));
 // The picked chip leaves the row, taking keyboard focus with it, so focus lands on the list, which now names it.
 const list = useTemplateRef<ComponentPublicInstance>("list");
-function onChip(part: ValuePartKey): void {
+function onChip(part: PartKey): void {
   selected.value = part;
   (list.value?.$el as HTMLElement | undefined)?.focus();
 }
 const listId = useId();
 const othersId = useId();
 
-const partName = (part: ValuePartKey): string => m.calendar_appearance_part({ part });
-const modified = (part: ValuePartKey): boolean => isModified(slice.state, display.state, width.value, part);
+const partName = (part: PartKey): string => m.calendar_appearance_part({ part });
+const modified = (part: PartKey): boolean => isModified(slice.state, display.state, width.value, part);
 
 const inspected = computed(() => {
   const part = selected.value;
   if (part === undefined) return;
-  const family =
-    PARTS[part].controls.find((control): control is ValueControl => !isStructure(control))?.family ?? "text";
-  const style =
-    family === "highlight" ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
-  const controls = visibleControls(part, style).filter((control): control is ValueControl => !isStructure(control));
-  return { part, family, controls };
+  const highlighted = part !== "grid" && PARTS[part].controls.some((control) => control.family === "highlight");
+  const style = highlighted ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
+  return { part, families: familiesOf(part, style) };
 });
+
+const controlKey = (part: PartKey, control: Control): string =>
+  `${part}.${isStructure(control) ? control.setting : control.path.join(".")}`;
 
 // Keyed by part, so collapsing a family on one part leaves the same family open on the next.
 const collapsed = ref(new Set<string>());
@@ -115,7 +109,7 @@ function setFamilyOpen(part: PartKey, family: string, open: boolean): void {
   collapsed.value = next;
 }
 
-function reset(part: ValuePartKey): void {
+function reset(part: PartKey): void {
   const next = withReset(slice.state, display.state, width.value, part);
   slice.state = next.appearance;
   display.state = next.display;
@@ -142,7 +136,14 @@ function reset(part: ValuePartKey): void {
       <!-- Wide keeps a floor above the breakpoint, so a pane narrower than that scrolls here, not the page. -->
       <div class="appearance-subpage__scroller">
         <div class="appearance-subpage__frame" :class="{ 'appearance-subpage__frame--fill': width === 'wide' }">
-          <AppearancePreview ref="preview" :width="width" :picked="selected" :spot="spot" @pick="onPick" />
+          <AppearancePreview
+            ref="preview"
+            :width="width"
+            :display="display.state"
+            :picked="selected"
+            :spot="spot"
+            @pick="onPick"
+          />
         </div>
       </div>
       <p class="appearance-subpage__caption">{{ m.calendar_appearance_editing({ width }) }}</p>
@@ -193,14 +194,16 @@ function reset(part: ValuePartKey): void {
       </UiButton>
     </UiSettingRow>
     <UiCollapsibleBlock
+      v-for="group of inspected.families"
+      :key="familyKey(inspected.part, group.family)"
       class="appearance-subpage__family"
-      :expanded="familyOpen(inspected.part, inspected.family)"
-      @update:expanded="setFamilyOpen(inspected.part, inspected.family, $event === true)"
+      :expanded="familyOpen(inspected.part, group.family)"
+      @update:expanded="setFamilyOpen(inspected.part, group.family, $event === true)"
     >
-      <template #trigger>{{ m.calendar_appearance_family({ family: inspected.family }) }}</template>
+      <template #trigger>{{ m.calendar_appearance_family({ family: group.family }) }}</template>
       <AppearanceControl
-        v-for="control of inspected.controls"
-        :key="`${inspected.part}.${control.path.join('.')}`"
+        v-for="control of group.controls"
+        :key="controlKey(inspected.part, control)"
         :part="inspected.part"
         :control="control"
         :width="width"

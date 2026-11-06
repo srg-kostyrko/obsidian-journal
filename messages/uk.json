@@ -88,7 +88,8 @@
         "part=weekday": "Заголовок днів тижня",
         "part=weekNumber": "Номери тижнів",
         "part=date": "Число дня",
-        "part=cell": "Комірки"
+        "part=cell": "Комірки",
+        "part=grid": "Сітка місяця"
       }
     }
   ],
@@ -99,6 +100,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Видимість",
         "family=text": "Текст",
         "family=highlight": "Виділення",
         "family=box": "Комірка"
@@ -110,6 +112,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Заголовок",
+        "control=visibility_show_weekdays": "Заголовок днів тижня",
+        "control=visibility_week_placement": "Розташування",
+        "control=visibility_outside_days": "Дні поза місяцем",
+        "control=visibility_month_rows": "Рядки",
         "control=highlight_style": "Стиль",
         "control=highlight_color": "Колір виділення",
         "control=highlight_ring_width": "Товщина контуру",
@@ -135,6 +142,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Показано",
+        "option=show_heading_hidden": "Приховано",
+        "option=show_weekdays_shown": "Показано",
+        "option=show_weekdays_hidden": "Приховано",
+        "option=week_placement_left": "Перед днями тижня",
+        "option=week_placement_right": "Після днів тижня",
+        "option=week_placement_none": "Прихований",
+        "option=outside_days_automatic": "Автоматично",
+        "option=outside_days_interactive": "Інтерактивні",
+        "option=outside_days_inert": "Неактивні",
+        "option=outside_days_hidden": "Приховані",
+        "option=month_rows_fit": "За потреби",
+        "option=month_rows_six": "Завжди шість",
         "option=style_ring": "Контур",
         "option=style_background": "Фон",
         "option=style_text": "Лише текст",
@@ -158,6 +178,7 @@
   "calendar_appearance_unchanged": "Без змін",
   "calendar_appearance_narrow_only": "Лише вузький",
   "calendar_appearance_narrow_only_clear": "Використати значення для всіх ширин",
+  "calendar_appearance_all_widths": "Усі ширини",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],

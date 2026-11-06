@@ -89,7 +89,8 @@
         "part=weekday": "Weekday header",
         "part=weekNumber": "Week numbers",
         "part=date": "Date number",
-        "part=cell": "Cells"
+        "part=cell": "Cells",
+        "part=grid": "Month grid"
       }
     }
   ],
@@ -100,6 +101,7 @@
       "declarations": ["input family"],
       "selectors": ["family"],
       "match": {
+        "family=visibility": "Visibility",
         "family=text": "Text",
         "family=highlight": "Highlight",
         "family=box": "Box"
@@ -111,6 +113,11 @@
       "declarations": ["input control"],
       "selectors": ["control"],
       "match": {
+        "control=visibility_show_heading": "Heading",
+        "control=visibility_show_weekdays": "Weekday header",
+        "control=visibility_week_placement": "Placement",
+        "control=visibility_outside_days": "Days outside the month",
+        "control=visibility_month_rows": "Rows",
         "control=highlight_style": "Style",
         "control=highlight_color": "Highlight color",
         "control=highlight_ring_width": "Ring width",
@@ -136,6 +143,19 @@
       "declarations": ["input option"],
       "selectors": ["option"],
       "match": {
+        "option=show_heading_shown": "Shown",
+        "option=show_heading_hidden": "Hidden",
+        "option=show_weekdays_shown": "Shown",
+        "option=show_weekdays_hidden": "Hidden",
+        "option=week_placement_left": "Before weekdays",
+        "option=week_placement_right": "After weekdays",
+        "option=week_placement_none": "Hidden",
+        "option=outside_days_automatic": "Automatic",
+        "option=outside_days_interactive": "Interactive",
+        "option=outside_days_inert": "Inert",
+        "option=outside_days_hidden": "Hidden",
+        "option=month_rows_fit": "As needed",
+        "option=month_rows_six": "Always six",
         "option=style_ring": "Ring",
         "option=style_background": "Background",
         "option=style_text": "Text only",
@@ -159,6 +179,7 @@
   "calendar_appearance_unchanged": "Unchanged",
   "calendar_appearance_narrow_only": "Narrow only",
   "calendar_appearance_narrow_only_clear": "Use the all-widths value",
+  "calendar_appearance_all_widths": "All widths",
   "calendar_appearance_reset": [
     {
       "declarations": ["input width"],
