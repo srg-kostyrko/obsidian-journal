@@ -49,11 +49,27 @@ function migrateAppearance(old: Partial<Record<keyof AppearanceSettingsV7, unkno
   return { wide: { today, active, selected } };
 }
 
+const HEADING_DEFAULT_BLOCKS = new Set(["month-calendar", "week-calendar"]);
+
+// Month and week blocks gained a "default" heading that follows the global; `true` was the old stock,
+// so it joins the global. An explicit `false` stays, the seeded default view relies on it.
+function migrateViews(views: unknown): void {
+  if (!isRecord(views)) return;
+  for (const view of Object.values(views)) {
+    if (!isRecord(view) || !Array.isArray(view.blocks)) continue;
+    for (const block of view.blocks) {
+      if (!isRecord(block) || typeof block.key !== "string" || !HEADING_DEFAULT_BLOCKS.has(block.key)) continue;
+      if (isRecord(block.config) && block.config.showHeading === true) block.config.showHeading = "default";
+    }
+  }
+}
+
 export const v7ToV8Migration: Migration = {
   fromVersion: 7,
   toVersion: 8,
   migrate(raw) {
     if (isRecord(raw.appearance)) raw.appearance = migrateAppearance(raw.appearance);
+    migrateViews(raw.views);
     return raw;
   },
 };

@@ -29,6 +29,9 @@ function migrated(appearance: unknown) {
   return v.parse(appearanceSliceSchema, out.appearance);
 }
 
+const block = (key: string, config: unknown) => ({ id: `${key}-id`, key, config });
+const run = (views: unknown) => v7ToV8Migration.migrate({ version: 7, views }).views;
+
 describe("v7ToV8Migration", () => {
   it("moves custom colors into part values", () => {
     const state = migrated({
@@ -134,5 +137,45 @@ describe("v7ToV8Migration on load", () => {
     expect(harness.settings.getSlice(appearanceSlice).state).toEqual(appearanceSlice.defaults);
     const repair = harness.logs.records.find((record) => record.message === "slice fields reset to defaults");
     expect(repair?.fields).toMatchObject({ sliceKey: "appearance", fields: ["wide.selected.color"] });
+  });
+
+  describe("calendar block headings", () => {
+    type Out = Record<string, { blocks: { config: Record<string, unknown> }[] }>;
+
+    it("turns showHeading true into default on month and week blocks", () => {
+      const out = run({
+        a: { blocks: [block("month-calendar", { showHeading: true }), block("week-calendar", { showHeading: true })] },
+      });
+
+      expect((out as Out).a.blocks.map((b: { config: unknown }) => b.config)).toEqual([
+        { showHeading: "default" },
+        { showHeading: "default" },
+      ]);
+    });
+
+    it("keeps an explicit false", () => {
+      const out = run({ a: { blocks: [block("month-calendar", { showHeading: false })] } });
+
+      expect((out as Out).a.blocks[0]?.config.showHeading).toBe(false);
+    });
+
+    it("leaves a day-notes block alone", () => {
+      const out = run({ a: { blocks: [block("day-notes", { showHeading: true })] } });
+
+      expect((out as Out).a.blocks[0]?.config.showHeading).toBe(true);
+    });
+
+    it("passes malformed views through unchanged", () => {
+      const views = {
+        a: { blocks: [{ key: "month-calendar" }, null, "x", block("week-calendar", null)] },
+        b: 3,
+        c: {},
+      };
+      const copy = structuredClone(views);
+
+      expect(run(views)).toEqual(copy);
+      expect(run([1])).toEqual([1]);
+      expect(run("nope")).toBe("nope");
+    });
   });
 });
