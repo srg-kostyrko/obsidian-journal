@@ -228,14 +228,14 @@ describe("the appearance editor drives the rendered calendar", () => {
     });
   });
 
-  // Also before any edit: the week numbers' stock weight is var(--font-bold), which Obsidian defines.
+  // Also before any edit: the week numbers' stock weight is var(--font-normal), which Obsidian defines.
   describe("a stock select", () => {
     it("names the value its Default resolves to", async () => {
       await chooseWidth("wide");
       await chooseFromList("weekNumber");
       const select = $(controlRowPath(m.calendar_appearance_control({ control: "text_weight" }))).$("select");
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       await expectRead(
         () => select.$('option[value=""]').getText(),

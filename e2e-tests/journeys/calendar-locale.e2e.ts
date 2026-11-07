@@ -17,7 +17,7 @@ function presetUseButton(preset: string): string {
 
 // calendar.mode=custom with dow=1 calls moment.updateLocale(week.dow=1) at boot (CalendarSettingsBridge),
 // which rotates the weekday header so Monday leads. NotesMonthView builds its weekday labels from
-// moment's localeData via .format("ddd"); the first weekday header must read "Mon". This
+// moment's localeData; the first weekday header must name Monday. This
 // is a global moment-locale effect that a unit/component test cannot exercise through real rendering.
 describe("calendar locale", () => {
   before(async () => {
@@ -30,8 +30,9 @@ describe("calendar locale", () => {
     await firstWeekday.waitForExist({ timeoutMsg: "the weekday header did not render" });
     // The element exists before moment's localeData has supplied its label, so a read-once
     // `expect(await getText())` asserts on a plain string and never retries — it saw "" under
-    // load. The expect-webdriverio matcher polls to waitforTimeout instead.
-    await expect(firstWeekday).toHaveText("Mon");
+    // load. The expect-webdriverio matcher polls to waitforTimeout instead. The full name, not the shown
+    // label: the sidebar calendar is narrow, where the label is one letter and "S" leads either way.
+    await expect(firstWeekday).toHaveAttribute("aria-label", "Monday");
   });
 
   // The week configuration lives in moment's locale registry, which Vue cannot observe: before
@@ -50,7 +51,7 @@ describe("calendar locale", () => {
     await $(presetUseButton("Western traditional")).click();
     await submitModal();
 
-    await browser.waitUntil(async () => (await firstWeekday.getText()) === "Sun", {
+    await browser.waitUntil(async () => (await firstWeekday.getAttribute("aria-label")) === "Sunday", {
       timeoutMsg: "the open view kept its old week start after the preset changed",
     });
     await closeSettings();

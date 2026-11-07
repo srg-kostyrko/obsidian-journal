@@ -224,6 +224,14 @@ describe("the open-note fill on a cell with no decoration", () => {
     await clickCell(anchor, false);
     await waitForActiveNote(`day/${anchor}.md`);
     await calendar.waitForActive(anchor);
+    // Opening the note selects its date too, and the sidebar calendar is narrow, where the selected tint
+    // paints over the open-note fill. Moving the selection off leaves the fill alone in the cell.
+    await clickCell(dayAnchor(DAY), true);
+    await waitForState(
+      async () => (await calendar.cell(anchor).getAttribute("aria-selected")) ?? "none",
+      (selected) => selected === "none",
+      "the open note's date stayed selected",
+    );
     await waitForState(
       () => paintedHex(anchor),
       (hex) => hex === ACTIVE_BG_HEX,
@@ -451,7 +459,13 @@ describe("date text on days outside the month", () => {
     expect(anchor).not.toBe("");
   });
 
+  // On a wide calendar: the sidebar's is narrow, where the date reads its own stock narrow size and a
+  // public wide one stays out by design.
   it("date size reaches days outside the month", async () => {
+    await browser.execute((root: string) => {
+      const block = document.querySelector<HTMLElement>(`${root} .journal-view-month-calendar`);
+      if (block !== null) block.style.width = "40em";
+    }, OUTSIDE_VIEW_ROOT);
     await waitForState(
       () => outsideViewLabelSize(".notes-month-view__day:not([data-outside])"),
       (px) => px === 21,
