@@ -35,7 +35,7 @@ const resolvedTabIndex = computed(() =>
   props.disabled ? undefined : (props.tabIndex ?? (isControl.value ? 0 : undefined)),
 );
 const today = useToday();
-const isToday = computed(() => rawPeriod.value.contains(today.value));
+const isToday = computed(() => rawPeriod.value.kind === "day" && rawPeriod.value.contains(today.value));
 const states = computed(() =>
   (
     [
@@ -48,7 +48,8 @@ const states = computed(() =>
     .filter(([, applies]) => applies)
     .map(([state]) => state),
 );
-// The open note's fill replaces today's, as it did before layers existed; today's ring stays.
+// The open note's fill replaces today's, as it did before layers existed; today's ring stays. The selected
+// fill stays: at narrow it is the selection's only mark on a decorated day.
 const fills = computed(() => states.value.filter((state) => state !== "today" || !isActive.value));
 const accessibleName = computed(() =>
   isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
@@ -75,6 +76,7 @@ const hover = useModifierHoverPreview();
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"
+    :data-kind="rawPeriod.kind"
     :data-today="isToday || null"
     :data-selected="selected || null"
     :data-outside="outside || null"
@@ -136,7 +138,10 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell {
   --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
   --_v-cell-radius: var(--journal-cell-cell-radius, var(--journal-saved-cell-cell-radius, var(--radius-s)));
-  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-min-height: var(
+    --journal-cell-cell-min-height,
+    var(--journal-saved-cell-cell-min-height, clamp(26px, 7cqi, 64px))
+  );
   --_v-outside-color: var(--journal-cell-outside-color, var(--journal-saved-cell-outside-color, transparent));
   --_v-outside-ring-width: var(--journal-cell-outside-ring-width, var(--journal-saved-cell-outside-ring-width, 0px));
   --_v-outside-strength: var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0));
@@ -192,11 +197,30 @@ const hover = useModifierHoverPreview();
     --journal-cell-current-week-text-italic,
     var(--journal-saved-cell-current-week-text-italic)
   );
+  --_v-current-week-week-number-text-color: var(
+    --journal-cell-current-week-week-number-text-color,
+    var(--journal-saved-cell-current-week-week-number-text-color, var(--text-accent))
+  );
+  --_v-current-week-week-number-text-weight: var(
+    --journal-cell-current-week-week-number-text-weight,
+    var(--journal-saved-cell-current-week-week-number-text-weight, var(--font-bold))
+  );
+  --_v-current-week-week-number-text-italic: var(
+    --journal-cell-current-week-week-number-text-italic,
+    var(--journal-saved-cell-current-week-week-number-text-italic)
+  );
   --_v-current-week-layer: var(--journal-cell-current-week-layer, var(--journal-saved-cell-current-week-layer, -1));
   --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
   --_v-weekend-text-weight: var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight));
   --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
   --_v-weekend-layer: var(--journal-cell-weekend-layer, var(--journal-saved-cell-weekend-layer, -1));
+}
+/* The growing stock is sized in cqi. A WebView without the unit finds the min-height it reaches invalid
+   and leaves the row no floor at all, so there the stock is the flat floor. */
+@supports not (width: 1cqi) {
+  .notes-calendar-cell {
+    --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  }
 }
 @container journal-calendar (max-width: 28em) {
   .notes-calendar-cell {
@@ -216,10 +240,7 @@ const hover = useModifierHoverPreview();
     );
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,
-      var(
-        --journal-saved-cell-cell-min-height-narrow,
-        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
-      )
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
     );
     --_v-outside-color: var(
       --journal-cell-outside-color-narrow,
@@ -328,17 +349,11 @@ const hover = useModifierHoverPreview();
     );
     --_v-selected-ring-width: var(
       --journal-cell-selected-ring-width-narrow,
-      var(
-        --journal-saved-cell-selected-ring-width-narrow,
-        var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px))
-      )
+      var(--journal-saved-cell-selected-ring-width-narrow, 0px)
     );
     --_v-selected-strength: var(
       --journal-cell-selected-strength-narrow,
-      var(
-        --journal-saved-cell-selected-strength-narrow,
-        var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0))
-      )
+      var(--journal-saved-cell-selected-strength-narrow, 0.2)
     );
     --_v-selected-text-color: var(
       --journal-cell-selected-text-color-narrow,
@@ -438,6 +453,36 @@ const hover = useModifierHoverPreview();
         var(--journal-cell-current-week-text-italic, var(--journal-saved-cell-current-week-text-italic))
       )
     );
+    --_v-current-week-week-number-text-color: var(
+      --journal-cell-current-week-week-number-text-color-narrow,
+      var(
+        --journal-saved-cell-current-week-week-number-text-color-narrow,
+        var(
+          --journal-cell-current-week-week-number-text-color,
+          var(--journal-saved-cell-current-week-week-number-text-color, var(--text-accent))
+        )
+      )
+    );
+    --_v-current-week-week-number-text-weight: var(
+      --journal-cell-current-week-week-number-text-weight-narrow,
+      var(
+        --journal-saved-cell-current-week-week-number-text-weight-narrow,
+        var(
+          --journal-cell-current-week-week-number-text-weight,
+          var(--journal-saved-cell-current-week-week-number-text-weight, var(--font-bold))
+        )
+      )
+    );
+    --_v-current-week-week-number-text-italic: var(
+      --journal-cell-current-week-week-number-text-italic-narrow,
+      var(
+        --journal-saved-cell-current-week-week-number-text-italic-narrow,
+        var(
+          --journal-cell-current-week-week-number-text-italic,
+          var(--journal-saved-cell-current-week-week-number-text-italic)
+        )
+      )
+    );
     --_v-current-week-layer: var(
       --journal-cell-current-week-layer-narrow,
       var(
@@ -510,6 +555,12 @@ const hover = useModifierHoverPreview();
   --_italic-current-week: var(--_v-current-week-text-italic);
   --_over-current-week: calc(clamp(0, var(--_v-current-week-layer), 1) * 100%);
 }
+/* The week number has its own text group, so its days can stay plain while it is marked. */
+.notes-calendar-cell[data-current-week][data-kind="week"] {
+  --_text-current-week: var(--_v-current-week-week-number-text-color);
+  --_weight-current-week: var(--_v-current-week-week-number-text-weight);
+  --_italic-current-week: var(--_v-current-week-week-number-text-italic);
+}
 .notes-calendar-cell[data-today] {
   --_text-today: var(--_v-today-text-color);
   --_weight-today: var(--_v-today-text-weight);
@@ -562,17 +613,32 @@ const hover = useModifierHoverPreview();
   }
 }
 @container style(--_v-current-week-text-color: unchanged) {
-  .notes-calendar-cell[data-current-week] > .notes-calendar-cell__text {
+  .notes-calendar-cell[data-current-week]:not([data-kind="week"]) > .notes-calendar-cell__text {
+    --_text-current-week: initial;
+  }
+}
+@container style(--_v-current-week-week-number-text-color: unchanged) {
+  .notes-calendar-cell[data-current-week][data-kind="week"] > .notes-calendar-cell__text {
     --_text-current-week: initial;
   }
 }
 @container style(--_v-current-week-text-weight: unchanged) {
-  .notes-calendar-cell[data-current-week] > .notes-calendar-cell__text {
+  .notes-calendar-cell[data-current-week]:not([data-kind="week"]) > .notes-calendar-cell__text {
+    --_weight-current-week: initial;
+  }
+}
+@container style(--_v-current-week-week-number-text-weight: unchanged) {
+  .notes-calendar-cell[data-current-week][data-kind="week"] > .notes-calendar-cell__text {
     --_weight-current-week: initial;
   }
 }
 @container style(--_v-current-week-text-italic: unchanged) {
-  .notes-calendar-cell[data-current-week] > .notes-calendar-cell__text {
+  .notes-calendar-cell[data-current-week]:not([data-kind="week"]) > .notes-calendar-cell__text {
+    --_italic-current-week: initial;
+  }
+}
+@container style(--_v-current-week-week-number-text-italic: unchanged) {
+  .notes-calendar-cell[data-current-week][data-kind="week"] > .notes-calendar-cell__text {
     --_italic-current-week: initial;
   }
 }

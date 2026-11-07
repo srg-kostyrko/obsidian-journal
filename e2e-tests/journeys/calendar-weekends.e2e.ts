@@ -276,6 +276,7 @@ describe("weekend and current-week bands", () => {
       expect(band.bottom).toBeLessThan(day(layout, "2027-05-17").top + 1);
     });
 
+    // The block's week number still marks the current week, in its text; its days take neither.
     it("the week view block draws the weekend band and no current-week band", async () => {
       const layout = await waitForGrid(
         WEEK,
@@ -285,7 +286,8 @@ describe("weekend and current-week bands", () => {
       );
       expect(layout.currentWeekBands).toEqual([]);
       expect(await $(`${WEEK} [data-today]`).isExisting()).toBe(true);
-      expect(await $(`${WEEK} [data-current-week]`).isExisting()).toBe(false);
+      expect(await $(`${WEEK} .notes-week-view__day[data-current-week]`).isExisting()).toBe(false);
+      expect(await $(`${WEEK} .notes-week-view__week-number[data-current-week]`).isExisting()).toBe(true);
     });
   });
 

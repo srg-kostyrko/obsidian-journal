@@ -5,6 +5,7 @@ import { calendarDisplaySlice } from "@/calendar";
 import {
   formatAt,
   fromControlValue,
+  hasStockNarrow,
   isModified,
   sourceAt,
   structureAt,
@@ -13,6 +14,8 @@ import {
   withNarrowCleared,
   withReset,
   withFormat,
+  withNarrowFromWide,
+  withNarrowWeekdayFromWide,
   withStructure,
   withValue,
 } from "./appearance-editing";
@@ -31,6 +34,14 @@ const fresh = () => structuredClone(appearanceSlice.defaults);
 const stockDisplay = () => structuredClone(calendarDisplaySlice.defaults);
 const custom = (hex: string) => ({ type: "custom" as const, color: hex });
 const TEXT_COLOR = ["text", "color"];
+
+describe("narrow Selected stock", () => {
+  it("narrow Selected reads as a 20% background out of the box", () => {
+    const defaults = fresh();
+    expect(valueAt(defaults, "narrow", "selected", ["style"])).toBe("background");
+    expect(valueAt(defaults, "narrow", "selected", ["strength"])).toBe(20);
+  });
+});
 
 describe("valueAt", () => {
   it("at narrow merges the narrow leaf over the wide value", () => {
@@ -144,6 +155,31 @@ describe("sourceAt", () => {
     expect(sourceAt(user, "wide", "cell", ["padding"])).toBe("user");
     expect(sourceAt(user, "narrow", "cell", ["padding"])).toBe("user");
     expect(sourceAt(withValue(user, "narrow", "cell", ["padding"], 3), "narrow", "cell", ["padding"])).toBe("narrow");
+  });
+});
+
+describe("stock narrow values", () => {
+  it("narrow shows the stock narrow value, from stock", () => {
+    const state = withValue(fresh(), "wide", "cell", ["gap"], "3px");
+
+    expect(valueAt(state, "narrow", "cell", ["gap"])).toBe("1px");
+    expect(sourceAt(state, "narrow", "cell", ["gap"])).toBe("stock");
+    expect(valueAt(state, "wide", "cell", ["gap"])).toBe("3px");
+    expect(sourceAt(state, "wide", "cell", ["gap"])).toBe("user");
+  });
+
+  it("a narrow override still wins over the stock narrow", () => {
+    const state = withValue(fresh(), "narrow", "cell", ["gap"], "4px");
+
+    expect(valueAt(state, "narrow", "cell", ["gap"])).toBe("4px");
+    expect(sourceAt(state, "narrow", "cell", ["gap"])).toBe("narrow");
+  });
+
+  it("a leaf with no stock narrow still follows wide at narrow", () => {
+    const state = withValue(fresh(), "wide", "cell", ["padding"], 2);
+
+    expect(valueAt(state, "narrow", "cell", ["padding"])).toBe(2);
+    expect(sourceAt(state, "narrow", "cell", ["padding"])).toBe("user");
   });
 });
 
@@ -288,10 +324,12 @@ describe("formatAt", () => {
     expect(formatAt(stockDisplay(), format("day"), "wide")).toBe("");
   });
 
-  it("reads the weekday per width, one letter as its object and an unset narrow as null", () => {
-    const display = { ...stockDisplay(), weekdayLabel: { type: "letter" as const } };
-    expect(formatAt(display, format("weekday"), "wide")).toEqual({ type: "letter" });
-    expect(formatAt(display, format("weekday"), "narrow")).toBeNull();
+  it("reads the weekday per width, one letter as its object and an unset narrow as the stock one letter", () => {
+    const display = { ...stockDisplay(), weekdayLabel: { type: "pattern" as const, pattern: "dddd" } };
+    expect(formatAt({ ...display, weekdayLabel: { type: "letter" } }, format("weekday"), "wide")).toEqual({
+      type: "letter",
+    });
+    expect(formatAt(display, format("weekday"), "narrow")).toEqual({ type: "letter" });
     const narrow = { ...display, weekdayLabelNarrow: { type: "pattern" as const, pattern: "dd" } };
     expect(formatAt(narrow, format("weekday"), "narrow")).toBe("dd");
     expect(formatAt(stockDisplay(), format("weekday"), "wide")).toBe("");
@@ -343,7 +381,7 @@ describe("withFormat", () => {
     expect(narrow.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "" });
   });
 
-  it("reads an empty narrow weekday as same as wide, so narrow is not modified", () => {
+  it("reads an empty narrow weekday as no override, so narrow is not modified", () => {
     const set = withFormat(stockDisplay(), format("weekday"), "narrow", "dd");
     const cleared = withFormat(set, format("weekday"), "narrow", "");
     expect(cleared.weekdayLabelNarrow).toBeNull();
@@ -360,7 +398,7 @@ describe("withFormat", () => {
     expect(next.weekdayLabelNarrow).toBeNull();
   });
 
-  it("clears the narrow weekday back to same as wide with null", () => {
+  it("clears the narrow weekday back to no override with null", () => {
     const set = withFormat(stockDisplay(), format("weekday"), "narrow", { type: "letter" });
     expect(withFormat(set, format("weekday"), "narrow", null).weekdayLabelNarrow).toBeNull();
   });
@@ -423,5 +461,34 @@ describe("label formats in modified and reset", () => {
     const reset = withReset(fresh(), display, "narrow", "weekday").display;
     expect(reset).toEqual({ ...display, weekdayLabelNarrow: null });
     expect(withReset(fresh(), labelled(), "narrow", "heading").display).toEqual(labelled());
+  });
+});
+
+describe("narrow's own stock value", () => {
+  it("is known for the leaves stock narrow sets, and only those", () => {
+    expect(hasStockNarrow("date", ["size"])).toBe(true);
+    expect(hasStockNarrow("cell", ["gap"])).toBe(true);
+    expect(hasStockNarrow("cell", ["minHeight"])).toBe(true);
+    expect(hasStockNarrow("selected", ["style"])).toBe(true);
+    expect(hasStockNarrow("selected", ["strength"])).toBe(true);
+    expect(hasStockNarrow("cell", ["padding"])).toBe(false);
+    expect(hasStockNarrow("today", TEXT_COLOR)).toBe(false);
+  });
+
+  it("takes the wide value as a narrow override, and leaves wide alone", () => {
+    const wide = withValue(fresh(), "wide", "date", ["size"], "1.4em");
+    const next = withNarrowFromWide(wide, "date", ["size"]);
+    expect(next.narrow.date.size).toBe("1.4em");
+    expect(next.wide.date.size).toBe("1.4em");
+    expect(valueAt(next, "narrow", "date", ["size"])).toBe("1.4em");
+    expect(sourceAt(next, "narrow", "date", ["size"])).toBe("narrow");
+  });
+
+  it("takes the wide weekday label as the narrow one", () => {
+    const display = { ...stockDisplay(), weekdayLabel: { type: "pattern" as const, pattern: "dddd" } };
+    const next = withNarrowWeekdayFromWide(display);
+    expect(next.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "dddd" });
+    expect(next.weekdayLabelNarrow).not.toBe(display.weekdayLabel);
+    expect(formatAt(next, format("weekday"), "narrow")).toBe("dddd");
   });
 });

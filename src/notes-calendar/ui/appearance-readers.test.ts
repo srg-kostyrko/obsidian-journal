@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { appearanceCatalog, type CatalogEntry } from "../appearance/appearance-catalog";
+import { ROW_FLOOR_PX } from "../appearance/slice";
 import { calendarStyleRules, NARROW_QUERY, narrowReader, privateName, wideReader, type ScopedRule } from "../testing";
 
 const components = calendarStyleRules();
@@ -16,9 +17,12 @@ const BANDS = ["weekend", "current-week"];
 // month grids read the cell's min height and label padding for it too.
 // A band draws its own fill and ring, so it reads them and the cell's corner radius; the cells under it
 // read its text and its layer, which decides whether that text paints over a decoration. A weekend
-// column's header takes the weekend's text too, so every grid reads that.
+// column's header takes the weekend's text too, so every grid reads that. The week numbers' divider is
+// drawn by its own component, across the rows, so it alone reads the divider's color; every grid reads its
+// width too, which sizes the track the divider sits in.
 function bandRenderers(state: string, value: string): readonly Component[] {
   if (value === "layer") return ["band", "cell"];
+  if (value.startsWith("week-number-text-")) return ["cell"];
   if (!value.startsWith("text-")) return ["band"];
   return state === "weekend" ? ["cell", ...GRIDS] : ["cell"];
 }
@@ -29,8 +33,18 @@ function renderers(entry: CatalogEntry): readonly Component[] {
   if (band !== undefined) return bandRenderers(band, part.slice(band.length + 1));
   if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
   if (part === "cell-radius") return ["cell", "band"];
+  if (part === "week-number-divider-width") return ["divider", ...GRIDS];
+  if (part.startsWith("week-number-divider-")) return ["divider"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix) ? GRIDS : ["cell"];
 }
+
+// A heading cell holds one line of text, so its row keeps the flat floor where a wide day row grows.
+const HEADING_CELLS: Readonly<Record<(typeof GRIDS)[number], string>> = {
+  monthView: ".notes-month-view__header .notes-calendar-cell",
+  weekView: ".notes-week-view__header .notes-calendar-cell",
+  preview: ".appearance-preview__header .notes-calendar-cell",
+};
+const headingCellSelectors: readonly string[] = Object.values(HEADING_CELLS);
 
 const cases = appearanceCatalog.flatMap((entry) =>
   renderers(entry).map((component) => [entry.name, component, entry] as const),
@@ -45,8 +59,9 @@ const cellDeclarations = (selector: string): Record<string, string> =>
 
 describe("calendar appearance readers", () => {
   it("assigns every catalog entry to the components that render it, the weekend's text to every grid's headers", () => {
-    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(24);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(25);
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("band")).length).toBe(9);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("divider")).length).toBe(2);
   });
 
   it.each([
@@ -132,7 +147,13 @@ describe("calendar appearance readers", () => {
     (_name, component, entry) => {
       const rules: readonly ScopedRule[] = components[component];
       const name = privateName(entry);
-      const wide = rules.filter((rule) => rule.container === null && rule.declarations.has(name));
+      const wide = rules.filter(
+        (rule) =>
+          rule.container === null &&
+          rule.supports === null &&
+          rule.declarations.has(name) &&
+          !headingCellSelectors.includes(rule.selector),
+      );
       expect(wide.length).toBeGreaterThan(0);
       for (const rule of wide) {
         expect({ selector: rule.selector, value: rule.declarations.get(name) }).toEqual({
@@ -149,6 +170,34 @@ describe("calendar appearance readers", () => {
       }
     },
   );
+
+  it.each(GRIDS)("%s keeps its heading cells at the flat row floor at every width", (component) => {
+    const entry = appearanceCatalog.find((candidate) => candidate.name === "journal-cell-cell-min-height");
+    if (entry === undefined) throw new Error("no row-height entry in the catalog");
+    const declared = (container: string | null): string | undefined =>
+      components[component]
+        .find((rule) => rule.container === container && rule.selector === HEADING_CELLS[component])
+        ?.declarations.get(privateName(entry));
+    expect({ wide: declared(null), narrow: declared(NARROW_QUERY) }).toEqual({
+      wide: wideReader({ ...entry, stock: `${ROW_FLOOR_PX}px` }),
+      narrow: narrowReader(entry),
+    });
+  });
+
+  // The growing stock is sized in cqi; where the unit is unknown the min-height it reaches is invalid and the
+  // row loses its floor, so each reader of it falls back to the flat one.
+  it.each([
+    ["cell", ".notes-calendar-cell"],
+    ["monthView", ".notes-month-view__day--blank"],
+    ["preview", ".appearance-preview__day--blank"],
+  ] as const)("%s falls back to the flat row floor where cqi is unsupported", (component, selector) => {
+    const entry = appearanceCatalog.find((candidate) => candidate.name === "journal-cell-cell-min-height");
+    if (entry === undefined) throw new Error("no row-height entry in the catalog");
+    const fallback = components[component].find(
+      (rule) => rule.supports === "not (width: 1cqi)" && rule.selector === selector,
+    );
+    expect(fallback?.declarations.get(privateName(entry))).toBe(wideReader({ ...entry, stock: `${ROW_FLOOR_PX}px` }));
+  });
 
   it.each(cases)("%s is read by %s outside the private values", (_name, component, entry) => {
     const read = `var(${privateName(entry)})`;
@@ -174,17 +223,32 @@ const TEXT_VALUES = [
   ["text-weight", "weight"],
   ["text-italic", "italic"],
 ] as const;
-const passThroughCases = STATES.flatMap((state) =>
-  TEXT_VALUES.map(([value, slot]) => [state, value, `--_${slot}-${state}`] as const),
-);
+// The current week's week number reads its own text group, so the days' pass-through must not reach it.
+const passThroughCell = (state: string): string =>
+  state === "current-week"
+    ? '.notes-calendar-cell[data-current-week]:not([data-kind="week"])'
+    : `.notes-calendar-cell[data-${state}]`;
+const passThroughCases = [
+  ...STATES.flatMap((state) =>
+    TEXT_VALUES.map(([value, slot]) => [`${state}-${value}`, `--_${slot}-${state}`, passThroughCell(state)] as const),
+  ),
+  ...TEXT_VALUES.map(
+    ([value, slot]) =>
+      [
+        `current-week-week-number-${value}`,
+        `--_${slot}-current-week`,
+        '.notes-calendar-cell[data-current-week][data-kind="week"]',
+      ] as const,
+  ),
+];
 
 describe("calendar appearance Unchanged pass-through", () => {
   // The query is answered by the span's parent, the cell, which is where `--_v-*` lives.
-  it.each(passThroughCases)("%s %s clears %s on the text span when it reads unchanged", (state, value, slot) => {
-    const container = `style(--_v-${state}-${value}: unchanged)`;
+  it.each(passThroughCases)("%s clears %s on the text span when it reads unchanged", (value, slot, cell) => {
+    const container = `style(--_v-${value}: unchanged)`;
     const rules = components.cell.filter((rule) => rule.container === container);
     expect(rules.map((rule) => ({ selector: rule.selector, value: rule.declarations.get(slot) }))).toEqual([
-      { selector: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`, value: "initial" },
+      { selector: `${cell} > .notes-calendar-cell__text`, value: "initial" },
     ]);
   });
 });

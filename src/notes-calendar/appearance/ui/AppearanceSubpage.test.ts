@@ -198,7 +198,9 @@ describe("AppearanceSubpage", () => {
     expect(outlined(container)).toEqual([todayCell(container)]);
 
     await userEvent.selectOptions(partsList(), "weekNumber");
-    expect(outlined(container)).toEqual([...container.querySelectorAll('[data-preview-part="weekNumber"]')]);
+    expect(outlined(container)).toEqual([
+      ...container.querySelectorAll(".notes-calendar-divider, .appearance-preview__week-number"),
+    ]);
   });
 
   describe("a part every day has", () => {
@@ -391,6 +393,25 @@ describe("AppearanceSubpage", () => {
     slice().state = withValue(slice().state, "wide", "today", ["style"], "ring");
 
     expect(await screen.findByText("--journal-cell-today-ring-width")).toBeTruthy();
+  });
+
+  it("shows the divider's color and width only while the divider is shown, at the width edited", async () => {
+    mount();
+    await userEvent.selectOptions(partsList(), "weekNumber");
+    expect(screen.getByText("--journal-cell-week-number-divider-width")).toBeTruthy();
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: m.calendar_appearance_control({ control: "divider_divider" }) }),
+      "hidden",
+    );
+
+    expect(slice().state.wide.weekNumber.divider).toBe(false);
+    expect(screen.queryByText("--journal-cell-week-number-divider-width")).toBeNull();
+    expect(screen.queryByText("--journal-cell-week-number-divider-color")).toBeNull();
+    await switchTo("narrow");
+    expect(screen.queryByText("--journal-cell-week-number-divider-width-narrow")).toBeNull();
+    slice().state = withValue(slice().state, "narrow", "weekNumber", ["divider"], true);
+    expect(await screen.findByText("--journal-cell-week-number-divider-width-narrow")).toBeTruthy();
   });
 
   it("a modified part carries the marker in the chips and the parts list, per width", async () => {

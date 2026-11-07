@@ -19,6 +19,7 @@ import {
   type ValuePartKey,
 } from "./appearance-parts";
 import { writtenEntryNames } from "./appearance-variables";
+import { appearanceSlice } from "./slice";
 
 const names = (part: ValuePartKey, style?: Parameters<typeof visibleControls>[1]) =>
   visibleControls(part, style).map((control) => {
@@ -56,7 +57,7 @@ describe("PARTS", () => {
   it("gives every control a family", () => {
     for (const { controls } of Object.values(PARTS)) {
       for (const control of controls)
-        expect(["visibility", "label", "text", "highlight", "box"]).toContain(control.family);
+        expect(["visibility", "label", "text", "divider", "highlight", "box"]).toContain(control.family);
     }
   });
 
@@ -148,10 +149,57 @@ describe("familiesOf", () => {
   });
 });
 
+const valueControls = (part: "today" | "currentWeek") =>
+  PARTS[part].controls.filter((control): control is ValueControl => !isStructure(control) && !isFormat(control));
+
 describe("the band parts", () => {
   it.each(["weekend", "currentWeek"] as const)("%s at none is the highlight style alone", (part) => {
     expect(familiesOf(part, "none").map((group) => group.family)).toEqual(["highlight"]);
     expect(names(part, "none")).toEqual(["style"]);
+  });
+
+  it("gives the current week a week-number text group after the days' text and before the layer", () => {
+    const added = valueControls("currentWeek").filter((control) => control.path[0] === "weekNumberText");
+    expect(added).toEqual([
+      {
+        family: "highlight",
+        path: ["weekNumberText", "color"],
+        kind: "color",
+        entry: "journal-cell-current-week-week-number-text-color",
+        role: "text",
+        unchanged: true,
+        shownFor: ["text", "ring", "background"],
+      },
+      {
+        family: "highlight",
+        path: ["weekNumberText", "weight"],
+        kind: "select",
+        entry: "journal-cell-current-week-week-number-text-weight",
+        options: ["normal", "semibold", "bold"],
+        unchanged: true,
+        shownFor: ["text", "ring", "background"],
+      },
+      {
+        family: "highlight",
+        path: ["weekNumberText", "italic"],
+        kind: "select",
+        entry: "journal-cell-current-week-week-number-text-italic",
+        options: ["on", "off"],
+        unchanged: true,
+        shownFor: ["text", "ring", "background"],
+      },
+    ]);
+    expect(names("currentWeek", "text")).toEqual([
+      "style",
+      "text.color",
+      "text.weight",
+      "text.italic",
+      "weekNumberText.color",
+      "weekNumberText.weight",
+      "weekNumberText.italic",
+    ]);
+    expect(names("currentWeek", "ring").slice(-2)).toEqual(["weekNumberText.italic", "over"]);
+    expect(valueControls("today").some((control) => control.path[0] === "weekNumberText")).toBe(false);
   });
 
   it("feeds the weekend's variables from its own catalog entries", () => {
@@ -177,6 +225,70 @@ describe("the band parts", () => {
       "cell",
       "grid",
     ]);
+  });
+});
+
+describe("the week number's divider", () => {
+  const shown = { ...appearanceSlice.defaults.wide.weekNumber, divider: true };
+  const hidden = { ...shown, divider: false };
+  const groups = (values: typeof shown) =>
+    familiesOf("weekNumber", undefined, values).map((group) => ({
+      family: group.family,
+      paths: group.controls.map((control) =>
+        isStructure(control) || isFormat(control) ? control.family : control.path.join("."),
+      ),
+    }));
+
+  it("week numbers show the divider family after text, its color and width only while shown", () => {
+    expect(groups(shown).map((group) => group.family)).toEqual(["visibility", "label", "text", "divider"]);
+    expect(groups(shown).at(-1)?.paths).toEqual(["divider", "dividerColor", "dividerWidth"]);
+    expect(groups(hidden).at(-1)?.paths).toEqual(["divider"]);
+  });
+
+  it("offers the divider shown or hidden, a border color and a 1–4px width", () => {
+    const controls = PARTS.weekNumber.controls.filter(
+      (control): control is ValueControl => !isStructure(control) && !isFormat(control) && control.family === "divider",
+    );
+    expect(
+      controls.map(({ path, kind, entry, role, options, range }) => ({ path, kind, entry, role, options, range })),
+    ).toEqual([
+      {
+        path: ["divider"],
+        kind: "select",
+        entry: undefined,
+        role: undefined,
+        options: ["shown", "hidden"],
+        range: undefined,
+      },
+      {
+        path: ["dividerColor"],
+        kind: "color",
+        entry: "journal-cell-week-number-divider-color",
+        role: "border",
+        options: undefined,
+        range: undefined,
+      },
+      {
+        path: ["dividerWidth"],
+        kind: "slider",
+        entry: "journal-cell-week-number-divider-width",
+        role: undefined,
+        options: undefined,
+        range: { min: 1, max: 4, step: 1, unit: "px" },
+      },
+    ]);
+  });
+
+  it("stores the divider select's options as the boolean", () => {
+    const select = PARTS.weekNumber.controls.find(
+      (control): control is ValueControl =>
+        !isStructure(control) && !isFormat(control) && control.path.join(".") === "divider",
+    );
+    expect(select && [fromControlValue(select, "shown"), fromControlValue(select, "hidden")]).toEqual([true, false]);
+  });
+
+  it("leaves every control of the part without its values", () => {
+    expect(visibleControls("weekNumber", undefined)).toBe(PARTS.weekNumber.controls);
   });
 });
 

@@ -4,7 +4,7 @@ import { computed, ref, useId, useTemplateRef, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import { appearanceSlice } from "@/notes-calendar/appearance/slice";
+import { appearanceSlice, ROW_FLOOR_PX } from "@/notes-calendar/appearance/slice";
 import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -52,11 +52,11 @@ const previewDay = new Date().getDate();
 // overlay it is supposed to sit under. The source size is the saved wide row min-height, the
 // cell height floor the calendar actually renders.
 const appearance = useService(SettingsService).getSlice(appearanceSlice);
-// The schema allows 0, which would make the magnification a division by zero.
-const STOCK_CELL_SOURCE_SIZE_PX = 26;
+// The schema allows 0, which would make the magnification a division by zero. Default (null) grows with
+// the calendar's width, so the canvas, which has no calendar width, sizes from the row floor.
 const cellSourceSizePx = computed(() => {
   const saved = appearance.state.wide.cell.minHeight;
-  return saved >= 1 ? saved : STOCK_CELL_SOURCE_SIZE_PX;
+  return saved !== null && saved >= 1 ? saved : ROW_FLOOR_PX;
 });
 const canvasStyle = computed(() => ({ "--cell-source-size": `${cellSourceSizePx.value}px` }));
 const cell = useTemplateRef<HTMLElement>("cell");

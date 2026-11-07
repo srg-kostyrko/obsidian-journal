@@ -21,6 +21,7 @@ import { shelvesCoreModule } from "@/shelves/module";
 import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { ActiveEntryViewModel } from "../active-entry";
 import { notesCalendarModule } from "../module";
 import { calendarStyleRules } from "../testing";
 
@@ -304,11 +305,11 @@ describe("NotesWeekView", () => {
       expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "M", narrow: "Mo" });
     });
 
-    it("renders the wide text at both widths when the narrow one is unset", async () => {
+    it("renders one letter at narrow when the narrow one is unset", async () => {
       const harness = await bootHarness(daily, { weekdayLabel: { type: "pattern", pattern: "dd" } });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
 
-      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "Mo", narrow: "Mo" });
+      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "Mo", narrow: "M" });
     });
   });
 
@@ -521,7 +522,7 @@ describe("NotesWeekView bands", () => {
       weekend: bands(container, "weekend").map(placement),
       currentWeek: bands(container, "current-week").map(placement),
     }).toEqual({
-      weekend: [{ column: "7 / span 2", row: "auto" }],
+      weekend: [{ column: "8 / span 2", row: "auto" }],
       currentWeek: [{ column: "1 / -1", row: "2 / span 1" }],
     });
     expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
@@ -538,7 +539,7 @@ describe("NotesWeekView bands", () => {
     expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "1 / span 1" }]);
   });
 
-  it("keeps the weekend band but drops the current week when the caller opts out", async () => {
+  it("keeps the weekend band but drops the current-week band when the caller opts out", async () => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, {
       props: { shelf: null, week: thisWeek(), currentWeekBand: false },
@@ -546,7 +547,34 @@ describe("NotesWeekView bands", () => {
 
     expect(bands(container, "weekend").length).toBe(1);
     expect(bands(container, "current-week")).toEqual([]);
-    expect(container.querySelector("[data-current-week]")).toBeNull();
+  });
+
+  // The band is the caller's to drop; the week number's current-week text is the block's only accent.
+  it("the week block's week number keeps the current week without a band", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), weeks: "left", currentWeekBand: false },
+    });
+
+    expect(container.querySelector(".notes-week-view__week-number")?.hasAttribute("data-current-week")).toBe(true);
+    expect(container.querySelector(".notes-week-view__day[data-current-week]")).toBeNull();
+  });
+
+  it("a weekly note open on the current week shows the open note's text on its number", async () => {
+    const harness = await bootHarness({ ...daily, weekly: fixedJournal("weekly", { type: "week" }) });
+    harness.resolve(ActiveEntryViewModel).active.value = {
+      journalName: "weekly",
+      anchor: thisWeek().anchor.toAnchor(),
+    };
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), weeks: "left", currentWeekBand: false },
+    });
+    const weekNumber = container.querySelector<HTMLElement>(".notes-week-view__week-number");
+
+    expect({ active: weekNumber?.dataset.active, currentWeek: weekNumber?.dataset.currentWeek }).toEqual({
+      active: "true",
+      currentWeek: "true",
+    });
   });
 
   it("draws no current-week band for a week without today", async () => {
@@ -566,17 +594,42 @@ describe("NotesWeekView bands", () => {
 
     expect(container.querySelector(".notes-week-view__day")).toBeNull();
     expect(bands(container, "current-week")).toEqual([]);
-    expect(container.querySelector("[data-current-week]")).toBeNull();
+    expect([...container.querySelectorAll("[data-current-week]")].map((cell) => cell.className)).toEqual([
+      expect.stringContaining("notes-week-view__week-number"),
+    ]);
   });
 
-  it("places the bands ahead of the header row", async () => {
+  it.each([
+    ["left", { column: "2 / 3", row: "2 / auto" }],
+    ["right", { column: "-3 / -2", row: "2 / auto" }],
+  ] as const)("draws the divider in its own track beside a week number on the %s", async (weeks, expected) => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek(), weeks } });
+
+    expect(
+      [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map((divider) => ({
+        column: divider.style.gridColumn,
+        row: divider.style.gridRow,
+      })),
+    ).toEqual([expected]);
+  });
+
+  it("draws no divider without a week number", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek(), weeks: "none" } });
+
+    expect(container.querySelector(".notes-calendar-divider")).toBeNull();
+  });
+
+  it("places the bands ahead of the header row, then the divider", async () => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek() } });
     const children = [...(container.querySelector('[role="grid"]')?.children ?? [])];
 
-    expect(children.slice(0, 2).map((child) => (child as HTMLElement).dataset.band)).toEqual([
+    expect(children.slice(0, 3).map((child) => (child as HTMLElement).dataset.band ?? child.className)).toEqual([
       "weekend",
       "current-week",
+      "notes-calendar-divider",
     ]);
   });
 
@@ -592,14 +645,33 @@ describe("NotesWeekView bands", () => {
       "grid-template-columns": "repeat(var(--day-columns, 7), 1fr)",
       "row-gap": "var(--size-2-2)",
       "column-gap": "var(--_v-cell-gap)",
+      "--_divider-track": "min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000)",
     });
     expect(declarations('.notes-week-view__grid[data-weeks="left"]')).toMatchObject({
-      "grid-template-columns": "1fr repeat(var(--day-columns, 7), 1fr)",
+      "grid-template-columns": "1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr)",
     });
     expect(declarations('.notes-week-view__grid[data-weeks="right"]')).toMatchObject({
-      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) 1fr",
+      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr",
     });
     expect(declarations(".notes-week-view__row > *")).toMatchObject({ "text-align": "center" });
+    // Cells place themselves in source order, so whatever follows the week number has to step over the divider's track.
+    const placed = (selector: string, property: string): string | undefined =>
+      rules
+        .filter((rule) => rule.supports === null)
+        .find((rule) => rule.selector.split(",").some((part) => part.trim() === selector))
+        ?.declarations.get(property);
+    expect({
+      leftDay: placed(
+        '.notes-week-view__grid[data-weeks="left"] .notes-week-view__week-number + *',
+        "grid-column-start",
+      ),
+      leftWeekday: placed(
+        '.notes-week-view__grid[data-weeks="left"] .notes-week-view__weekday-spacer + *',
+        "grid-column-start",
+      ),
+      rightWeek: placed('.notes-week-view__grid[data-weeks="right"] .notes-week-view__week-number', "grid-column"),
+      rightSpacer: placed('.notes-week-view__grid[data-weeks="right"] .notes-week-view__weekday-spacer', "grid-column"),
+    }).toEqual({ leftDay: "3", leftWeekday: "3", rightWeek: "-2 / -1", rightSpacer: "-2 / -1" });
     // The first rule laying out each row; the fallback for engines without nested grid tracks that follows it sits under `@supports`.
     for (const row of [".notes-week-view__weekdays", ".notes-week-view__row"]) {
       const layout = rules.find(

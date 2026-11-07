@@ -26,6 +26,7 @@ import { useShelfScope } from "../use-shelf-scope";
 
 import NotesCalendarBand from "./NotesCalendarBand.vue";
 import NotesCalendarCell from "./NotesCalendarCell.vue";
+import NotesCalendarDivider from "./NotesCalendarDivider.vue";
 import {
   useCalendarGridNavigation,
   type CalendarGridItem,
@@ -120,7 +121,7 @@ const bands = computed(() =>
   bandPlacement({
     columns: (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
     weekend: weekend.value,
-    weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
+    weekNumbers: weeksPos.value,
     weekdayHeader: props.showWeekdays,
     rows: rows.value.map((row) => ({
       isCurrentWeek: props.currentWeekBand && row.weekPeriod.contains(today.value),
@@ -251,6 +252,7 @@ const isSelected = (period: Period): boolean =>
         row="auto"
       />
       <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
+      <NotesCalendarDivider v-if="bands.divider" :column="bands.divider.column" :row="bands.divider.row" />
       <div
         class="notes-month-view__row"
         :class="{ 'notes-month-view__row--visually-hidden': !showWeekdays }"
@@ -382,16 +384,32 @@ const isSelected = (period: Period): boolean =>
 /* Positioned for its bands, never isolated: a cell with an open mark popover lifts itself out of the grid. */
 .notes-month-view__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  --_v-week-number-divider-width: var(
+    --journal-cell-week-number-divider-width,
+    var(--journal-saved-cell-week-number-divider-width, 1px)
+  );
+  /* The divider's own track, so a filled cell beside it keeps clear of its line: 8px while it shows, and
+     none once its width is 0, which is how a hidden divider is written. */
+  --_divider-track: min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000);
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--day-columns, 7), 1fr);
   gap: var(--_v-cell-gap);
 }
 .notes-month-view__grid[data-weeks="left"] {
-  grid-template-columns: auto repeat(var(--day-columns, 7), 1fr);
+  grid-template-columns: 1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr);
 }
 .notes-month-view__grid[data-weeks="right"] {
-  grid-template-columns: repeat(var(--day-columns, 7), 1fr) auto;
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr;
+}
+/* Cells place themselves in source order, so whatever follows the week numbers steps over the divider's track. */
+.notes-month-view__grid[data-weeks="left"] .notes-month-view__week-number + *,
+.notes-month-view__grid[data-weeks="left"] .notes-month-view__weekday-spacer + * {
+  grid-column-start: 3;
+}
+.notes-month-view__grid[data-weeks="right"] .notes-month-view__week-number,
+.notes-month-view__grid[data-weeks="right"] .notes-month-view__weekday-spacer {
+  grid-column: -2 / -1;
 }
 .notes-month-view__row {
   display: grid;
@@ -473,16 +491,19 @@ const isSelected = (period: Period): boolean =>
    outside the month take the date values too; the outside highlight's text sits above `--_part-color`,
    so they stay muted. */
 .notes-month-view__week-number {
-  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
+  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em));
   --_v-week-number-weight: var(
     --journal-cell-week-number-weight,
-    var(--journal-saved-cell-week-number-weight, var(--font-bold))
+    var(--journal-saved-cell-week-number-weight, var(--font-normal))
   );
   --_v-week-number-italic: var(
     --journal-cell-week-number-italic,
     var(--journal-saved-cell-week-number-italic, inherit)
   );
-  --_v-week-number-color: var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit));
+  --_v-week-number-color: var(
+    --journal-cell-week-number-color,
+    var(--journal-saved-cell-week-number-color, var(--text-muted))
+  );
   --_v-week-number-case: var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit));
   --_part-color: var(--_v-week-number-color);
   font-size: var(--_v-week-number-size);
@@ -491,7 +512,7 @@ const isSelected = (period: Period): boolean =>
   text-transform: var(--_v-week-number-case);
 }
 .notes-month-view__day {
-  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, 1.1em));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
@@ -506,7 +527,10 @@ const isSelected = (period: Period): boolean =>
    plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
    short of its neighbours, when no week number holds the row open. */
 .notes-month-view__day--blank {
-  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-min-height: var(
+    --journal-cell-cell-min-height,
+    var(--journal-saved-cell-cell-min-height, clamp(26px, 7cqi, 64px))
+  );
   --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
   min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
 }
@@ -515,7 +539,25 @@ const isSelected = (period: Period): boolean =>
 [data-custom-day-label] .notes-month-view__day {
   min-width: 0;
 }
+/* A heading cell holds one line of text, so it keeps the flat floor where a wide day row grows with the
+   calendar's width. */
+.notes-month-view__header :deep(.notes-calendar-cell) {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+}
+/* The growing stock is sized in cqi. A WebView without the unit finds the min-height it reaches invalid
+   and leaves the row no floor at all, so there the stock is the flat floor. */
+@supports not (width: 1cqi) {
+  .notes-month-view__day--blank {
+    --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  }
+}
 @container journal-calendar (max-width: 28em) {
+  .notes-month-view__header :deep(.notes-calendar-cell) {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
+    );
+  }
   .notes-month-view__row {
     --_v-weekend-text-color: var(
       --journal-cell-weekend-text-color-narrow,
@@ -548,10 +590,7 @@ const isSelected = (period: Period): boolean =>
   .notes-month-view__day--blank {
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,
-      var(
-        --journal-saved-cell-cell-min-height-narrow,
-        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
-      )
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
     );
     --_v-cell-padding: var(
       --journal-cell-cell-padding-narrow,
@@ -599,11 +638,12 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-month-view__grid {
-    --_v-cell-gap: var(
-      --journal-cell-cell-gap-narrow,
+    --_v-cell-gap: var(--journal-cell-cell-gap-narrow, var(--journal-saved-cell-cell-gap-narrow, 1px));
+    --_v-week-number-divider-width: var(
+      --journal-cell-week-number-divider-width-narrow,
       var(
-        --journal-saved-cell-cell-gap-narrow,
-        var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)))
+        --journal-saved-cell-week-number-divider-width-narrow,
+        var(--journal-cell-week-number-divider-width, var(--journal-saved-cell-week-number-divider-width, 1px))
       )
     );
   }
@@ -649,14 +689,14 @@ const isSelected = (period: Period): boolean =>
       --journal-cell-week-number-size-narrow,
       var(
         --journal-saved-cell-week-number-size-narrow,
-        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit))
+        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em))
       )
     );
     --_v-week-number-weight: var(
       --journal-cell-week-number-weight-narrow,
       var(
         --journal-saved-cell-week-number-weight-narrow,
-        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-bold)))
+        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-normal)))
       )
     );
     --_v-week-number-italic: var(
@@ -670,7 +710,7 @@ const isSelected = (period: Period): boolean =>
       --journal-cell-week-number-color-narrow,
       var(
         --journal-saved-cell-week-number-color-narrow,
-        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit))
+        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, var(--text-muted)))
       )
     );
     --_v-week-number-case: var(
@@ -682,13 +722,7 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-month-view__day {
-    --_v-date-size: var(
-      --journal-cell-date-size-narrow,
-      var(
-        --journal-saved-cell-date-size-narrow,
-        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
-      )
-    );
+    --_v-date-size: var(--journal-cell-date-size-narrow, var(--journal-saved-cell-date-size-narrow, 1em));
     --_v-date-weight: var(
       --journal-cell-date-weight-narrow,
       var(
