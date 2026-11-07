@@ -209,12 +209,7 @@ const isSelected = (period: Period): boolean =>
         row="auto"
       />
       <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
-      <NotesCalendarDivider
-        v-if="bands.divider"
-        :side="weeksPos === 'left' ? 'end' : 'start'"
-        :column="bands.divider.column"
-        :row="bands.divider.row"
-      />
+      <NotesCalendarDivider v-if="bands.divider" :column="bands.divider.column" :row="bands.divider.row" />
       <div
         class="notes-week-view__weekdays"
         :class="{ 'notes-week-view__weekdays--visually-hidden': !showWeekdays }"
@@ -329,6 +324,13 @@ const isSelected = (period: Period): boolean =>
    isolated: a cell with an open mark popover lifts itself out of the grid. */
 .notes-week-view__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  --_v-week-number-divider-width: var(
+    --journal-cell-week-number-divider-width,
+    var(--journal-saved-cell-week-number-divider-width, 1px)
+  );
+  /* The divider's own track, so a filled cell beside it keeps clear of its line: 8px while it shows, and
+     none once its width is 0, which is how a hidden divider is written. */
+  --_divider-track: min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000);
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--day-columns, 7), 1fr);
@@ -337,10 +339,19 @@ const isSelected = (period: Period): boolean =>
 }
 /* The week number takes an equal share, as it did as a flex row, and as it does in the month view. */
 .notes-week-view__grid[data-weeks="left"] {
-  grid-template-columns: 1fr repeat(var(--day-columns, 7), 1fr);
+  grid-template-columns: 1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr);
 }
 .notes-week-view__grid[data-weeks="right"] {
-  grid-template-columns: repeat(var(--day-columns, 7), 1fr) 1fr;
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr;
+}
+/* Cells place themselves in source order, so whatever follows the week numbers steps over the divider's track. */
+.notes-week-view__grid[data-weeks="left"] .notes-week-view__week-number + *,
+.notes-week-view__grid[data-weeks="left"] .notes-week-view__weekday-spacer + * {
+  grid-column-start: 3;
+}
+.notes-week-view__grid[data-weeks="right"] .notes-week-view__week-number,
+.notes-week-view__grid[data-weeks="right"] .notes-week-view__weekday-spacer {
+  grid-column: -2 / -1;
 }
 .notes-week-view__weekdays,
 .notes-week-view__row {
@@ -520,6 +531,13 @@ const isSelected = (period: Period): boolean =>
   }
   .notes-week-view__grid {
     --_v-cell-gap: var(--journal-cell-cell-gap-narrow, var(--journal-saved-cell-cell-gap-narrow, 1px));
+    --_v-week-number-divider-width: var(
+      --journal-cell-week-number-divider-width-narrow,
+      var(
+        --journal-saved-cell-week-number-divider-width-narrow,
+        var(--journal-cell-week-number-divider-width, var(--journal-saved-cell-week-number-divider-width, 1px))
+      )
+    );
   }
   .notes-week-view__weekdays {
     --_v-weekday-size: var(

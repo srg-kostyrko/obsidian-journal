@@ -11,7 +11,7 @@ export interface BandPlacement {
   /** The index among `rows` of the row the current-week band crosses, or -1. */
   readonly currentWeekIndex: number;
   readonly currentWeekRow: string | undefined;
-  /** The week-number column from the first week row down, or undefined without week numbers. */
+  /** The divider's own track, from the first week row down, or undefined without week numbers. */
   readonly divider: { readonly column: string; readonly row: string } | undefined;
 }
 
@@ -24,7 +24,8 @@ export function bandPlacement(input: {
   readonly weekdayHeader: boolean;
   readonly rows: readonly BandRow[];
 }): BandPlacement {
-  const firstDayColumn = input.weekNumbers === "left" ? 2 : 1;
+  // Left week numbers take the first column and their divider the second.
+  const firstDayColumn = input.weekNumbers === "left" ? 3 : 1;
   const weekend = weekendRuns(input.columns, input.weekend).map(({ start, span }) => ({
     key: String(start),
     column: `${start + firstDayColumn} / span ${span}`,
@@ -38,6 +39,6 @@ export function bandPlacement(input: {
   const divider =
     input.weekNumbers === "none"
       ? undefined
-      : { column: input.weekNumbers === "left" ? "1 / 2" : "-2 / -1", row: `${firstWeekRow} / auto` };
+      : { column: input.weekNumbers === "left" ? "2 / 3" : "-3 / -2", row: `${firstWeekRow} / auto` };
   return { weekend, currentWeekIndex, currentWeekRow, divider };
 }

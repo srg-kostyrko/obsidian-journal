@@ -18,8 +18,8 @@ const placement = (overrides: Partial<Parameters<typeof bandPlacement>[0]> = {})
 
 describe("bandPlacement", () => {
   describe("weekend", () => {
-    it("runs down each group of adjacent weekend columns, after left week numbers", () => {
-      expect(placement().weekend).toEqual([{ key: "5", column: "7 / span 2" }]);
+    it("runs down each group of adjacent weekend columns, after left week numbers and their divider", () => {
+      expect(placement().weekend).toEqual([{ key: "5", column: "8 / span 2" }]);
     });
 
     it("starts at the first column without left week numbers", () => {
@@ -28,9 +28,13 @@ describe("bandPlacement", () => {
 
     it("splits a Sunday-start weekend across both edges", () => {
       expect(placement({ columns: [0, 1, 2, 3, 4, 5, 6] }).weekend).toEqual([
-        { key: "0", column: "2 / span 1" },
-        { key: "6", column: "8 / span 1" },
+        { key: "0", column: "3 / span 1" },
+        { key: "6", column: "9 / span 1" },
       ]);
+    });
+
+    it("starts at the first column without week numbers", () => {
+      expect(placement({ weekNumbers: "none" }).weekend).toEqual([{ key: "5", column: "6 / span 2" }]);
     });
 
     it("draws none for an empty weekend", () => {
@@ -63,16 +67,16 @@ describe("bandPlacement", () => {
   });
 
   describe("divider", () => {
-    it("puts the divider beside the week numbers, from the first week row", () => {
-      expect(placement().divider).toEqual({ column: "1 / 2", row: "2 / auto" });
+    it("puts the divider in its own column between the week numbers and the days, from the first week row", () => {
+      expect(placement().divider).toEqual({ column: "2 / 3", row: "2 / auto" });
     });
 
     it("follows week numbers on the right", () => {
-      expect(placement({ weekNumbers: "right" }).divider).toEqual({ column: "-2 / -1", row: "2 / auto" });
+      expect(placement({ weekNumbers: "right" }).divider).toEqual({ column: "-3 / -2", row: "2 / auto" });
     });
 
     it("starts at the top when the weekday header is hidden", () => {
-      expect(placement({ weekdayHeader: false }).divider).toEqual({ column: "1 / 2", row: "1 / auto" });
+      expect(placement({ weekdayHeader: false }).divider).toEqual({ column: "2 / 3", row: "1 / auto" });
     });
 
     it("draws no divider without week numbers", () => {

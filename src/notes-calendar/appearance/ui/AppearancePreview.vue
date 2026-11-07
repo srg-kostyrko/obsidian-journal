@@ -216,7 +216,6 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
         class="appearance-preview__divider"
         :class="pickedClass(picked === 'weekNumber')"
         data-preview-part="weekNumber"
-        :side="weeksPos === 'left' ? 'end' : 'start'"
         :column="bands.divider.column"
         :row="bands.divider.row"
       />
@@ -330,16 +329,32 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 /* Positioned for its bands, never isolated, as the month view's grid. */
 .appearance-preview__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  --_v-week-number-divider-width: var(
+    --journal-cell-week-number-divider-width,
+    var(--journal-saved-cell-week-number-divider-width, 1px)
+  );
+  /* The divider's own track, so a filled cell beside it keeps clear of its line: 8px while it shows, and
+     none once its width is 0, which is how a hidden divider is written. */
+  --_divider-track: min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000);
   position: relative;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: var(--_v-cell-gap);
 }
 .appearance-preview__grid[data-weeks="left"] {
-  grid-template-columns: 1fr repeat(7, 1fr);
+  grid-template-columns: 1fr var(--_divider-track) repeat(7, 1fr);
 }
 .appearance-preview__grid[data-weeks="right"] {
-  grid-template-columns: repeat(7, 1fr) 1fr;
+  grid-template-columns: repeat(7, 1fr) var(--_divider-track) 1fr;
+}
+/* Cells place themselves in source order, so whatever follows the week numbers steps over the divider's track. */
+.appearance-preview__grid[data-weeks="left"] .appearance-preview__week-number + *,
+.appearance-preview__grid[data-weeks="left"] .appearance-preview__weekday-spacer + * {
+  grid-column-start: 3;
+}
+.appearance-preview__grid[data-weeks="right"] .appearance-preview__week-number,
+.appearance-preview__grid[data-weeks="right"] .appearance-preview__weekday-spacer {
+  grid-column: -2 / -1;
 }
 /* A calendar's divider lets the pointer through to the cells; here a click on it picks the week numbers.
    The grid in the selector outranks the divider's own rule whichever stylesheet loads last. */
@@ -570,6 +585,13 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   }
   .appearance-preview__grid {
     --_v-cell-gap: var(--journal-cell-cell-gap-narrow, var(--journal-saved-cell-cell-gap-narrow, 1px));
+    --_v-week-number-divider-width: var(
+      --journal-cell-week-number-divider-width-narrow,
+      var(
+        --journal-saved-cell-week-number-divider-width-narrow,
+        var(--journal-cell-week-number-divider-width, var(--journal-saved-cell-week-number-divider-width, 1px))
+      )
+    );
   }
   .appearance-preview__weekday {
     --_v-weekday-size: var(

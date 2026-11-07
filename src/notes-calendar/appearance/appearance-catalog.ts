@@ -252,7 +252,7 @@ function textEntries(): CatalogEntry[] {
     ];
   });
 }
-
+// The divider draws its line on its inline-start edge, whichever side the week numbers are on.
 // Probed on a month view with week numbers on the left, where the divider draws its inline-end edge.
 const DIVIDER_ENTRIES: readonly CatalogEntry[] = [
   {
@@ -260,7 +260,7 @@ const DIVIDER_ENTRIES: readonly CatalogEntry[] = [
     stock: "var(--background-modifier-border)",
     probe: {
       selector: ".notes-calendar-divider",
-      property: "border-inline-end-color",
+      property: "border-inline-start-color",
       sample: "#123456",
       with: { "--journal-cell-week-number-divider-width": "3px" },
       expect: "rgb(18, 52, 86)",
@@ -269,7 +269,7 @@ const DIVIDER_ENTRIES: readonly CatalogEntry[] = [
   {
     name: "journal-cell-week-number-divider-width",
     stock: "1px",
-    probe: { selector: ".notes-calendar-divider", property: "border-inline-end-width", sample: "3px", expect: "3px" },
+    probe: { selector: ".notes-calendar-divider", property: "border-inline-start-width", sample: "3px", expect: "3px" },
   },
 ];
 

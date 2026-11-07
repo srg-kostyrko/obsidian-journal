@@ -68,6 +68,12 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+// The declaration of the first unconditional rule listing `selector` among its comma-separated selectors.
+const placed = (selector: string, property: string): string | undefined =>
+  calendarStyleRules()
+    .monthView.filter((rule) => rule.container === null && rule.supports === null)
+    .find((rule) => rule.selector.split(",").some((part) => part.trim() === selector))
+    ?.declarations.get(property);
 const dayCell = (container: Element, at: string): HTMLElement | null =>
   container.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(at)}"]`);
 const headerFor = (container: Element, name: string): Element | undefined =>
@@ -731,25 +737,58 @@ describe("NotesMonthView", () => {
       expect(container.querySelector<HTMLElement>(".notes-month-view__grid")?.dataset.weeks).toBe("left");
     });
 
-    it.each([
-      ["left", "1fr repeat(var(--day-columns, 7), 1fr)"],
-      ["right", "repeat(var(--day-columns, 7), 1fr) 1fr"],
-    ] as const)("lays the week-number column out as wide as a day, on the %s", (side, columns) => {
+    // The divider's track is 8px while it shows and 0 once its width is 0, which is how a hidden divider is written.
+    it("sizes the divider's track from the divider's width", () => {
       const rule = calendarStyleRules().monthView.find(
         (candidate) =>
-          candidate.container === null && candidate.selector === `.notes-month-view__grid[data-weeks="${side}"]`,
+          candidate.selector === ".notes-month-view__grid" && candidate.declarations.has("--_divider-track"),
       );
-      expect(rule?.declarations.get("grid-template-columns")).toBe(columns);
+      expect(rule?.declarations.get("--_divider-track")).toBe(
+        "min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000)",
+      );
     });
 
     it.each([
-      ["left", "end"],
-      ["right", "start"],
-    ] as const)("draws the divider on the days' side of week numbers on the %s", async (weeks, side) => {
+      ["left", "1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr)"],
+      ["right", "repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr"],
+    ] as const)(
+      "lays the week-number column out as wide as a day, its divider's track beside it, on the %s",
+      (side, columns) => {
+        const rule = calendarStyleRules().monthView.find(
+          (candidate) =>
+            candidate.container === null && candidate.selector === `.notes-month-view__grid[data-weeks="${side}"]`,
+        );
+        expect(rule?.declarations.get("grid-template-columns")).toBe(columns);
+      },
+    );
+
+    // Cells place themselves in source order, so whatever follows the week-number column has to step over the divider's track.
+    it("keeps every cell out of the divider's track", () => {
+      expect({
+        leftDay: placed(
+          '.notes-month-view__grid[data-weeks="left"] .notes-month-view__week-number + *',
+          "grid-column-start",
+        ),
+        leftWeekday: placed(
+          '.notes-month-view__grid[data-weeks="left"] .notes-month-view__weekday-spacer + *',
+          "grid-column-start",
+        ),
+        rightWeek: placed('.notes-month-view__grid[data-weeks="right"] .notes-month-view__week-number', "grid-column"),
+        rightSpacer: placed(
+          '.notes-month-view__grid[data-weeks="right"] .notes-month-view__weekday-spacer',
+          "grid-column",
+        ),
+      }).toEqual({ leftDay: "3", leftWeekday: "3", rightWeek: "-2 / -1", rightSpacer: "-2 / -1" });
+    });
+
+    it.each([
+      ["left", "2 / 3"],
+      ["right", "-3 / -2"],
+    ] as const)("draws the divider in its own track beside week numbers on the %s", async (weeks, column) => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks } });
       const dividers = [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")];
-      expect(dividers.map((divider) => divider.dataset.side)).toEqual([side]);
+      expect(dividers.map((divider) => divider.style.gridColumn)).toEqual([column]);
     });
 
     it("draws no divider without week numbers", async () => {
@@ -908,7 +947,7 @@ describe("NotesMonthView bands", () => {
       const harness = await bootHarness(daily);
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
 
-      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "7 / span 2", row: "auto" }]);
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "8 / span 2", row: "auto" }]);
     });
 
     it("splits the weekend into the first and last columns of a Sunday-start grid", async () => {
@@ -917,8 +956,8 @@ describe("NotesMonthView bands", () => {
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
 
       expect(bands(container, "weekend").map(placement)).toEqual([
-        { column: "2 / span 1", row: "auto" },
-        { column: "8 / span 1", row: "auto" },
+        { column: "3 / span 1", row: "auto" },
+        { column: "9 / span 1", row: "auto" },
       ]);
     });
 
@@ -933,7 +972,7 @@ describe("NotesMonthView bands", () => {
       const harness = await bootHarness(daily, { weekend: { type: "custom", days: [5, 6] } });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
 
-      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "6 / span 2", row: "auto" }]);
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "7 / span 2", row: "auto" }]);
       const weekendDays = [...container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-weekend]")];
       expect(new Set(weekendDays.map((cell) => new Date(`${cell.dataset.anchor}T12:00`).getDay()))).toEqual(
         new Set([5, 6]),

@@ -103,14 +103,67 @@ describe("AppearancePreview", () => {
     expect(emitted("pick")).toEqual([[["weekNumber", "grid"], undefined]]);
   });
 
+  // The divider takes the pointer here, so it must sit beside the week numbers, not over them.
+  it("keeps the current week among the parts of a clicked current week's number", async () => {
+    const { container, emitted } = render(AppearancePreview, { props: { width: "wide" } });
+    const week = container.querySelector<HTMLElement>(".appearance-preview__week-number[data-current-week]");
+    if (!week) throw new Error("no current week's number");
+
+    await userEvent.click(week);
+
+    expect(emitted("pick")).toEqual([[["weekNumber", "currentWeek", "grid"], undefined]]);
+  });
+
   it.each([
-    ["left", "end"],
-    ["right", "start"],
-  ] as const)("draws the divider beside week numbers on the %s, on the days' side", (weekPlacement, side) => {
+    ["left", "2 / 3"],
+    ["right", "-3 / -2"],
+  ] as const)("draws the divider in its own track beside week numbers on the %s", (weekPlacement, column) => {
     const { container } = withDisplay({ weekPlacement });
     expect(
-      [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map((divider) => divider.dataset.side),
-    ).toEqual([side]);
+      [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map(
+        (divider) => divider.style.gridColumn,
+      ),
+    ).toEqual([column]);
+  });
+
+  // Laid out as the month view lays it out, so a band or the divider means the same grid lines here.
+  it("gives the divider a track of its own and keeps every cell out of it", () => {
+    const rules = calendarStyleRules().preview.filter((rule) => rule.container === null && rule.supports === null);
+    const declared = (selector: string, property: string): string | undefined =>
+      rules
+        .find((rule) => rule.selector.split(",").some((part) => part.trim() === selector))
+        ?.declarations.get(property);
+    expect({
+      track: rules
+        .find((rule) => rule.selector === ".appearance-preview__grid" && rule.declarations.has("--_divider-track"))
+        ?.declarations.get("--_divider-track"),
+      left: declared('.appearance-preview__grid[data-weeks="left"]', "grid-template-columns"),
+      right: declared('.appearance-preview__grid[data-weeks="right"]', "grid-template-columns"),
+      leftDay: declared(
+        '.appearance-preview__grid[data-weeks="left"] .appearance-preview__week-number + *',
+        "grid-column-start",
+      ),
+      leftWeekday: declared(
+        '.appearance-preview__grid[data-weeks="left"] .appearance-preview__weekday-spacer + *',
+        "grid-column-start",
+      ),
+      rightWeek: declared(
+        '.appearance-preview__grid[data-weeks="right"] .appearance-preview__week-number',
+        "grid-column",
+      ),
+      rightSpacer: declared(
+        '.appearance-preview__grid[data-weeks="right"] .appearance-preview__weekday-spacer',
+        "grid-column",
+      ),
+    }).toEqual({
+      track: "min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000)",
+      left: "1fr var(--_divider-track) repeat(7, 1fr)",
+      right: "repeat(7, 1fr) var(--_divider-track) 1fr",
+      leftDay: "3",
+      leftWeekday: "3",
+      rightWeek: "-2 / -1",
+      rightSpacer: "-2 / -1",
+    });
   });
 
   it("draws no divider without week numbers", () => {
@@ -470,7 +523,7 @@ describe("AppearancePreview bands", () => {
   it("draws the weekend band and the current-week band as the month view does, ahead of the rows", () => {
     const { container } = withDisplay({});
     expect({ weekend: bands(container, "weekend"), currentWeek: bands(container, "current-week") }).toEqual({
-      weekend: [{ column: "7 / span 2", row: "auto" }],
+      weekend: [{ column: "8 / span 2", row: "auto" }],
       currentWeek: [{ column: "1 / -1", row: "4 / span 1" }],
     });
     const children = [...(container.querySelector(".appearance-preview__grid")?.children ?? [])];

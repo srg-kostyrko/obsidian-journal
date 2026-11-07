@@ -9,47 +9,38 @@ const rule = (selector: string) =>
   calendarStyleRules().divider.find((candidate) => candidate.container === null && candidate.selector === selector);
 
 describe("NotesCalendarDivider", () => {
-  it("sits on the grid lines it is given, on the side it is given, hidden from assistive tech", () => {
-    const { container } = render(NotesCalendarDivider, { props: { side: "end", column: "1 / 2", row: "2 / auto" } });
+  it("sits on the grid lines it is given, hidden from assistive tech", () => {
+    const { container } = render(NotesCalendarDivider, { props: { column: "2 / 3", row: "2 / auto" } });
     const divider = container.querySelector<HTMLElement>(".notes-calendar-divider");
 
     expect({
-      side: divider?.dataset.side,
       column: divider?.style.gridColumn,
       row: divider?.style.gridRow,
       hidden: divider?.getAttribute("aria-hidden"),
-    }).toEqual({ side: "end", column: "1 / 2", row: "2 / auto", hidden: "true" });
+    }).toEqual({ column: "2 / 3", row: "2 / auto", hidden: "true" });
   });
 
-  it("fills its grid area and takes no pointer", () => {
+  it("runs the height of its grid area and takes no pointer", () => {
     expect({
       position: rule(".notes-calendar-divider")?.declarations.get("position"),
-      inset: rule(".notes-calendar-divider")?.declarations.get("inset"),
+      inset: rule(".notes-calendar-divider")?.declarations.get("inset-block"),
       pointer: rule(".notes-calendar-divider")?.declarations.get("pointer-events"),
     }).toEqual({ position: "absolute", inset: "0", pointer: "none" });
   });
 
-  // A divider wider than the cell gap reaches into the cells either side, which are positioned and come later.
+  // A divider wider than its track reaches into the cells either side, which are positioned and come later.
   it("paints above the cells, as an over band does, and below a lifted mark popover", () => {
     expect(rule(".notes-calendar-divider")?.declarations.get("z-index")).toBe("1");
   });
 
-  it.each([
-    ["end", "border-inline-end"],
-    ["start", "border-inline-start"],
-  ] as const)("draws its line on the %s edge", (side, property) => {
-    expect(rule(`.notes-calendar-divider[data-side="${side}"]`)?.declarations.get(property)).toBe(
-      "var(--_v-week-number-divider-width) solid var(--_v-week-number-divider-color)",
-    );
-  });
-
-  // A filled week-number cell paints over anything inside its column, so the line sits in the gutter instead.
-  it.each([
-    ["end", "inset-inline-end"],
-    ["start", "inset-inline-start"],
-  ] as const)("centres its %s line in the grid's cell gap", (side, property) => {
-    expect(rule(`.notes-calendar-divider[data-side="${side}"]`)?.declarations.get(property)).toBe(
-      "calc(var(--_v-cell-gap, 0px) / -2 - var(--_v-week-number-divider-width) / 2)",
-    );
+  // Its grid area is the track between the week numbers and the days, so a line centred in it keeps clear of both.
+  it("draws its line centred in its grid area", () => {
+    expect({
+      inline: rule(".notes-calendar-divider")?.declarations.get("inset-inline"),
+      line: rule(".notes-calendar-divider")?.declarations.get("border-inline-start"),
+    }).toEqual({
+      inline: "calc(50% - var(--_v-week-number-divider-width) / 2)",
+      line: "var(--_v-week-number-divider-width) solid var(--_v-week-number-divider-color)",
+    });
   });
 });

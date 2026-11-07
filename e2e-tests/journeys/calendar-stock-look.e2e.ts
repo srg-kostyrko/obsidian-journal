@@ -205,6 +205,50 @@ async function readRow(width: string): Promise<RowRead | null> {
   );
 }
 
+async function expectDividerClear(): Promise<void> {
+  const divider = `${MONTH} .notes-calendar-divider`;
+  expect(await roundedPx(divider, "border-left-width")).toBe("1px");
+  await expectHex(divider, "border-left-color", BORDER, "the divider does not take the border color");
+  const layout = await settle(
+    () =>
+      browser.execute((month: string) => {
+        const grid = document.querySelector(`${month} .notes-month-view__grid`);
+        const line = grid?.querySelector(".notes-calendar-divider");
+        // May 2027 opens on a Saturday, so the full second week gives the first day column.
+        const [header, firstWeek, fullWeek] = grid?.querySelectorAll(":scope > [role='row']") ?? [];
+        const week = firstWeek?.querySelector(".notes-month-view__week-number");
+        const day = fullWeek?.querySelector(".notes-month-view__day");
+        if (!grid || !line || !week || !day || !header) return null;
+        const box = line.getBoundingClientRect();
+        return {
+          lineLeft: box.left,
+          lineRight: box.right,
+          top: box.top,
+          bottom: box.bottom,
+          gap: Number.parseFloat(getComputedStyle(grid).columnGap),
+          weekRight: week.getBoundingClientRect().right,
+          weekTop: week.getBoundingClientRect().top,
+          dayLeft: day.getBoundingClientRect().left,
+          headerBottom: header.getBoundingClientRect().bottom,
+          gridBottom: grid.getBoundingClientRect().bottom,
+        };
+      }, MONTH),
+    (read) => read.lineRight > read.lineLeft,
+    "the month block drew no divider line",
+  );
+  expect({
+    clearOfWeek: layout.lineLeft - layout.weekRight > layout.gap + 1,
+    clearOfDay: layout.dayLeft - layout.lineRight > layout.gap + 1,
+  }).toEqual({ clearOfWeek: true, clearOfDay: true });
+  expect(Math.abs((layout.lineLeft + layout.lineRight) / 2 - (layout.weekRight + layout.dayLeft) / 2)).toBeLessThan(
+    0.5,
+  );
+  // From the first week row, under the weekday header, to the grid's end.
+  expect(Math.abs(layout.top - layout.weekTop)).toBeLessThan(1);
+  expect(layout.top).toBeGreaterThanOrEqual(layout.headerBottom - 0.05);
+  expect(Math.abs(layout.bottom - layout.gridBottom)).toBeLessThan(1);
+}
+
 describe("the calendar's stock look", () => {
   before(async () => {
     await reloadObsidianOn(PINNED_TODAY, {
@@ -258,48 +302,18 @@ describe("the calendar's stock look", () => {
       expect(text.size).toBeCloseTo(0.85, 2);
     });
 
-    it("the divider sits between the week numbers and the days", async () => {
-      const divider = `${MONTH} .notes-calendar-divider`;
-      expect(await roundedPx(divider, "border-right-width")).toBe("1px");
-      await expectHex(divider, "border-right-color", BORDER, "the divider does not take the border color");
-      const layout = await settle(
-        () =>
-          browser.execute((month: string) => {
-            const grid = document.querySelector(`${month} .notes-month-view__grid`);
-            const line = grid?.querySelector(".notes-calendar-divider");
-            // May 2027 opens on a Saturday, so the full second week gives the first day column.
-            const [header, firstWeek, fullWeek] = grid?.querySelectorAll(":scope > [role='row']") ?? [];
-            const week = firstWeek?.querySelector(".notes-month-view__week-number");
-            const day = fullWeek?.querySelector(".notes-month-view__day");
-            if (!grid || !line || !week || !day || !header) return null;
-            const box = line.getBoundingClientRect();
-            const width = Number.parseFloat(getComputedStyle(line).borderRightWidth);
-            return {
-              lineLeft: box.right - width,
-              lineRight: box.right,
-              top: box.top,
-              bottom: box.bottom,
-              weekRight: week.getBoundingClientRect().right,
-              weekTop: week.getBoundingClientRect().top,
-              dayLeft: day.getBoundingClientRect().left,
-              headerBottom: header.getBoundingClientRect().bottom,
-              gridBottom: grid.getBoundingClientRect().bottom,
-            };
-          }, MONTH),
-        (read) => read.lineRight > read.lineLeft,
-        "the month block drew no divider line",
-      );
-      // Inside the gutter, so no week-number or day fill covers it, and centred on it.
-      expect(layout.lineLeft).toBeGreaterThanOrEqual(layout.weekRight - 0.05);
-      expect(layout.lineRight).toBeLessThanOrEqual(layout.dayLeft + 0.05);
-      expect(Math.abs((layout.lineLeft + layout.lineRight) / 2 - (layout.weekRight + layout.dayLeft) / 2)).toBeLessThan(
-        0.5,
-      );
-      // From the first week row, under the weekday header, to the grid's end.
-      expect(Math.abs(layout.top - layout.weekTop)).toBeLessThan(1);
-      expect(layout.top).toBeGreaterThanOrEqual(layout.headerBottom - 0.05);
-      expect(Math.abs(layout.bottom - layout.gridBottom)).toBeLessThan(1);
-    });
+    // The divider has a track of its own, so at either width its line keeps clear of the cells on both sides by
+    // more than the cell gap, where a filled cell's background would otherwise butt against it.
+    for (const width of [WIDE, NARROW]) {
+      it(`the divider sits in its own space between the week numbers and the days, at ${width}`, async () => {
+        await forceWidth(MONTH, width);
+        try {
+          await expectDividerClear();
+        } finally {
+          await forceWidth(MONTH, WIDE);
+        }
+      });
+    }
   });
 
   describe("rows", () => {

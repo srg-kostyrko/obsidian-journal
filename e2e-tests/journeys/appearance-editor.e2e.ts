@@ -267,6 +267,35 @@ describe("the appearance editor drives the rendered calendar", () => {
     });
   });
 
+  describe("the preview's divider", () => {
+    after(async () => {
+      await chooseWidth("wide");
+    });
+
+    // The preview gives its divider the pointer back, so a divider box over the cells would take their clicks.
+    for (const width of ["wide", "narrow"] as const) {
+      it(`takes no click meant for a cell beside it, ${width}`, async () => {
+        await chooseWidth(width);
+        const read = await browser.execute(() => {
+          const grid = document.querySelector(".appearance-preview [data-preview-grid]");
+          const divider = grid?.querySelector(".notes-calendar-divider");
+          const week = grid?.querySelector<HTMLElement>(".appearance-preview__week-number[data-current-week]");
+          if (!grid || !divider || !week) return null;
+          const line = divider.getBoundingClientRect();
+          const cells = [...grid.querySelectorAll(".appearance-preview__week-number, .appearance-preview__day")];
+          const overlapping = cells.filter((cell) => {
+            const box = cell.getBoundingClientRect();
+            return box.left < line.right && line.left < box.right && box.top < line.bottom && line.top < box.bottom;
+          }).length;
+          const box = week.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+          return { overlapping, hitsWeek: hit !== null && week.contains(hit) };
+        });
+        expect(read).toMatchObject({ overlapping: 0, hitsWeek: true });
+      });
+    }
+  });
+
   describe("a color", () => {
     it("a color set in the editor paints the calendar view", async () => {
       await pickInPreview(".appearance-preview__day[data-today]", "today");

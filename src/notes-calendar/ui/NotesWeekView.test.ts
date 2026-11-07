@@ -522,7 +522,7 @@ describe("NotesWeekView bands", () => {
       weekend: bands(container, "weekend").map(placement),
       currentWeek: bands(container, "current-week").map(placement),
     }).toEqual({
-      weekend: [{ column: "7 / span 2", row: "auto" }],
+      weekend: [{ column: "8 / span 2", row: "auto" }],
       currentWeek: [{ column: "1 / -1", row: "2 / span 1" }],
     });
     expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
@@ -600,15 +600,14 @@ describe("NotesWeekView bands", () => {
   });
 
   it.each([
-    ["left", { side: "end", column: "1 / 2", row: "2 / auto" }],
-    ["right", { side: "start", column: "-2 / -1", row: "2 / auto" }],
-  ] as const)("draws the divider on the days' side of a week number on the %s", async (weeks, expected) => {
+    ["left", { column: "2 / 3", row: "2 / auto" }],
+    ["right", { column: "-3 / -2", row: "2 / auto" }],
+  ] as const)("draws the divider in its own track beside a week number on the %s", async (weeks, expected) => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek(), weeks } });
 
     expect(
       [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map((divider) => ({
-        side: divider.dataset.side,
         column: divider.style.gridColumn,
         row: divider.style.gridRow,
       })),
@@ -646,14 +645,33 @@ describe("NotesWeekView bands", () => {
       "grid-template-columns": "repeat(var(--day-columns, 7), 1fr)",
       "row-gap": "var(--size-2-2)",
       "column-gap": "var(--_v-cell-gap)",
+      "--_divider-track": "min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000)",
     });
     expect(declarations('.notes-week-view__grid[data-weeks="left"]')).toMatchObject({
-      "grid-template-columns": "1fr repeat(var(--day-columns, 7), 1fr)",
+      "grid-template-columns": "1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr)",
     });
     expect(declarations('.notes-week-view__grid[data-weeks="right"]')).toMatchObject({
-      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) 1fr",
+      "grid-template-columns": "repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr",
     });
     expect(declarations(".notes-week-view__row > *")).toMatchObject({ "text-align": "center" });
+    // Cells place themselves in source order, so whatever follows the week number has to step over the divider's track.
+    const placed = (selector: string, property: string): string | undefined =>
+      rules
+        .filter((rule) => rule.supports === null)
+        .find((rule) => rule.selector.split(",").some((part) => part.trim() === selector))
+        ?.declarations.get(property);
+    expect({
+      leftDay: placed(
+        '.notes-week-view__grid[data-weeks="left"] .notes-week-view__week-number + *',
+        "grid-column-start",
+      ),
+      leftWeekday: placed(
+        '.notes-week-view__grid[data-weeks="left"] .notes-week-view__weekday-spacer + *',
+        "grid-column-start",
+      ),
+      rightWeek: placed('.notes-week-view__grid[data-weeks="right"] .notes-week-view__week-number', "grid-column"),
+      rightSpacer: placed('.notes-week-view__grid[data-weeks="right"] .notes-week-view__weekday-spacer', "grid-column"),
+    }).toEqual({ leftDay: "3", leftWeekday: "3", rightWeek: "-2 / -1", rightSpacer: "-2 / -1" });
     // The first rule laying out each row; the fallback for engines without nested grid tracks that follows it sits under `@supports`.
     for (const row of [".notes-week-view__weekdays", ".notes-week-view__row"]) {
       const layout = rules.find(
