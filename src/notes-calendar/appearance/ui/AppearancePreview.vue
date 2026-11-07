@@ -43,8 +43,9 @@ const SIZES: Readonly<Record<Width, Readonly<Record<string, string>>>> = {
   narrow: { width: "260px" },
 };
 
+// A theme color Obsidian defines from 1.8.7 on; --text-highlight-bg left app.css at 1.14.
 const SAMPLE_DECORATION: readonly JournalDecorationStyle[] = [
-  { type: "background", color: { type: "theme", name: "text-highlight-bg" } },
+  { type: "background", color: { type: "theme", name: "background-secondary" } },
   { type: "color", color: { type: "theme", name: "text-accent" } },
 ];
 
