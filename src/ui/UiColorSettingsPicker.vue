@@ -4,7 +4,7 @@ import { computed } from "vue";
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
 
-import { themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "./theme-colors";
+import { themeColorCss, themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "./theme-colors";
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
 
@@ -121,7 +121,7 @@ const customColor = computed<string>({
       <span
         v-if="themeName"
         class="ui-color-settings-picker__swatch"
-        :style="{ backgroundColor: `var(--${themeName})` }"
+        :style="{ backgroundColor: themeColorCss(themeName) }"
       />
     </template>
     <span
