@@ -19,6 +19,10 @@ const MONTH = `${ROOT} .journal-view-month-calendar`;
 // Every case forces the block's width, so wide and narrow do not depend on the sidebar's.
 const WIDE = "40em";
 const NARROW = "20em";
+// Under the breakpoint, but wide enough that the wide stock row (7cqi) would come out above 26px.
+const NARROW_BUT_GROWN = "27em";
+// The breakpoint's 28em, in the units of the container it is evaluated against.
+const BREAKPOINT_EMS = 28;
 
 // The stock reads theme variables; the view root pins each to a hex of its own, so a color compares
 // exactly instead of against whatever the theme resolves.
@@ -27,7 +31,9 @@ const ACCENT = "#9c2f6a";
 const BORDER = "#2e8b57";
 
 const YEAR_HOST = "weekends/year-timeline.md";
-const YEAR_TIMELINE = `${VISIBLE_LEAF} .markdown-reading-view .block-language-calendar-timeline`;
+// May 2027 opens on a Saturday, so a month timeline that hides outside days leads with blanks.
+const BLANKS_HOST = "weekends/blank-outside-timeline.md";
+const TIMELINE = `${VISIBLE_LEAF} .markdown-reading-view .block-language-calendar-timeline`;
 
 class StockLookError extends Error {
   override name = "StockLookError";
@@ -171,17 +177,32 @@ function readSelected(anchor: string): Promise<SelectedRead | null> {
   );
 }
 
-// A day cell's min-height at `width`, and the inline size of the month it is a row of.
-async function readRow(width: string): Promise<{ minHeight: number; inline: number } | null> {
+interface RowRead {
+  readonly minHeight: number;
+  readonly inline: number;
+  readonly breakpoint: number;
+}
+
+// A day cell's min-height at `width`, the inline size of the month it is a row of, and the breakpoint in
+// px: a container query's em is the container's own font size.
+async function readRow(width: string): Promise<RowRead | null> {
   await forceWidth(MONTH, width);
-  return browser.execute((month: string) => {
-    const view = document.querySelector(`${month} .notes-month-view`);
-    const cell = view?.querySelector<HTMLElement>('.notes-calendar-cell[role="gridcell"]');
-    if (!view || !cell) return null;
-    const styles = getComputedStyle(view);
-    const inline = view.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
-    return { minHeight: Number.parseFloat(getComputedStyle(cell).minHeight), inline };
-  }, MONTH);
+  return browser.execute(
+    (month: string, ems: number) => {
+      const view = document.querySelector(`${month} .notes-month-view`);
+      const cell = view?.querySelector<HTMLElement>('.notes-calendar-cell[role="gridcell"]');
+      if (!view || !cell) return null;
+      const styles = getComputedStyle(view);
+      const inline = view.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight);
+      return {
+        minHeight: Number.parseFloat(getComputedStyle(cell).minHeight),
+        inline,
+        breakpoint: ems * Number.parseFloat(styles.fontSize),
+      };
+    },
+    MONTH,
+    BREAKPOINT_EMS,
+  );
 }
 
 describe("the calendar's stock look", () => {
@@ -289,7 +310,7 @@ describe("the calendar's stock look", () => {
     it("rows grow on a wide calendar and stay at 26px on a narrow one", async () => {
       const wide = await settle(
         () => readRow(WIDE),
-        (value) => value.inline > 448,
+        (value) => value.inline > value.breakpoint,
         `the month did not lay out at ${WIDE}`,
       );
       // The stock wide row: 7% of the calendar's width, between 26px and 64px.
@@ -297,12 +318,49 @@ describe("the calendar's stock look", () => {
       expect(growing).toBeGreaterThan(26);
       expect(Math.abs(wide.minHeight - growing)).toBeLessThan(1);
 
+      // Read where the wide stock would already be taller than 26px, so only the narrow stock gives 26px.
       const narrow = await settle(
-        () => readRow(NARROW),
-        (value) => value.inline < 448,
-        `the month did not lay out at ${NARROW}`,
+        () => readRow(NARROW_BUT_GROWN),
+        (value) => value.inline < value.breakpoint,
+        `the month did not lay out at ${NARROW_BUT_GROWN}`,
       );
+      expect(0.07 * narrow.inline).toBeGreaterThan(27);
       expect(Math.round(narrow.minHeight)).toBe(26);
+    });
+
+    // A hidden outside day is no cell and reads the row height itself, so its narrow stock is its own.
+    it("a hidden outside day holds a narrow row at 26px", async () => {
+      await seedNote(
+        BLANKS_HOST,
+        hostNote("daily", "2027-05-14", "```calendar-timeline\nmode: month\noutside: hidden\n```"),
+      );
+      await openInReadingMode(BLANKS_HOST);
+      await forceWidth(TIMELINE, NARROW_BUT_GROWN);
+      const read = await settle(
+        () =>
+          browser.execute(
+            (block: string, ems: number) => {
+              const host = [...document.querySelectorAll<HTMLElement>(block)].find(
+                (candidate) => candidate.clientWidth > 0,
+              );
+              const view = host?.querySelector<HTMLElement>(".notes-month-view");
+              const blank = view?.querySelector(".notes-month-view__day--blank");
+              const cell = view?.querySelector('.notes-calendar-cell[role="gridcell"]');
+              if (!view || !blank || !cell) return null;
+              return {
+                inline: view.clientWidth,
+                breakpoint: ems * Number.parseFloat(getComputedStyle(view).fontSize),
+                blank: Math.round(Number.parseFloat(getComputedStyle(blank).minHeight)),
+                cell: Math.round(Number.parseFloat(getComputedStyle(cell).minHeight)),
+              };
+            },
+            TIMELINE,
+            BREAKPOINT_EMS,
+          ),
+        (value) => value.inline < value.breakpoint && 0.07 * value.inline > 27,
+        `the month timeline did not lay out under the breakpoint at ${NARROW_BUT_GROWN}`,
+      );
+      expect({ blank: read.blank, cell: read.cell }).toEqual({ blank: 26, cell: 26 });
     });
   });
 
@@ -376,38 +434,44 @@ describe("the calendar's stock look", () => {
       await seedNote(YEAR_HOST, hostNote("daily", "2027-05-14", "```calendar-timeline\nmode: calendar\n```"));
       await openInReadingMode(YEAR_HOST);
       await settle(
-        () => readWeekdays(YEAR_TIMELINE),
+        () => readWeekdays(TIMELINE),
         (months) => months.length === 12,
         "the year timeline did not render twelve months",
       );
     });
 
     it("a timeline in year mode draws its months narrow", async () => {
-      await settle(() => readWeekdays(YEAR_TIMELINE), oneLetter, "a timeline month's weekdays are not one letter");
-      const months = await browser.execute((block: string) => {
-        const host = [...document.querySelectorAll<HTMLElement>(block)].find((candidate) => candidate.clientWidth > 0);
-        return [...(host?.querySelectorAll(".notes-month-view") ?? [])].map((month) => {
-          const grid = month.querySelector(".notes-month-view__grid");
-          const day = month.querySelector<HTMLElement>('.notes-month-view__day[role="gridcell"]');
-          const row = day?.parentElement;
-          if (!grid || !day || !row) return null;
-          return {
-            width: Math.round(month.getBoundingClientRect().width),
-            minHeight: Math.round(Number.parseFloat(getComputedStyle(day).minHeight)),
-            gap: Math.round(Number.parseFloat(getComputedStyle(grid).rowGap)),
-            dateSize:
-              Math.round(
-                (Number.parseFloat(getComputedStyle(day).fontSize) /
-                  Number.parseFloat(getComputedStyle(row).fontSize)) *
-                  100,
-              ) / 100,
-          };
-        });
-      }, YEAR_TIMELINE);
+      await settle(() => readWeekdays(TIMELINE), oneLetter, "a timeline month's weekdays are not one letter");
+      const months = await browser.execute(
+        (block: string, ems: number) => {
+          const host = [...document.querySelectorAll<HTMLElement>(block)].find(
+            (candidate) => candidate.clientWidth > 0,
+          );
+          return [...(host?.querySelectorAll(".notes-month-view") ?? [])].map((month) => {
+            const grid = month.querySelector(".notes-month-view__grid");
+            const day = month.querySelector<HTMLElement>('.notes-month-view__day[role="gridcell"]');
+            const row = day?.parentElement;
+            if (!grid || !day || !row) return null;
+            return {
+              narrow: month.clientWidth < ems * Number.parseFloat(getComputedStyle(month).fontSize),
+              minHeight: Math.round(Number.parseFloat(getComputedStyle(day).minHeight)),
+              gap: Math.round(Number.parseFloat(getComputedStyle(grid).rowGap)),
+              dateSize:
+                Math.round(
+                  (Number.parseFloat(getComputedStyle(day).fontSize) /
+                    Number.parseFloat(getComputedStyle(row).fontSize)) *
+                    100,
+                ) / 100,
+            };
+          });
+        },
+        TIMELINE,
+        BREAKPOINT_EMS,
+      );
       expect(months).toHaveLength(12);
       for (const month of months) {
         expect(month).not.toBeNull();
-        expect(month?.width).toBeLessThan(448);
+        expect(month?.narrow).toBe(true);
         expect({ minHeight: month?.minHeight, gap: month?.gap, dateSize: month?.dateSize }).toEqual({
           minHeight: 26,
           gap: 1,

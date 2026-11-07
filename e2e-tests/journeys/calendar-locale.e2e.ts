@@ -31,7 +31,8 @@ describe("calendar locale", () => {
     // The element exists before moment's localeData has supplied its label, so a read-once
     // `expect(await getText())` asserts on a plain string and never retries — it saw "" under
     // load. The expect-webdriverio matcher polls to waitforTimeout instead. The full name, not the shown
-    // label: the sidebar calendar is narrow, where the label is one letter and "S" leads either way.
+    // label: the sidebar calendar is narrow, where the label is one letter, and "S" alone cannot tell the
+    // Sunday-first header the next case waits for from a Saturday-first one.
     await expect(firstWeekday).toHaveAttribute("aria-label", "Monday");
   });
 

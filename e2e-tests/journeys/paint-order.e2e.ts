@@ -215,22 +215,23 @@ describe("the open-note fill on a cell with no decoration", () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
   });
 
-  after(closePopoutWindows);
+  after(async () => {
+    await forceBlockWidth(BASE_VIEW_ROOT, "");
+    await closePopoutWindows();
+  });
 
+  // Opening the note selects its date too, and a narrow calendar marks the selected date with a tint; the
+  // open note's fill replaces it, so the saved color shows unshifted.
   it("paints the saved active background", async () => {
     const anchor = dayAnchor(PLAIN_DAY);
     await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
     await openCalendarView();
-    await clickCell(anchor, false);
-    await waitForActiveNote(`day/${anchor}.md`);
-    await calendar.waitForActive(anchor);
-    // Opening the note selects its date too, and the sidebar calendar is narrow, where the selected tint
-    // paints over the open-note fill. Moving the selection off leaves the fill alone in the cell.
-    await clickCell(dayAnchor(DAY), true);
+    await forceBlockWidth(BASE_VIEW_ROOT, NARROW_WIDTH);
+    await openDay(anchor);
     await waitForState(
-      async () => (await calendar.cell(anchor).getAttribute("aria-selected")) ?? "none",
-      (selected) => selected === "none",
-      "the open note's date stayed selected",
+      () => isSelected(anchor),
+      (selected) => selected,
+      "opening the note did not select its date",
     );
     await waitForState(
       () => paintedHex(anchor),
@@ -462,16 +463,18 @@ describe("date text on days outside the month", () => {
   // On a wide calendar: the sidebar's is narrow, where the date reads its own stock narrow size and a
   // public wide one stays out by design.
   it("date size reaches days outside the month", async () => {
-    await browser.execute((root: string) => {
-      const block = document.querySelector<HTMLElement>(`${root} .journal-view-month-calendar`);
-      if (block !== null) block.style.width = "40em";
-    }, OUTSIDE_VIEW_ROOT);
-    await waitForState(
-      () => outsideViewLabelSize(".notes-month-view__day:not([data-outside])"),
-      (px) => px === 21,
-      "an in-month date label did not take the snippet's 21px date size",
-    );
-    expect(await outsideViewLabelSize(`.notes-month-view__day[data-anchor="${anchor}"]`)).toBe(21);
+    await forceBlockWidth(OUTSIDE_VIEW_ROOT, WIDE_WIDTH);
+    // Restored here, not in a hook: the cases after this one read the calendar at its own width.
+    try {
+      await waitForState(
+        () => outsideViewLabelSize(".notes-month-view__day:not([data-outside])"),
+        (px) => px === 21,
+        "an in-month date label did not take the snippet's 21px date size",
+      );
+      expect(await outsideViewLabelSize(`.notes-month-view__day[data-anchor="${anchor}"]`)).toBe(21);
+    } finally {
+      await forceBlockWidth(OUTSIDE_VIEW_ROOT, "");
+    }
   });
 
   it("an outside day keeps the muted color over the date color", async () => {
