@@ -728,21 +728,24 @@ describe("text precedence", () => {
       );
     });
 
-    it("Unchanged today keeps the week number's weight and part color", async () => {
+    it("the current week's number keeps the week-number part's color and weight", async () => {
       await saveAppearance(baseline, {
-        "wide.today.text.color": "unchanged",
         "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
         "wide.weekNumber.weight": "semibold",
       });
       const weekNumber = ".notes-month-view__week-number[data-current-week]";
-      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for today's week" });
+      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for the current week" });
       expect(await $(weekNumber).getAttribute("data-active")).toBeNull();
       await expectLabelHex(
         weekNumber,
         WEEK_NUMBER_TEXT,
-        `today's week number did not keep the part's ${WEEK_NUMBER_TEXT} under an Unchanged today`,
+        `the current week's number did not keep the part's ${WEEK_NUMBER_TEXT}`,
       );
-      await expectLabelWeight(weekNumber, SEMIBOLD, "today's week number did not keep the part's semibold weight");
+      await expectLabelWeight(
+        weekNumber,
+        SEMIBOLD,
+        "the current week's number did not keep the part's semibold weight",
+      );
     });
 
     it("narrow none cancels a wide bold", async () => {
