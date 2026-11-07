@@ -188,25 +188,31 @@ describe("paint order of highlight states around a decoration", () => {
   });
 
   it("keeps the 2px focus-visible outline on a selected cell", async () => {
-    // Tab out of the grid and back, so the cell takes focus by keyboard and :focus-visible matches.
-    await browser.execute((anchor) => {
-      document.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"]`)?.focus();
-    }, dayAnchor(DAY));
-    await browser.keys(["Tab"]);
-    await browser.keys(["Shift", "Tab"]);
+    // A sibling worker's boot can take OS focus at any moment, and :focus-visible stops matching
+    // with it. So driving focus and reading the outline are one attempt, and the match and the width
+    // come from one script: an attempt that lost focus is driven again, never read.
+    let width: number | undefined;
     await waitForState(
-      () =>
-        browser.execute((anchor) => {
-          const focused = document.activeElement;
-          return (
-            focused instanceof HTMLElement && focused.dataset.anchor === anchor && focused.matches(":focus-visible")
-          );
-        }, dayAnchor(DAY)),
-      (focused) => focused,
+      async () => {
+        // Tab out of the grid and back, so the cell takes focus by keyboard and :focus-visible matches.
+        await browser.execute((anchor) => {
+          document.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"]`)?.focus();
+        }, dayAnchor(DAY));
+        await browser.keys(["Tab"]);
+        await browser.keys(["Shift", "Tab"]);
+        width =
+          (await browser.execute((anchor) => {
+            const focused = document.activeElement;
+            if (!(focused instanceof HTMLElement && focused.dataset.anchor === anchor)) return null;
+            if (!focused.matches(":focus-visible")) return null;
+            return Math.round(Number.parseFloat(getComputedStyle(focused).outlineWidth));
+          }, dayAnchor(DAY))) ?? undefined;
+        return width;
+      },
+      () => true,
       "keyboard focus did not return to the selected cell with :focus-visible",
     );
-    const width = await cell.getCSSProperty("outline-width");
-    expect(typeof width.parsed.value === "number" ? Math.round(width.parsed.value) : width.value).toBe(2);
+    expect(width).toBe(2);
   });
 });
 
