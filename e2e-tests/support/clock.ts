@@ -7,6 +7,18 @@ class ClockPinError extends Error {
   }
 }
 
+class ReloadConfigLostError extends Error {
+  constructor(before: string, after: string) {
+    super(`the pinned-clock reload lost the vault's enabled snippets: ${before} before, ${after} after`);
+    this.name = "ReloadConfigLostError";
+  }
+}
+
+interface VaultConfig {
+  getConfig(key: string): unknown;
+  requestSaveConfig?: { run?(): Promise<void> | undefined };
+}
+
 interface MomentTimeSource {
   now: () => number;
 }
@@ -75,12 +87,17 @@ export async function reloadObsidianOn(
   await browser.sendCommandAndGetResult("Page.addScriptToEvaluateOnNewDocument", {
     source: pinScript(`${day}T${time}`),
   });
-  await browser.executeObsidian(async ({ app }, ids) => {
+  const snippetsBefore = await browser.executeObsidian(async ({ app }, ids) => {
     // Enabled in config only: enablePlugin would load them now, on the real clock.
     const plugins = (app as unknown as { plugins: { enabledPlugins: Set<string>; saveConfig(): Promise<void> } })
       .plugins;
     for (const id of ids) plugins.enabledPlugins.add(id);
     await plugins.saveConfig();
+    // Every boot ends its config load by queueing a rewrite of app.json and appearance.json, 1s
+    // debounced. A reload between that write's truncate and its write leaves appearance.json empty,
+    // and the next boot loses every enabled snippet. Flush it the way Obsidian's own quit does.
+    await (app.vault as unknown as VaultConfig).requestSaveConfig?.run?.();
+    return JSON.stringify((app.vault as unknown as VaultConfig).getConfig("enabledCssSnippets") ?? []);
   }, params.plugins);
   await browser.execute(() => {
     document.documentElement.dataset.e2eAwaitingReload = "true";
@@ -100,5 +117,9 @@ export async function reloadObsidianOn(
     params.plugins,
   );
   if (notLoaded.length > 0) throw new ClockPinError(day, { pluginsNotLoaded: notLoaded });
+  const snippetsAfter = await browser.executeObsidian(({ app }) =>
+    JSON.stringify((app.vault as unknown as VaultConfig).getConfig("enabledCssSnippets") ?? []),
+  );
+  if (snippetsAfter !== snippetsBefore) throw new ReloadConfigLostError(snippetsBefore, snippetsAfter);
   await assertRendererToday(day);
 }
