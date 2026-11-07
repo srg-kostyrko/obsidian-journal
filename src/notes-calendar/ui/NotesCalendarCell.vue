@@ -341,17 +341,11 @@ const hover = useModifierHoverPreview();
     );
     --_v-selected-ring-width: var(
       --journal-cell-selected-ring-width-narrow,
-      var(
-        --journal-saved-cell-selected-ring-width-narrow,
-        var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px))
-      )
+      var(--journal-saved-cell-selected-ring-width-narrow, 0px)
     );
     --_v-selected-strength: var(
       --journal-cell-selected-strength-narrow,
-      var(
-        --journal-saved-cell-selected-strength-narrow,
-        var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0))
-      )
+      var(--journal-saved-cell-selected-strength-narrow, 0.2)
     );
     --_v-selected-text-color: var(
       --journal-cell-selected-text-color-narrow,

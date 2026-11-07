@@ -32,6 +32,14 @@ const stockDisplay = () => structuredClone(calendarDisplaySlice.defaults);
 const custom = (hex: string) => ({ type: "custom" as const, color: hex });
 const TEXT_COLOR = ["text", "color"];
 
+describe("narrow Selected stock", () => {
+  it("narrow Selected reads as a 20% background out of the box", () => {
+    const defaults = fresh();
+    expect(valueAt(defaults, "narrow", "selected", ["style"])).toBe("background");
+    expect(valueAt(defaults, "narrow", "selected", ["strength"])).toBe(20);
+  });
+});
+
 describe("valueAt", () => {
   it("at narrow merges the narrow leaf over the wide value", () => {
     const wide = withValue(fresh(), "wide", "today", TEXT_COLOR, custom("#111111"));

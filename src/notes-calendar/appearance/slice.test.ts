@@ -78,8 +78,12 @@ describe("appearanceSlice", () => {
     expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: null });
   });
 
-  it("narrow keeps one-em dates, one-pixel gaps and 26px rows as its stock", () => {
-    expect(STOCK_NARROW).toEqual({ date: { size: "1em" }, cell: { gap: "1px", minHeight: 26 } });
+  it("narrow keeps one-em dates, one-pixel gaps, 26px rows and a 20% Selected background as its stock", () => {
+    expect(STOCK_NARROW).toEqual({
+      selected: { style: "background", strength: 20 },
+      date: { size: "1em" },
+      cell: { gap: "1px", minHeight: 26 },
+    });
   });
 
   it("the weekend band draws nothing at stock", () => {

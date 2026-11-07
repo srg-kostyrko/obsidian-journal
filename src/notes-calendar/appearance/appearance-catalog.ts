@@ -32,7 +32,9 @@ const HIGHLIGHT_STATES = [
     attribute: "data-selected",
     color: "var(--interactive-accent)",
     ring: "2px",
+    ringNarrow: "0px",
     strength: "0",
+    strengthNarrow: "0.2",
     text: "",
     layer: "1",
   },
@@ -83,7 +85,10 @@ function layer(state: string, kind: "fill" | "ring"): string {
 }
 
 function highlightEntries(): CatalogEntry[] {
-  return HIGHLIGHT_STATES.flatMap(({ state, attribute, color, ring, strength, text, layer: z }) => {
+  return HIGHLIGHT_STATES.flatMap((highlight) => {
+    const { state, attribute, color, ring, strength, text, layer: z } = highlight;
+    const ringNarrow = "ringNarrow" in highlight ? { stockNarrow: highlight.ringNarrow } : {};
+    const strengthNarrow = "strengthNarrow" in highlight ? { stockNarrow: highlight.strengthNarrow } : {};
     const cell = `.notes-calendar-cell[${attribute}]`;
     // Weight and italic land on the label: on the cell, an unset chain would unset a host's own weight.
     const label = `${cell} .cell-decoration__content`;
@@ -112,11 +117,13 @@ function highlightEntries(): CatalogEntry[] {
       {
         name: name("ring-width"),
         stock: ring,
+        ...ringNarrow,
         probe: { selector: layer(state, "ring"), property: "box-shadow", sample: "5px", with: red, expect: "5px" },
       },
       {
         name: name("strength"),
         stock: strength,
+        ...strengthNarrow,
         probe: {
           selector: layer(state, "fill"),
           property: "opacity",

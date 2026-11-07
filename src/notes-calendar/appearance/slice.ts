@@ -261,7 +261,11 @@ export type StockNarrow = { readonly [P in keyof NarrowOverrides]?: DeepPartialN
  * What narrow shows where the user set nothing at narrow, ahead of their wide value. It lives in code,
  * not in `narrow`, so a saved narrow null keeps meaning "no override" and a later stock can still change.
  */
-export const STOCK_NARROW: StockNarrow = { date: { size: "1em" }, cell: { gap: "1px", minHeight: ROW_FLOOR_PX } };
+export const STOCK_NARROW: StockNarrow = {
+  selected: { style: "background", strength: 20 },
+  date: { size: "1em" },
+  cell: { gap: "1px", minHeight: ROW_FLOOR_PX },
+};
 
 export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceSchema>(
   "appearance",

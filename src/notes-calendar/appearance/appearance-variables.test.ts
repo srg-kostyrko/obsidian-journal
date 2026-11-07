@@ -13,14 +13,7 @@ import {
   writtenValue,
 } from "./appearance-variables";
 import { calendarAppearanceCoreModule } from "./module";
-import {
-  appearanceSlice,
-  STOCK_NARROW,
-  UNCHANGED,
-  type AppearanceSliceState,
-  type HighlightValues,
-  type StockNarrow,
-} from "./slice";
+import { appearanceSlice, STOCK_NARROW, UNCHANGED, type AppearanceSliceState, type HighlightValues } from "./slice";
 import { calendarAppearanceStartupModule } from "./startup-module";
 
 type HighlightText = HighlightValues["text"];
@@ -222,7 +215,9 @@ describe("appearanceVariables", () => {
     state.wide.selected.style = "none";
     state.wide.selected.text = { color: { type: "custom", color: "#123456" }, weight: "bold", italic: true };
 
-    expect(appearanceVariables(state)).toEqual({
+    const bare = appearanceCatalog.map(({ stockNarrow: _stockNarrow, ...entry }) => entry);
+
+    expect(appearanceVariables(state, {}, bare)).toEqual({
       [saved("journal-cell-selected-ring-width")]: "0px",
     });
   });
@@ -268,6 +263,16 @@ describe("appearanceVariables", () => {
       [saved("journal-cell-selected-text-color", true)]: "unchanged",
       [saved("journal-cell-selected-text-weight", true)]: "unchanged",
       [saved("journal-cell-selected-text-italic", true)]: "unchanged",
+    });
+  });
+
+  it("a narrow ring for Selected writes its ring and a zero strength", () => {
+    const state = fresh();
+    state.narrow.selected.style = "ring";
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-selected-ring-width", true)]: "2px",
+      [saved("journal-cell-selected-strength", true)]: "0",
     });
   });
 
@@ -359,18 +364,6 @@ describe("appearanceVariables", () => {
   });
 });
 
-// A stand-in for the narrow Selected stock a later change ships: its text values read the style but
-// carry no stock narrow string of their own, so only comparing values can tell when to write them.
-const SELECTED_NARROW = new Map([
-  ["journal-cell-selected-ring-width", "0px"],
-  ["journal-cell-selected-strength", "0.2"],
-]);
-const STOCK: StockNarrow = { ...STOCK_NARROW, selected: { style: "background", strength: 20 } };
-const CATALOG: readonly CatalogEntry[] = appearanceCatalog.map((entry) => {
-  const stockNarrow = SELECTED_NARROW.get(entry.name);
-  return stockNarrow === undefined ? entry : { ...entry, stockNarrow };
-});
-
 const STYLES = ["ring", "background", "text", "none"] as const;
 const WIDE_WEIGHTS: readonly HighlightText["weight"][] = [UNCHANGED, "bold"];
 const NARROW_WEIGHTS: readonly (HighlightText["weight"] | null)[] = [null, UNCHANGED, "normal"];
@@ -427,10 +420,10 @@ describe("what the readers resolve", () => {
   ] as const)("at %s is what the model says, for every state", (_width, narrow) => {
     const mismatches: unknown[] = [];
     for (const state of states) {
-      const variables = appearanceVariables(state, STOCK, CATALOG);
-      for (const entry of CATALOG) {
+      const variables = appearanceVariables(state, STOCK_NARROW, appearanceCatalog);
+      for (const entry of appearanceCatalog) {
         const value = writtenValue(entry.name);
-        const css = narrow ? value?.narrowCss(state, STOCK) : value?.wideCss(state);
+        const css = narrow ? value?.narrowCss(state, STOCK_NARROW) : value?.wideCss(state);
         const expected = settled(css ?? entry.stock);
         const actual = rendered(variables, entry, narrow);
         if (actual !== expected)
@@ -446,8 +439,8 @@ describe("what the readers resolve", () => {
     expect(mismatches.slice(0, 3)).toEqual([]);
   });
 
-  it("writes nothing for defaults under the stand-in stock either", () => {
-    expect(appearanceVariables(fresh(), STOCK, CATALOG)).toEqual({});
+  it("writes nothing for defaults under the stock either", () => {
+    expect(appearanceVariables(fresh(), STOCK_NARROW, appearanceCatalog)).toEqual({});
   });
 });
 
