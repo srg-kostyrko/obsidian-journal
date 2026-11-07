@@ -17,7 +17,7 @@ import {
   type Width,
 } from "./appearance-parts";
 import { mergedPart } from "./appearance-variables";
-import { appearanceSlice, appearanceSliceSchema, type AppearanceSliceState } from "./slice";
+import { appearanceSlice, appearanceSliceSchema, STOCK_NARROW, type AppearanceSliceState } from "./slice";
 
 export { visibleControls } from "./appearance-parts";
 
@@ -68,6 +68,8 @@ export function sourceAt(
   path: readonly string[],
 ): "stock" | "user" | "narrow" {
   if (width === "narrow" && (read(state.narrow[part], path) ?? null) !== null) return "narrow";
+  // A stock narrow value wins over the user's wide one at narrow, so what shows there is stock.
+  if (width === "narrow" && read(STOCK_NARROW[part], path) !== undefined) return "stock";
   const stock = read(appearanceSlice.defaults.wide[part], path);
   return equal(read(state.wide[part], path), stock) ? "stock" : "user";
 }

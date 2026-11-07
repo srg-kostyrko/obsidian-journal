@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { appearanceCatalog, publicName, savedName } from "./appearance-catalog";
+import { writtenValue } from "./appearance-variables";
+import { appearanceSlice, STOCK_NARROW, type AppearanceSliceState } from "./slice";
 
 const names = appearanceCatalog.map((entry) => entry.name);
 const find = (name: string) => {
@@ -105,5 +107,49 @@ describe("appearanceCatalog", () => {
   it("strength probes read opacity and ring-width probes read box-shadow", () => {
     expect(new Set(propertyOf("-strength"))).toEqual(new Set(["opacity"]));
     expect(new Set(propertyOf("-ring-width"))).toEqual(new Set(["box-shadow"]));
+  });
+});
+
+// Fills the stock narrow leaves in as if a user had set them at narrow, so the writer reports which values they feed.
+function stockAsOverrides(): AppearanceSliceState {
+  const state = structuredClone(appearanceSlice.defaults);
+  const fill = (target: Record<string, unknown>, source: object): void => {
+    for (const [key, leaf] of Object.entries(source)) {
+      const group = target[key];
+      if (typeof group === "object" && group !== null) fill(group as Record<string, unknown>, leaf as object);
+      else target[key] = leaf;
+    }
+  };
+  fill(state.narrow, STOCK_NARROW);
+  return state;
+}
+
+describe("stock narrow values", () => {
+  const withStockNarrow = appearanceCatalog.filter((entry) => entry.stockNarrow !== undefined);
+
+  it("every stock narrow string is what the writer makes of the stock narrow values", () => {
+    const defaults = structuredClone(appearanceSlice.defaults);
+    expect(withStockNarrow.length).toBeGreaterThan(0);
+    expect(
+      withStockNarrow.map((entry) => ({ name: entry.name, css: writtenValue(entry.name)?.narrowCss(defaults) })),
+    ).toEqual(withStockNarrow.map((entry) => ({ name: entry.name, css: entry.stockNarrow })));
+  });
+
+  it("an entry has a stock narrow exactly when STOCK_NARROW feeds it", () => {
+    const state = stockAsOverrides();
+    const fed = appearanceCatalog.filter((entry) => writtenValue(entry.name)?.readsNarrow(state) === true);
+    expect(fed.map((entry) => entry.name).toSorted()).toEqual(withStockNarrow.map((entry) => entry.name).toSorted());
+  });
+
+  it("states the growing row height and the larger wide dates as their stock", () => {
+    expect([
+      find("journal-cell-cell-min-height"),
+      find("journal-cell-date-size"),
+      find("journal-cell-cell-gap"),
+    ]).toEqual([
+      expect.objectContaining({ stock: "clamp(26px, 7cqi, 64px)", stockNarrow: "26px" }),
+      expect.objectContaining({ stock: "1.1em", stockNarrow: "1em" }),
+      expect.objectContaining({ stock: "var(--size-2-1)", stockNarrow: "1px" }),
+    ]);
   });
 });

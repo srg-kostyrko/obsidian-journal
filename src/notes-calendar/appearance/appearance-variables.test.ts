@@ -5,7 +5,7 @@ import { nextTick } from "vue";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { appearanceCatalog, savedName } from "./appearance-catalog";
-import { AppearanceVariables, appearanceVariables, writtenEntryNames } from "./appearance-variables";
+import { AppearanceVariables, appearanceVariables, mergedPart, writtenEntryNames } from "./appearance-variables";
 import { calendarAppearanceCoreModule } from "./module";
 import { appearanceSlice } from "./slice";
 import { calendarAppearanceStartupModule } from "./startup-module";
@@ -139,6 +139,37 @@ describe("appearanceVariables", () => {
       [saved("journal-cell-cell-min-height")]: "40px",
       [saved("journal-cell-cell-min-height", true)]: "26px",
     });
+  });
+
+  it("a wide date size does not reach narrow while narrow keeps its stock", () => {
+    const state = fresh();
+    state.wide.date.size = "1.4em";
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-date-size")]: "1.4em" });
+  });
+
+  it("the stock row height writes nothing", () => {
+    const state = fresh();
+    state.wide.cell.minHeight = null;
+
+    expect(appearanceVariables(state)).toEqual({});
+  });
+
+  it("a set row height writes its pixels", () => {
+    const state = fresh();
+    state.wide.cell.minHeight = 26;
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-cell-min-height")]: "26px" });
+  });
+
+  it("the narrow part takes the stock narrow values under its overrides and over the wide ones", () => {
+    const state = fresh();
+    state.wide.cell.gap = "3px";
+    state.wide.cell.padding = 2;
+    state.narrow.cell.minHeight = 30;
+
+    expect(mergedPart(state, "cell")).toEqual({ padding: 2, radius: "var(--radius-s)", gap: "1px", minHeight: 30 });
+    expect(mergedPart(state, "date").size).toBe("1em");
   });
 
   it("a ring style writes the ring width and zero strength", () => {
@@ -276,7 +307,7 @@ describe("appearanceVariables", () => {
       color: { type: "theme", name: "text-normal" },
       case: "upper",
     };
-    state.wide.cell = { padding: 4, radius: "50%", gap: "2px", minHeight: 26 };
+    state.wide.cell = { padding: 4, radius: "50%", gap: "2px", minHeight: null };
 
     expect(appearanceVariables(state)).toEqual({
       [saved("journal-cell-today-color")]: "#111111",

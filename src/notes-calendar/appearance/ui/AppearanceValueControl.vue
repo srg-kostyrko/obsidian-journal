@@ -103,30 +103,53 @@ function rootFontPx(): number | undefined {
 // The preview root inherits what the calendar does under this theme, and no part's own setting
 // reaches it, so it is where an `inherit` stock is read.
 const previewRoot = inject(AppearancePreviewRootKey, null);
-function readStock(): string | undefined {
+const stockString = computed(() => {
   const found = entry.value;
-  if (found === undefined || rowElement.value === undefined) return;
-  const stock = width === "narrow" ? (found.stockNarrow ?? found.stock) : found.stock;
+  if (found === undefined) return;
+  return width === "narrow" ? (found.stockNarrow ?? found.stock) : found.stock;
+});
+function readStock(): string | undefined {
+  const stock = stockString.value;
+  if (stock === undefined || rowElement.value === undefined) return;
   const root = previewRoot?.value;
   const property = inheritedProperty(leaf);
   const inherited =
     root && property ? root.ownerDocument.defaultView?.getComputedStyle(root).getPropertyValue(property) : undefined;
   return resolveStock(stock, readVariable, inherited);
 }
+// A stock that grows with the calendar's width has no one number, so the slider sits on what the
+// preview's cell renders at instead.
+const MEASURED: Readonly<Record<string, string>> = { minHeight: "min-height" };
+const growing = computed(() => {
+  const stock = stockString.value;
+  if (stock === undefined || MEASURED[leaf] === undefined || control.range === undefined) return false;
+  return stockNumber(stock, control.range.unit, readVariable, rootFontPx()) === undefined;
+});
+function readMeasured(): number | undefined {
+  const property = MEASURED[leaf];
+  const cell = previewRoot?.value?.querySelector(".notes-calendar-cell");
+  const view = cell?.ownerDocument.defaultView;
+  if (property === undefined || !cell || !view) return;
+  const measured = Number.parseFloat(view.getComputedStyle(cell).getPropertyValue(property));
+  return Number.isFinite(measured) ? Math.round(measured) : undefined;
+}
 // Computed style is not reactive: it is read after the DOM settles, again whenever the width
 // switches, since the preview's computed style can differ between the two.
 const stockShown = shallowRef<string | undefined>();
+const measuredShown = shallowRef<number | undefined>();
 watch(
   [rowElement, () => previewRoot?.value, () => width],
   () => {
     stockShown.value = readStock();
+    measuredShown.value = readMeasured();
   },
   { flush: "post", immediate: true },
 );
 const sliderNumber = computed<number | undefined>(() => {
   if (typeof value.value === "number") return value.value;
-  if (typeof value.value !== "string" || control.range === undefined) return;
-  return stockNumber(value.value, control.range.unit, readVariable, rootFontPx());
+  if (control.range === undefined) return;
+  if (typeof value.value === "string") return stockNumber(value.value, control.range.unit, readVariable, rootFontPx());
+  return growing.value ? measuredShown.value : undefined;
 });
 const atStock = computed(() => sourceAt(slice.state, width, part, control.path) === "stock");
 const writesString = computed(() => typeof valueAt(appearanceSlice.defaults, "wide", part, control.path) === "string");
@@ -167,7 +190,7 @@ function writeSlider(next: number): void {
       <span class="appearance-control__value">
         <span v-if="sliderNumber !== undefined">{{ `${sliderNumber}${control.range.unit}` }}</span>
         <span v-if="atStock || sliderNumber === undefined" class="appearance-control__default">
-          {{ m.calendar_appearance_default() }}
+          {{ growing ? m.calendar_appearance_default_grows() : m.calendar_appearance_default() }}
         </span>
       </span>
       <UiSlider

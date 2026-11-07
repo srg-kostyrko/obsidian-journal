@@ -147,6 +147,31 @@ describe("sourceAt", () => {
   });
 });
 
+describe("stock narrow values", () => {
+  it("narrow shows the stock narrow value, from stock", () => {
+    const state = withValue(fresh(), "wide", "cell", ["gap"], "3px");
+
+    expect(valueAt(state, "narrow", "cell", ["gap"])).toBe("1px");
+    expect(sourceAt(state, "narrow", "cell", ["gap"])).toBe("stock");
+    expect(valueAt(state, "wide", "cell", ["gap"])).toBe("3px");
+    expect(sourceAt(state, "wide", "cell", ["gap"])).toBe("user");
+  });
+
+  it("a narrow override still wins over the stock narrow", () => {
+    const state = withValue(fresh(), "narrow", "cell", ["gap"], "4px");
+
+    expect(valueAt(state, "narrow", "cell", ["gap"])).toBe("4px");
+    expect(sourceAt(state, "narrow", "cell", ["gap"])).toBe("narrow");
+  });
+
+  it("a leaf with no stock narrow still follows wide at narrow", () => {
+    const state = withValue(fresh(), "wide", "cell", ["padding"], 2);
+
+    expect(valueAt(state, "narrow", "cell", ["padding"])).toBe(2);
+    expect(sourceAt(state, "narrow", "cell", ["padding"])).toBe("user");
+  });
+});
+
 describe("sourceAt with an absent narrow key", () => {
   it("is not narrow", () => {
     const state = fresh();

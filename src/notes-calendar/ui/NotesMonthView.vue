@@ -501,7 +501,7 @@ const isSelected = (period: Period): boolean =>
   text-transform: var(--_v-week-number-case);
 }
 .notes-month-view__day {
-  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, 1.1em));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
@@ -516,7 +516,10 @@ const isSelected = (period: Period): boolean =>
    plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
    short of its neighbours, when no week number holds the row open. */
 .notes-month-view__day--blank {
-  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-min-height: var(
+    --journal-cell-cell-min-height,
+    var(--journal-saved-cell-cell-min-height, clamp(26px, 7cqi, 64px))
+  );
   --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
   min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
 }
@@ -558,10 +561,7 @@ const isSelected = (period: Period): boolean =>
   .notes-month-view__day--blank {
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,
-      var(
-        --journal-saved-cell-cell-min-height-narrow,
-        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
-      )
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
     );
     --_v-cell-padding: var(
       --journal-cell-cell-padding-narrow,
@@ -609,13 +609,7 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-month-view__grid {
-    --_v-cell-gap: var(
-      --journal-cell-cell-gap-narrow,
-      var(
-        --journal-saved-cell-cell-gap-narrow,
-        var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)))
-      )
-    );
+    --_v-cell-gap: var(--journal-cell-cell-gap-narrow, var(--journal-saved-cell-cell-gap-narrow, 1px));
   }
   .notes-month-view__weekday {
     --_v-weekday-size: var(
@@ -692,13 +686,7 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-month-view__day {
-    --_v-date-size: var(
-      --journal-cell-date-size-narrow,
-      var(
-        --journal-saved-cell-date-size-narrow,
-        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
-      )
-    );
+    --_v-date-size: var(--journal-cell-date-size-narrow, var(--journal-saved-cell-date-size-narrow, 1em));
     --_v-date-weight: var(
       --journal-cell-date-weight-narrow,
       var(

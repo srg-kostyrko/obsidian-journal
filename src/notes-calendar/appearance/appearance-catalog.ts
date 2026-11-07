@@ -201,17 +201,25 @@ const TEXT_PARTS = [
   {
     part: "date",
     selector: ".notes-month-view__day:not([data-outside])",
-    size: "inherit",
+    size: "1.1em",
+    sizeNarrow: "1em",
     weight: "inherit",
     color: "inherit",
   },
 ] as const;
 
 function textEntries(): CatalogEntry[] {
-  return TEXT_PARTS.flatMap(({ part, selector, size, weight, color }) => {
+  return TEXT_PARTS.flatMap((text) => {
+    const { part, selector, size, weight, color } = text;
     const name = (value: string): string => `journal-cell-${part}-${value}`;
+    const sizeNarrow = "sizeNarrow" in text ? { stockNarrow: text.sizeNarrow } : {};
     return [
-      { name: name("size"), stock: size, probe: { selector, property: "font-size", sample: "21px", expect: "21px" } },
+      {
+        name: name("size"),
+        stock: size,
+        ...sizeNarrow,
+        probe: { selector, property: "font-size", sample: "21px", expect: "21px" },
+      },
       {
         name: name("weight"),
         stock: weight,
@@ -276,11 +284,14 @@ const BOX_ENTRIES: readonly CatalogEntry[] = [
   {
     name: "journal-cell-cell-gap",
     stock: "var(--size-2-1)",
+    stockNarrow: "1px",
     probe: { selector: ".notes-month-view__grid", property: "row-gap", sample: "13px", expect: "13px" },
   },
   {
     name: "journal-cell-cell-min-height",
-    stock: "26px",
+    // Rows grow with the calendar's width, within a floor a date fits and a ceiling a wide pane keeps tidy.
+    stock: "clamp(26px, 7cqi, 64px)",
+    stockNarrow: "26px",
     probe: { selector: ".notes-calendar-cell", property: "min-height", sample: "41px", expect: "41px" },
   },
 ];

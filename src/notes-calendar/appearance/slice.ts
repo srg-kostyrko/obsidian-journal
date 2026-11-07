@@ -59,7 +59,8 @@ const boxEntries = {
   padding: pixelsSchema,
   radius: v.string(),
   gap: v.string(),
-  minHeight: pixelsSchema,
+  // Null is Default, a row height that grows with the calendar's width; no number can say that.
+  minHeight: v.nullable(pixelsSchema),
 };
 
 type Shape<E extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<E, undefined>>;
@@ -195,8 +196,8 @@ const wideDefaults = {
     dividerColor: theme("background-modifier-border"),
     dividerWidth: 1,
   } satisfies WeekNumberValues,
-  date: text({}),
-  cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 },
+  date: text({ size: "1.1em" }),
+  cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: null },
 };
 
 const wideSchema = v.object({
@@ -241,6 +242,23 @@ export const appearanceSliceSchema = v.object({
 });
 
 export type AppearanceSliceState = v.InferOutput<typeof appearanceSliceSchema>;
+
+/** A leaf left out keeps its narrow null; a group recurses, since a group is never null itself. */
+export type DeepPartialNonNull<T> = {
+  readonly [K in keyof T]?: null extends T[K]
+    ? NonNullable<T[K]>
+    : T[K] extends object
+      ? DeepPartialNonNull<T[K]>
+      : T[K];
+};
+
+export type StockNarrow = { readonly [P in keyof NarrowOverrides]?: DeepPartialNonNull<NarrowOverrides[P]> };
+
+/**
+ * What narrow shows where the user set nothing at narrow, ahead of their wide value. It lives in code,
+ * not in `narrow`, so a saved narrow null keeps meaning "no override" and a later stock can still change.
+ */
+export const STOCK_NARROW: StockNarrow = { date: { size: "1em" }, cell: { gap: "1px", minHeight: 26 } };
 
 export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceSchema>(
   "appearance",

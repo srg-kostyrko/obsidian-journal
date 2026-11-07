@@ -52,11 +52,12 @@ const previewDay = new Date().getDate();
 // overlay it is supposed to sit under. The source size is the saved wide row min-height, the
 // cell height floor the calendar actually renders.
 const appearance = useService(SettingsService).getSlice(appearanceSlice);
-// The schema allows 0, which would make the magnification a division by zero.
+// The schema allows 0, which would make the magnification a division by zero. Default (null) grows with
+// the calendar's width, so the canvas, which has no calendar width, sizes from the narrow floor.
 const STOCK_CELL_SOURCE_SIZE_PX = 26;
 const cellSourceSizePx = computed(() => {
   const saved = appearance.state.wide.cell.minHeight;
-  return saved >= 1 ? saved : STOCK_CELL_SOURCE_SIZE_PX;
+  return saved !== null && saved >= 1 ? saved : STOCK_CELL_SOURCE_SIZE_PX;
 });
 const canvasStyle = computed(() => ({ "--cell-source-size": `${cellSourceSizePx.value}px` }));
 const cell = useTemplateRef<HTMLElement>("cell");

@@ -8,6 +8,7 @@ import { testContainer } from "@/testing";
 import {
   appearanceSlice,
   appearanceSliceSchema,
+  STOCK_NARROW,
   type AppearanceParts,
   type AppearanceSliceState,
   type BoxValues,
@@ -72,8 +73,13 @@ describe("appearanceSlice", () => {
       dividerColor: theme("background-modifier-border"),
       dividerWidth: 1,
     });
-    expect(wide.date).toEqual(asToday);
-    expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
+    expect(wide.date).toEqual({ ...asToday, size: "1.1em" });
+    // Null, not a number: Default is a row height that grows with the calendar's width.
+    expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: null });
+  });
+
+  it("narrow keeps one-em dates, one-pixel gaps and 26px rows as its stock", () => {
+    expect(STOCK_NARROW).toEqual({ date: { size: "1em" }, cell: { gap: "1px", minHeight: 26 } });
   });
 
   it("the weekend band draws nothing at stock", () => {
@@ -218,6 +224,19 @@ describe("appearance slice repair on load", () => {
     const reset = repairs[0]?.fields as { sliceKey?: string; fields?: string[] } | undefined;
     expect(reset?.sliceKey).toBe("appearance");
     expect(reset?.fields?.toSorted()).toEqual(["narrow.cell.minHeight", "narrow.selected.style"]);
+  });
+
+  it("repairs an unreadable row height to the growing default alone", async () => {
+    const { state } = await loaded({ wide: { cell: { minHeight: "tall", padding: 4 } } });
+
+    expect(state.wide.cell.minHeight).toBeNull();
+    expect(state.wide.cell.padding).toBe(4);
+  });
+
+  it("keeps a set row height", async () => {
+    const { state } = await loaded({ wide: { cell: { minHeight: 40 } } });
+
+    expect(state.wide.cell.minHeight).toBe(40);
   });
 
   it("an unreadable highlight text color resets only that color", async () => {

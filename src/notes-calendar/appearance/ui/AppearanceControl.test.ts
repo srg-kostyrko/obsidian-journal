@@ -350,6 +350,48 @@ describe("AppearanceControl", () => {
     expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("0");
   });
 
+  describe("the growing row height", () => {
+    let root: HTMLElement;
+    beforeEach(() => {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(".row-height-under-test .notes-calendar-cell { min-height: 41px; }");
+      document.adoptedStyleSheets = [sheet];
+      root = document.createElement("div");
+      root.classList.add("row-height-under-test");
+      const cell = document.createElement("div");
+      cell.classList.add("notes-calendar-cell");
+      root.append(cell);
+      document.body.append(root);
+      return () => {
+        root.remove();
+        document.adoptedStyleSheets = [];
+      };
+    });
+    const mountRowHeight = (width: Width) =>
+      harness.render(AppearanceControl, {
+        props: { part: "cell", control: control("cell", "minHeight"), width },
+        global: { provide: { [AppearancePreviewRootKey as symbol]: shallowRef(root) } },
+      });
+
+    it("sits on the height the preview's cell renders at, and says it grows", async () => {
+      mountRowHeight("wide");
+
+      expect(await screen.findByText("41px")).toBeTruthy();
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("41");
+      expect(screen.getByText(m.calendar_appearance_default_grows())).toBeTruthy();
+    });
+
+    it("sits on the stock narrow height at Narrow, as a plain Default", async () => {
+      mountRowHeight("narrow");
+      await nextTick();
+
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("26");
+      expect(screen.getByText("26px")).toBeTruthy();
+      expect(screen.getByText(m.calendar_appearance_default())).toBeTruthy();
+      expect(screen.queryByText(m.calendar_appearance_default_grows())).toBeNull();
+    });
+  });
+
   it("writes a number to a numeric leaf", async () => {
     mount("cell", control("cell", "minHeight"));
 

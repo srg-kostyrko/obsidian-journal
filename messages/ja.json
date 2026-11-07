@@ -204,6 +204,7 @@
   ],
   "calendar_appearance_default": "デフォルト",
   "calendar_appearance_default_resolved": "デフォルト（{value}）",
+  "calendar_appearance_default_grows": "デフォルト（幅に合わせて伸びる）",
   "calendar_appearance_unchanged": "変更なし",
   "calendar_appearance_narrow_only": "狭い幅のみ",
   "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",

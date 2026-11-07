@@ -137,7 +137,10 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell {
   --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
   --_v-cell-radius: var(--journal-cell-cell-radius, var(--journal-saved-cell-cell-radius, var(--radius-s)));
-  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-min-height: var(
+    --journal-cell-cell-min-height,
+    var(--journal-saved-cell-cell-min-height, clamp(26px, 7cqi, 64px))
+  );
   --_v-outside-color: var(--journal-cell-outside-color, var(--journal-saved-cell-outside-color, transparent));
   --_v-outside-ring-width: var(--journal-cell-outside-ring-width, var(--journal-saved-cell-outside-ring-width, 0px));
   --_v-outside-strength: var(--journal-cell-outside-strength, var(--journal-saved-cell-outside-strength, 0));
@@ -229,10 +232,7 @@ const hover = useModifierHoverPreview();
     );
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,
-      var(
-        --journal-saved-cell-cell-min-height-narrow,
-        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
-      )
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
     );
     --_v-outside-color: var(
       --journal-cell-outside-color-narrow,
