@@ -29,6 +29,11 @@ describe("NotesCalendarDivider", () => {
     }).toEqual({ position: "absolute", inset: "0", pointer: "none" });
   });
 
+  // A divider wider than the cell gap reaches into the cells either side, which are positioned and come later.
+  it("paints above the cells, as an over band does, and below a lifted mark popover", () => {
+    expect(rule(".notes-calendar-divider")?.declarations.get("z-index")).toBe("1");
+  });
+
   it.each([
     ["end", "border-inline-end"],
     ["start", "border-inline-start"],

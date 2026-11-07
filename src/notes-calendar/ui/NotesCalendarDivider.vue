@@ -25,6 +25,9 @@ defineProps<{ side: "start" | "end"; column: string; row: string }>();
   );
   position: absolute;
   inset: 0;
+  /* A line wider than the cell gap reaches into the cells either side, which would paint over it; a cell
+     holding an open mark popover lifts itself to the popover layer, above this. */
+  z-index: 1;
   pointer-events: none;
 }
 @container journal-calendar (max-width: 28em) {
