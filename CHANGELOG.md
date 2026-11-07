@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- The **Text highlight** theme color shows again on Obsidian 1.14 and later. Obsidian 1.14 stopped defining the variable it names, so a decoration or calendar appearance color set to it painted nothing, and its swatch in the color picker was empty. It now falls back to Obsidian's own highlight color, and a theme that sets the old variable still wins. Your settings need no change.
 - The selected date's ring now shows over more than it did. It used to hide under a decoration background, so on a decorated day nothing marked where the calendar view was, and under any fill on the open note's day or on today. It now shows over a decoration and its border, over the open note's fill and over today's background, unless its color matches the fill it sits on. The open note's fill still sits under a decoration, so the decoration's color, and what it means, stays visible on the note you are reading.
 - A day outside the month that is today now shows today's accent color instead of the muted outside color.
 - A day outside the month that is the open note now shows the open note's text color instead of muted text on the accent fill, which was hard to read.
