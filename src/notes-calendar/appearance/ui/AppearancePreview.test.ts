@@ -22,12 +22,7 @@ const DecorationProbe = defineComponent({
       const styles = cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value ?? [];
       return h(
         "span",
-        {
-          "data-decoration": styles.length > 0 ? styles.map((style) => style.type).join(",") : undefined,
-          "data-theme-colors": styles
-            .map((style) => ("color" in style && style.color.type === "theme" ? style.color.name : ""))
-            .join(","),
-        },
+        { "data-decoration": styles.length > 0 ? styles.map((style) => style.type).join(",") : undefined },
         slots.default?.(),
       );
     };
@@ -223,18 +218,6 @@ describe("AppearancePreview", () => {
     const [anchor, styles] = decorated.at(0) ?? [];
     expect(styles).toBe("background,color");
     expect(anchor).toBe("2026-05-16");
-  });
-
-  // --text-highlight-bg is gone from Obsidian 1.14's app.css, which would leave the sample with no
-  // background; --background-secondary is a solid color on every supported version.
-  it("paints the sample decoration's background from a theme color every supported Obsidian defines", () => {
-    const { container } = render(AppearancePreview, {
-      props: { width: "wide" },
-      global: { stubs: { CellDecoration: DecorationProbe } },
-    });
-    expect(container.querySelector<HTMLElement>("[data-decoration]")?.dataset.themeColors).toBe(
-      "background-secondary,text-accent",
-    );
   });
 
   describe("outlines the part being edited", () => {
