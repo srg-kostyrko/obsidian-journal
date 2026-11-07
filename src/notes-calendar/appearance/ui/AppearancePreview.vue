@@ -138,10 +138,12 @@ function onPick(event: Event): void {
 // A state outlines every day in it. Every day is a date number and a cell, so those two outline the day
 // they were picked at, or every day when they were not. One element takes a strong outline; a part
 // spread over many takes a light one on each, or a grid of heavy boxes would bury the calendar.
-function isPickedDay(day: { period: DayPeriod; outside: boolean }): boolean {
+function isPickedDay(day: { period: DayPeriod; outside: boolean }, rowIndex: number): boolean {
   const anchor = day.period.anchor.toAnchor();
   return match(props.picked)
     .with("today", () => anchor === today.value.toAnchor())
+    .with("weekend", () => isWeekend(day.period))
+    .with("currentWeek", () => rowIndex === bands.value.currentWeekIndex)
     .with("selected", () => anchor === sample.value.selected)
     .with("active", () => anchor === sample.value.active)
     .with("outside", () => day.outside)
@@ -156,7 +158,9 @@ const pickedCount = computed(() =>
     .with("weekday", () => weekdays.value.length)
     .with("weekNumber", () => rows.value.length)
     .with("grid", () => 1)
-    .otherwise(() => rows.value.reduce((count, row) => count + row.days.filter(isPickedDay).length, 0)),
+    .otherwise(() =>
+      rows.value.reduce((count, row, index) => count + row.days.filter((day) => isPickedDay(day, index)).length, 0),
+    ),
 );
 
 function pickedClass(isPicked: boolean): Record<string, boolean> {
@@ -214,7 +218,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           v-for="(day, i) in weekdays"
           :key="i"
           class="appearance-preview__weekday"
-          :class="pickedClass(picked === 'weekday')"
+          :class="pickedClass(picked === 'weekday' || (picked === 'weekend' && day.weekend))"
           data-preview-part="weekday"
           :data-weekend="day.weekend || null"
         >
@@ -227,7 +231,9 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
         <NotesCalendarCell
           v-if="weeksPos === 'left'"
           class="appearance-preview__week-number"
-          :class="pickedClass(picked === 'weekNumber')"
+          :class="
+            pickedClass(picked === 'weekNumber' || (picked === 'currentWeek' && index === bands.currentWeekIndex))
+          "
           data-preview-part="weekNumber"
           :current-week="index === bands.currentWeekIndex"
           :period="row.week"
@@ -245,7 +251,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
           <NotesCalendarCell
             v-else
             class="appearance-preview__day"
-            :class="pickedClass(isPickedDay(day))"
+            :class="pickedClass(isPickedDay(day, index))"
             data-preview-part="date"
             :period="day.period"
             :cell="outsideDates === 'inactive' && day.outside ? inertCell : cell"
@@ -259,7 +265,9 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
         <NotesCalendarCell
           v-if="weeksPos === 'right'"
           class="appearance-preview__week-number"
-          :class="pickedClass(picked === 'weekNumber')"
+          :class="
+            pickedClass(picked === 'weekNumber' || (picked === 'currentWeek' && index === bands.currentWeekIndex))
+          "
           data-preview-part="weekNumber"
           :current-week="index === bands.currentWeekIndex"
           :period="row.week"

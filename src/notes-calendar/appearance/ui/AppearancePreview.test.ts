@@ -208,6 +208,34 @@ describe("AppearancePreview", () => {
       expect(picked(container)).toEqual(weekNumbers);
     });
 
+    it("outlines the weekend days and their weekday headers, and nothing else", () => {
+      const { container } = render(AppearancePreview, {
+        props: {
+          width: "wide",
+          picked: "weekend",
+          display: { ...calendarDisplaySlice.defaults, weekend: { type: "custom", days: [5] } },
+        },
+      });
+      const fridays = [...container.querySelectorAll<HTMLElement>('[data-preview-part="date"]')].filter(
+        (cell) => cell.dataset.weekend !== undefined,
+      );
+      const header = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekday"]')].filter(
+        (span) => span.dataset.weekend !== undefined,
+      );
+      expect(header).toHaveLength(1);
+      expect(fridays.length).toBeGreaterThan(3);
+      expect(new Set(picked(container))).toEqual(new Set([...header, ...fridays]));
+      expect(picked(container).every(isLight)).toBe(true);
+    });
+
+    it("outlines today's week, its days and its week number, and nothing else", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "currentWeek" } });
+      const week = [...container.querySelectorAll<HTMLElement>("[data-current-week]")];
+      expect(week).toHaveLength(8);
+      expect(week.some((element) => element.dataset.previewPart === "weekNumber")).toBe(true);
+      expect(new Set(picked(container))).toEqual(new Set(week));
+    });
+
     it("outlines the month grid", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "grid" } });
       expect(picked(container)).toEqual([container.querySelector(".appearance-preview__grid")]);
