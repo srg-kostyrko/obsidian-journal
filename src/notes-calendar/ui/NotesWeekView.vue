@@ -90,7 +90,9 @@ const bands = computed(() =>
     weekend: weekend.value,
     weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
     weekdayHeader: props.showWeekdays,
-    rows: [{ isCurrentWeek: props.currentWeekBand && rawWeek.value.contains(today.value), hasDay: true }],
+    rows: [
+      { isCurrentWeek: props.currentWeekBand && rawWeek.value.contains(today.value), hasDay: days.value.length > 0 },
+    ],
   }),
 );
 const isCurrentWeek = computed(() => bands.value.currentWeekIndex === 0);

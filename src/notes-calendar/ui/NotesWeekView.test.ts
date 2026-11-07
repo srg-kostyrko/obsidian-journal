@@ -558,6 +558,17 @@ describe("NotesWeekView bands", () => {
     expect(container.querySelector("[data-current-week]")).toBeNull();
   });
 
+  it("draws no current-week band on a week whose every day is hidden", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), weeks: "left", hiddenWeekdays: [0, 1, 2, 3, 4, 5, 6] },
+    });
+
+    expect(container.querySelector(".notes-week-view__day")).toBeNull();
+    expect(bands(container, "current-week")).toEqual([]);
+    expect(container.querySelector("[data-current-week]")).toBeNull();
+  });
+
   it("places the bands ahead of the header row", async () => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek() } });
