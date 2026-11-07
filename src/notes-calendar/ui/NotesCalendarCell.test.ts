@@ -357,7 +357,13 @@ describe("NotesCalendarCell state layers", () => {
   it("renders fill then ring layers in state order", () => {
     onMay25();
     const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
-    expect(layers(container)).toEqual(["selected-fill", "active-fill", "today-ring", "selected-ring", "active-ring"]);
+    expect(layers(container)).toEqual(["active-fill", "today-ring", "selected-ring", "active-ring"]);
+  });
+
+  // At narrow the selected date is a tint, which would shift the open note's own fill toward the accent.
+  it("keeps the selected ring but not its fill on the open note", () => {
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
+    expect(layers(container)).toEqual(["active-fill", "selected-ring", "active-ring"]);
   });
 
   it("keeps today's ring but not its fill on the open note", () => {

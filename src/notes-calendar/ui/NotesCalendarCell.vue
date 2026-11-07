@@ -48,8 +48,10 @@ const states = computed(() =>
     .filter(([, applies]) => applies)
     .map(([state]) => state),
 );
-// The open note's fill replaces today's, as it did before layers existed; today's ring stays.
-const fills = computed(() => states.value.filter((state) => state !== "today" || !isActive.value));
+// The open note's fill replaces today's and the selected date's, whose rings still show around it.
+const fills = computed(() =>
+  states.value.filter((state) => !isActive.value || (state !== "today" && state !== "selected")),
+);
 const accessibleName = computed(() =>
   isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
 );
