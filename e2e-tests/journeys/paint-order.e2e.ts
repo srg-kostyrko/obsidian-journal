@@ -24,6 +24,7 @@ const ACTIVE_BG_HEX = "#00aa55";
 const SELECTED_TEXT = "#00aa00";
 const DAY = 15;
 const PLAIN_DAY = 16;
+const OTHER_DECORATED_DAY = 17;
 
 interface CapturedBitmap {
   toBitmap(): { length: number; readUInt8(offset: number): number };
@@ -53,6 +54,32 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
   }, anchor);
   if (reply === null) return undefined;
   return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
+// The color the selected fill's tint over the open note's opaque fill composites to, from the two layers'
+// computed colors and the tint's opacity: what the cell should paint if the tint layer is drawn over it.
+async function tintOverActiveHex(anchor: string): Promise<string | undefined> {
+  const reply = await browser.execute((cellAnchor: string) => {
+    const cell = document.querySelector(`.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`);
+    const tint = cell?.querySelector('[data-layer="selected-fill"]');
+    const fill = cell?.querySelector('[data-layer="active-fill"]');
+    if (!tint || !fill) return null;
+    const channels = (color: string): number[] => (color.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+    const opacity = Number.parseFloat(getComputedStyle(tint).opacity);
+    const over = channels(getComputedStyle(tint).backgroundColor);
+    const under = channels(getComputedStyle(fill).backgroundColor);
+    return under.map((channel, at) => Math.round(channel * (1 - opacity) + (over[at] ?? 0) * opacity));
+  }, anchor);
+  if (reply === null) return undefined;
+  return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
+// Compositing rounds per channel, so a painted pixel can sit a step or two off the computed blend.
+function nearHex(actual: string, expected: string): boolean {
+  return [1, 3, 5].every(
+    (at) =>
+      Math.abs(Number.parseInt(actual.slice(at, at + 2), 16) - Number.parseInt(expected.slice(at, at + 2), 16)) <= 3,
+  );
 }
 
 const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
@@ -208,6 +235,35 @@ describe("paint order of highlight states around a decoration", () => {
     const width = await cell.getCSSProperty("outline-width");
     expect(typeof width.parsed.value === "number" ? Math.round(width.parsed.value) : width.value).toBe(2);
   });
+
+  // At narrow the selected ring is 0px and the open note's fill sits under the decoration's background, so
+  // the selected tint, painted over the decoration, is all that tells this day from any other decorated one.
+  it("a decorated open day at narrow still shows that it is selected", async () => {
+    const other = dayAnchor(
+      new Date().getDate() === OTHER_DECORATED_DAY ? OTHER_DECORATED_DAY + 1 : OTHER_DECORATED_DAY,
+    );
+    await seedNote(`day/${other}.md`, note("daily", other, "marker #layered"));
+    await waitForState(
+      () => decorationBackgroundHex(calendar.cell(other)),
+      (hex) => hex === DECORATED_BG,
+      `the second decorated day did not take the ${DECORATED_BG} background`,
+    );
+    await forceBlockWidth(BASE_VIEW_ROOT, NARROW_WIDTH);
+    try {
+      await waitForState(
+        () => paintedHex(other),
+        (hex) => hex === DECORATED_BG,
+        `the unselected decorated day did not paint ${DECORATED_BG}`,
+      );
+      await waitForState(
+        () => paintedHex(dayAnchor(DAY)),
+        (hex) => hex !== DECORATED_BG,
+        `the open and selected decorated day painted the same ${DECORATED_BG} as an unselected decorated day`,
+      );
+    } finally {
+      await forceBlockWidth(BASE_VIEW_ROOT, "");
+    }
+  });
 });
 
 describe("the open-note fill on a cell with no decoration", () => {
@@ -220,9 +276,9 @@ describe("the open-note fill on a cell with no decoration", () => {
     await closePopoutWindows();
   });
 
-  // Opening the note selects its date too, and a narrow calendar marks the selected date with a tint; the
-  // open note's fill replaces it, so the saved color shows unshifted.
-  it("paints the saved active background", async () => {
+  // Opening the note selects its date too, and a narrow calendar marks the selected date with a tint that
+  // paints over the open note's fill: the cell shows the saved color shifted toward the selected one.
+  it("paints the saved active background under the selected tint", async () => {
     const anchor = dayAnchor(PLAIN_DAY);
     await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
     await openCalendarView();
@@ -233,10 +289,22 @@ describe("the open-note fill on a cell with no decoration", () => {
       (selected) => selected,
       "opening the note did not select its date",
     );
+    const cell = calendar.cell(anchor);
+    expect(await layerZ(cell, "active-fill")).toBe("-1");
+    expect(await layerZ(cell, "selected-fill")).toBe("1");
+    let expected = "";
+    await waitForState(
+      () => tintOverActiveHex(anchor),
+      (hex) => {
+        expected = hex;
+        return hex !== ACTIVE_BG_HEX;
+      },
+      `the open note's selected date drew no selected tint over ${ACTIVE_BG_HEX}`,
+    );
     await waitForState(
       () => paintedHex(anchor),
-      (hex) => hex === ACTIVE_BG_HEX,
-      `the open note's cell did not paint ${ACTIVE_BG_HEX}`,
+      (hex) => nearHex(hex, expected),
+      `the open note's selected date did not paint the selected tint over ${ACTIVE_BG_HEX} (${expected})`,
     );
   });
 

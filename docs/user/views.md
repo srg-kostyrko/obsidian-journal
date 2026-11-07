@@ -421,9 +421,10 @@ A narrow calendar is drawn tighter than a wide one, and out of the box it differ
 - weekday names are one letter, such as `M` for Monday;
 - the selected date is a 20% tint of the accent color, drawn over decorations, rather than a ring.
 
-On the open note's own day, the open note's fill takes the place of the selected date's tint, as it does
-of today's, so the day looks like the open note. On a wide calendar the selected date's ring still shows
-around the open note's fill.
+Opening a note selects its date too, so on the open note's own day the tint draws over the open note's
+fill and shades it toward the accent color. On a decorated day the open note's fill sits under the
+decoration, and the tint is what still shows the day is selected. On a wide calendar the selected date's
+ring shows around the open note's fill instead.
 
 These narrow defaults win over a value set under **Wide**: a date size chosen under **Wide**, say, does
 not reach narrow calendars, which keep their own. Under **Wide**, each control this applies to — the
