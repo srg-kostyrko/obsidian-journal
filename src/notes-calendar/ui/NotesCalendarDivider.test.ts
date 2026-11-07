@@ -37,4 +37,14 @@ describe("NotesCalendarDivider", () => {
       "var(--_v-week-number-divider-width) solid var(--_v-week-number-divider-color)",
     );
   });
+
+  // A filled week-number cell paints over anything inside its column, so the line sits in the gutter instead.
+  it.each([
+    ["end", "inset-inline-end"],
+    ["start", "inset-inline-start"],
+  ] as const)("centres its %s line in the grid's cell gap", (side, property) => {
+    expect(rule(`.notes-calendar-divider[data-side="${side}"]`)?.declarations.get(property)).toBe(
+      "calc(var(--_v-cell-gap, 0px) / -2 - var(--_v-week-number-divider-width) / 2)",
+    );
+  });
 });

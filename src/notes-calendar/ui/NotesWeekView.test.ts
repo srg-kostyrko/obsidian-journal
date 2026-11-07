@@ -622,14 +622,15 @@ describe("NotesWeekView bands", () => {
     expect(container.querySelector(".notes-calendar-divider")).toBeNull();
   });
 
-  it("places the bands ahead of the header row", async () => {
+  it("places the bands ahead of the header row, then the divider", async () => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek() } });
     const children = [...(container.querySelector('[role="grid"]')?.children ?? [])];
 
-    expect(children.slice(0, 2).map((child) => (child as HTMLElement).dataset.band)).toEqual([
+    expect(children.slice(0, 3).map((child) => (child as HTMLElement).dataset.band ?? child.className)).toEqual([
       "weekend",
       "current-week",
+      "notes-calendar-divider",
     ]);
   });
 
