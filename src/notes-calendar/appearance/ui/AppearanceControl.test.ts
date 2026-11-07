@@ -449,13 +449,23 @@ describe("AppearanceControl", () => {
     expect(tag.title).toBe(m.calendar_appearance_narrow_only_clear_stock());
   });
 
-  it("does not tag a narrow override while Wide is edited", () => {
-    slice().state = {
-      ...slice().state,
-      narrow: { ...slice().state.narrow, cell: { ...slice().state.narrow.cell, padding: 6 } },
-    };
+  it("at Wide, says a narrow override that differs from the wide value is narrow's own, and copies the wide value over it", async () => {
+    slice().state = withValue(slice().state, "narrow", "cell", ["padding"], 6);
+    mount("cell", control("cell", "padding"), "wide");
+    expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
+    expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+    expect(slice().state.narrow.cell.padding).toBe(0);
+    expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+  });
+
+  it("at Wide, carries no tag for a narrow override equal to the wide value", () => {
+    slice().state = withValue(slice().state, "narrow", "cell", ["padding"], 0);
     mount("cell", control("cell", "padding"), "wide");
 
+    expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
     expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
   });
 
@@ -467,6 +477,14 @@ describe("AppearanceControl", () => {
       await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
 
       expect(slice().state.narrow.date.size).toBe("1.1em");
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("carries no tag at Wide when the wide value is already narrow's stock", () => {
+      slice().state = withValue(slice().state, "wide", "date", ["size"], "1em");
+      mount("date", control("date", "size"));
+
       expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
       expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
     });

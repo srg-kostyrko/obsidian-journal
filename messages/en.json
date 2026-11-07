@@ -216,7 +216,7 @@
   "calendar_appearance_format_suggestions": "Suggestions",
   "calendar_appearance_format_preview": "Preview:",
   "calendar_appearance_format_letter": "One letter",
-  "calendar_appearance_format_same_as_wide": "Same as wide",
+  "calendar_appearance_format_same_as_wide": "Copy wide format",
   "calendar_appearance_format_iso_warning": "W counts ISO weeks, which can differ from the week rows this calendar shows.",
   "calendar_appearance_reset": [
     {

@@ -215,7 +215,7 @@
   "calendar_appearance_format_suggestions": "候補",
   "calendar_appearance_format_preview": "プレビュー:",
   "calendar_appearance_format_letter": "1文字",
-  "calendar_appearance_format_same_as_wide": "広いと同じ",
+  "calendar_appearance_format_same_as_wide": "広いの形式をコピー",
   "calendar_appearance_format_iso_warning": "W は ISO 週を数えるため、このカレンダーに表示される週の行と異なる場合があります。",
   "calendar_appearance_reset": [
     {

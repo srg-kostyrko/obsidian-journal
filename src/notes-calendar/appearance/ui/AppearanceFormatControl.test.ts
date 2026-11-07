@@ -179,12 +179,12 @@ describe("AppearanceFormatControl", () => {
       expect(display().state.weekdayLabel).toEqual({ type: "pattern", pattern: "letter" });
     });
 
-    it("does not offer Same as wide at wide", () => {
+    it("does not offer Copy wide format at wide", () => {
       mount("weekday");
       expect(optionTexts()).not.toContain(m.calendar_appearance_format_same_as_wide());
     });
 
-    it("at narrow shows the stock one letter until set, and Same as wide copies the wide label", async () => {
+    it("at narrow shows the stock one letter until set, and Copy wide format copies the wide label", async () => {
       display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: "dddd" } };
       mount("weekday", "narrow");
       expect(optionTexts()).toContain(m.calendar_appearance_format_same_as_wide());
@@ -229,11 +229,38 @@ describe("AppearanceFormatControl", () => {
       expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
     });
 
-    it("carries no narrow tag once narrow has a label of its own", () => {
-      display().state = { ...display().state, weekdayLabelNarrow: { type: "pattern", pattern: "dd" } };
+    it("at Wide, tags a narrow label that differs from the wide one, and copies the wide label over it", async () => {
+      display().state = {
+        ...display().state,
+        weekdayLabel: { type: "pattern", pattern: "dddd" },
+        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+      };
+      mount("weekday");
+      expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+      expect(display().state.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "dddd" });
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+    });
+
+    it("carries no narrow tag once narrow has the wide label, an empty pattern read as its default", () => {
+      display().state = {
+        ...display().state,
+        weekdayLabel: { type: "pattern", pattern: "" },
+        weekdayLabelNarrow: { type: "pattern", pattern: "ddd" },
+      };
       mount("weekday");
 
       expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+    });
+
+    it("carries no narrow tag at Wide when the wide label is already narrow's stock one letter", () => {
+      display().state = { ...display().state, weekdayLabel: { type: "letter" } };
+      mount("weekday");
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
     });
 
     it("at Narrow, tags a narrow label Narrow only, whose clear brings the stock back", async () => {

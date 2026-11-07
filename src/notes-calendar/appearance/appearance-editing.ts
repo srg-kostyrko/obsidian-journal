@@ -66,6 +66,16 @@ export function hasStockNarrow(part: ValuePartKey, path: readonly string[]): boo
   return read(STOCK_NARROW[part], path) !== undefined;
 }
 
+/** Whether narrow shows something other than the wide value: an override of its own, or a stock narrow value. */
+export function narrowDiffersFromWide(
+  state: AppearanceSliceState,
+  part: ValuePartKey,
+  path: readonly string[],
+): boolean {
+  const narrow = read(state.narrow[part], path) ?? read(STOCK_NARROW[part], path);
+  return narrow !== undefined && narrow !== null && !equal(narrow, read(state.wide[part], path));
+}
+
 export function sourceAt(
   state: AppearanceSliceState,
   width: Width,
@@ -260,6 +270,17 @@ export function withNarrowFromWide(
   path: readonly string[],
 ): AppearanceSliceState {
   return withValue(state, "narrow", part, path, read(state.wide[part], path));
+}
+
+// An empty pattern renders the default one, so the two name the same label.
+function sameWeekdayLabel(a: WeekdayLabel, b: WeekdayLabel): boolean {
+  if (a.type === "letter" || b.type === "letter") return a.type === b.type;
+  return (a.pattern || DEFAULT_WEEKDAY_PATTERN) === (b.pattern || DEFAULT_WEEKDAY_PATTERN);
+}
+
+/** Whether a narrow calendar's weekday shows something other than the wide label. */
+export function narrowWeekdayDiffersFromWide(display: CalendarDisplaySliceState): boolean {
+  return !sameWeekdayLabel(display.weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY, display.weekdayLabel);
 }
 
 /** Writes the wide weekday label as the narrow one, so narrow stops showing its stock one letter. */

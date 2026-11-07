@@ -215,7 +215,7 @@
   "calendar_appearance_format_suggestions": "Suggestions",
   "calendar_appearance_format_preview": "Aperçu :",
   "calendar_appearance_format_letter": "Une lettre",
-  "calendar_appearance_format_same_as_wide": "Comme en Large",
+  "calendar_appearance_format_same_as_wide": "Copier le format de Large",
   "calendar_appearance_format_iso_warning": "W compte les semaines ISO, qui peuvent différer des lignes de semaine affichées par ce calendrier.",
   "calendar_appearance_reset": [
     {

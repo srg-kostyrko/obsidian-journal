@@ -215,7 +215,7 @@
   "calendar_appearance_format_suggestions": "Варіанти",
   "calendar_appearance_format_preview": "Попередній перегляд:",
   "calendar_appearance_format_letter": "Одна літера",
-  "calendar_appearance_format_same_as_wide": "Як у широкому",
+  "calendar_appearance_format_same_as_wide": "Скопіювати формат широкого",
   "calendar_appearance_format_iso_warning": "W рахує тижні за ISO, і вони можуть не збігатися з рядками тижнів у цьому календарі.",
   "calendar_appearance_reset": [
     {

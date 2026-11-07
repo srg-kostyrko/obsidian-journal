@@ -16,6 +16,7 @@ import { appearanceCatalog, publicName } from "../appearance-catalog";
 import {
   fromControlValue,
   hasStockNarrow,
+  narrowDiffersFromWide,
   sourceAt,
   toControlValue,
   valueAt,
@@ -52,10 +53,10 @@ const role = computed(() => {
 
 const value = computed(() => toControlValue(control, valueAt(slice.state, width, part, control.path)));
 const narrowOverridden = computed(() => sourceAt(slice.state, "narrow", part, control.path) === "narrow");
-// At Wide, a stock narrow value would keep the user's wide one off narrow calendars without a word.
+// At Wide, a narrow value of its own, stock or set, would keep the wide one off narrow calendars without a word.
 const narrowTag = computed(() => {
   if (width === "narrow") return narrowOverridden.value ? "only" : null;
-  return hasStockNarrow(part, control.path) && !narrowOverridden.value ? "own" : null;
+  return narrowDiffersFromWide(slice.state, part, control.path) ? "own" : null;
 });
 // Narrow cannot hold Default, so a wide value at Default has nothing to apply.
 const canApplyToNarrow = computed(() => valueAt(slice.state, "wide", part, control.path) !== null);

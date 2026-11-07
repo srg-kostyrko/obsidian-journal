@@ -215,7 +215,7 @@
   "calendar_appearance_format_suggestions": "Варианты",
   "calendar_appearance_format_preview": "Предпросмотр:",
   "calendar_appearance_format_letter": "Одна буква",
-  "calendar_appearance_format_same_as_wide": "Как в широком",
+  "calendar_appearance_format_same_as_wide": "Скопировать формат широкого",
   "calendar_appearance_format_iso_warning": "W считает недели по ISO, и они могут не совпадать со строками недель в этом календаре.",
   "calendar_appearance_reset": [
     {

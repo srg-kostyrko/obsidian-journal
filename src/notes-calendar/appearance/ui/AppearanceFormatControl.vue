@@ -11,7 +11,13 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { formatWeekday, weekFormatNeedsIsoWarning } from "../../cell-format";
-import { defaultPattern, formatAt, withFormat, withNarrowWeekdayFromWide } from "../appearance-editing";
+import {
+  defaultPattern,
+  formatAt,
+  narrowWeekdayDiffersFromWide,
+  withFormat,
+  withNarrowWeekdayFromWide,
+} from "../appearance-editing";
 
 import AppearanceNarrowTag from "./AppearanceNarrowTag.vue";
 import { controlLabel } from "./control-copy";
@@ -34,9 +40,8 @@ const stored = computed(() => formatAt(display.state, control, width));
 // is read from the slice.
 const narrowTag = computed(() => {
   if (!isWeekday.value) return null;
-  const overridden = display.state.weekdayLabelNarrow !== null;
-  if (width === "narrow") return overridden ? "only" : null;
-  return overridden ? null : "own";
+  if (width === "narrow") return display.state.weekdayLabelNarrow === null ? null : "only";
+  return narrowWeekdayDiffersFromWide(display.state) ? "own" : null;
 });
 function clearNarrow(): void {
   display.state = withFormat(display.state, control, "narrow", null);

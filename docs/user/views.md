@@ -379,9 +379,10 @@ mean it.
 The weekday is the only label with a value of its own at narrow width, and out of the box narrow
 calendars show **One letter**. Under **Narrow**, its box and suggestions edit the format used by narrow
 calendars: typing a pattern, even the default `ddd`, or choosing a suggestion sets a format for narrow
-calendars alone, and clearing the box goes back to one letter. **Same as wide** in the list copies the
+calendars alone, and clearing the box goes back to one letter. **Copy wide format** in the list copies the
 format chosen under **Wide** to narrow calendars; a later change under **Wide** does not follow it. Under
-**Wide**, while narrow calendars still show their one letter, the weekday's name carries a
+**Wide**, while narrow calendars show a weekday other than the wide format's, whether their one letter or
+a format set under **Narrow**, the weekday's name carries a
 [**Narrow has its own value**](#narrow-only-values-and-resetting) tag. The other formats have a single
 value and carry an **All widths** note under both widths.
 
@@ -431,7 +432,8 @@ not reach narrow calendars, which keep their own. Under **Wide**, each control t
 selected date's **Style** and **Strength**, the date number's **Size**, and the cells' **Gap between
 cells** and **Row height** — and the weekday's format carry a **Narrow has its own value** tag, with
 **Use at narrow too** beside it to copy the wide value to narrow calendars as a narrow-only value. A
-**Row height** left at **Default** has nothing to copy, so it shows the tag alone.
+**Row height** left at **Default** has nothing to copy, so it shows the tag alone. A wide value that is
+already the narrow default carries no tag, since narrow calendars show it either way.
 
 A [timeline](/reference/code-blocks) in `calendar` or `quarter` mode draws each month at about a third
 of the note's width, so in all but a very wide note its months are narrow calendars and look this way.
@@ -440,7 +442,9 @@ of the note's width, so in all but a very wide note its months are narrow calend
 
 While you edit **Narrow**, a control that has a narrow-only value carries a **Narrow only** tag next
 to its name. Click the tag to remove that value, so narrow calendars go back to their own default where
-they have [one](#narrow-calendars), and take the all-widths value everywhere else.
+they have [one](#narrow-calendars), and take the all-widths value everywhere else. Under **Wide**, the
+same control says **Narrow has its own value** while that value differs from the wide one, and **Use at
+narrow too** beside it copies the wide value over it.
 
 The button beside the part's name, above its controls, resets that part for the width you are editing:
 **Reset to default** under **Wide** puts the part's all-widths values back to their defaults, and
