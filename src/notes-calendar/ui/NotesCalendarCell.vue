@@ -75,6 +75,7 @@ const hover = useModifierHoverPreview();
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"
+    :data-kind="rawPeriod.kind"
     :data-today="isToday || null"
     :data-selected="selected || null"
     :data-outside="outside || null"
@@ -191,6 +192,18 @@ const hover = useModifierHoverPreview();
   --_v-current-week-text-italic: var(
     --journal-cell-current-week-text-italic,
     var(--journal-saved-cell-current-week-text-italic)
+  );
+  --_v-current-week-week-number-text-color: var(
+    --journal-cell-current-week-week-number-text-color,
+    var(--journal-saved-cell-current-week-week-number-text-color, var(--text-accent))
+  );
+  --_v-current-week-week-number-text-weight: var(
+    --journal-cell-current-week-week-number-text-weight,
+    var(--journal-saved-cell-current-week-week-number-text-weight, var(--font-bold))
+  );
+  --_v-current-week-week-number-text-italic: var(
+    --journal-cell-current-week-week-number-text-italic,
+    var(--journal-saved-cell-current-week-week-number-text-italic)
   );
   --_v-current-week-layer: var(--journal-cell-current-week-layer, var(--journal-saved-cell-current-week-layer, -1));
   --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
@@ -438,6 +451,36 @@ const hover = useModifierHoverPreview();
         var(--journal-cell-current-week-text-italic, var(--journal-saved-cell-current-week-text-italic))
       )
     );
+    --_v-current-week-week-number-text-color: var(
+      --journal-cell-current-week-week-number-text-color-narrow,
+      var(
+        --journal-saved-cell-current-week-week-number-text-color-narrow,
+        var(
+          --journal-cell-current-week-week-number-text-color,
+          var(--journal-saved-cell-current-week-week-number-text-color, var(--text-accent))
+        )
+      )
+    );
+    --_v-current-week-week-number-text-weight: var(
+      --journal-cell-current-week-week-number-text-weight-narrow,
+      var(
+        --journal-saved-cell-current-week-week-number-text-weight-narrow,
+        var(
+          --journal-cell-current-week-week-number-text-weight,
+          var(--journal-saved-cell-current-week-week-number-text-weight, var(--font-bold))
+        )
+      )
+    );
+    --_v-current-week-week-number-text-italic: var(
+      --journal-cell-current-week-week-number-text-italic-narrow,
+      var(
+        --journal-saved-cell-current-week-week-number-text-italic-narrow,
+        var(
+          --journal-cell-current-week-week-number-text-italic,
+          var(--journal-saved-cell-current-week-week-number-text-italic)
+        )
+      )
+    );
     --_v-current-week-layer: var(
       --journal-cell-current-week-layer-narrow,
       var(
@@ -510,6 +553,12 @@ const hover = useModifierHoverPreview();
   --_italic-current-week: var(--_v-current-week-text-italic);
   --_over-current-week: calc(clamp(0, var(--_v-current-week-layer), 1) * 100%);
 }
+/* The week number has its own text group, so its days can stay plain while it is marked. */
+.notes-calendar-cell[data-current-week][data-kind="week"] {
+  --_text-current-week: var(--_v-current-week-week-number-text-color);
+  --_weight-current-week: var(--_v-current-week-week-number-text-weight);
+  --_italic-current-week: var(--_v-current-week-week-number-text-italic);
+}
 .notes-calendar-cell[data-today] {
   --_text-today: var(--_v-today-text-color);
   --_weight-today: var(--_v-today-text-weight);
@@ -562,17 +611,32 @@ const hover = useModifierHoverPreview();
   }
 }
 @container style(--_v-current-week-text-color: unchanged) {
-  .notes-calendar-cell[data-current-week] > .notes-calendar-cell__text {
+  .notes-calendar-cell[data-current-week]:not([data-kind="week"]) > .notes-calendar-cell__text {
+    --_text-current-week: initial;
+  }
+}
+@container style(--_v-current-week-week-number-text-color: unchanged) {
+  .notes-calendar-cell[data-current-week][data-kind="week"] > .notes-calendar-cell__text {
     --_text-current-week: initial;
   }
 }
 @container style(--_v-current-week-text-weight: unchanged) {
-  .notes-calendar-cell[data-current-week] > .notes-calendar-cell__text {
+  .notes-calendar-cell[data-current-week]:not([data-kind="week"]) > .notes-calendar-cell__text {
+    --_weight-current-week: initial;
+  }
+}
+@container style(--_v-current-week-week-number-text-weight: unchanged) {
+  .notes-calendar-cell[data-current-week][data-kind="week"] > .notes-calendar-cell__text {
     --_weight-current-week: initial;
   }
 }
 @container style(--_v-current-week-text-italic: unchanged) {
-  .notes-calendar-cell[data-current-week] > .notes-calendar-cell__text {
+  .notes-calendar-cell[data-current-week]:not([data-kind="week"]) > .notes-calendar-cell__text {
+    --_italic-current-week: initial;
+  }
+}
+@container style(--_v-current-week-week-number-text-italic: unchanged) {
+  .notes-calendar-cell[data-current-week][data-kind="week"] > .notes-calendar-cell__text {
     --_italic-current-week: initial;
   }
 }

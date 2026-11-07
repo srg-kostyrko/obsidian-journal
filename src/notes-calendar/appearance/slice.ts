@@ -36,6 +36,9 @@ const highlightEntries = {
   over: v.boolean(),
 };
 
+// Only the current week spans a week number, so only it carries a second text group.
+const currentWeekEntries = { ...highlightEntries, weekNumberText: v.object(highlightTextEntries) };
+
 const textEntries = {
   size: v.string(),
   weight: v.nullable(weightSchema),
@@ -54,6 +57,7 @@ const boxEntries = {
 type Shape<E extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<E, undefined>>;
 
 export type HighlightValues = Shape<typeof highlightEntries>;
+export type CurrentWeekValues = Shape<typeof currentWeekEntries>;
 export type TextValues = Shape<typeof textEntries>;
 export type BoxValues = Shape<typeof boxEntries>;
 
@@ -102,9 +106,8 @@ function overriddenPart<E extends v.ObjectEntries>(entries: E) {
   return v.optional(part, fresh(empty));
 }
 
-// `text` is the only nested group given per-leaf defaults and overrides; a new nested group in
-// `highlightEntries` needs the same spread here and in `narrowHighlightPart`, or it defaults and
-// overrides as a whole.
+// A nested group defaults and overrides as a whole unless it is spread like `text` here and in
+// `narrowHighlightPart`; the current week's parts spread `weekNumberText` the same way.
 function highlightPart(defaults: HighlightValues) {
   return v.optional(
     v.object({
@@ -117,6 +120,26 @@ function highlightPart(defaults: HighlightValues) {
 
 const narrowHighlightPart = v.optional(
   v.object({ ...asOverrides(highlightEntries), text: overriddenPart(highlightTextEntries) }),
+  () => ({}),
+);
+
+function currentWeekPart(defaults: CurrentWeekValues) {
+  return v.optional(
+    v.object({
+      ...withDefaults(currentWeekEntries, defaults),
+      text: defaultedPart(highlightTextEntries, defaults.text),
+      weekNumberText: defaultedPart(highlightTextEntries, defaults.weekNumberText),
+    }),
+    fresh(defaults),
+  );
+}
+
+const narrowCurrentWeekPart = v.optional(
+  v.object({
+    ...asOverrides(currentWeekEntries),
+    text: overriddenPart(highlightTextEntries),
+    weekNumberText: overriddenPart(highlightTextEntries),
+  }),
   () => ({}),
 );
 
@@ -149,7 +172,11 @@ const wideDefaults = {
   }),
   outside: highlight({ text: { color: theme("text-muted"), weight: UNCHANGED, italic: UNCHANGED } }),
   weekend: highlight({ style: "none" }),
-  currentWeek: highlight({ style: "none" }),
+  // Text only, not None: None passes every text value through, so the week number's accent could not be stock.
+  currentWeek: {
+    ...highlight({}),
+    weekNumberText: { color: theme("text-accent"), weight: "bold", italic: UNCHANGED },
+  } satisfies CurrentWeekValues,
   heading: text({}),
   // Null, not a copy of the stock: Default is the stock, so an explicit copy would read as a change.
   weekday: text({ size: "0.6em" }),
@@ -164,7 +191,7 @@ const wideSchema = v.object({
   active: highlightPart(wideDefaults.active),
   outside: highlightPart(wideDefaults.outside),
   weekend: highlightPart(wideDefaults.weekend),
-  currentWeek: highlightPart(wideDefaults.currentWeek),
+  currentWeek: currentWeekPart(wideDefaults.currentWeek),
   heading: defaultedPart(textEntries, wideDefaults.heading),
   weekday: defaultedPart(textEntries, wideDefaults.weekday),
   weekNumber: defaultedPart(textEntries, wideDefaults.weekNumber),
@@ -178,7 +205,7 @@ const narrowSchema = v.object({
   active: narrowHighlightPart,
   outside: narrowHighlightPart,
   weekend: narrowHighlightPart,
-  currentWeek: narrowHighlightPart,
+  currentWeek: narrowCurrentWeekPart,
   heading: overriddenPart(textEntries),
   weekday: overriddenPart(textEntries),
   weekNumber: overriddenPart(textEntries),
@@ -189,6 +216,7 @@ const narrowSchema = v.object({
 export type AppearanceParts = v.InferOutput<typeof wideSchema>;
 export type NarrowOverrides = v.InferOutput<typeof narrowSchema>;
 export type NarrowHighlight = NarrowOverrides["today"];
+export type NarrowCurrentWeek = NarrowOverrides["currentWeek"];
 
 const narrowDefaults: NarrowOverrides = v.parse(narrowSchema, {});
 

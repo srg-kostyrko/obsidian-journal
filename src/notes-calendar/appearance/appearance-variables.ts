@@ -14,7 +14,9 @@ import {
   type AppearanceParts,
   type AppearanceSliceState,
   type BoxValues,
+  type CurrentWeekValues,
   type HighlightValues,
+  type NarrowCurrentWeek,
   type NarrowHighlight,
   type NarrowOverrides,
   type Overrides,
@@ -86,11 +88,17 @@ function styleValues(h: HighlightValues): { ring: number; strength: number; text
 
 const orNull = <T>(value: T | Unchanged): T | null => (value === UNCHANGED ? null : value);
 
-const textOf = (h: HighlightValues): HighlightValues["text"] | undefined => (styleValues(h).text ? h.text : undefined);
+type HighlightText = HighlightValues["text"];
 
-const textColor = (h: HighlightValues): Css | Pass => color(orNull(textOf(h)?.color ?? null)) ?? PASS;
-const textWeight = (h: HighlightValues): Css | Pass => weight(orNull(textOf(h)?.weight ?? null)) ?? PASS;
-const textItalic = (h: HighlightValues): Css | Pass => italic(orNull(textOf(h)?.italic ?? null)) ?? PASS;
+const gated = (h: HighlightValues, group: HighlightText): HighlightText | undefined =>
+  styleValues(h).text ? group : undefined;
+
+const textColor = (h: HighlightValues, group = h.text): Css | Pass =>
+  color(orNull(gated(h, group)?.color ?? null)) ?? PASS;
+const textWeight = (h: HighlightValues, group = h.text): Css | Pass =>
+  weight(orNull(gated(h, group)?.weight ?? null)) ?? PASS;
+const textItalic = (h: HighlightValues, group = h.text): Css | Pass =>
+  italic(orNull(gated(h, group)?.italic ?? null)) ?? PASS;
 
 function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighlight> {
   return {
@@ -99,9 +107,9 @@ function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighli
       { suffix: "color", css: (h) => colorToString(h.color), reads: (n) => [n.color] },
       { suffix: "ring-width", css: (h) => px(styleValues(h).ring), reads: (n) => [n.style, n.ringWidth] },
       { suffix: "strength", css: (h) => String(styleValues(h).strength / 100), reads: (n) => [n.style, n.strength] },
-      { suffix: "text-color", css: textColor, reads: (n) => [n.style, n.text.color] },
-      { suffix: "text-weight", css: textWeight, reads: (n) => [n.style, n.text.weight] },
-      { suffix: "text-italic", css: textItalic, reads: (n) => [n.style, n.text.italic] },
+      { suffix: "text-color", css: (h) => textColor(h), reads: (n) => [n.style, n.text.color] },
+      { suffix: "text-weight", css: (h) => textWeight(h), reads: (n) => [n.style, n.text.weight] },
+      { suffix: "text-italic", css: (h) => textItalic(h), reads: (n) => [n.style, n.text.italic] },
       { suffix: "layer", css: (h) => (h.over ? "1" : "-1"), reads: (n) => [n.over] },
     ],
     merge: (wide, narrow) => ({
@@ -115,6 +123,39 @@ function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighli
         italic: narrow.text.italic ?? wide.text.italic,
       },
       over: narrow.over ?? wide.over,
+    }),
+  };
+}
+
+function currentWeekWriter(): PartWriter<CurrentWeekValues, NarrowCurrentWeek> {
+  const base = highlightWriter("current-week");
+  return {
+    name: base.name,
+    values: [
+      ...base.values,
+      {
+        suffix: "week-number-text-color",
+        css: (h) => textColor(h, h.weekNumberText),
+        reads: (n) => [n.style, n.weekNumberText.color],
+      },
+      {
+        suffix: "week-number-text-weight",
+        css: (h) => textWeight(h, h.weekNumberText),
+        reads: (n) => [n.style, n.weekNumberText.weight],
+      },
+      {
+        suffix: "week-number-text-italic",
+        css: (h) => textItalic(h, h.weekNumberText),
+        reads: (n) => [n.style, n.weekNumberText.italic],
+      },
+    ],
+    merge: (wide, narrow) => ({
+      ...base.merge(wide, narrow),
+      weekNumberText: {
+        color: narrow.weekNumberText.color ?? wide.weekNumberText.color,
+        weight: narrow.weekNumberText.weight ?? wide.weekNumberText.weight,
+        italic: narrow.weekNumberText.italic ?? wide.weekNumberText.italic,
+      },
     }),
   };
 }
@@ -163,7 +204,7 @@ const WRITERS: Writers = {
   active: highlightWriter("active"),
   outside: highlightWriter("outside"),
   weekend: highlightWriter("weekend"),
-  currentWeek: highlightWriter("current-week"),
+  currentWeek: currentWeekWriter(),
   heading: textWriter("heading"),
   weekday: textWriter("weekday"),
   weekNumber: textWriter("week-number"),

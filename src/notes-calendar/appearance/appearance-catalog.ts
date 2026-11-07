@@ -152,6 +152,36 @@ function highlightEntries(): CatalogEntry[] {
   });
 }
 
+const currentWeekNumberName = (value: string): string => `journal-cell-current-week-week-number-text-${value}`;
+
+// Probed on a month view's week number: the days of the current week read the days' text instead.
+function currentWeekNumberEntries(): CatalogEntry[] {
+  const cell = ".notes-month-view__week-number[data-current-week]";
+  const label = `${cell} .cell-decoration__content`;
+  return [
+    {
+      name: currentWeekNumberName("color"),
+      stock: "var(--text-accent)",
+      probe: {
+        selector: `${cell} > .notes-calendar-cell__text`,
+        property: "color",
+        sample: "#563412",
+        expect: "rgb(86, 52, 18)",
+      },
+    },
+    {
+      name: currentWeekNumberName("weight"),
+      stock: "var(--font-bold)",
+      probe: { selector: label, property: "font-weight", sample: "300", expect: "300" },
+    },
+    {
+      name: currentWeekNumberName("italic"),
+      stock: "",
+      probe: { selector: label, property: "font-style", sample: "italic", expect: "italic" },
+    },
+  ];
+}
+
 const TEXT_PARTS = [
   { part: "heading", selector: '[data-testid="header-month"]', size: "inherit", weight: "inherit", color: "inherit" },
   {
@@ -236,7 +266,12 @@ const BOX_ENTRIES: readonly CatalogEntry[] = [
 ];
 
 /** Every documented calendar variable; the writer, the readers and the e2e gate all read this one list. */
-export const appearanceCatalog: readonly CatalogEntry[] = [...highlightEntries(), ...textEntries(), ...BOX_ENTRIES];
+export const appearanceCatalog: readonly CatalogEntry[] = [
+  ...highlightEntries(),
+  ...currentWeekNumberEntries(),
+  ...textEntries(),
+  ...BOX_ENTRIES,
+];
 
 export function publicName(entry: CatalogEntry, narrow = false): `--${string}` {
   return `--${entry.name}${narrow ? "-narrow" : ""}`;

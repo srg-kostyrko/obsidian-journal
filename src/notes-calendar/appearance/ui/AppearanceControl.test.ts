@@ -76,6 +76,19 @@ describe("AppearanceControl", () => {
     }
   });
 
+  it("names the current week's week-number text controls apart from the days' text", () => {
+    const labels = PARTS.currentWeek.controls
+      .filter((target) => !isStructure(target) && !isFormat(target) && target.path[0] === "weekNumberText")
+      .map((target) => {
+        const { container, unmount } = mount("currentWeek", target);
+        const label = container.querySelector(".setting-item-name")?.textContent?.trim();
+        unmount();
+        return label;
+      });
+
+    expect(labels).toEqual(["Week number text color", "Week number weight", "Week number italic"]);
+  });
+
   describe("a visibility control", () => {
     it.each(["wide", "narrow"] as const)("is a dropdown with no variable, noted for all widths at %s", (width) => {
       const { container } = mount("heading", structure("heading"), width);

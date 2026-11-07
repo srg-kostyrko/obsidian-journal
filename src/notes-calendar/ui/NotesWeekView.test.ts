@@ -21,6 +21,7 @@ import { shelvesCoreModule } from "@/shelves/module";
 import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { ActiveEntryViewModel } from "../active-entry";
 import { notesCalendarModule } from "../module";
 import { calendarStyleRules } from "../testing";
 
@@ -538,7 +539,7 @@ describe("NotesWeekView bands", () => {
     expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "1 / span 1" }]);
   });
 
-  it("keeps the weekend band but drops the current week when the caller opts out", async () => {
+  it("keeps the weekend band but drops the current-week band when the caller opts out", async () => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, {
       props: { shelf: null, week: thisWeek(), currentWeekBand: false },
@@ -546,7 +547,34 @@ describe("NotesWeekView bands", () => {
 
     expect(bands(container, "weekend").length).toBe(1);
     expect(bands(container, "current-week")).toEqual([]);
-    expect(container.querySelector("[data-current-week]")).toBeNull();
+  });
+
+  // The band is the caller's to drop; the week number's current-week text is the block's only accent.
+  it("the week block's week number keeps the current week without a band", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), weeks: "left", currentWeekBand: false },
+    });
+
+    expect(container.querySelector(".notes-week-view__week-number")?.hasAttribute("data-current-week")).toBe(true);
+    expect(container.querySelector(".notes-week-view__day[data-current-week]")).toBeNull();
+  });
+
+  it("a weekly note open on the current week shows the open note's text on its number", async () => {
+    const harness = await bootHarness({ ...daily, weekly: fixedJournal("weekly", { type: "week" }) });
+    harness.resolve(ActiveEntryViewModel).active.value = {
+      journalName: "weekly",
+      anchor: thisWeek().anchor.toAnchor(),
+    };
+    const { container } = harness.render(NotesWeekView, {
+      props: { shelf: null, week: thisWeek(), weeks: "left", currentWeekBand: false },
+    });
+    const weekNumber = container.querySelector<HTMLElement>(".notes-week-view__week-number");
+
+    expect({ active: weekNumber?.dataset.active, currentWeek: weekNumber?.dataset.currentWeek }).toEqual({
+      active: "true",
+      currentWeek: "true",
+    });
   });
 
   it("draws no current-week band for a week without today", async () => {
@@ -566,7 +594,9 @@ describe("NotesWeekView bands", () => {
 
     expect(container.querySelector(".notes-week-view__day")).toBeNull();
     expect(bands(container, "current-week")).toEqual([]);
-    expect(container.querySelector("[data-current-week]")).toBeNull();
+    expect([...container.querySelectorAll("[data-current-week]")].map((cell) => cell.className)).toEqual([
+      expect.stringContaining("notes-week-view__week-number"),
+    ]);
   });
 
   it("places the bands ahead of the header row", async () => {

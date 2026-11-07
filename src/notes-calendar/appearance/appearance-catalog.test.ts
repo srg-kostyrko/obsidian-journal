@@ -9,6 +9,8 @@ const find = (name: string) => {
   return entry;
 };
 
+const weekNumberEntry = (value: string) => find(`journal-cell-current-week-week-number-text-${value}`);
+
 const propertyOf = (suffix: string) =>
   appearanceCatalog.filter((entry) => entry.name.endsWith(suffix)).map((entry) => entry.probe.property);
 
@@ -83,6 +85,21 @@ describe("appearanceCatalog", () => {
       layer: `.notes-calendar-band__layer[data-layer="${state}-fill"]`,
       text: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`,
     });
+  });
+
+  it("probes the current week's week-number text on the week number alone, with an accent bold stock", () => {
+    const weekNumber = ".notes-month-view__week-number[data-current-week]";
+    expect(
+      ["color", "weight", "italic"].map((value) => ({
+        stock: weekNumberEntry(value).stock,
+        selector: weekNumberEntry(value).probe.selector,
+        property: weekNumberEntry(value).probe.property,
+      })),
+    ).toEqual([
+      { stock: "var(--text-accent)", selector: `${weekNumber} > .notes-calendar-cell__text`, property: "color" },
+      { stock: "var(--font-bold)", selector: `${weekNumber} .cell-decoration__content`, property: "font-weight" },
+      { stock: "", selector: `${weekNumber} .cell-decoration__content`, property: "font-style" },
+    ]);
   });
 
   it("strength probes read opacity and ring-width probes read box-shadow", () => {

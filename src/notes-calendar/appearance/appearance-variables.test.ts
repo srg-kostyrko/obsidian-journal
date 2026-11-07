@@ -41,9 +41,56 @@ describe("appearanceVariables", () => {
     expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-current-week-layer")]: "1" });
   });
 
-  it("writes all seven values of both bands", () => {
+  it("writes all seven values of both bands, and the current week's three week-number values", () => {
     const bands = [...writtenEntryNames()].filter((name) => /^journal-cell-(weekend|current-week)-/.test(name));
-    expect(bands.length).toBe(14);
+    expect(bands.length).toBe(17);
+  });
+
+  it("writes nothing for the stock current week", () => {
+    const written = Object.keys(appearanceVariables(fresh()));
+    expect(written.filter((name) => name.startsWith("--journal-saved-cell-current-week-"))).toEqual([]);
+  });
+
+  it("a None current week passes the week number's text through", () => {
+    const state = fresh();
+    state.wide.currentWeek.style = "none";
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-current-week-week-number-text-color")]: "unchanged",
+      [saved("journal-cell-current-week-week-number-text-weight")]: "unchanged",
+    });
+  });
+
+  it("writes the week number's text apart from the days' text", () => {
+    const state = fresh();
+    state.wide.currentWeek.text.color = { type: "custom", color: "#123456" };
+    state.wide.currentWeek.weekNumberText.italic = true;
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-current-week-text-color")]: "#123456",
+      [saved("journal-cell-current-week-week-number-text-italic")]: "italic",
+    });
+  });
+
+  it("a narrow week-number color writes its narrow pair only", () => {
+    const state = fresh();
+    state.narrow.currentWeek.weekNumberText.color = { type: "custom", color: "#abcdef" };
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-current-week-week-number-text-color", true)]: "#abcdef",
+    });
+  });
+
+  it("a narrow None current week passes the week number's stock text through at narrow", () => {
+    const state = fresh();
+    state.narrow.currentWeek.style = "none";
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-current-week-week-number-text-color", true)]: "unchanged",
+      [saved("journal-cell-current-week-week-number-text-weight", true)]: "unchanged",
+      [saved("journal-cell-current-week-ring-width", true)]: "0px",
+      [saved("journal-cell-current-week-strength", true)]: "0",
+    });
   });
 
   it("writes the narrow name for a narrow override", () => {

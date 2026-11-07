@@ -148,10 +148,57 @@ describe("familiesOf", () => {
   });
 });
 
+const valueControls = (part: "today" | "currentWeek") =>
+  PARTS[part].controls.filter((control): control is ValueControl => !isStructure(control) && !isFormat(control));
+
 describe("the band parts", () => {
   it.each(["weekend", "currentWeek"] as const)("%s at none is the highlight style alone", (part) => {
     expect(familiesOf(part, "none").map((group) => group.family)).toEqual(["highlight"]);
     expect(names(part, "none")).toEqual(["style"]);
+  });
+
+  it("gives the current week a week-number text group after the days' text and before the layer", () => {
+    const added = valueControls("currentWeek").filter((control) => control.path[0] === "weekNumberText");
+    expect(added).toEqual([
+      {
+        family: "highlight",
+        path: ["weekNumberText", "color"],
+        kind: "color",
+        entry: "journal-cell-current-week-week-number-text-color",
+        role: "text",
+        unchanged: true,
+        shownFor: ["text", "ring", "background"],
+      },
+      {
+        family: "highlight",
+        path: ["weekNumberText", "weight"],
+        kind: "select",
+        entry: "journal-cell-current-week-week-number-text-weight",
+        options: ["normal", "semibold", "bold"],
+        unchanged: true,
+        shownFor: ["text", "ring", "background"],
+      },
+      {
+        family: "highlight",
+        path: ["weekNumberText", "italic"],
+        kind: "select",
+        entry: "journal-cell-current-week-week-number-text-italic",
+        options: ["on", "off"],
+        unchanged: true,
+        shownFor: ["text", "ring", "background"],
+      },
+    ]);
+    expect(names("currentWeek", "text")).toEqual([
+      "style",
+      "text.color",
+      "text.weight",
+      "text.italic",
+      "weekNumberText.color",
+      "weekNumberText.weight",
+      "weekNumberText.italic",
+    ]);
+    expect(names("currentWeek", "ring").slice(-2)).toEqual(["weekNumberText.italic", "over"]);
+    expect(valueControls("today").some((control) => control.path[0] === "weekNumberText")).toBe(false);
   });
 
   it("feeds the weekend's variables from its own catalog entries", () => {

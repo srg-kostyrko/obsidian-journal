@@ -19,6 +19,7 @@ const BANDS = ["weekend", "current-week"];
 // column's header takes the weekend's text too, so every grid reads that.
 function bandRenderers(state: string, value: string): readonly Component[] {
   if (value === "layer") return ["band", "cell"];
+  if (value.startsWith("week-number-text-")) return ["cell"];
   if (!value.startsWith("text-")) return ["band"];
   return state === "weekend" ? ["cell", ...GRIDS] : ["cell"];
 }
@@ -174,17 +175,32 @@ const TEXT_VALUES = [
   ["text-weight", "weight"],
   ["text-italic", "italic"],
 ] as const;
-const passThroughCases = STATES.flatMap((state) =>
-  TEXT_VALUES.map(([value, slot]) => [state, value, `--_${slot}-${state}`] as const),
-);
+// The current week's week number reads its own text group, so the days' pass-through must not reach it.
+const passThroughCell = (state: string): string =>
+  state === "current-week"
+    ? '.notes-calendar-cell[data-current-week]:not([data-kind="week"])'
+    : `.notes-calendar-cell[data-${state}]`;
+const passThroughCases = [
+  ...STATES.flatMap((state) =>
+    TEXT_VALUES.map(([value, slot]) => [`${state}-${value}`, `--_${slot}-${state}`, passThroughCell(state)] as const),
+  ),
+  ...TEXT_VALUES.map(
+    ([value, slot]) =>
+      [
+        `current-week-week-number-${value}`,
+        `--_${slot}-current-week`,
+        '.notes-calendar-cell[data-current-week][data-kind="week"]',
+      ] as const,
+  ),
+];
 
 describe("calendar appearance Unchanged pass-through", () => {
   // The query is answered by the span's parent, the cell, which is where `--_v-*` lives.
-  it.each(passThroughCases)("%s %s clears %s on the text span when it reads unchanged", (state, value, slot) => {
-    const container = `style(--_v-${state}-${value}: unchanged)`;
+  it.each(passThroughCases)("%s clears %s on the text span when it reads unchanged", (value, slot, cell) => {
+    const container = `style(--_v-${value}: unchanged)`;
     const rules = components.cell.filter((rule) => rule.container === container);
     expect(rules.map((rule) => ({ selector: rule.selector, value: rule.declarations.get(slot) }))).toEqual([
-      { selector: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`, value: "initial" },
+      { selector: `${cell} > .notes-calendar-cell__text`, value: "initial" },
     ]);
   });
 });

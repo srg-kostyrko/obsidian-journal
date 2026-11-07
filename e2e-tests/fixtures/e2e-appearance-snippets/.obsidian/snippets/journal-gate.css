@@ -142,6 +142,15 @@
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-current-week-layer"] {
   --journal-cell-current-week-layer: 1;
 }
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-current-week-week-number-text-color"] {
+  --journal-cell-current-week-week-number-text-color: #563412;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-current-week-week-number-text-weight"] {
+  --journal-cell-current-week-week-number-text-weight: 300;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-current-week-week-number-text-italic"] {
+  --journal-cell-current-week-week-number-text-italic: italic;
+}
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-heading-size"] {
   --journal-cell-heading-size: 21px;
 }

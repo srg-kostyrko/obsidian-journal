@@ -422,6 +422,17 @@ describe("NotesCalendarCell bands", () => {
     }).toEqual({ weekend: true, currentWeek: true, layers: [] });
   });
 
+  it("names its period kind, so a current week can style its week number apart from its days", () => {
+    const week = WeekPeriod.containing(date("2026-05-25"));
+    const kinds = [may25, week].map((period) => {
+      const { container, unmount } = mount({ period, cell: stubApi(), currentWeek: true });
+      const kind = container.querySelector<HTMLElement>(".notes-calendar-cell")?.dataset.kind;
+      unmount();
+      return kind;
+    });
+    expect(kinds).toEqual(["day", "week"]);
+  });
+
   it("carries neither band state by default", () => {
     const { container } = mount({ period: may25, cell: stubApi() });
     const cell = container.querySelector(".notes-calendar-cell");
@@ -447,6 +458,12 @@ describe("NotesCalendarCell text precedence", () => {
     return inner ?? "";
   }
 
+  const currentWeekSlots = (selector: string) => ({
+    text: declaration(selector, "--_text-current-week"),
+    weight: declaration(selector, "--_weight-current-week"),
+    italic: declaration(selector, "--_italic-current-week"),
+  });
+
   it("ranks the text color open note, selected, today, current week, weekend, outside, then the part", () => {
     expect(declaration(".notes-calendar-cell__text", "color")).toBe(chain("text", "var(--_part-color)"));
   });
@@ -460,6 +477,24 @@ describe("NotesCalendarCell text precedence", () => {
       color: chain("r", "currentColor"),
       weight: chain("weight"),
       italic: chain("italic"),
+    });
+  });
+
+  it("a current week's week number reads the week-number text, its days the days' text", () => {
+    expect({
+      days: currentWeekSlots(".notes-calendar-cell[data-current-week]"),
+      weekNumber: currentWeekSlots('.notes-calendar-cell[data-current-week][data-kind="week"]'),
+    }).toEqual({
+      days: {
+        text: "var(--_v-current-week-text-color)",
+        weight: "var(--_v-current-week-text-weight)",
+        italic: "var(--_v-current-week-text-italic)",
+      },
+      weekNumber: {
+        text: "var(--_v-current-week-week-number-text-color)",
+        weight: "var(--_v-current-week-week-number-text-weight)",
+        italic: "var(--_v-current-week-week-number-text-italic)",
+      },
     });
   });
 

@@ -728,7 +728,9 @@ describe("text precedence", () => {
       );
     });
 
-    it("the current week's number keeps the week-number part's color and weight", async () => {
+    // The part's own color and weight are set apart from the stock, so a pass-through and the
+    // current week's accent bold read differently.
+    it("the current week's number shows the current week's accent and bold over the part's own", async () => {
       await saveAppearance(baseline, {
         "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
         "wide.weekNumber.weight": "semibold",
@@ -736,15 +738,42 @@ describe("text precedence", () => {
       const weekNumber = ".notes-month-view__week-number[data-current-week]";
       await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for the current week" });
       expect(await $(weekNumber).getAttribute("data-active")).toBeNull();
+      const message = "the current week's number did not take --text-accent";
+      let last: Record<"label" | "accent", string | undefined> | undefined;
+      await waitForState(
+        async () => {
+          last = await readColors({
+            label: { label: weekNumber },
+            accent: { variable: "--text-accent", near: weekNumber },
+          });
+          return last;
+        },
+        ({ label, accent }) => label !== undefined && label === accent && label !== WEEK_NUMBER_TEXT,
+        message,
+      ).catch((error: unknown) => {
+        throw asLabelMismatch(error, message, JSON.stringify(last));
+      });
+      await expectLabelWeight(weekNumber, BOLD, "the current week's number did not take the current week's bold");
+    });
+
+    it("an Unchanged current-week week number keeps the week-number part's color and weight", async () => {
+      await saveAppearance(baseline, {
+        "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
+        "wide.weekNumber.weight": "semibold",
+        "wide.currentWeek.weekNumberText.color": "unchanged",
+        "wide.currentWeek.weekNumberText.weight": "unchanged",
+      });
+      const weekNumber = ".notes-month-view__week-number[data-current-week]";
+      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for the current week" });
       await expectLabelHex(
         weekNumber,
         WEEK_NUMBER_TEXT,
-        `the current week's number did not keep the part's ${WEEK_NUMBER_TEXT}`,
+        `the Unchanged current week's number did not keep the part's ${WEEK_NUMBER_TEXT}`,
       );
       await expectLabelWeight(
         weekNumber,
         SEMIBOLD,
-        "the current week's number did not keep the part's semibold weight",
+        "the Unchanged current week's number did not keep the part's semibold weight",
       );
     });
 

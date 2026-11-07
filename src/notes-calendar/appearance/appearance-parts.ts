@@ -170,6 +170,41 @@ const BOX_CONTROLS: readonly ValueControl[] = inFamily("box", [
   },
 ]);
 
+const currentWeekNumberEntry = (value: string): string => `journal-cell-current-week-week-number-text-${value}`;
+
+// Spliced in after the days' text, so the two text groups sit together ahead of the layer.
+function currentWeekControls(): readonly ValueControl[] {
+  const controls = highlightControls("current-week");
+  const weekNumber = inFamily("highlight", [
+    {
+      path: ["weekNumberText", "color"],
+      kind: "color",
+      entry: currentWeekNumberEntry("color"),
+      role: "text",
+      unchanged: true,
+      shownFor: WITH_TEXT,
+    },
+    {
+      path: ["weekNumberText", "weight"],
+      kind: "select",
+      entry: currentWeekNumberEntry("weight"),
+      options: WEIGHTS,
+      unchanged: true,
+      shownFor: WITH_TEXT,
+    },
+    {
+      path: ["weekNumberText", "italic"],
+      kind: "select",
+      entry: currentWeekNumberEntry("italic"),
+      options: ITALIC,
+      unchanged: true,
+      shownFor: WITH_TEXT,
+    },
+  ]);
+  const over = controls.findIndex((control) => control.path[0] === "over");
+  return [...controls.slice(0, over), ...weekNumber, ...controls.slice(over)];
+}
+
 export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Control[] }>> = {
   today: { controls: highlightControls("today") },
   selected: { controls: highlightControls("selected") },
@@ -181,7 +216,7 @@ export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Contr
     ],
   },
   weekend: { controls: highlightControls("weekend") },
-  currentWeek: { controls: highlightControls("current-week") },
+  currentWeek: { controls: currentWeekControls() },
   heading: {
     controls: [
       structure("showHeading", SHOWN),

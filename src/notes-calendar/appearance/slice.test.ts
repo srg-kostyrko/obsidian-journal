@@ -11,7 +11,9 @@ import {
   type AppearanceParts,
   type AppearanceSliceState,
   type BoxValues,
+  type CurrentWeekValues,
   type HighlightValues,
+  type NarrowCurrentWeek,
   type NarrowHighlight,
   type NarrowOverrides,
   type Overrides,
@@ -67,13 +69,26 @@ describe("appearanceSlice", () => {
     expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
   });
 
-  it.each(["weekend", "currentWeek"] as const)("the %s band draws nothing at stock", (part) => {
-    expect(appearanceSlice.defaults.wide[part]).toEqual({
+  it("the weekend band draws nothing at stock", () => {
+    expect(appearanceSlice.defaults.wide.weekend).toEqual({
       style: "none",
       color: transparent,
       ringWidth: 2,
       strength: 100,
       text: unchangedText,
+      over: false,
+    });
+  });
+
+  // Text only, not None: None would pass every text value through, the week number's accent included.
+  it("the current week marks only its week number at stock, in accent and bold", () => {
+    expect(appearanceSlice.defaults.wide.currentWeek).toEqual({
+      style: "text",
+      color: transparent,
+      ringWidth: 2,
+      strength: 100,
+      text: unchangedText,
+      weekNumberText: { color: theme("text-accent"), weight: "bold", italic: "unchanged" },
       over: false,
     });
   });
@@ -121,7 +136,7 @@ describe("appearance slice types", () => {
       active: HighlightValues;
       outside: HighlightValues;
       weekend: HighlightValues;
-      currentWeek: HighlightValues;
+      currentWeek: CurrentWeekValues;
       heading: TextValues;
       weekday: TextValues;
       weekNumber: TextValues;
@@ -132,10 +147,15 @@ describe("appearance slice types", () => {
 
   it("every narrow part overrides exactly its wide part's fields", () => {
     expectTypeOf<NarrowOverrides>().toEqualTypeOf<{
-      [P in keyof AppearanceParts]: AppearanceParts[P] extends HighlightValues
-        ? NarrowHighlight
-        : Overrides<AppearanceParts[P]>;
+      [P in keyof AppearanceParts]: AppearanceParts[P] extends CurrentWeekValues
+        ? NarrowCurrentWeek
+        : AppearanceParts[P] extends HighlightValues
+          ? NarrowHighlight
+          : Overrides<AppearanceParts[P]>;
     }>();
+    expectTypeOf<Omit<NarrowCurrentWeek, "weekNumberText">>().toEqualTypeOf<NarrowHighlight>();
+    expectTypeOf<NarrowCurrentWeek["weekNumberText"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
+    expectTypeOf<CurrentWeekValues["weekNumberText"]>().toEqualTypeOf<HighlightValues["text"]>();
     expectTypeOf<keyof NarrowHighlight>().toEqualTypeOf<keyof HighlightValues>();
     expectTypeOf<Omit<NarrowHighlight, "text">>().toEqualTypeOf<Overrides<Omit<HighlightValues, "text">>>();
     expectTypeOf<NarrowHighlight["text"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
@@ -210,6 +230,24 @@ describe("appearance slice repair on load", () => {
 
     expect(state.wide.selected.text.weight).toBe("unchanged");
     expect(state.wide.selected.text.color).toEqual(appearanceSlice.defaults.wide.selected.text.color);
+  });
+
+  it("a corrupt week-number text leaf repairs that leaf alone", async () => {
+    const { state, repairs } = await loaded({ wide: { currentWeek: { weekNumberText: { weight: 7, italic: true } } } });
+
+    expect(state.wide.currentWeek.weekNumberText).toEqual({
+      ...appearanceSlice.defaults.wide.currentWeek.weekNumberText,
+      italic: true,
+    });
+    expect(repairs[0]?.fields).toMatchObject({ fields: ["wide.currentWeek.weekNumberText.weight"] });
+  });
+
+  it("a narrow week-number text leaf overrides that leaf alone", () => {
+    const state = v.parse(appearanceSliceSchema, {
+      narrow: { currentWeek: { weekNumberText: { color: "unchanged" } } },
+    });
+
+    expect(state.narrow.currentWeek.weekNumberText).toEqual({ color: "unchanged", weight: null, italic: null });
   });
 
   it("narrow keeps null as no override and accepts unchanged", () => {

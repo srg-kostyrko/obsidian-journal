@@ -84,17 +84,18 @@ const weeksPos = computed(() => props.weeks ?? "left");
 const showWeekNumber = computed(() => weeksPos.value !== "none");
 
 const today = useToday();
+const holdsToday = computed(() => rawWeek.value.contains(today.value));
 const bands = computed(() =>
   bandPlacement({
     columns: days.value.map((day) => day.start.weekday()),
     weekend: weekend.value,
     weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
     weekdayHeader: props.showWeekdays,
-    rows: [
-      { isCurrentWeek: props.currentWeekBand && rawWeek.value.contains(today.value), hasDay: days.value.length > 0 },
-    ],
+    rows: [{ isCurrentWeek: props.currentWeekBand && holdsToday.value, hasDay: days.value.length > 0 }],
   }),
 );
+// The band and the days' current-week text go with `currentWeekBand`; the week number keeps its
+// current-week text regardless, since without the band it is the only mark of the current week.
 const isCurrentWeek = computed(() => bands.value.currentWeekIndex === 0);
 const showQuarter = computed(() => scope.quarter.value.length > 0);
 
@@ -246,7 +247,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
-          :current-week="isCurrentWeek"
+          :current-week="holdsToday"
         />
         <NotesCalendarCell
           v-for="day in days"
@@ -272,7 +273,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
-          :current-week="isCurrentWeek"
+          :current-week="holdsToday"
         />
       </div>
     </div>
