@@ -155,12 +155,11 @@ export function withStructure(
 export const defaultPattern = (control: FormatControl): string =>
   control.label === "weekday" ? DEFAULT_WEEKDAY_PATTERN : defaultFormatPattern(control.label);
 
-/**
- * A pattern string (`""` for the default) or one letter: what renders, so an unset narrow weekday reads as
- * its stock. Whether narrow has a label of its own is `weekdayLabelNarrow !== null`, not this value.
- */
+/** The format a control shows: what renders at that width, `""` for the default pattern. */
 export function formatAt(display: CalendarDisplaySliceState, control: FormatControl, width: Width): FormatValue {
   if (control.label !== "weekday") return display.labels[control.label];
+  // An unset narrow weekday reads as its stock; whether narrow has a label of its own is
+  // `weekdayLabelNarrow !== null`, never this value.
   const label = width === "wide" ? display.weekdayLabel : (display.weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY);
   return label.type === "letter" ? { type: "letter" } : label.pattern;
 }

@@ -26,10 +26,8 @@ function rule(entry: CatalogEntry, narrow: boolean): string {
   ].join("\n");
 }
 
-/**
- * The CSS snippet the e2e gate loads: every catalog entry set to its probe sample, and each entry with a
- * stock narrow value also set through its `-narrow` name.
- */
+// Each entry with a stock narrow value is also set through its `-narrow` name, under its own gate value.
+/** The CSS snippet the e2e gate loads: every catalog entry set to its probe sample. */
 export function gateSnippet(): string {
   const header = "/* Generated from appearance-catalog.ts by `npm run gen:appearance-gate`. Do not edit. */";
   const wide = appearanceCatalog.map((entry) => rule(entry, false));

@@ -324,11 +324,8 @@ function writePart<Part, Narrow>(
   }
 }
 
-/**
- * One saved variable per wide value that differs from the catalog's stock, and one narrow saved
- * variable per value a narrow override feeds. Stock values are left out, so they resolve through
- * the calendar's own fallback.
- */
+// Stock values are left out, so they resolve through the calendar's own fallback.
+/** The saved variables for every value that differs from what the calendar would resolve without them. */
 export function appearanceVariables(
   state: AppearanceSliceState,
   stock: StockNarrow = STOCK_NARROW,
