@@ -184,7 +184,13 @@ const sliderDefaultLabel = computed(() =>
   <UiSettingRow ref="row" class="appearance-control">
     <template #name>
       {{ label }}
-      <AppearanceNarrowTag :tag="narrowTag" :can-apply="canApplyToNarrow" @clear="clearNarrow" @apply="applyToNarrow" />
+      <AppearanceNarrowTag
+        :tag="narrowTag"
+        :can-apply="canApplyToNarrow"
+        :stock-narrow="hasStockNarrow(part, control.path)"
+        @clear="clearNarrow"
+        @apply="applyToNarrow"
+      />
     </template>
     <template #description>
       <code v-if="variable" class="appearance-control__variable">{{ variable }}</code>

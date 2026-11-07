@@ -208,6 +208,7 @@
   "calendar_appearance_unchanged": "Sin cambios",
   "calendar_appearance_narrow_only": "Solo estrecho",
   "calendar_appearance_narrow_only_clear": "Usar el valor de todos los anchos",
+  "calendar_appearance_narrow_only_clear_stock": "Usar el valor predeterminado de estrecho",
   "calendar_appearance_narrow_own": "Estrecho tiene su propio valor",
   "calendar_appearance_narrow_apply": "Usar también en Estrecho",
   "calendar_appearance_all_widths": "Todos los anchos",

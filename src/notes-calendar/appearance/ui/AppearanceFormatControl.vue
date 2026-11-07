@@ -124,7 +124,7 @@ const isoWarning = computed(
   <UiSettingRow class="appearance-control">
     <template #name>
       {{ label }}
-      <AppearanceNarrowTag :tag="narrowTag" can-apply @clear="clearNarrow" @apply="applyToNarrow" />
+      <AppearanceNarrowTag :tag="narrowTag" can-apply stock-narrow @clear="clearNarrow" @apply="applyToNarrow" />
     </template>
     <template #description>
       <div v-if="!isWeekday">{{ m.calendar_appearance_all_widths() }}</div>

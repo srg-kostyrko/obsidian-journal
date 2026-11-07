@@ -3,8 +3,15 @@ import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
 import UiIcon from "@/ui/UiIcon.vue";
 
-/** `only`: narrow overrides this value. `own`: narrow keeps a stock value of its own over the wide one. */
-const { tag, canApply = false } = defineProps<{ tag: "only" | "own" | null; canApply?: boolean }>();
+/**
+ * `only`: narrow overrides this value. `own`: narrow keeps a stock value of its own over the wide one.
+ * `stockNarrow`: clearing the override returns narrow to that stock value, not to the wide one.
+ */
+const {
+  tag,
+  canApply = false,
+  stockNarrow = false,
+} = defineProps<{ tag: "only" | "own" | null; canApply?: boolean; stockNarrow?: boolean }>();
 
 const emit = defineEmits<{ clear: []; apply: [] }>();
 </script>
@@ -14,7 +21,7 @@ const emit = defineEmits<{ clear: []; apply: [] }>();
     v-if="tag === 'only'"
     type="button"
     class="appearance-control__tag"
-    :title="m.calendar_appearance_narrow_only_clear()"
+    :title="stockNarrow ? m.calendar_appearance_narrow_only_clear_stock() : m.calendar_appearance_narrow_only_clear()"
     @click="emit('clear')"
   >
     {{ m.calendar_appearance_narrow_only() }}

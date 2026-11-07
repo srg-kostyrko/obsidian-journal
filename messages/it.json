@@ -208,6 +208,7 @@
   "calendar_appearance_unchanged": "Invariato",
   "calendar_appearance_narrow_only": "Solo stretto",
   "calendar_appearance_narrow_only_clear": "Usa il valore per tutte le larghezze",
+  "calendar_appearance_narrow_only_clear_stock": "Usa il valore predefinito di stretto",
   "calendar_appearance_narrow_own": "Stretto ha un valore proprio",
   "calendar_appearance_narrow_apply": "Usa anche in Stretto",
   "calendar_appearance_all_widths": "Tutte le larghezze",

@@ -208,6 +208,7 @@
   "calendar_appearance_unchanged": "Inchangé",
   "calendar_appearance_narrow_only": "Étroit uniquement",
   "calendar_appearance_narrow_only_clear": "Utiliser la valeur commune à toutes les largeurs",
+  "calendar_appearance_narrow_only_clear_stock": "Utiliser la valeur par défaut d’étroit",
   "calendar_appearance_narrow_own": "Étroit a sa propre valeur",
   "calendar_appearance_narrow_apply": "Utiliser aussi en Étroit",
   "calendar_appearance_all_widths": "Toutes les largeurs",

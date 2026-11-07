@@ -433,6 +433,16 @@ describe("AppearanceControl", () => {
     expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
   });
 
+  it("at Narrow, titles the tag of a leaf with a narrow default of its own as a return to that default", async () => {
+    mount("cell", control("cell", "minHeight"), "narrow");
+
+    await fireEvent.update(screen.getByRole("slider"), "40");
+
+    expect(slice().state.narrow.cell.minHeight).toBe(40);
+    const tag = screen.getByRole("button", { name: m.calendar_appearance_narrow_only() });
+    expect(tag.title).toBe(m.calendar_appearance_narrow_only_clear_stock());
+  });
+
   it("does not tag a narrow override while Wide is edited", () => {
     slice().state = {
       ...slice().state,

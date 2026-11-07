@@ -239,8 +239,10 @@ describe("AppearanceFormatControl", () => {
     it("at Narrow, tags a narrow label Narrow only, whose clear brings the stock back", async () => {
       display().state = { ...display().state, weekdayLabelNarrow: { type: "pattern", pattern: "dd" } };
       mount("weekday", "narrow");
+      const tag = screen.getByRole("button", { name: m.calendar_appearance_narrow_only() });
+      expect(tag.title).toBe(m.calendar_appearance_narrow_only_clear_stock());
 
-      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_only() }));
+      await userEvent.click(tag);
 
       expect(display().state.weekdayLabelNarrow).toBeNull();
       expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();

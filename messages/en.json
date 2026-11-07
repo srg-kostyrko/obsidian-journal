@@ -209,6 +209,7 @@
   "calendar_appearance_unchanged": "Unchanged",
   "calendar_appearance_narrow_only": "Narrow only",
   "calendar_appearance_narrow_only_clear": "Use the all-widths value",
+  "calendar_appearance_narrow_only_clear_stock": "Use the narrow default",
   "calendar_appearance_narrow_own": "Narrow has its own value",
   "calendar_appearance_narrow_apply": "Use at narrow too",
   "calendar_appearance_all_widths": "All widths",
