@@ -4,11 +4,26 @@ import { nextTick } from "vue";
 
 import { testContainer, type TestHarness } from "@/testing";
 
-import { appearanceCatalog, savedName } from "./appearance-catalog";
-import { AppearanceVariables, appearanceVariables, mergedPart, writtenEntryNames } from "./appearance-variables";
+import { appearanceCatalog, savedName, type CatalogEntry } from "./appearance-catalog";
+import {
+  AppearanceVariables,
+  appearanceVariables,
+  mergedPart,
+  writtenEntryNames,
+  writtenValue,
+} from "./appearance-variables";
 import { calendarAppearanceCoreModule } from "./module";
-import { appearanceSlice } from "./slice";
+import {
+  appearanceSlice,
+  STOCK_NARROW,
+  UNCHANGED,
+  type AppearanceSliceState,
+  type HighlightValues,
+  type StockNarrow,
+} from "./slice";
 import { calendarAppearanceStartupModule } from "./startup-module";
+
+type HighlightText = HighlightValues["text"];
 
 const fresh = () => structuredClone(appearanceSlice.defaults);
 
@@ -341,6 +356,98 @@ describe("appearanceVariables", () => {
     state.narrow.outside.text.italic = true;
 
     expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-outside-text-italic", true)]: "italic" });
+  });
+});
+
+// A stand-in for the narrow Selected stock a later change ships: its text values read the style but
+// carry no stock narrow string of their own, so only comparing values can tell when to write them.
+const SELECTED_NARROW = new Map([
+  ["journal-cell-selected-ring-width", "0px"],
+  ["journal-cell-selected-strength", "0.2"],
+]);
+const STOCK: StockNarrow = { ...STOCK_NARROW, selected: { style: "background", strength: 20 } };
+const CATALOG: readonly CatalogEntry[] = appearanceCatalog.map((entry) => {
+  const stockNarrow = SELECTED_NARROW.get(entry.name);
+  return stockNarrow === undefined ? entry : { ...entry, stockNarrow };
+});
+
+const STYLES = ["ring", "background", "text", "none"] as const;
+const WIDE_WEIGHTS: readonly HighlightText["weight"][] = [UNCHANGED, "bold"];
+const NARROW_WEIGHTS: readonly (HighlightText["weight"] | null)[] = [null, UNCHANGED, "normal"];
+const WIDE_COLORS: readonly HighlightText["color"][] = [UNCHANGED, { type: "custom", color: "#123456" }];
+
+function* selectedStates(): Generator<AppearanceSliceState> {
+  for (const wideStyle of STYLES)
+    for (const narrowStyle of [null, ...STYLES])
+      for (const wideWeight of WIDE_WEIGHTS)
+        for (const narrowWeight of NARROW_WEIGHTS)
+          for (const wideColor of WIDE_COLORS) {
+            const state = fresh();
+            state.wide.selected = { ...state.wide.selected, style: wideStyle };
+            state.wide.selected.text = { ...state.wide.selected.text, weight: wideWeight, color: wideColor };
+            state.narrow.selected.style = narrowStyle;
+            state.narrow.selected.text.weight = narrowWeight;
+            yield state;
+          }
+}
+
+function* dateAndCellStates(): Generator<AppearanceSliceState> {
+  for (const wideSize of ["1.1em", "1.4em", "1em"])
+    for (const narrowSize of [null, "1em", "2em"])
+      for (const wideGap of ["var(--size-2-1)", "3px", "1px"])
+        for (const narrowGap of [null, "1px", "4px"])
+          for (const wideHeight of [null, 26, 40])
+            for (const narrowHeight of [null, 26, 30]) {
+              const state = fresh();
+              state.wide.date.size = wideSize;
+              state.narrow.date.size = narrowSize;
+              state.wide.cell.gap = wideGap;
+              state.narrow.cell.gap = narrowGap;
+              state.wide.cell.minHeight = wideHeight;
+              state.narrow.cell.minHeight = narrowHeight;
+              yield state;
+            }
+}
+
+// Pass and an empty stock both leave the property to what it inherits.
+const settled = (css: string): string => (css === UNCHANGED ? "" : css);
+
+function rendered(variables: Record<string, string>, entry: CatalogEntry, narrow: boolean): string {
+  const wide = variables[savedName(entry)] ?? entry.stock;
+  if (!narrow) return settled(wide);
+  return settled(variables[savedName(entry, true)] ?? entry.stockNarrow ?? wide);
+}
+
+describe("what the readers resolve", () => {
+  const states = [fresh(), ...selectedStates(), ...dateAndCellStates()];
+
+  it.each([
+    ["wide", false],
+    ["narrow", true],
+  ] as const)("at %s is what the model says, for every state", (_width, narrow) => {
+    const mismatches: unknown[] = [];
+    for (const state of states) {
+      const variables = appearanceVariables(state, STOCK, CATALOG);
+      for (const entry of CATALOG) {
+        const value = writtenValue(entry.name);
+        const css = narrow ? value?.narrowCss(state, STOCK) : value?.wideCss(state);
+        const expected = settled(css ?? entry.stock);
+        const actual = rendered(variables, entry, narrow);
+        if (actual !== expected)
+          mismatches.push({
+            entry: entry.name,
+            expected,
+            actual,
+            wide: state.wide.selected,
+            narrow: state.narrow.selected,
+          });
+      }
+    }
+    expect(mismatches.slice(0, 3)).toEqual([]);
+  });
+
+  it("writes nothing for defaults under the stand-in stock either", () => {
+    expect(appearanceVariables(fresh(), STOCK, CATALOG)).toEqual({});
   });
 });
 

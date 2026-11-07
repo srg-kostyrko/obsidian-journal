@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { appearanceCatalog, publicName, savedName } from "./appearance-catalog";
 import { writtenValue } from "./appearance-variables";
-import { appearanceSlice, STOCK_NARROW, type AppearanceSliceState } from "./slice";
+import { appearanceSlice } from "./slice";
 
 const names = appearanceCatalog.map((entry) => entry.name);
 const find = (name: string) => {
@@ -110,20 +110,6 @@ describe("appearanceCatalog", () => {
   });
 });
 
-// Fills the stock narrow leaves in as if a user had set them at narrow, so the writer reports which values they feed.
-function stockAsOverrides(): AppearanceSliceState {
-  const state = structuredClone(appearanceSlice.defaults);
-  const fill = (target: Record<string, unknown>, source: object): void => {
-    for (const [key, leaf] of Object.entries(source)) {
-      const group = target[key];
-      if (typeof group === "object" && group !== null) fill(group as Record<string, unknown>, leaf as object);
-      else target[key] = leaf;
-    }
-  };
-  fill(state.narrow, STOCK_NARROW);
-  return state;
-}
-
 describe("stock narrow values", () => {
   const withStockNarrow = appearanceCatalog.filter((entry) => entry.stockNarrow !== undefined);
 
@@ -133,12 +119,6 @@ describe("stock narrow values", () => {
     expect(
       withStockNarrow.map((entry) => ({ name: entry.name, css: writtenValue(entry.name)?.narrowCss(defaults) })),
     ).toEqual(withStockNarrow.map((entry) => ({ name: entry.name, css: entry.stockNarrow })));
-  });
-
-  it("an entry has a stock narrow exactly when STOCK_NARROW feeds it", () => {
-    const state = stockAsOverrides();
-    const fed = appearanceCatalog.filter((entry) => writtenValue(entry.name)?.readsNarrow(state) === true);
-    expect(fed.map((entry) => entry.name).toSorted()).toEqual(withStockNarrow.map((entry) => entry.name).toSorted());
   });
 
   it("states the growing row height and the larger wide dates as their stock", () => {

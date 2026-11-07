@@ -381,6 +381,22 @@ describe("AppearanceControl", () => {
       expect(screen.getByText(m.calendar_appearance_default_grows())).toBeTruthy();
     });
 
+    it("a set row height goes back to the growing Default through its button", async () => {
+      slice().state = withValue(slice().state, "wide", "cell", ["minHeight"], 40);
+      mountRowHeight("wide");
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_default_grows() }));
+
+      expect(slice().state.wide.cell.minHeight).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_default_grows() })).toBeNull();
+    });
+
+    it("offers no Default button while the row height is Default", () => {
+      mountRowHeight("wide");
+
+      expect(screen.queryByRole("button")).toBeNull();
+    });
+
     it("sits on the stock narrow height at Narrow, as a plain Default", async () => {
       mountRowHeight("narrow");
       await nextTick();

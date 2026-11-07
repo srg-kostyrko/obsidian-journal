@@ -9,6 +9,7 @@ import { icons } from "@/ui/icons";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIcon from "@/ui/UiIcon.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiSlider from "@/ui/UiSlider.vue";
 
@@ -156,6 +157,15 @@ const writesString = computed(() => typeof valueAt(appearanceSlice.defaults, "wi
 function writeSlider(next: number): void {
   write(writesString.value ? `${next}${control.range?.unit ?? ""}` : next);
 }
+// A slider leaf whose stock is null has a Default no position can reach, so it gets a button back to it.
+// At Narrow the "Narrow only" tag is the way back, as it is for a select.
+const offersSliderDefault = computed(
+  () =>
+    width === "wide" && value.value !== null && valueAt(appearanceSlice.defaults, "wide", part, control.path) === null,
+);
+const sliderDefaultLabel = computed(() =>
+  growing.value ? m.calendar_appearance_default_grows() : m.calendar_appearance_default(),
+);
 </script>
 
 <template>
@@ -190,7 +200,7 @@ function writeSlider(next: number): void {
       <span class="appearance-control__value">
         <span v-if="sliderNumber !== undefined">{{ `${sliderNumber}${control.range.unit}` }}</span>
         <span v-if="atStock || sliderNumber === undefined" class="appearance-control__default">
-          {{ growing ? m.calendar_appearance_default_grows() : m.calendar_appearance_default() }}
+          {{ sliderDefaultLabel }}
         </span>
       </span>
       <UiSlider
@@ -200,6 +210,12 @@ function writeSlider(next: number): void {
         :step="control.range.step"
         :label="label"
         @update:model-value="writeSlider"
+      />
+      <UiIconButton
+        v-if="offersSliderDefault"
+        :icon="icons.action.reset"
+        :tooltip="sliderDefaultLabel"
+        @click="write(null)"
       />
     </template>
     <UiDropdown v-else :model-value="selectValue" :aria-label="label" @update:model-value="writeSelect">

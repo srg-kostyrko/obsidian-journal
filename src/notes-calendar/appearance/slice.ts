@@ -243,6 +243,9 @@ export const appearanceSliceSchema = v.object({
 
 export type AppearanceSliceState = v.InferOutput<typeof appearanceSliceSchema>;
 
+/** The shortest row a date fits in: narrow's stock row height, and the floor a wide row grows from. */
+export const ROW_FLOOR_PX = 26;
+
 /** A leaf left out keeps its narrow null; a group recurses, since a group is never null itself. */
 export type DeepPartialNonNull<T> = {
   readonly [K in keyof T]?: null extends T[K]
@@ -258,7 +261,7 @@ export type StockNarrow = { readonly [P in keyof NarrowOverrides]?: DeepPartialN
  * What narrow shows where the user set nothing at narrow, ahead of their wide value. It lives in code,
  * not in `narrow`, so a saved narrow null keeps meaning "no override" and a later stock can still change.
  */
-export const STOCK_NARROW: StockNarrow = { date: { size: "1em" }, cell: { gap: "1px", minHeight: 26 } };
+export const STOCK_NARROW: StockNarrow = { date: { size: "1em" }, cell: { gap: "1px", minHeight: ROW_FLOOR_PX } };
 
 export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceSchema>(
   "appearance",

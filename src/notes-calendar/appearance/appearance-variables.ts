@@ -22,6 +22,7 @@ import {
   type NarrowHighlight,
   type NarrowOverrides,
   type Overrides,
+  type StockNarrow,
   type TextCase,
   type TextValues,
   type Weight,
@@ -229,17 +230,25 @@ const WRITERS: Writers = {
 };
 
 /** The part as the cell sees it at narrow width: narrow overrides, then stock narrow values, over the wide values. */
-export function mergedPart<P extends keyof AppearanceParts>(state: AppearanceSliceState, part: P): AppearanceParts[P] {
+export function mergedPart<P extends keyof AppearanceParts>(
+  state: AppearanceSliceState,
+  part: P,
+  stock: StockNarrow = STOCK_NARROW,
+): AppearanceParts[P] {
   const writer: PartWriter<AppearanceParts[P], NarrowOverrides[P]> = WRITERS[part];
-  return writer.merge(state.wide[part], state.narrow[part], STOCK_NARROW[part]);
+  return writer.merge(state.wide[part], state.narrow[part], stock[part]);
 }
 
 const PARTS = Object.keys(WRITERS) as (keyof AppearanceParts)[];
 
-const catalogByName = new Map(appearanceCatalog.map((entry) => [entry.name, entry]));
+type EntryOf = (part: string, suffix: string) => CatalogEntry | undefined;
 
-const entryOf = (part: string, suffix: string): CatalogEntry | undefined =>
-  catalogByName.get(`journal-cell-${part}-${suffix}`);
+function lookup(catalog: readonly CatalogEntry[]): EntryOf {
+  const byName = new Map(catalog.map((entry) => [entry.name, entry]));
+  return (part, suffix) => byName.get(`journal-cell-${part}-${suffix}`);
+}
+
+const entryOf = lookup(appearanceCatalog);
 
 /** Every catalog name the writer produces; a catalog entry missing here would never be saved. */
 export function writtenEntryNames(): ReadonlySet<string> {
@@ -257,22 +266,24 @@ export function writtenEntryNames(): ReadonlySet<string> {
 
 /** A catalog value as the writer sees it, so tests can pin a catalog string to the values it comes from. */
 export interface WrittenValue {
-  /** What the writer makes of the value at narrow width, before it compares it with any stock. */
-  readonly narrowCss: (state: AppearanceSliceState) => string | undefined;
-  /** Whether a narrow leaf the state sets feeds the value. */
-  readonly readsNarrow: (state: AppearanceSliceState) => boolean;
+  /** What the writer makes of the value from the part's values, before it compares it with any stock. */
+  readonly wideCss: (state: AppearanceSliceState) => string | undefined;
+  /** The same at narrow width, from the part as merged with the stock narrow values. */
+  readonly narrowCss: (state: AppearanceSliceState, stock?: StockNarrow) => string | undefined;
 }
+
+const token = (css: Css | Pass): Css => (typeof css === "object" ? PASS_TOKEN : css);
+
+// A pass and an empty stock both leave the property to what it inherits.
+const isNothing = (css: string): boolean => css === "" || css === PASS_TOKEN;
 
 function valueOf<P extends keyof AppearanceParts>(part: P, name: string): WrittenValue | undefined {
   const writer = WRITERS[part];
   const value = writer.values.find((candidate) => entryOf(writer.name, candidate.suffix)?.name === name);
   if (value === undefined) return;
   return {
-    narrowCss: (state) => {
-      const css = value.css(mergedPart(state, part));
-      return typeof css === "object" ? PASS_TOKEN : css;
-    },
-    readsNarrow: (state) => value.reads(state.narrow[part]).some((leaf) => leaf !== null),
+    wideCss: (state) => token(value.css(state.wide[part])),
+    narrowCss: (state, stock) => token(value.css(mergedPart(state, part, stock))),
   };
 }
 
@@ -290,22 +301,26 @@ function writePart<Part, Narrow>(
   wide: Part,
   narrow: Narrow,
   stock: DeepPartialNonNull<Narrow> | undefined,
+  entryAt: EntryOf,
 ): void {
   const merged = writer.merge(wide, narrow, stock);
   for (const value of writer.values) {
-    const entry = entryOf(writer.name, value.suffix);
+    const entry = entryAt(writer.name, value.suffix);
     if (entry === undefined) continue;
     const wideCss = value.css(wide);
     let written: string | undefined;
     if (typeof wideCss === "string") written = wideCss === entry.stock ? undefined : wideCss;
     else if (wideCss !== undefined && entry.stock !== "") written = PASS_TOKEN;
     if (written !== undefined) out[savedName(entry)] = written;
-    if (value.reads(narrow).every((leaf) => leaf === null)) continue;
-    const narrowCss = value.css(merged);
-    if (typeof narrowCss === "string") out[savedName(entry, true)] = narrowCss;
-    else if (narrowCss !== undefined && (entry.stock !== "" || written !== undefined)) {
-      out[savedName(entry, true)] = PASS_TOKEN;
-    }
+    const narrowCss = token(value.css(merged));
+    if (narrowCss === undefined) continue;
+    // What the reader resolves at narrow width when no narrow variable is written.
+    const fallback = entry.stockNarrow ?? written ?? entry.stock;
+    // A stock narrow leaf can change a value it carries no string for (a style gating the text), so a
+    // value is written whenever it differs, not only when a narrow leaf of the user's feeds it.
+    const differs = isNothing(narrowCss) ? !isNothing(fallback) : narrowCss !== fallback;
+    const userSet = value.reads(narrow).some((leaf) => leaf !== null);
+    if (differs || (userSet && !isNothing(narrowCss))) out[savedName(entry, true)] = narrowCss;
   }
 }
 
@@ -314,10 +329,15 @@ function writePart<Part, Narrow>(
  * variable per value a narrow override feeds. Stock values are left out, so they resolve through
  * the calendar's own fallback.
  */
-export function appearanceVariables(state: AppearanceSliceState): Record<string, string> {
+export function appearanceVariables(
+  state: AppearanceSliceState,
+  stock: StockNarrow = STOCK_NARROW,
+  catalog: readonly CatalogEntry[] = appearanceCatalog,
+): Record<string, string> {
   const out: Record<string, string> = {};
+  const entryAt = catalog === appearanceCatalog ? entryOf : lookup(catalog);
   const write = <P extends keyof AppearanceParts>(part: P): void => {
-    writePart(out, WRITERS[part], state.wide[part], state.narrow[part], STOCK_NARROW[part]);
+    writePart(out, WRITERS[part], state.wide[part], state.narrow[part], stock[part], entryAt);
   };
   for (const part of PARTS) write(part);
   return out;
