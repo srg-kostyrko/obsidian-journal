@@ -473,6 +473,13 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 .appearance-preview__header :deep(.notes-calendar-cell) {
   --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
 }
+/* The growing stock is sized in cqi. A WebView without the unit finds the min-height it reaches invalid
+   and leaves the row no floor at all, so there the stock is the flat floor. */
+@supports not (width: 1cqi) {
+  .appearance-preview__day--blank {
+    --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  }
+}
 @container journal-calendar (max-width: 28em) {
   .appearance-preview__header :deep(.notes-calendar-cell) {
     --_v-cell-min-height: var(

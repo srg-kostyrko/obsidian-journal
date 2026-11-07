@@ -215,6 +215,13 @@ const hover = useModifierHoverPreview();
   --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
   --_v-weekend-layer: var(--journal-cell-weekend-layer, var(--journal-saved-cell-weekend-layer, -1));
 }
+/* The growing stock is sized in cqi. A WebView without the unit finds the min-height it reaches invalid
+   and leaves the row no floor at all, so there the stock is the flat floor. */
+@supports not (width: 1cqi) {
+  .notes-calendar-cell {
+    --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  }
+}
 @container journal-calendar (max-width: 28em) {
   .notes-calendar-cell {
     --_v-cell-padding: var(

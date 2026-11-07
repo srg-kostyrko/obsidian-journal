@@ -147,7 +147,10 @@ describe("calendar appearance readers", () => {
       const name = privateName(entry);
       const wide = rules.filter(
         (rule) =>
-          rule.container === null && rule.declarations.has(name) && !headingCellSelectors.includes(rule.selector),
+          rule.container === null &&
+          rule.supports === null &&
+          rule.declarations.has(name) &&
+          !headingCellSelectors.includes(rule.selector),
       );
       expect(wide.length).toBeGreaterThan(0);
       for (const rule of wide) {
@@ -177,6 +180,21 @@ describe("calendar appearance readers", () => {
       wide: wideReader({ ...entry, stock: `${ROW_FLOOR_PX}px` }),
       narrow: narrowReader(entry),
     });
+  });
+
+  // The growing stock is sized in cqi; where the unit is unknown the min-height it reaches is invalid and the
+  // row loses its floor, so each reader of it falls back to the flat one.
+  it.each([
+    ["cell", ".notes-calendar-cell"],
+    ["monthView", ".notes-month-view__day--blank"],
+    ["preview", ".appearance-preview__day--blank"],
+  ] as const)("%s falls back to the flat row floor where cqi is unsupported", (component, selector) => {
+    const entry = appearanceCatalog.find((candidate) => candidate.name === "journal-cell-cell-min-height");
+    if (entry === undefined) throw new Error("no row-height entry in the catalog");
+    const fallback = components[component].find(
+      (rule) => rule.supports === "not (width: 1cqi)" && rule.selector === selector,
+    );
+    expect(fallback?.declarations.get(privateName(entry))).toBe(wideReader({ ...entry, stock: `${ROW_FLOOR_PX}px` }));
   });
 
   it.each(cases)("%s is read by %s outside the private values", (_name, component, entry) => {

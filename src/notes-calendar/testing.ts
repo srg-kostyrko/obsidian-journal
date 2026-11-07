@@ -16,6 +16,8 @@ export interface ScopedRule {
   readonly selector: string;
   /** The `@container` params the rule sits under, or null outside any container query. */
   readonly container: string | null;
+  /** The `@supports` params the rule sits under, or null outside any feature query. */
+  readonly supports: string | null;
   readonly declarations: ReadonlyMap<string, string>;
 }
 
@@ -29,6 +31,7 @@ export function scopedStyleRules(source: string): readonly ScopedRule[] {
     compiled.rawResult?.root.walkRules((rule) => {
       const parent = rule.parent;
       const container = parent && "params" in parent && parent.name === "container" ? parent.params : null;
+      const supports = parent && "params" in parent && parent.name === "supports" ? parent.params : null;
       const declarations = new Map<string, string>();
       rule.walkDecls((declaration) => {
         declarations.set(
@@ -36,7 +39,7 @@ export function scopedStyleRules(source: string): readonly ScopedRule[] {
           declaration.value.replaceAll(/\s+/g, " ").replaceAll(/\(\s/g, "(").replaceAll(/\s\)/g, ")").trim(),
         );
       });
-      rules.push({ selector: rule.selector.replaceAll("[data-v-t]", ""), container, declarations });
+      rules.push({ selector: rule.selector.replaceAll("[data-v-t]", ""), container, supports, declarations });
     });
   }
   return rules;
