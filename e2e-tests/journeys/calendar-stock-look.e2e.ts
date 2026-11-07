@@ -67,16 +67,29 @@ async function pinThemeColors(): Promise<void> {
   );
 }
 
+// A timeline block caps itself at its note's width, which on a narrow runner is below the widths forced here,
+// so the cap is lifted with it.
 async function forceWidth(block: string, width: string): Promise<void> {
   await browser.execute(
     (selector: string, forced: string) => {
       for (const candidate of document.querySelectorAll<HTMLElement>(selector)) {
-        if (candidate.clientWidth > 0) candidate.style.width = forced;
+        if (candidate.clientWidth === 0) continue;
+        candidate.style.width = forced;
+        candidate.style.maxWidth = "none";
       }
     },
     block,
     width,
   );
+}
+
+async function releaseWidth(block: string): Promise<void> {
+  await browser.execute((selector: string) => {
+    for (const candidate of document.querySelectorAll<HTMLElement>(selector)) {
+      candidate.style.removeProperty("width");
+      candidate.style.removeProperty("max-width");
+    }
+  }, block);
 }
 
 async function hexOf(selector: string, property: string): Promise<string | undefined> {
@@ -319,6 +332,7 @@ describe("the calendar's stock look", () => {
   describe("rows", () => {
     after(async () => {
       await forceWidth(MONTH, WIDE);
+      await releaseWidth(TIMELINE);
     });
 
     it("rows grow on a wide calendar and stay at 26px on a narrow one", async () => {
