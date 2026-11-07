@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useResizeObserver } from "@vueuse/core";
 import { computed, inject, shallowRef, useTemplateRef, watch, type ComponentPublicInstance } from "vue";
 
 import type { ColorSettings } from "@/decorations";
@@ -149,7 +150,8 @@ function readMeasured(): number | undefined {
   return Number.isFinite(measured) ? Math.round(measured) : undefined;
 }
 // Computed style is not reactive: it is read after the DOM settles, again whenever the width
-// switches, since the preview's computed style can differ between the two.
+// switches, since the preview's computed style can differ between the two. A measured row is read
+// again after its own value changes and when the preview resizes, since both move what it renders at.
 const stockShown = shallowRef<string | undefined>();
 const measuredShown = shallowRef<number | undefined>();
 watch(
@@ -159,6 +161,19 @@ watch(
     measuredShown.value = readMeasured();
   },
   { flush: "post", immediate: true },
+);
+watch(
+  value,
+  () => {
+    measuredShown.value = readMeasured();
+  },
+  { flush: "post" },
+);
+useResizeObserver(
+  () => previewRoot?.value,
+  () => {
+    measuredShown.value = readMeasured();
+  },
 );
 const sliderNumber = computed<number | undefined>(() => {
   if (typeof value.value === "number") return value.value;

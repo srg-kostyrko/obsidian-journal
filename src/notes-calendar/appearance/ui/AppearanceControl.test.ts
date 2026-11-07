@@ -397,6 +397,22 @@ describe("AppearanceControl", () => {
       expect(screen.queryByRole("button", { name: m.calendar_appearance_default_grows() })).toBeNull();
     });
 
+    it("reads the preview's row again once the row height goes back to Default", async () => {
+      slice().state = withValue(slice().state, "wide", "cell", ["minHeight"], 40);
+      mountRowHeight("wide");
+      expect(await screen.findByText("40px")).toBeTruthy();
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      // The preview re-renders after the reset; its day now grows to 47px rather than the 41px read at mount.
+      const grown = new CSSStyleSheet();
+      grown.replaceSync(".row-height-under-test [data-preview-part='date'] { min-height: 47px; }");
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, grown];
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_default_grows() }));
+
+      expect(await screen.findByText("47px")).toBeTruthy();
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("47");
+    });
+
     it("offers no Default button while the row height is Default", () => {
       mountRowHeight("wide");
 
