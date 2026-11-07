@@ -976,6 +976,15 @@ describe("NotesMonthView bands", () => {
       expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
     });
 
+    it("today's week number and the current month heading carry no today", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(container.querySelector('[data-testid="week-number-cell"][data-today]')).toBeNull();
+      expect(container.querySelector('[data-testid="header-month"][data-today]')).toBeNull();
+      expect(container.querySelector('[data-anchor="2026-08-15"][data-today]')).not.toBeNull();
+    });
+
     it("draws no current-week band in a month without today", async () => {
       const harness = await bootHarness(daily);
       const other = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-03-15")));

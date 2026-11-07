@@ -84,9 +84,9 @@ describe("partsAt", () => {
     expect(partsAt(target)).toEqual(["selected", "today", "date", "cell"]);
   });
 
-  it("names the current week number before the today it contains", () => {
-    const target = element({ class: CELL, "data-preview-part": "weekNumber", "data-today": "true" });
-    expect(partsAt(target)).toEqual(["weekNumber", "today"]);
+  it("names a week number by itself, since today marks day cells alone", () => {
+    const target = element({ class: CELL, "data-preview-part": "weekNumber" });
+    expect(partsAt(target)).toEqual(["weekNumber"]);
   });
 
   it("lists a multi-state day in chip order, with Current week and Weekends among the states", () => {
@@ -102,14 +102,13 @@ describe("partsAt", () => {
     expect(partsAt(target)).toEqual(["selected", "today", "currentWeek", "weekend", "outside", "date", "cell"]);
   });
 
-  it("names the current week's number cell by its week before the today it contains", () => {
+  it("names the current week's number cell by its week before the current week it carries", () => {
     const target = element({
       class: CELL,
       "data-preview-part": "weekNumber",
-      "data-today": "true",
       "data-current-week": "true",
     });
-    expect(partsAt(target)).toEqual(["weekNumber", "today", "currentWeek"]);
+    expect(partsAt(target)).toEqual(["weekNumber", "currentWeek"]);
   });
 
   it("names a weekend column's header Weekends first, then Weekday header", () => {
@@ -123,9 +122,9 @@ describe("partsAt", () => {
     expect(partsAt(element({ "data-preview-part": "weekday" }))).toEqual(["weekday"]);
   });
 
-  it("names the heading's month cell before the today it contains", () => {
-    const target = element({ "data-preview-part": "heading" }, { class: CELL, "data-today": "true" }, {});
-    expect(partsAt(target)).toEqual(["heading", "today"]);
+  it("names a heading's month cell by the heading alone, since today marks day cells alone", () => {
+    const target = element({ "data-preview-part": "heading" }, { class: CELL }, {});
+    expect(partsAt(target)).toEqual(["heading"]);
   });
 
   it("names an outside day", () => {

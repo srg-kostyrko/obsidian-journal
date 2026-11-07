@@ -734,7 +734,7 @@ describe("text precedence", () => {
         "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
         "wide.weekNumber.weight": "semibold",
       });
-      const weekNumber = ".notes-month-view__week-number[data-today]";
+      const weekNumber = ".notes-month-view__week-number[data-current-week]";
       await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for today's week" });
       expect(await $(weekNumber).getAttribute("data-active")).toBeNull();
       await expectLabelHex(

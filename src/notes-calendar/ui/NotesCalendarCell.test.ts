@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate, DayPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod, MonthPeriod, QuarterPeriod, WeekPeriod, YearPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date } from "@/calendar/testing";
 import { defineOpenMode } from "@/infrastructure/host";
@@ -187,6 +187,21 @@ describe("NotesCalendarCell", () => {
       const { container } = mount({ period: may25, cell: stubApi() });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.dataset.today).toBe("true");
+    });
+
+    it("a week, month, quarter or year containing today is not today", () => {
+      const now = date("2026-05-25");
+      vi.spyOn(CalendarDate, "today").mockReturnValue(now);
+      for (const period of [
+        WeekPeriod.containing(now),
+        MonthPeriod.containing(now),
+        QuarterPeriod.containing(now),
+        YearPeriod.containing(now),
+      ]) {
+        const { container, unmount } = mount({ period, cell: stubApi() });
+        expect(container.querySelector<HTMLElement>(".notes-calendar-cell")?.dataset.today).toBeUndefined();
+        unmount();
+      }
     });
 
     it("omits data-today when the cell's period does not contain today", () => {

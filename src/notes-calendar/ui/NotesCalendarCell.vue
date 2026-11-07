@@ -35,7 +35,7 @@ const resolvedTabIndex = computed(() =>
   props.disabled ? undefined : (props.tabIndex ?? (isControl.value ? 0 : undefined)),
 );
 const today = useToday();
-const isToday = computed(() => rawPeriod.value.contains(today.value));
+const isToday = computed(() => rawPeriod.value.kind === "day" && rawPeriod.value.contains(today.value));
 const states = computed(() =>
   (
     [
