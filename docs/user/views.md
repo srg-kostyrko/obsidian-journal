@@ -261,7 +261,7 @@ The highlights share one set:
   Not shown for **None**.
 - **Over decorations** — whether the ring or background, and this highlight's text, are drawn over a
   day's [decorations](/decorations) or under them. Shown for **Ring** and **Background**; out of the
-  box, only the selected date's ring is drawn over.
+  box, only the selected date's ring, or its tint on narrow calendars, is drawn over.
 
 **Today** marks today's day alone. The week number and the month, quarter and year headings that hold
 today look like any other; the current week's number is marked by [**Current
