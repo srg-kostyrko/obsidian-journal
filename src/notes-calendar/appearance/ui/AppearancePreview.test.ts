@@ -253,11 +253,14 @@ describe("AppearancePreview", () => {
       });
     });
 
-    it("outlines every week number", () => {
+    it("outlines every week number and their divider, lightly", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekNumber" } });
       const weekNumbers = [...container.querySelectorAll<HTMLElement>(".appearance-preview__week-number")];
+      const divider = container.querySelector<HTMLElement>(".notes-calendar-divider");
+      if (!divider) throw new Error("no divider");
       expect(weekNumbers.length).toBeGreaterThan(3);
-      expect(picked(container)).toEqual(weekNumbers);
+      expect(picked(container)).toEqual([divider, ...weekNumbers]);
+      expect(isLight(divider)).toBe(true);
     });
 
     it("outlines the weekend days and their weekday headers, and nothing else", () => {

@@ -198,7 +198,9 @@ describe("AppearanceSubpage", () => {
     expect(outlined(container)).toEqual([todayCell(container)]);
 
     await userEvent.selectOptions(partsList(), "weekNumber");
-    expect(outlined(container)).toEqual([...container.querySelectorAll(".appearance-preview__week-number")]);
+    expect(outlined(container)).toEqual([
+      ...container.querySelectorAll(".notes-calendar-divider, .appearance-preview__week-number"),
+    ]);
   });
 
   describe("a part every day has", () => {

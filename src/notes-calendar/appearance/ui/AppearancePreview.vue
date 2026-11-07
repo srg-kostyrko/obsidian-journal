@@ -214,6 +214,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       <NotesCalendarDivider
         v-if="bands.divider"
         class="appearance-preview__divider"
+        :class="pickedClass(picked === 'weekNumber')"
         data-preview-part="weekNumber"
         :side="weeksPos === 'left' ? 'end' : 'start'"
         :column="bands.divider.column"
