@@ -311,7 +311,7 @@ current week's number in the accent color and bold.
   take the band's text color, weight and italic, but not its fill.
 - **Current week** draws one band across the row that holds today, the week number included. It styles the
   week number apart from its days: **Text color**, **Text weight** and **Text italic** apply to the days, and
-  **Week number text color**, **Week number weight** and **Week number italic** to the week number. Choosing
+  **Week number color**, **Week number weight** and **Week number italic** to the week number. Choosing
   **None** turns both off, so the current week's number goes back to looking like the others.
   In a grid that hides the days outside the month, any row of today's week that shows at least one day gets
   the band, so a week split across two months of a timeline is marked in both; a row of hidden days alone

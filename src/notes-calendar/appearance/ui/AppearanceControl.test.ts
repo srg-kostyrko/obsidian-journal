@@ -86,7 +86,7 @@ describe("AppearanceControl", () => {
         return label;
       });
 
-    expect(labels).toEqual(["Week number text color", "Week number weight", "Week number italic"]);
+    expect(labels).toEqual(["Week number color", "Week number weight", "Week number italic"]);
   });
 
   describe("a visibility control", () => {

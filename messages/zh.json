@@ -145,7 +145,7 @@
         "control=highlight_text_color": "文本颜色",
         "control=highlight_text_weight": "文本字重",
         "control=highlight_text_italic": "文本斜体",
-        "control=highlight_week_number_text_color": "周数文本颜色",
+        "control=highlight_week_number_text_color": "周数颜色",
         "control=highlight_week_number_text_weight": "周数字重",
         "control=highlight_week_number_text_italic": "周数斜体",
         "control=highlight_over": "显示在装饰之上",

@@ -146,7 +146,7 @@
         "control=highlight_text_color": "Text color",
         "control=highlight_text_weight": "Text weight",
         "control=highlight_text_italic": "Text italic",
-        "control=highlight_week_number_text_color": "Week number text color",
+        "control=highlight_week_number_text_color": "Week number color",
         "control=highlight_week_number_text_weight": "Week number weight",
         "control=highlight_week_number_text_italic": "Week number italic",
         "control=highlight_over": "Over decorations",

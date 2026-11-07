@@ -145,7 +145,7 @@
         "control=highlight_text_color": "テキストの色",
         "control=highlight_text_weight": "テキストの太さ",
         "control=highlight_text_italic": "テキストのイタリック",
-        "control=highlight_week_number_text_color": "週番号のテキストの色",
+        "control=highlight_week_number_text_color": "週番号の色",
         "control=highlight_week_number_text_weight": "週番号の太さ",
         "control=highlight_week_number_text_italic": "週番号のイタリック",
         "control=highlight_over": "装飾の上に表示",
