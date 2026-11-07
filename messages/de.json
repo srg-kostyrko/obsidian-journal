@@ -116,6 +116,7 @@
         "family=visibility": "Sichtbarkeit",
         "family=label": "Beschriftung",
         "family=text": "Text",
+        "family=divider": "Trennlinie",
         "family=highlight": "Hervorhebung",
         "family=box": "Box"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "Kursiv",
         "control=text_color": "Farbe",
         "control=text_case": "Groß-/Kleinschreibung",
+        "control=divider_divider": "Trennlinie",
+        "control=divider_divider_color": "Farbe",
+        "control=divider_divider_width": "Breite",
         "control=box_padding": "Innenabstand",
         "control=box_radius": "Eckenradius",
         "control=box_gap": "Abstand zwischen Zellen",
@@ -189,6 +193,8 @@
         "option=italic_off": "Aus",
         "option=over_over": "Ja",
         "option=over_under": "Nein",
+        "option=divider_shown": "Angezeigt",
+        "option=divider_hidden": "Ausgeblendet",
         "option=case_none": "Wie geschrieben",
         "option=case_upper": "Großbuchstaben",
         "option=case_lower": "Kleinbuchstaben",

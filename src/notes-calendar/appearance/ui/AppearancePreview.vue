@@ -23,6 +23,7 @@ import { bandPlacement } from "../../band-placement";
 import { labelPattern, weekdayTexts } from "../../cell-format";
 import NotesCalendarBand from "../../ui/NotesCalendarBand.vue";
 import NotesCalendarCell from "../../ui/NotesCalendarCell.vue";
+import NotesCalendarDivider from "../../ui/NotesCalendarDivider.vue";
 
 import { partsAt, sampleDays } from "./preview-sample";
 
@@ -89,7 +90,7 @@ const bands = computed(() =>
   bandPlacement({
     columns: (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
     weekend: weekend.value,
-    weekNumbersLeft: weeksPos.value === "left",
+    weekNumbers: weeksPos.value,
     weekdayHeader: props.display.showWeekdays,
     rows: rows.value.map((row) => ({
       isCurrentWeek: row.week.contains(today.value),
@@ -209,6 +210,14 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
         row="auto"
       />
       <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
+      <NotesCalendarDivider
+        v-if="bands.divider"
+        class="appearance-preview__divider"
+        data-preview-part="weekNumber"
+        :side="weeksPos === 'left' ? 'end' : 'start'"
+        :column="bands.divider.column"
+        :row="bands.divider.row"
+      />
       <div
         class="appearance-preview__row"
         :class="{ 'appearance-preview__row--visually-hidden': !display.showWeekdays }"
@@ -325,10 +334,15 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   gap: var(--_v-cell-gap);
 }
 .appearance-preview__grid[data-weeks="left"] {
-  grid-template-columns: auto repeat(7, 1fr);
+  grid-template-columns: 1fr repeat(7, 1fr);
 }
 .appearance-preview__grid[data-weeks="right"] {
-  grid-template-columns: repeat(7, 1fr) auto;
+  grid-template-columns: repeat(7, 1fr) 1fr;
+}
+/* A calendar's divider lets the pointer through to the cells; here a click on it picks the week numbers.
+   The grid in the selector outranks the divider's own rule whichever stylesheet loads last. */
+.appearance-preview__grid > .appearance-preview__divider {
+  pointer-events: auto;
 }
 .appearance-preview__row {
   display: grid;
@@ -407,16 +421,19 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 }
 /* Cells take their part's color through `--_part-color`, never `color`, as the month view does. */
 .appearance-preview__week-number {
-  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
+  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em));
   --_v-week-number-weight: var(
     --journal-cell-week-number-weight,
-    var(--journal-saved-cell-week-number-weight, var(--font-bold))
+    var(--journal-saved-cell-week-number-weight, var(--font-normal))
   );
   --_v-week-number-italic: var(
     --journal-cell-week-number-italic,
     var(--journal-saved-cell-week-number-italic, inherit)
   );
-  --_v-week-number-color: var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit));
+  --_v-week-number-color: var(
+    --journal-cell-week-number-color,
+    var(--journal-saved-cell-week-number-color, var(--text-muted))
+  );
   --_v-week-number-case: var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit));
   --_part-color: var(--_v-week-number-color);
   font-size: var(--_v-week-number-size);
@@ -582,14 +599,14 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       --journal-cell-week-number-size-narrow,
       var(
         --journal-saved-cell-week-number-size-narrow,
-        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit))
+        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em))
       )
     );
     --_v-week-number-weight: var(
       --journal-cell-week-number-weight-narrow,
       var(
         --journal-saved-cell-week-number-weight-narrow,
-        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-bold)))
+        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-normal)))
       )
     );
     --_v-week-number-italic: var(
@@ -603,7 +620,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
       --journal-cell-week-number-color-narrow,
       var(
         --journal-saved-cell-week-number-color-narrow,
-        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit))
+        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, var(--text-muted)))
       )
     );
     --_v-week-number-case: var(

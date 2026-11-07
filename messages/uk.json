@@ -116,6 +116,7 @@
         "family=visibility": "Видимість",
         "family=label": "Підпис",
         "family=text": "Текст",
+        "family=divider": "Роздільник",
         "family=highlight": "Виділення",
         "family=box": "Комірка"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "Курсив",
         "control=text_color": "Колір",
         "control=text_case": "Регістр",
+        "control=divider_divider": "Роздільник",
+        "control=divider_divider_color": "Колір",
+        "control=divider_divider_width": "Товщина",
         "control=box_padding": "Внутрішній відступ",
         "control=box_radius": "Радіус кутів",
         "control=box_gap": "Проміжок між комірками",
@@ -189,6 +193,8 @@
         "option=italic_off": "Вимк.",
         "option=over_over": "Так",
         "option=over_under": "Ні",
+        "option=divider_shown": "Показано",
+        "option=divider_hidden": "Приховано",
         "option=case_none": "Як написано",
         "option=case_upper": "Великі літери",
         "option=case_lower": "Малі літери",

@@ -8,6 +8,8 @@ import { date } from "@/calendar/testing";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey } from "@/decorations/ui/cell-decoration-map-key";
 
+import { calendarStyleRules } from "../../testing";
+
 import AppearancePreview from "./AppearancePreview.vue";
 import { partsAt } from "./preview-sample";
 
@@ -84,6 +86,39 @@ describe("AppearancePreview", () => {
     await userEvent.keyboard(key);
 
     expect(emitted("pick")).toEqual([[["today", "currentWeek", "date", "cell", "grid"], "2026-05-13"]]);
+  });
+
+  it("picks the week numbers from their divider", async () => {
+    const { container, emitted } = render(AppearancePreview, { props: { width: "wide" } });
+    const divider = container.querySelector<HTMLElement>(".notes-calendar-divider");
+    if (!divider) throw new Error("no divider");
+
+    await userEvent.click(divider);
+
+    expect(emitted("pick")).toEqual([[["weekNumber", "grid"], undefined]]);
+  });
+
+  it.each([
+    ["left", "end"],
+    ["right", "start"],
+  ] as const)("draws the divider beside week numbers on the %s, on the days' side", (weekPlacement, side) => {
+    const { container } = withDisplay({ weekPlacement });
+    expect(
+      [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map((divider) => divider.dataset.side),
+    ).toEqual([side]);
+  });
+
+  it("draws no divider without week numbers", () => {
+    const { container } = withDisplay({ weekPlacement: "none" });
+    expect(container.querySelector(".notes-calendar-divider")).toBeNull();
+  });
+
+  // The divider takes no pointer in a calendar, so the preview gives it one back for picking.
+  it("lets the divider take the pointer in the preview", () => {
+    const rule = calendarStyleRules().preview.find(
+      (candidate) => candidate.container === null && candidate.selector.endsWith(".appearance-preview__divider"),
+    );
+    expect(rule?.declarations.get("pointer-events")).toBe("auto");
   });
 
   it("marks the open note two days after today, unselected", () => {
@@ -203,7 +238,7 @@ describe("AppearancePreview", () => {
 
     it("outlines every week number", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekNumber" } });
-      const weekNumbers = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekNumber"]')];
+      const weekNumbers = [...container.querySelectorAll<HTMLElement>(".appearance-preview__week-number")];
       expect(weekNumbers.length).toBeGreaterThan(3);
       expect(picked(container)).toEqual(weekNumbers);
     });
@@ -343,7 +378,7 @@ describe("AppearancePreview", () => {
 
       expect(cellAt(container, "2026-05-01").textContent?.trim()).toBe("01");
       expect(cellAt(container, "2026-05-01").getAttribute("aria-label")).toBe("May 1, 2026");
-      expect(container.querySelector('[data-preview-part="weekNumber"]')?.textContent?.trim()).toMatch(/^\d+$/);
+      expect(container.querySelector(".appearance-preview__week-number")?.textContent?.trim()).toMatch(/^\d+$/);
       expect(
         [...(heading?.querySelectorAll(".notes-calendar-cell") ?? [])].map((cell) => cell.textContent?.trim()),
       ).toEqual(["05", "26"]);

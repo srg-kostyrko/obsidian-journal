@@ -194,9 +194,9 @@ const TEXT_PARTS = [
   {
     part: "week-number",
     selector: ".notes-month-view__week-number",
-    size: "inherit",
-    weight: "var(--font-bold)",
-    color: "inherit",
+    size: "0.85em",
+    weight: "var(--font-normal)",
+    color: "var(--text-muted)",
   },
   {
     part: "date",
@@ -236,6 +236,26 @@ function textEntries(): CatalogEntry[] {
   });
 }
 
+// Probed on a month view with week numbers on the left, where the divider draws its inline-end edge.
+const DIVIDER_ENTRIES: readonly CatalogEntry[] = [
+  {
+    name: "journal-cell-week-number-divider-color",
+    stock: "var(--background-modifier-border)",
+    probe: {
+      selector: ".notes-calendar-divider",
+      property: "border-inline-end-color",
+      sample: "#123456",
+      with: { "--journal-cell-week-number-divider-width": "3px" },
+      expect: "rgb(18, 52, 86)",
+    },
+  },
+  {
+    name: "journal-cell-week-number-divider-width",
+    stock: "1px",
+    probe: { selector: ".notes-calendar-divider", property: "border-inline-end-width", sample: "3px", expect: "3px" },
+  },
+];
+
 const BOX_ENTRIES: readonly CatalogEntry[] = [
   {
     name: "journal-cell-cell-padding",
@@ -270,6 +290,7 @@ export const appearanceCatalog: readonly CatalogEntry[] = [
   ...highlightEntries(),
   ...currentWeekNumberEntries(),
   ...textEntries(),
+  ...DIVIDER_ENTRIES,
   ...BOX_ENTRIES,
 ];
 

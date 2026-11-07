@@ -18,6 +18,7 @@ import {
   type NarrowOverrides,
   type Overrides,
   type TextValues,
+  type WeekNumberValues,
 } from "./slice";
 
 const transparent = { type: "transparent" };
@@ -64,7 +65,13 @@ describe("appearanceSlice", () => {
     expect(wide.heading).toEqual(asToday);
     // A stock a Default option covers is stored as Default, so a fresh install reads Default there.
     expect(wide.weekday).toEqual({ ...asToday, size: "0.6em" });
-    expect(wide.weekNumber).toEqual(asToday);
+    expect(wide.weekNumber).toEqual({
+      ...asToday,
+      size: "0.85em",
+      divider: true,
+      dividerColor: theme("background-modifier-border"),
+      dividerWidth: 1,
+    });
     expect(wide.date).toEqual(asToday);
     expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
   });
@@ -139,7 +146,7 @@ describe("appearance slice types", () => {
       currentWeek: CurrentWeekValues;
       heading: TextValues;
       weekday: TextValues;
-      weekNumber: TextValues;
+      weekNumber: WeekNumberValues;
       date: TextValues;
       cell: BoxValues;
     }>();
@@ -159,6 +166,7 @@ describe("appearance slice types", () => {
     expectTypeOf<keyof NarrowHighlight>().toEqualTypeOf<keyof HighlightValues>();
     expectTypeOf<Omit<NarrowHighlight, "text">>().toEqualTypeOf<Overrides<Omit<HighlightValues, "text">>>();
     expectTypeOf<NarrowHighlight["text"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
+    expectTypeOf<Omit<WeekNumberValues, "divider" | "dividerColor" | "dividerWidth">>().toEqualTypeOf<TextValues>();
   });
 });
 
@@ -248,6 +256,19 @@ describe("appearance slice repair on load", () => {
     });
 
     expect(state.narrow.currentWeek.weekNumberText).toEqual({ color: "unchanged", weight: null, italic: null });
+  });
+
+  it("a corrupt divider width repairs that leaf alone", async () => {
+    const { state, repairs } = await loaded({ wide: { weekNumber: { divider: false, dividerWidth: -2 } } });
+
+    expect(state.wide.weekNumber).toMatchObject({ divider: false, dividerWidth: 1 });
+    expect(repairs[0]?.fields).toMatchObject({ fields: ["wide.weekNumber.dividerWidth"] });
+  });
+
+  it("a narrow divider overrides its three leaves alone", () => {
+    const state = v.parse(appearanceSliceSchema, { narrow: { weekNumber: { divider: false } } });
+
+    expect(state.narrow.weekNumber).toMatchObject({ divider: false, dividerColor: null, dividerWidth: null });
   });
 
   it("narrow keeps null as no override and accepts unchanged", () => {

@@ -116,6 +116,7 @@
         "family=visibility": "可见性",
         "family=label": "文字标签",
         "family=text": "文本",
+        "family=divider": "分隔线",
         "family=highlight": "高亮",
         "family=box": "单元格框"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "斜体",
         "control=text_color": "颜色",
         "control=text_case": "大小写",
+        "control=divider_divider": "分隔线",
+        "control=divider_divider_color": "颜色",
+        "control=divider_divider_width": "宽度",
         "control=box_padding": "内边距",
         "control=box_radius": "圆角半径",
         "control=box_gap": "单元格间距",
@@ -189,6 +193,8 @@
         "option=italic_off": "关",
         "option=over_over": "是",
         "option=over_under": "否",
+        "option=divider_shown": "显示",
+        "option=divider_hidden": "隐藏",
         "option=case_none": "原样",
         "option=case_upper": "大写",
         "option=case_lower": "小写",

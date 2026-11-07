@@ -116,6 +116,7 @@
         "family=visibility": "Visibilidad",
         "family=label": "Etiqueta",
         "family=text": "Texto",
+        "family=divider": "Separador",
         "family=highlight": "Resaltado",
         "family=box": "Caja"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "Cursiva",
         "control=text_color": "Color",
         "control=text_case": "Mayúsculas y minúsculas",
+        "control=divider_divider": "Separador",
+        "control=divider_divider_color": "Color",
+        "control=divider_divider_width": "Grosor",
         "control=box_padding": "Relleno",
         "control=box_radius": "Radio de las esquinas",
         "control=box_gap": "Espacio entre celdas",
@@ -189,6 +193,8 @@
         "option=italic_off": "Desactivado",
         "option=over_over": "Sí",
         "option=over_under": "No",
+        "option=divider_shown": "Visible",
+        "option=divider_hidden": "Oculto",
         "option=case_none": "Como está escrito",
         "option=case_upper": "Mayúsculas",
         "option=case_lower": "Minúsculas",

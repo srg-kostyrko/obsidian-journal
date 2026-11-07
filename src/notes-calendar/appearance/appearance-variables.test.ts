@@ -93,6 +93,36 @@ describe("appearanceVariables", () => {
     });
   });
 
+  it("the stock divider and week number write nothing", () => {
+    const written = Object.keys(appearanceVariables(fresh()));
+    expect(written.filter((name) => name.startsWith("--journal-saved-cell-week-number-"))).toEqual([]);
+  });
+
+  it("a hidden divider writes a zero width", () => {
+    const state = fresh();
+    state.wide.weekNumber.divider = false;
+
+    expect(appearanceVariables(state)).toEqual({ "--journal-saved-cell-week-number-divider-width": "0px" });
+  });
+
+  it("writes the divider's color and width", () => {
+    const state = fresh();
+    state.wide.weekNumber.dividerColor = { type: "custom", color: "#123456" };
+    state.wide.weekNumber.dividerWidth = 3;
+
+    expect(appearanceVariables(state)).toEqual({
+      [saved("journal-cell-week-number-divider-color")]: "#123456",
+      [saved("journal-cell-week-number-divider-width")]: "3px",
+    });
+  });
+
+  it("a divider hidden at narrow width writes a narrow zero width only", () => {
+    const state = fresh();
+    state.narrow.weekNumber.divider = false;
+
+    expect(appearanceVariables(state)).toEqual({ [saved("journal-cell-week-number-divider-width", true)]: "0px" });
+  });
+
   it("writes the narrow name for a narrow override", () => {
     const state = fresh();
     state.narrow.cell.minHeight = 30;

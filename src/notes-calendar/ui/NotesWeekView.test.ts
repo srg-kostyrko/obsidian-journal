@@ -599,6 +599,29 @@ describe("NotesWeekView bands", () => {
     ]);
   });
 
+  it.each([
+    ["left", { side: "end", column: "1 / 2", row: "2 / auto" }],
+    ["right", { side: "start", column: "-2 / -1", row: "2 / auto" }],
+  ] as const)("draws the divider on the days' side of a week number on the %s", async (weeks, expected) => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek(), weeks } });
+
+    expect(
+      [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map((divider) => ({
+        side: divider.dataset.side,
+        column: divider.style.gridColumn,
+        row: divider.style.gridRow,
+      })),
+    ).toEqual([expected]);
+  });
+
+  it("draws no divider without a week number", async () => {
+    const harness = await bootHarness(daily);
+    const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek(), weeks: "none" } });
+
+    expect(container.querySelector(".notes-calendar-divider")).toBeNull();
+  });
+
   it("places the bands ahead of the header row", async () => {
     const harness = await bootHarness(daily);
     const { container } = harness.render(NotesWeekView, { props: { shelf: null, week: thisWeek() } });

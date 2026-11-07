@@ -730,6 +730,33 @@ describe("NotesMonthView", () => {
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
       expect(container.querySelector<HTMLElement>(".notes-month-view__grid")?.dataset.weeks).toBe("left");
     });
+
+    it.each([
+      ["left", "1fr repeat(var(--day-columns, 7), 1fr)"],
+      ["right", "repeat(var(--day-columns, 7), 1fr) 1fr"],
+    ] as const)("lays the week-number column out as wide as a day, on the %s", (side, columns) => {
+      const rule = calendarStyleRules().monthView.find(
+        (candidate) =>
+          candidate.container === null && candidate.selector === `.notes-month-view__grid[data-weeks="${side}"]`,
+      );
+      expect(rule?.declarations.get("grid-template-columns")).toBe(columns);
+    });
+
+    it.each([
+      ["left", "end"],
+      ["right", "start"],
+    ] as const)("draws the divider on the days' side of week numbers on the %s", async (weeks, side) => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks } });
+      const dividers = [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")];
+      expect(dividers.map((divider) => divider.dataset.side)).toEqual([side]);
+    });
+
+    it("draws no divider without week numbers", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "none" } });
+      expect(container.querySelector(".notes-calendar-divider")).toBeNull();
+    });
   });
 
   describe("header badges", () => {
@@ -1057,17 +1084,16 @@ describe("NotesMonthView bands", () => {
   });
 
   describe("in the grid", () => {
-    it("places every band ahead of the header row, weekend bands first", async () => {
+    it("places every band ahead of the header row, weekend bands first, then the divider", async () => {
       const harness = await bootHarness(daily);
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
       const grid = container.querySelector('[role="grid"]');
       const children = [...(grid?.children ?? [])];
       const firstRow = children.findIndex((child) => child.getAttribute("role") === "row");
 
-      expect(children.slice(0, firstRow).map((child) => (child as HTMLElement).dataset.band)).toEqual([
-        "weekend",
-        "current-week",
-      ]);
+      expect(
+        children.slice(0, firstRow).map((child) => (child as HTMLElement).dataset.band ?? child.className),
+      ).toEqual(["weekend", "current-week", "notes-calendar-divider"]);
     });
 
     it("hides every band from assistive tech", async () => {

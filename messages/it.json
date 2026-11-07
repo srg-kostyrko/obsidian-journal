@@ -116,6 +116,7 @@
         "family=visibility": "Visibilità",
         "family=label": "Etichetta",
         "family=text": "Testo",
+        "family=divider": "Divisore",
         "family=highlight": "Evidenziazione",
         "family=box": "Riquadro"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "Corsivo",
         "control=text_color": "Colore",
         "control=text_case": "Maiuscole e minuscole",
+        "control=divider_divider": "Divisore",
+        "control=divider_divider_color": "Colore",
+        "control=divider_divider_width": "Spessore",
         "control=box_padding": "Spaziatura interna",
         "control=box_radius": "Raggio degli angoli",
         "control=box_gap": "Spazio tra le celle",
@@ -189,6 +193,8 @@
         "option=italic_off": "Disattivo",
         "option=over_over": "Sì",
         "option=over_under": "No",
+        "option=divider_shown": "Mostrato",
+        "option=divider_hidden": "Nascosto",
         "option=case_none": "Come scritto",
         "option=case_upper": "Maiuscolo",
         "option=case_lower": "Minuscolo",

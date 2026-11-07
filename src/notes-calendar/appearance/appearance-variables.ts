@@ -23,6 +23,7 @@ import {
   type TextCase,
   type TextValues,
   type Weight,
+  type WeekNumberValues,
 } from "./slice";
 
 /** A CSS value, or undefined for "write nothing" so the reader's own fallback applies. */
@@ -183,6 +184,24 @@ function textWriter(name: string): PartWriter<TextValues, Overrides<TextValues>>
   };
 }
 
+// Hidden is a zero width rather than a value of its own, so a snippet can show or hide the line by width alone.
+function weekNumberWriter(): PartWriter<WeekNumberValues, Overrides<WeekNumberValues>> {
+  const base = textWriter("week-number");
+  return {
+    name: base.name,
+    values: [
+      ...base.values,
+      { suffix: "divider-color", css: (w) => colorToString(w.dividerColor), reads: (n) => [n.dividerColor] },
+      {
+        suffix: "divider-width",
+        css: (w) => px(w.divider ? w.dividerWidth : 0),
+        reads: (n) => [n.divider, n.dividerWidth],
+      },
+    ],
+    merge: overlay,
+  };
+}
+
 const boxWriter: PartWriter<BoxValues, Overrides<BoxValues>> = {
   name: "cell",
   values: [
@@ -207,7 +226,7 @@ const WRITERS: Writers = {
   currentWeek: currentWeekWriter(),
   heading: textWriter("heading"),
   weekday: textWriter("weekday"),
-  weekNumber: textWriter("week-number"),
+  weekNumber: weekNumberWriter(),
   date: textWriter("date"),
   cell: boxWriter,
 };

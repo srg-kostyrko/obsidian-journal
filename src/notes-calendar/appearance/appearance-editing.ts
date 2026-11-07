@@ -91,6 +91,7 @@ export function withValue(
 const BOOLEAN_OPTIONS: Readonly<Record<string, readonly [string, string]>> = {
   italic: ["on", "off"],
   over: ["over", "under"],
+  divider: ["shown", "hidden"],
   showHeading: ["shown", "hidden"],
   showWeekdays: ["shown", "hidden"],
 };

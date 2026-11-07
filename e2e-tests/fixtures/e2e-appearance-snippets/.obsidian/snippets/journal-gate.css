@@ -211,6 +211,13 @@
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-case"] {
   --journal-cell-date-case: uppercase;
 }
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-divider-color"] {
+  --journal-cell-week-number-divider-color: #123456;
+  --journal-cell-week-number-divider-width: 3px;
+}
+[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-week-number-divider-width"] {
+  --journal-cell-week-number-divider-width: 3px;
+}
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-cell-padding"] {
   --journal-cell-cell-padding: 9px;
 }

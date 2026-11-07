@@ -116,6 +116,7 @@
         "family=visibility": "표시",
         "family=label": "라벨",
         "family=text": "텍스트",
+        "family=divider": "구분선",
         "family=highlight": "강조",
         "family=box": "박스"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "기울임",
         "control=text_color": "색상",
         "control=text_case": "대소문자",
+        "control=divider_divider": "구분선",
+        "control=divider_divider_color": "색상",
+        "control=divider_divider_width": "두께",
         "control=box_padding": "안쪽 여백",
         "control=box_radius": "모서리 반경",
         "control=box_gap": "셀 간격",
@@ -189,6 +193,8 @@
         "option=italic_off": "끄기",
         "option=over_over": "예",
         "option=over_under": "아니요",
+        "option=divider_shown": "표시",
+        "option=divider_hidden": "숨김",
         "option=case_none": "입력한 그대로",
         "option=case_upper": "대문자",
         "option=case_lower": "소문자",

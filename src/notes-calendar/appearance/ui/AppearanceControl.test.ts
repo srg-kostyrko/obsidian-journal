@@ -280,25 +280,25 @@ describe("AppearanceControl", () => {
       mount("weekNumber", control("weekNumber", "weight"));
 
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       expect(await screen.findByRole("option", { name: label })).toBeTruthy();
     });
 
-    it("is what a fresh week-number weight shows, unmodified, and Bold chosen outright modifies it", async () => {
+    it("is what a fresh week-number weight shows, unmodified, and Normal chosen outright modifies it", async () => {
       mount("weekNumber", control("weekNumber", "weight"));
       const select = screen.getByRole<HTMLSelectElement>("combobox");
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       await screen.findByRole("option", { name: label });
 
       expect(select.selectedOptions[0]?.textContent?.trim()).toBe(label);
       expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(false);
 
-      await userEvent.selectOptions(select, "bold");
+      await userEvent.selectOptions(select, "normal");
 
-      expect(slice().state.wide.weekNumber.weight).toBe("bold");
+      expect(slice().state.wide.weekNumber.weight).toBe("normal");
       expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(true);
     });
 

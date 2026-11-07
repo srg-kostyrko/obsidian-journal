@@ -17,7 +17,16 @@ import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { isModified, valueAt, withReset } from "../appearance-editing";
-import { familiesOf, isFormat, isStructure, PARTS, type Control, type PartKey, type Width } from "../appearance-parts";
+import {
+  familiesOf,
+  isFormat,
+  isStructure,
+  PARTS,
+  type Control,
+  type PartKey,
+  type PartValues,
+  type Width,
+} from "../appearance-parts";
 import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
@@ -95,7 +104,8 @@ const inspected = computed(() => {
   if (part === undefined) return;
   const highlighted = part !== "grid" && PARTS[part].controls.some((control) => control.family === "highlight");
   const style = highlighted ? (valueAt(slice.state, width.value, part, ["style"]) as HighlightStyle) : undefined;
-  return { part, families: familiesOf(part, style) };
+  const values = part === "grid" ? undefined : (valueAt(slice.state, width.value, part, []) as PartValues);
+  return { part, families: familiesOf(part, style, values) };
 });
 
 function controlKey(part: PartKey, control: Control): string {

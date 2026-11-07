@@ -116,6 +116,7 @@
         "family=visibility": "表示",
         "family=label": "ラベル",
         "family=text": "テキスト",
+        "family=divider": "区切り線",
         "family=highlight": "ハイライト",
         "family=box": "ボックス"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "イタリック",
         "control=text_color": "色",
         "control=text_case": "大文字・小文字",
+        "control=divider_divider": "区切り線",
+        "control=divider_divider_color": "色",
+        "control=divider_divider_width": "幅",
         "control=box_padding": "内側の余白",
         "control=box_radius": "角の半径",
         "control=box_gap": "セルの間隔",
@@ -189,6 +193,8 @@
         "option=italic_off": "オフ",
         "option=over_over": "はい",
         "option=over_under": "いいえ",
+        "option=divider_shown": "表示",
+        "option=divider_hidden": "非表示",
         "option=case_none": "そのまま",
         "option=case_upper": "大文字",
         "option=case_lower": "小文字",

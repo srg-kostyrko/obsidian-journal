@@ -16,7 +16,8 @@ const BANDS = ["weekend", "current-week"];
 // month grids read the cell's min height and label padding for it too.
 // A band draws its own fill and ring, so it reads them and the cell's corner radius; the cells under it
 // read its text and its layer, which decides whether that text paints over a decoration. A weekend
-// column's header takes the weekend's text too, so every grid reads that.
+// column's header takes the weekend's text too, so every grid reads that. The week numbers' divider is
+// drawn by its own component, across the rows, so it alone reads the divider's values.
 function bandRenderers(state: string, value: string): readonly Component[] {
   if (value === "layer") return ["band", "cell"];
   if (value.startsWith("week-number-text-")) return ["cell"];
@@ -30,6 +31,7 @@ function renderers(entry: CatalogEntry): readonly Component[] {
   if (band !== undefined) return bandRenderers(band, part.slice(band.length + 1));
   if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
   if (part === "cell-radius") return ["cell", "band"];
+  if (part.startsWith("week-number-divider-")) return ["divider"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix) ? GRIDS : ["cell"];
 }
 
@@ -48,6 +50,7 @@ describe("calendar appearance readers", () => {
   it("assigns every catalog entry to the components that render it, the weekend's text to every grid's headers", () => {
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(24);
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("band")).length).toBe(9);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("divider")).length).toBe(2);
   });
 
   it.each([

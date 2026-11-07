@@ -117,6 +117,7 @@
         "family=visibility": "Visibility",
         "family=label": "Label",
         "family=text": "Text",
+        "family=divider": "Divider",
         "family=highlight": "Highlight",
         "family=box": "Box"
       }
@@ -154,6 +155,9 @@
         "control=text_italic": "Italic",
         "control=text_color": "Color",
         "control=text_case": "Case",
+        "control=divider_divider": "Divider",
+        "control=divider_divider_color": "Color",
+        "control=divider_divider_width": "Width",
         "control=box_padding": "Padding",
         "control=box_radius": "Corner radius",
         "control=box_gap": "Gap between cells",
@@ -190,6 +194,8 @@
         "option=italic_off": "Off",
         "option=over_over": "Yes",
         "option=over_under": "No",
+        "option=divider_shown": "Shown",
+        "option=divider_hidden": "Hidden",
         "option=case_none": "As written",
         "option=case_upper": "Uppercase",
         "option=case_lower": "Lowercase",

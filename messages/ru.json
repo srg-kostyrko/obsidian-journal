@@ -116,6 +116,7 @@
         "family=visibility": "Видимость",
         "family=label": "Подпись",
         "family=text": "Текст",
+        "family=divider": "Разделитель",
         "family=highlight": "Выделение",
         "family=box": "Ячейка"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "Курсив",
         "control=text_color": "Цвет",
         "control=text_case": "Регистр",
+        "control=divider_divider": "Разделитель",
+        "control=divider_divider_color": "Цвет",
+        "control=divider_divider_width": "Толщина",
         "control=box_padding": "Внутренний отступ",
         "control=box_radius": "Радиус углов",
         "control=box_gap": "Промежуток между ячейками",
@@ -189,6 +193,8 @@
         "option=italic_off": "Выкл.",
         "option=over_over": "Да",
         "option=over_under": "Нет",
+        "option=divider_shown": "Показано",
+        "option=divider_hidden": "Скрыто",
         "option=case_none": "Как написано",
         "option=case_upper": "Прописные",
         "option=case_lower": "Строчные",

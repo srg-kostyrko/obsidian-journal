@@ -116,6 +116,7 @@
         "family=visibility": "Visibilité",
         "family=label": "Libellé",
         "family=text": "Texte",
+        "family=divider": "Séparateur",
         "family=highlight": "Mise en évidence",
         "family=box": "Boîte"
       }
@@ -153,6 +154,9 @@
         "control=text_italic": "Italique",
         "control=text_color": "Couleur",
         "control=text_case": "Casse",
+        "control=divider_divider": "Séparateur",
+        "control=divider_divider_color": "Couleur",
+        "control=divider_divider_width": "Épaisseur",
         "control=box_padding": "Marge intérieure",
         "control=box_radius": "Rayon des coins",
         "control=box_gap": "Espace entre les cellules",
@@ -189,6 +193,8 @@
         "option=italic_off": "Désactivé",
         "option=over_over": "Oui",
         "option=over_under": "Non",
+        "option=divider_shown": "Affiché",
+        "option=divider_hidden": "Masqué",
         "option=case_none": "Telle quelle",
         "option=case_upper": "Majuscules",
         "option=case_lower": "Minuscules",

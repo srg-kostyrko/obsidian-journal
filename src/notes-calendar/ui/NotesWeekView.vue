@@ -24,6 +24,7 @@ import { useShelfScope } from "../use-shelf-scope";
 
 import NotesCalendarBand from "./NotesCalendarBand.vue";
 import NotesCalendarCell from "./NotesCalendarCell.vue";
+import NotesCalendarDivider from "./NotesCalendarDivider.vue";
 import {
   useCalendarGridNavigation,
   type CalendarGridItem,
@@ -89,7 +90,7 @@ const bands = computed(() =>
   bandPlacement({
     columns: days.value.map((day) => day.start.weekday()),
     weekend: weekend.value,
-    weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
+    weekNumbers: weeksPos.value,
     weekdayHeader: props.showWeekdays,
     rows: [{ isCurrentWeek: props.currentWeekBand && holdsToday.value, hasDay: days.value.length > 0 }],
   }),
@@ -208,6 +209,12 @@ const isSelected = (period: Period): boolean =>
         row="auto"
       />
       <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
+      <NotesCalendarDivider
+        v-if="bands.divider"
+        :side="weeksPos === 'left' ? 'end' : 'start'"
+        :column="bands.divider.column"
+        :row="bands.divider.row"
+      />
       <div
         class="notes-week-view__weekdays"
         :class="{ 'notes-week-view__weekdays--visually-hidden': !showWeekdays }"
@@ -328,7 +335,7 @@ const isSelected = (period: Period): boolean =>
   row-gap: var(--size-2-2);
   column-gap: var(--_v-cell-gap);
 }
-/* The week number takes an equal share, as it did as a flex row; the month view sizes it to its content. */
+/* The week number takes an equal share, as it did as a flex row, and as it does in the month view. */
 .notes-week-view__grid[data-weeks="left"] {
   grid-template-columns: 1fr repeat(var(--day-columns, 7), 1fr);
 }
@@ -419,16 +426,19 @@ const isSelected = (period: Period): boolean =>
 /* Week numbers and dates are cells, whose color the cell's state precedence owns; `--_part-color` is
    the bottom of that chain, so a state with no text color of its own leaves the part's color. */
 .notes-week-view__week-number {
-  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
+  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em));
   --_v-week-number-weight: var(
     --journal-cell-week-number-weight,
-    var(--journal-saved-cell-week-number-weight, var(--font-bold))
+    var(--journal-saved-cell-week-number-weight, var(--font-normal))
   );
   --_v-week-number-italic: var(
     --journal-cell-week-number-italic,
     var(--journal-saved-cell-week-number-italic, inherit)
   );
-  --_v-week-number-color: var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit));
+  --_v-week-number-color: var(
+    --journal-cell-week-number-color,
+    var(--journal-saved-cell-week-number-color, var(--text-muted))
+  );
   --_v-week-number-case: var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit));
   --_part-color: var(--_v-week-number-color);
   font-size: var(--_v-week-number-size);
@@ -569,14 +579,14 @@ const isSelected = (period: Period): boolean =>
       --journal-cell-week-number-size-narrow,
       var(
         --journal-saved-cell-week-number-size-narrow,
-        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit))
+        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em))
       )
     );
     --_v-week-number-weight: var(
       --journal-cell-week-number-weight-narrow,
       var(
         --journal-saved-cell-week-number-weight-narrow,
-        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-bold)))
+        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-normal)))
       )
     );
     --_v-week-number-italic: var(
@@ -590,7 +600,7 @@ const isSelected = (period: Period): boolean =>
       --journal-cell-week-number-color-narrow,
       var(
         --journal-saved-cell-week-number-color-narrow,
-        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit))
+        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, var(--text-muted)))
       )
     );
     --_v-week-number-case: var(

@@ -47,6 +47,14 @@ const textEntries = {
   case: v.nullable(caseSchema),
 };
 
+// Only week numbers sit beside the days in a column of their own, so only they carry a divider.
+const weekNumberEntries = {
+  ...textEntries,
+  divider: v.boolean(),
+  dividerColor: colorSchema,
+  dividerWidth: pixelsSchema,
+};
+
 const boxEntries = {
   padding: pixelsSchema,
   radius: v.string(),
@@ -59,6 +67,7 @@ type Shape<E extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<E, undefine
 export type HighlightValues = Shape<typeof highlightEntries>;
 export type CurrentWeekValues = Shape<typeof currentWeekEntries>;
 export type TextValues = Shape<typeof textEntries>;
+export type WeekNumberValues = Shape<typeof weekNumberEntries>;
 export type BoxValues = Shape<typeof boxEntries>;
 
 export type Overrides<T> = { [K in keyof T]: T[K] | null };
@@ -180,7 +189,12 @@ const wideDefaults = {
   heading: text({}),
   // Null, not a copy of the stock: Default is the stock, so an explicit copy would read as a change.
   weekday: text({ size: "0.6em" }),
-  weekNumber: text({}),
+  weekNumber: {
+    ...text({ size: "0.85em" }),
+    divider: true,
+    dividerColor: theme("background-modifier-border"),
+    dividerWidth: 1,
+  } satisfies WeekNumberValues,
   date: text({}),
   cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 },
 };
@@ -194,7 +208,7 @@ const wideSchema = v.object({
   currentWeek: currentWeekPart(wideDefaults.currentWeek),
   heading: defaultedPart(textEntries, wideDefaults.heading),
   weekday: defaultedPart(textEntries, wideDefaults.weekday),
-  weekNumber: defaultedPart(textEntries, wideDefaults.weekNumber),
+  weekNumber: defaultedPart(weekNumberEntries, wideDefaults.weekNumber),
   date: defaultedPart(textEntries, wideDefaults.date),
   cell: defaultedPart(boxEntries, wideDefaults.cell),
 });
@@ -208,7 +222,7 @@ const narrowSchema = v.object({
   currentWeek: narrowCurrentWeekPart,
   heading: overriddenPart(textEntries),
   weekday: overriddenPart(textEntries),
-  weekNumber: overriddenPart(textEntries),
+  weekNumber: overriddenPart(weekNumberEntries),
   date: overriddenPart(textEntries),
   cell: overriddenPart(boxEntries),
 });
