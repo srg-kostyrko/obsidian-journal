@@ -26,6 +26,7 @@ const NotesWeekViewStub = defineComponent({
     showWeekdays: { type: Boolean, default: false },
     selectedDate: { type: String, default: undefined },
     selectDate: { type: Function as PropType<(date: AnchorString) => void>, default: undefined },
+    currentWeekBand: { type: Boolean, default: true },
   },
   setup: (p) => () =>
     h(
@@ -37,6 +38,7 @@ const NotesWeekViewStub = defineComponent({
         "data-show-header": String(p.showHeader),
         "data-show-weekdays": String(p.showWeekdays),
         "data-selected-date": p.selectedDate,
+        "data-current-week-band": String(p.currentWeekBand),
       },
       h("button", {
         "data-testid": "select-date",
@@ -125,6 +127,16 @@ describe("WeekCalendarBlock", () => {
     await nextTick();
 
     expect(screen.getAllByTestId("week-stub")[0]?.dataset.week).not.toBe(start);
+  });
+
+  // The lone week view block is by ruling the one grid without a current-week band; its weekend band stays.
+  it("opts every week out of the current-week band", async () => {
+    await mountBlock({ ...baseConfig, before: 1, after: 1 });
+    expect(screen.getAllByTestId("week-stub").map((stub) => stub.dataset.currentWeekBand)).toEqual([
+      "false",
+      "false",
+      "false",
+    ]);
   });
 
   describe("visibility overrides", () => {

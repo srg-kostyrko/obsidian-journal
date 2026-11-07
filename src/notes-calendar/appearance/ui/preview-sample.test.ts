@@ -17,28 +17,37 @@ function element(...chain: readonly Record<string, string>[]): Element {
 }
 
 const CELL = "notes-calendar-cell";
+const SAT_SUN: ReadonlySet<number> = new Set([0, 6]);
 
 describe("sampleDays", () => {
   it("shows today's month", () => {
-    expect(sampleDays(date("2026-05-13")).month.start.toAnchor()).toBe("2026-05-01");
+    expect(sampleDays(date("2026-05-13"), SAT_SUN).month.start.toAnchor()).toBe("2026-05-01");
   });
 
   it("opens the note two days after today", () => {
-    expect(sampleDays(date("2026-05-13")).active).toBe("2026-05-15");
+    expect(sampleDays(date("2026-05-13"), SAT_SUN).active).toBe("2026-05-15");
   });
 
   it("clamps the open note to the month's last day", () => {
-    expect(sampleDays(date("2026-05-30")).active).toBe("2026-05-31");
+    expect(sampleDays(date("2026-05-30"), SAT_SUN).active).toBe("2026-05-31");
   });
 
   it("clamps the open note to February's last day", () => {
-    expect(sampleDays(date("2026-02-27")).active).toBe("2026-02-28");
+    expect(sampleDays(date("2026-02-27"), SAT_SUN).active).toBe("2026-02-28");
   });
 
-  it("selects the month's first day that is neither today nor the open note's", () => {
-    expect(sampleDays(date("2026-05-13")).selected).toBe("2026-05-01");
-    expect(sampleDays(date("2026-05-01")).selected).toBe("2026-05-02");
-    expect(sampleDays(date("2026-05-30")).selected).toBe("2026-05-01");
+  // The selected day is also a weekend day in today's week, so one sample day shows several states at once.
+  it("selects a weekend day of today's week that is neither today nor the open note's", () => {
+    expect(sampleDays(date("2026-05-13"), SAT_SUN).selected).toBe("2026-05-16");
+    expect(sampleDays(date("2026-05-01"), SAT_SUN).selected).toBe("2026-05-02");
+    expect(sampleDays(date("2026-05-13"), new Set([5, 6])).selected).toBe("2026-05-16");
+    expect(sampleDays(date("2026-05-11"), new Set([4])).selected).toBe("2026-05-14");
+  });
+
+  it("falls back to the month's first free day when today's week has no free weekend day in the month", () => {
+    // Today and the open note take both weekend days of the month's last week.
+    expect(sampleDays(date("2026-05-30"), SAT_SUN).selected).toBe("2026-05-01");
+    expect(sampleDays(date("2026-05-13"), new Set()).selected).toBe("2026-05-01");
   });
 
   it.each([
@@ -55,7 +64,7 @@ describe("sampleDays", () => {
   ])(
     "gives today, the open note and the selected day a day each, and decorates only the selected (today %s)",
     (today) => {
-      const sample = sampleDays(date(today));
+      const sample = sampleDays(date(today), SAT_SUN);
       expect(new Set([today, sample.active, sample.selected]).size).toBe(3);
       for (const anchor of [today, sample.active, sample.selected]) {
         expect(sample.month.contains(date(anchor))).toBe(true);
@@ -78,6 +87,36 @@ describe("partsAt", () => {
   it("names the current week number before the today it contains", () => {
     const target = element({ class: CELL, "data-preview-part": "weekNumber", "data-today": "true" });
     expect(partsAt(target)).toEqual(["weekNumber", "today"]);
+  });
+
+  it("lists a multi-state day in chip order, with Current week and Weekends among the states", () => {
+    const target = element({
+      class: CELL,
+      "data-preview-part": "date",
+      "data-selected": "true",
+      "data-today": "true",
+      "data-current-week": "true",
+      "data-weekend": "true",
+      "data-outside": "true",
+    });
+    expect(partsAt(target)).toEqual(["selected", "today", "currentWeek", "weekend", "outside", "date", "cell"]);
+  });
+
+  it("names the current week's number cell by its week before the today it contains", () => {
+    const target = element({
+      class: CELL,
+      "data-preview-part": "weekNumber",
+      "data-today": "true",
+      "data-current-week": "true",
+    });
+    expect(partsAt(target)).toEqual(["weekNumber", "today", "currentWeek"]);
+  });
+
+  it("names a weekend column's header Weekends first, then Weekday header", () => {
+    expect(partsAt(element({ "data-preview-part": "weekday", "data-weekend": "true" }))).toEqual([
+      "weekend",
+      "weekday",
+    ]);
   });
 
   it("names a weekday header", () => {

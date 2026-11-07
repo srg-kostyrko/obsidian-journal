@@ -1,0 +1,102 @@
+{
+  "version": 8,
+  "logging": {
+    "level": "debug"
+  },
+  "calendar": {
+    "mode": "custom",
+    "dow": 1,
+    "doy": 4,
+    "global": false
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "tinted"
+            }
+          ],
+          "styles": [
+            {
+              "type": "color",
+              "color": {
+                "type": "custom",
+                "color": "#cc3300"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "views": {
+    "2b7e4c19-8a3d-4f6e-9b1c-5d0a7e3f2c84": {
+      "id": "2b7e4c19-8a3d-4f6e-9b1c-5d0a7e3f2c84",
+      "name": "Weekends target",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "3c8f5d2a-9b4e-4a7f-8c2d-6e1b8f4a3d95",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "left",
+            "showHeading": "default",
+            "showWeekdays": "default",
+            "outsideDays": "default",
+            "monthRows": "default"
+          }
+        },
+        {
+          "id": "4d9a6e3b-0c5f-4b8a-9d3e-7f2c9a5b4ea6",
+          "key": "week-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "left",
+            "showHeading": "default",
+            "showWeekdays": "default"
+          }
+        }
+      ]
+    }
+  }
+}

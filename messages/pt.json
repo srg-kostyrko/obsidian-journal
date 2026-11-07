@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Aplicar a configuração da semana a todas as datas do cofre",
   "calendar_appearance_section_title": "Aparência do calendário",
   "calendar_appearance_open": "Abrir",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Fim de semana: {days}",
+        "mode=none": "Sem fim de semana"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "Alterar nas configurações do calendário",
   "calendar_appearance_preview": "Pré-visualização",
   "calendar_appearance_width_label": "Largura",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "Data selecionada",
         "part=active": "Nota aberta",
         "part=outside": "Dias fora do mês",
+        "part=currentWeek": "Semana atual",
+        "part=weekend": "Fins de semana",
         "part=heading": "Cabeçalho do mês",
         "part=weekday": "Cabeçalho dos dias da semana",
         "part=weekNumber": "Números da semana",
@@ -1875,6 +1888,20 @@
   ],
   "calendar_week_placement_label": "Números de semana padrão",
   "calendar_week_placement_description": "Onde a coluna do número da semana aparece nos blocos de calendário definidos como \"Usar padrão global\".",
+  "calendar_weekend_label": "Dias de fim de semana",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Sem fim de semana"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Fim de semana da localidade",
+  "calendar_weekend_custom": "Personalizado",
   "calendar_timeline_navigation_label": "Navegação padrão da linha do tempo",
   "calendar_timeline_navigation_description": "Mostra os controles de período anterior e seguinte nos blocos de código calendar-timeline. Um bloco pode substituir isso com sua opção navigation.",
   "view_block_config_show_heading_label": "Exibir cabeçalho de mês/ano",

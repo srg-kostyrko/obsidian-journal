@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Appliquer la configuration hebdomadaire à toutes les dates du coffre-fort",
   "calendar_appearance_section_title": "Apparence du calendrier",
   "calendar_appearance_open": "Ouvrir",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Week-end : {days}",
+        "mode=none": "Pas de week-end"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "Modifier dans les réglages du calendrier",
   "calendar_appearance_preview": "Aperçu",
   "calendar_appearance_width_label": "Largeur",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "Date sélectionnée",
         "part=active": "Note ouverte",
         "part=outside": "Jours hors du mois",
+        "part=currentWeek": "Semaine en cours",
+        "part=weekend": "Week-ends",
         "part=heading": "En-tête du mois",
         "part=weekday": "En-tête des jours de la semaine",
         "part=weekNumber": "Numéros de semaine",
@@ -1875,6 +1888,20 @@
   ],
   "calendar_week_placement_label": "Numéros de semaine par défaut",
   "calendar_week_placement_description": "Emplacement de la colonne des numéros de semaine dans les blocs de calendrier réglés sur « Utiliser la valeur par défaut globale ».",
+  "calendar_weekend_label": "Jours du week-end",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Pas de week-end"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Week-end des paramètres régionaux",
+  "calendar_weekend_custom": "Personnalisé",
   "calendar_timeline_navigation_label": "Navigation par défaut de la chronologie",
   "calendar_timeline_navigation_description": "Affiche les contrôles de période précédente et suivante dans les blocs de code calendar-timeline. Un bloc peut le remplacer avec son option navigation.",
   "view_block_config_show_heading_label": "Afficher l’en-tête mois/année",

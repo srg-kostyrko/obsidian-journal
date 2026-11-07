@@ -54,10 +54,32 @@ const HIGHLIGHT_STATES = [
     text: "var(--text-muted)",
     layer: "-1",
   },
+  {
+    state: "weekend",
+    attribute: "data-weekend",
+    color: "transparent",
+    ring: "0px",
+    strength: "0",
+    text: "",
+    layer: "-1",
+  },
+  {
+    state: "current-week",
+    attribute: "data-current-week",
+    color: "transparent",
+    ring: "0px",
+    strength: "0",
+    text: "",
+    layer: "-1",
+  },
 ] as const;
 
+// A band is drawn by the grid, across many cells, so its fill and ring are the band's, not a cell's.
+const BANDS: ReadonlySet<string> = new Set(["weekend", "current-week"]);
+
 function layer(state: string, kind: "fill" | "ring"): string {
-  return `.notes-calendar-cell__layer[data-layer="${state}-${kind}"]`;
+  const owner = BANDS.has(state) ? "notes-calendar-band" : "notes-calendar-cell";
+  return `.${owner}__layer[data-layer="${state}-${kind}"]`;
 }
 
 function highlightEntries(): CatalogEntry[] {
@@ -121,7 +143,10 @@ function highlightEntries(): CatalogEntry[] {
       {
         name: name("layer"),
         stock: z,
-        probe: { selector: layer(state, "fill"), property: "z-index", sample: "7", expect: "7" },
+        // A band's layer is clamped to under (0) or over (1), so a larger sample would read back as 1.
+        probe: BANDS.has(state)
+          ? { selector: layer(state, "fill"), property: "z-index", sample: "1", expect: "1" }
+          : { selector: layer(state, "fill"), property: "z-index", sample: "7", expect: "7" },
       },
     ];
   });

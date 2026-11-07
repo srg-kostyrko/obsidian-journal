@@ -2,6 +2,7 @@ import { compileStyle, parse } from "vue/compiler-sfc";
 
 import { publicName, savedName, type CatalogEntry } from "./appearance/appearance-catalog";
 import previewSource from "./appearance/ui/AppearancePreview.vue?raw";
+import bandSource from "./ui/NotesCalendarBand.vue?raw";
 import cellSource from "./ui/NotesCalendarCell.vue?raw";
 import monthViewSource from "./ui/NotesMonthView.vue?raw";
 import weekViewSource from "./ui/NotesWeekView.vue?raw";
@@ -41,9 +42,13 @@ export function scopedStyleRules(source: string): readonly ScopedRule[] {
 }
 
 /** The scoped rules of every component that reads the appearance catalog. */
-export function calendarStyleRules(): Record<"cell" | "monthView" | "weekView" | "preview", readonly ScopedRule[]> {
+export function calendarStyleRules(): Record<
+  "cell" | "band" | "monthView" | "weekView" | "preview",
+  readonly ScopedRule[]
+> {
   return {
     cell: scopedStyleRules(cellSource),
+    band: scopedStyleRules(bandSource),
     monthView: scopedStyleRules(monthViewSource),
     weekView: scopedStyleRules(weekViewSource),
     preview: scopedStyleRules(previewSource),

@@ -25,6 +25,8 @@ describe("appearanceCatalog", () => {
         "journal-cell-today-layer",
         "journal-cell-selected-layer",
         "journal-cell-active-layer",
+        "journal-cell-weekend-color",
+        "journal-cell-current-week-layer",
       ]),
     );
   });
@@ -62,6 +64,25 @@ describe("appearanceCatalog", () => {
         });
       }
     }
+  });
+
+  // A band draws its fill and ring outside every cell, so its probes read the band, not a cell layer.
+  it.each(["weekend", "current-week"])("probes the %s band's own layers and its text on the cell", (state) => {
+    const probe = (value: string) =>
+      appearanceCatalog.find((entry) => entry.name === `journal-cell-${state}-${value}`)?.probe.selector;
+    expect({
+      color: probe("color"),
+      ring: probe("ring-width"),
+      strength: probe("strength"),
+      layer: probe("layer"),
+      text: probe("text-color"),
+    }).toEqual({
+      color: `.notes-calendar-band__layer[data-layer="${state}-fill"]`,
+      ring: `.notes-calendar-band__layer[data-layer="${state}-ring"]`,
+      strength: `.notes-calendar-band__layer[data-layer="${state}-fill"]`,
+      layer: `.notes-calendar-band__layer[data-layer="${state}-fill"]`,
+      text: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`,
+    });
   });
 
   it("strength probes read opacity and ring-width probes read box-shadow", () => {

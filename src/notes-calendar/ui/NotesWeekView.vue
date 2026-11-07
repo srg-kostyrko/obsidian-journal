@@ -12,14 +12,17 @@ import {
   type PeriodKind,
   type WeekPeriod,
 } from "@/calendar";
+import { useToday, useWeekend } from "@/calendar/ui";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 
+import { bandPlacement } from "../band-placement";
 import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
+import NotesCalendarBand from "./NotesCalendarBand.vue";
 import NotesCalendarCell from "./NotesCalendarCell.vue";
 import {
   useCalendarGridNavigation,
@@ -37,6 +40,7 @@ const props = withDefaults(
     showWeekdays?: boolean;
     selectedDate?: AnchorString;
     selectDate?: NotesDateSelect;
+    currentWeekBand?: boolean;
   }>(),
   {
     weeks: undefined,
@@ -45,6 +49,7 @@ const props = withDefaults(
     showWeekdays: true,
     selectedDate: undefined,
     selectDate: undefined,
+    currentWeekBand: true,
   },
 );
 
@@ -56,14 +61,19 @@ const rawWeek = computed(() => toRaw(props.week));
 const days = computed(() =>
   [...rawWeek.value.days()]
     .map((d) => DayPeriod.containing(d))
-    .filter((d) => !hiddenWeekdays.value.has(Number(d.start.format("d")))),
+    .filter((d) => !hiddenWeekdays.value.has(d.start.weekday())),
 );
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
 const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
+const weekend = useWeekend();
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
-  return days.value.map((day) => weekdayTexts(day.start, weekdayLabel, weekdayLabelNarrow));
+  return days.value.map((day) => ({
+    ...weekdayTexts(day.start, weekdayLabel, weekdayLabelNarrow),
+    weekend: isWeekend(day),
+  }));
 });
 // A week belongs to the period that owns it, which is the representative day's — not the
 // week start's, which for a cross-year week sits in the previous month and year.
@@ -72,6 +82,20 @@ const quarterPeriod = computed(() => QuarterPeriod.containing(rawWeek.value.repr
 const yearPeriod = computed(() => YearPeriod.containing(rawWeek.value.representative));
 const weeksPos = computed(() => props.weeks ?? "left");
 const showWeekNumber = computed(() => weeksPos.value !== "none");
+
+const today = useToday();
+const bands = computed(() =>
+  bandPlacement({
+    columns: days.value.map((day) => day.start.weekday()),
+    weekend: weekend.value,
+    weekNumbersLeft: showWeekNumber.value && weeksPos.value === "left",
+    weekdayHeader: props.showWeekdays,
+    rows: [
+      { isCurrentWeek: props.currentWeekBand && rawWeek.value.contains(today.value), hasDay: days.value.length > 0 },
+    ],
+  }),
+);
+const isCurrentWeek = computed(() => bands.value.currentWeekIndex === 0);
 const showQuarter = computed(() => scope.quarter.value.length > 0);
 
 const allPeriods = computed<readonly Period[]>(() => {
@@ -170,9 +194,19 @@ const isSelected = (period: Period): boolean =>
       class="notes-week-view__grid"
       role="grid"
       :aria-label="rawWeek.format(accessibleFormatPattern('week'))"
+      :data-weeks="showWeekNumber ? weeksPos : null"
+      :style="{ '--day-columns': days.length }"
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
+      <NotesCalendarBand
+        v-for="band in bands.weekend"
+        :key="band.key"
+        kind="weekend"
+        :column="band.column"
+        row="auto"
+      />
+      <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
       <div
         class="notes-week-view__weekdays"
         :class="{ 'notes-week-view__weekdays--visually-hidden': !showWeekdays }"
@@ -190,6 +224,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-week-view__weekday"
           role="columnheader"
           :aria-label="day.name"
+          :data-weekend="day.weekend || null"
         >
           <span class="notes-week-view__weekday-wide" aria-hidden="true">{{ day.wide }}</span>
           <span class="notes-week-view__weekday-narrow" aria-hidden="true">{{ day.narrow }}</span>
@@ -211,12 +246,15 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
+          :current-week="isCurrentWeek"
         />
         <NotesCalendarCell
           v-for="day in days"
           :key="day.anchor.toAnchor()"
           class="notes-week-view__day"
           :period="day"
+          :weekend="isWeekend(day)"
+          :current-week="isCurrentWeek"
           :cell="dayCell"
           :format="format('day')"
           role="gridcell"
@@ -234,6 +272,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
+          :current-week="isCurrentWeek"
         />
       </div>
     </div>
@@ -278,11 +317,35 @@ const isSelected = (period: Period): boolean =>
 .notes-week-view__header[data-flanked] {
   justify-content: center;
 }
+/* The month view's grid scheme, so a band's grid lines mean the same here. Positioned for its bands, never
+   isolated: a cell with an open mark popover lifts itself out of the grid. */
 .notes-week-view__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-2-2);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr);
+  row-gap: var(--size-2-2);
+  column-gap: var(--_v-cell-gap);
+}
+/* The week number takes an equal share, as it did as a flex row; the month view sizes it to its content. */
+.notes-week-view__grid[data-weeks="left"] {
+  grid-template-columns: 1fr repeat(var(--day-columns, 7), 1fr);
+}
+.notes-week-view__grid[data-weeks="right"] {
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr) 1fr;
+}
+.notes-week-view__weekdays,
+.notes-week-view__row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: var(--_v-cell-gap);
+}
+@supports not (grid-template-columns: subgrid) {
+  .notes-week-view__weekdays,
+  .notes-week-view__row {
+    display: contents;
+  }
 }
 .notes-week-view__weekdays {
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
@@ -290,10 +353,13 @@ const isSelected = (period: Period): boolean =>
   --_v-weekday-italic: var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit));
   --_v-weekday-color: var(--journal-cell-weekday-color, var(--journal-saved-cell-weekday-color, var(--text-muted)));
   --_v-weekday-case: var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit));
-  display: flex;
-  gap: var(--_v-cell-gap);
+  --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
+  --_v-weekend-text-weight: var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight));
+  --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
 }
+/* A block, over the no-subgrid `display: contents`: a row with no box of its own cannot be clipped. */
 .notes-week-view__weekdays--visually-hidden {
+  display: block;
   position: absolute;
   width: 1px;
   height: 1px;
@@ -302,8 +368,9 @@ const isSelected = (period: Period): boolean =>
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.notes-week-view__weekdays > * {
-  flex: 1;
+/* Positioned, so it paints above an under weekend band, which is positioned and precedes it. */
+.notes-week-view__weekday {
+  position: relative;
   font-size: var(--_v-weekday-size);
   font-weight: var(--_v-weekday-weight);
   font-style: var(--_v-weekday-italic);
@@ -311,17 +378,41 @@ const isSelected = (period: Period): boolean =>
   text-align: center;
   color: var(--_v-weekday-color);
   text-transform: var(--_v-weekday-case);
+  display: flex;
+  justify-content: center;
+  align-items: end;
+}
+/* A weekend column's header takes the weekend's text over the weekday part's own, since the band starts
+   there. Its values sit on the header row, so the Unchanged queries below are answered by its parent. */
+.notes-week-view__weekday[data-weekend] {
+  --_weekend-text: var(--_v-weekend-text-color);
+  --_weekend-weight: var(--_v-weekend-text-weight);
+  --_weekend-italic: var(--_v-weekend-text-italic);
+  color: var(--_weekend-text, var(--_v-weekday-color));
+  font-weight: var(--_weekend-weight, var(--_v-weekday-weight));
+  font-style: var(--_weekend-italic, var(--_v-weekday-italic));
+}
+@container style(--_v-weekend-text-color: unchanged) {
+  .notes-week-view__weekday[data-weekend] {
+    --_weekend-text: initial;
+  }
+}
+@container style(--_v-weekend-text-weight: unchanged) {
+  .notes-week-view__weekday[data-weekend] {
+    --_weekend-weight: initial;
+  }
+}
+@container style(--_v-weekend-text-italic: unchanged) {
+  .notes-week-view__weekday[data-weekend] {
+    --_weekend-italic: initial;
+  }
 }
 /* Both texts render, and the narrow query swaps which one shows. */
 .notes-week-view__weekday-narrow {
   display: none;
 }
-.notes-week-view__row {
-  display: flex;
-  gap: var(--_v-cell-gap);
-}
+/* A label that wraps stays centred, as it did in the flex row. */
 .notes-week-view__row > * {
-  flex: 1;
   text-align: center;
 }
 /* Week numbers and dates are cells, whose color the cell's state precedence owns; `--_part-color` is
@@ -356,7 +447,7 @@ const isSelected = (period: Period): boolean =>
   font-style: var(--_v-date-italic);
   text-transform: var(--_v-date-case);
 }
-/* A flex item keeps a content-sized floor; giving it up lets a long label clip inside the cell. Stock labels
+/* A 1fr track keeps a content-sized floor; giving it up lets a long label clip inside the cell. Stock labels
    keep the floor, so a short date beside marks never clips. */
 [data-custom-day-label] .notes-week-view__day {
   min-width: 0;
@@ -448,6 +539,27 @@ const isSelected = (period: Period): boolean =>
       var(
         --journal-saved-cell-weekday-case-narrow,
         var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit))
+      )
+    );
+    --_v-weekend-text-color: var(
+      --journal-cell-weekend-text-color-narrow,
+      var(
+        --journal-saved-cell-weekend-text-color-narrow,
+        var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color))
+      )
+    );
+    --_v-weekend-text-weight: var(
+      --journal-cell-weekend-text-weight-narrow,
+      var(
+        --journal-saved-cell-weekend-text-weight-narrow,
+        var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight))
+      )
+    );
+    --_v-weekend-text-italic: var(
+      --journal-cell-weekend-text-italic-narrow,
+      var(
+        --journal-saved-cell-weekend-text-italic-narrow,
+        var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic))
       )
     );
   }

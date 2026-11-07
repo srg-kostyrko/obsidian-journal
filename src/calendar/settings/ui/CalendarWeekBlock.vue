@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-import { Calendar } from "@/calendar/calendar";
+import { activeLocale, Calendar } from "@/calendar/calendar";
 import { detectCurrentPreset, type WeekPreset } from "@/calendar/presets";
-import { m } from "@/i18n";
+import { resolveWeekend, weekendDayNames } from "@/calendar/weekend";
+import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 import { ReloadHintService, SettingsService } from "@/settings";
@@ -15,8 +16,9 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
+import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
-import { calendarDisplaySlice, type WeekPlacement } from "../display-slice";
+import { calendarDisplaySlice, type WeekendSetting, type WeekPlacement } from "../display-slice";
 import { calendarSlice, type CalendarSliceState } from "../slice";
 import { WeekPresetApplierToken } from "../week-preset-applier";
 
@@ -36,6 +38,41 @@ const expanded = ref(false);
 function setWeekPlacement(weekPlacement: WeekPlacement): void {
   displaySlice.state = { ...displaySlice.state, weekPlacement };
 }
+
+// Read during render so the order follows the installed week grid, as in the weekday condition.
+const weekOrder = computed(() => calendar.weekdaysShort().map((weekday) => weekday.index));
+
+const resolvedWeekend = computed(() => resolveWeekend(displaySlice.state.weekend, activeLocale()));
+
+const weekendDescription = computed(() => {
+  const days = weekendDayNames(resolvedWeekend.value, calendar.weekdays());
+  return m.calendar_weekend_description({
+    mode: days.length === 0 ? "none" : displaySlice.state.weekend.type,
+    days: formatConjunction(days),
+  });
+});
+
+const weekendDayOptions = computed(() =>
+  weekOrder.value.map((day) => ({ value: day, label: calendar.weekdays()[day] ?? "" })),
+);
+
+function setWeekendType(type: WeekendSetting["type"]): void {
+  const weekend: WeekendSetting =
+    type === "locale" ? { type } : { type, days: [...resolvedWeekend.value].toSorted((a, b) => a - b) };
+  displaySlice.state = { ...displaySlice.state, weekend };
+}
+
+function setWeekendDays(days: number[]): void {
+  displaySlice.state = {
+    ...displaySlice.state,
+    weekend: { type: "custom", days: days.toSorted((a, b) => a - b) },
+  };
+}
+
+const customWeekendDays = computed(() => {
+  const { weekend } = displaySlice.state;
+  return weekend.type === "custom" ? weekend.days : [];
+});
 
 const timelineNavigation = computed({
   get: () => displaySlice.state.timelineNavigation,
@@ -119,6 +156,24 @@ function change(): void {
         <option value="left">{{ m.view_block_config_weeks_left() }}</option>
         <option value="right">{{ m.view_block_config_weeks_right() }}</option>
       </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_weekend_label()">
+      <template #description>{{ weekendDescription }}</template>
+      <UiDropdown
+        :model-value="displaySlice.state.weekend.type"
+        @update:model-value="(v) => setWeekendType(v as WeekendSetting['type'])"
+      >
+        <option value="locale">{{ m.calendar_weekend_locale() }}</option>
+        <option value="custom">{{ m.calendar_weekend_custom() }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow v-if="displaySlice.state.weekend.type === 'custom'" controls-only>
+      <UiToggleGroup
+        :model-value="customWeekendDays"
+        :options="weekendDayOptions"
+        :aria-label="m.calendar_weekend_label()"
+        @update:model-value="setWeekendDays"
+      />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_timeline_navigation_label()">
       <template #description>{{ m.calendar_timeline_navigation_description() }}</template>

@@ -22,6 +22,7 @@ import { appearanceSlice, type HighlightStyle } from "../slice";
 
 import AppearanceControl from "./AppearanceControl.vue";
 import AppearancePreview from "./AppearancePreview.vue";
+import AppearanceWeekendSummary from "./AppearanceWeekendSummary.vue";
 import { AppearancePreviewRootKey } from "./preview-root-key";
 
 const { nav } = defineProps<{ nav: SubpageNav }>();
@@ -39,6 +40,8 @@ const LIST_ORDER: readonly PartKey[] = [
   "today",
   "selected",
   "active",
+  "currentWeek",
+  "weekend",
   "outside",
   "cell",
   "grid",
@@ -195,6 +198,7 @@ function reset(part: PartKey): void {
         {{ m.calendar_appearance_reset({ width }) }}
       </UiButton>
     </UiSettingRow>
+    <AppearanceWeekendSummary v-if="inspected.part === 'weekend'" :nav="nav" />
     <UiCollapsibleBlock
       v-for="group of inspected.families"
       :key="familyKey(inspected.part, group.family)"

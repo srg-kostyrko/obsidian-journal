@@ -48,6 +48,7 @@ const showWeekdays = useResolvedStructure("showWeekdays", () => props.config.sho
       :show-weekdays="showWeekdays"
       :selected-date="viewContext.refDate.value"
       :select-date="viewContext.selectRefDate"
+      :current-week-band="false"
     />
   </div>
 </template>

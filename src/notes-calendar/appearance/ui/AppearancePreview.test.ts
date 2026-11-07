@@ -73,7 +73,7 @@ describe("AppearancePreview", () => {
     await userEvent.click(today);
 
     expect(emitted("pick")).toEqual([[partsAt(today), "2026-05-13"]]);
-    expect(partsAt(today)).toEqual(["today", "date", "cell", "grid"]);
+    expect(partsAt(today)).toEqual(["today", "currentWeek", "date", "cell", "grid"]);
   });
 
   it.each(["{Enter}", " "])("emits the same parts for %j on a focused cell as for a click", async (key) => {
@@ -83,7 +83,7 @@ describe("AppearancePreview", () => {
     today.focus();
     await userEvent.keyboard(key);
 
-    expect(emitted("pick")).toEqual([[["today", "date", "cell", "grid"], "2026-05-13"]]);
+    expect(emitted("pick")).toEqual([[["today", "currentWeek", "date", "cell", "grid"], "2026-05-13"]]);
   });
 
   it("marks the open note two days after today, unselected", () => {
@@ -94,9 +94,9 @@ describe("AppearancePreview", () => {
     expect(container.querySelectorAll("[data-active]")).toHaveLength(1);
   });
 
-  it("selects the month's first day, which is not the open note's", () => {
+  it("selects a weekend day in today's week, which is not the open note's", () => {
     const { container } = render(AppearancePreview, { props: { width: "wide" } });
-    const selected = cellAt(container, "2026-05-01");
+    const selected = cellAt(container, "2026-05-16");
     expect(selected.dataset.selected).toBe("true");
     expect(selected.dataset.active).toBeUndefined();
     expect(container.querySelectorAll("[data-selected]")).toHaveLength(1);
@@ -129,7 +129,7 @@ describe("AppearancePreview", () => {
     expect(decorated).toHaveLength(1);
     const [anchor, styles] = decorated.at(0) ?? [];
     expect(styles).toBe("background,color");
-    expect(anchor).toBe("2026-05-01");
+    expect(anchor).toBe("2026-05-16");
   });
 
   describe("outlines the part being edited", () => {
@@ -206,6 +206,34 @@ describe("AppearancePreview", () => {
       const weekNumbers = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekNumber"]')];
       expect(weekNumbers.length).toBeGreaterThan(3);
       expect(picked(container)).toEqual(weekNumbers);
+    });
+
+    it("outlines the weekend days and their weekday headers, and nothing else", () => {
+      const { container } = render(AppearancePreview, {
+        props: {
+          width: "wide",
+          picked: "weekend",
+          display: { ...calendarDisplaySlice.defaults, weekend: { type: "custom", days: [5] } },
+        },
+      });
+      const fridays = [...container.querySelectorAll<HTMLElement>('[data-preview-part="date"]')].filter(
+        (cell) => cell.dataset.weekend !== undefined,
+      );
+      const header = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekday"]')].filter(
+        (span) => span.dataset.weekend !== undefined,
+      );
+      expect(header).toHaveLength(1);
+      expect(fridays.length).toBeGreaterThan(3);
+      expect(new Set(picked(container))).toEqual(new Set([...header, ...fridays]));
+      expect(picked(container).every(isLight)).toBe(true);
+    });
+
+    it("outlines today's week, its days and its week number, and nothing else", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "currentWeek" } });
+      const week = [...container.querySelectorAll<HTMLElement>("[data-current-week]")];
+      expect(week).toHaveLength(8);
+      expect(week.some((element) => element.dataset.previewPart === "weekNumber")).toBe(true);
+      expect(new Set(picked(container))).toEqual(new Set(week));
     });
 
     it("outlines the month grid", () => {
@@ -366,5 +394,75 @@ describe("AppearancePreview", () => {
     const root = container.querySelector<HTMLElement>(".appearance-preview");
     expect(root?.style.width).toBe("100%");
     expect(root?.style.minWidth).toBe("30em");
+  });
+});
+
+const bands = (container: Element, kind: "weekend" | "current-week") =>
+  [...container.querySelectorAll<HTMLElement>(`.notes-calendar-band[data-band="${CSS.escape(kind)}"]`)].map((band) => ({
+    column: band.style.gridColumn,
+    row: band.style.gridRow,
+  }));
+
+describe("AppearancePreview bands", () => {
+  beforeEach(() => {
+    vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("draws the weekend band and the current-week band as the month view does, ahead of the rows", () => {
+    const { container } = withDisplay({});
+    expect({ weekend: bands(container, "weekend"), currentWeek: bands(container, "current-week") }).toEqual({
+      weekend: [{ column: "7 / span 2", row: "auto" }],
+      currentWeek: [{ column: "1 / -1", row: "4 / span 1" }],
+    });
+    const children = [...(container.querySelector(".appearance-preview__grid")?.children ?? [])];
+    expect(children.slice(0, 2).map((child) => (child as HTMLElement).dataset.band)).toEqual([
+      "weekend",
+      "current-week",
+    ]);
+  });
+
+  it("follows the display's weekend, week placement and weekday header", () => {
+    const { container } = withDisplay({
+      weekend: { type: "custom", days: [5, 6] },
+      weekPlacement: "right",
+      showWeekdays: false,
+    });
+    expect({ weekend: bands(container, "weekend"), currentWeek: bands(container, "current-week") }).toEqual({
+      weekend: [{ column: "5 / span 2", row: "auto" }],
+      currentWeek: [{ column: "1 / -1", row: "3 / span 1" }],
+    });
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekday"]')].map(
+        (header) => header.dataset.weekend !== undefined,
+      ),
+    ).toEqual([false, false, false, false, true, true, false]);
+  });
+
+  it("marks today's week number and days with the current week, and the weekend days", () => {
+    const { container } = withDisplay({});
+    const row = rowsOf(container).at(3);
+    expect(row?.querySelectorAll("[data-current-week]").length).toBe(8);
+    expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
+    expect(cellAt(container, "2026-05-16").dataset.weekend).toBe("true");
+    expect(cellAt(container, "2026-05-15").dataset.weekend).toBeUndefined();
+  });
+
+  it("shows several states on the selected day: selected, current week and weekend", () => {
+    const { container } = withDisplay({});
+    const selected = container.querySelector<HTMLElement>("[data-selected]");
+    expect({
+      weekend: selected?.dataset.weekend,
+      currentWeek: selected?.dataset.currentWeek,
+    }).toEqual({ weekend: "true", currentWeek: "true" });
+  });
+
+  it("draws no weekend band for an empty weekend", () => {
+    const { container } = withDisplay({ weekend: { type: "custom", days: [] } });
+    expect(bands(container, "weekend")).toEqual([]);
+    expect(container.querySelector("[data-weekend]")).toBeNull();
   });
 });

@@ -1,14 +1,14 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
+import { chooseFromList, controlRowPath, openEditor } from "../support/appearance-editor.js";
 import { reloadObsidianOn } from "../support/clock.js";
-import { clickSectionButton, closeSettings, isSettingsOpen, openSettings } from "../support/settings.js";
+import { closeSettings, isSettingsOpen } from "../support/settings.js";
 import { waitForState } from "../support/wait.js";
 
 import { openInReadingMode, VISIBLE_LEAF } from "./code-blocks.js";
 
 type Width = "wide" | "narrow";
-type PartKey = "weekday" | "weekNumber" | "date";
 
 // The fixture starts weeks on Sunday with the US first-week rule (day-of-year 6), so its grid is not
 // ISO and a `W` format reads a different number than the rows' own `w`. Today is pinned in May 2027,
@@ -182,30 +182,9 @@ function readWeekdays(blockSelector: string): Promise<WeekdayRead | null> {
 const sameList = (read: readonly (string | null)[], expected: readonly string[]): boolean =>
   read.length === expected.length && read.every((value, index) => value === expected[index]);
 
-async function openEditor(): Promise<void> {
-  await openSettings();
-  await clickSectionButton(m.calendar_appearance_section_title(), m.calendar_appearance_open());
-  await $(".appearance-preview").waitForDisplayed({ timeoutMsg: "the appearance subpage showed no preview" });
-}
-
 async function chooseWidth(width: Width): Promise<void> {
   await $(`.ui-segmented-control__label=${m.calendar_appearance_width({ width })}`).click();
 }
-
-const partsList = () => $(`//select[@id=//label[normalize-space(.)="${m.calendar_appearance_part_label()}"]/@for]`);
-
-async function chooseFromList(part: PartKey): Promise<void> {
-  await partsList().selectByAttribute("value", part);
-  await waitForState(
-    () => partsList().getValue(),
-    (value) => value === part,
-    `${part} did not become the edited part`,
-  );
-}
-
-// A format control's row, by its visible label.
-const controlRowPath = (label: string): string =>
-  `//div[contains(@class,"appearance-control")][.//div[contains(@class,"setting-item-name")][starts-with(normalize-space(.), "${label}")]]`;
 
 const DAY_FORMAT = m.calendar_appearance_control({ control: "label_day" });
 const WEEK_FORMAT = m.calendar_appearance_control({ control: "label_week" });
