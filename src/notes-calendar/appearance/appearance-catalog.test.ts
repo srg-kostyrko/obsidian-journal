@@ -70,6 +70,11 @@ describe("appearanceCatalog", () => {
     }
   });
 
+  const DAYS_OF: Record<string, string> = {
+    weekend: ".notes-calendar-cell[data-weekend]",
+    "current-week": '.notes-calendar-cell[data-current-week]:not([data-kind="week"])',
+  };
+
   // A band draws its fill and ring outside every cell, so its probes read the band, not a cell layer.
   it.each(["weekend", "current-week"])("probes the %s band's own layers and its text on the cell", (state) => {
     const probe = (value: string) =>
@@ -85,8 +90,24 @@ describe("appearanceCatalog", () => {
       ring: `.notes-calendar-band__layer[data-layer="${state}-ring"]`,
       strength: `.notes-calendar-band__layer[data-layer="${state}-fill"]`,
       layer: `.notes-calendar-band__layer[data-layer="${state}-fill"]`,
-      text: `.notes-calendar-cell[data-${state}] > .notes-calendar-cell__text`,
+      text: `${DAYS_OF[state]} > .notes-calendar-cell__text`,
     });
+  });
+
+  // The week number comes first in each row and reads its own text group, so a days' probe left free to
+  // match it would read the week number's accent and bold instead of the value under test.
+  it("probes the current week's days' text on a day, never on the week number", () => {
+    const days = '.notes-calendar-cell[data-current-week]:not([data-kind="week"])';
+    expect(
+      ["text-color", "text-weight", "text-italic"].map(
+        (value) =>
+          appearanceCatalog.find((entry) => entry.name === `journal-cell-current-week-${value}`)?.probe.selector,
+      ),
+    ).toEqual([
+      `${days} > .notes-calendar-cell__text`,
+      `${days} .cell-decoration__content`,
+      `${days} .cell-decoration__content`,
+    ]);
   });
 
   it("probes the current week's week-number text on the week number alone, with an accent bold stock", () => {

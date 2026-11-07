@@ -89,7 +89,9 @@ function highlightEntries(): CatalogEntry[] {
     const { state, attribute, color, ring, strength, text, layer: z } = highlight;
     const ringNarrow = "ringNarrow" in highlight ? { stockNarrow: highlight.ringNarrow } : {};
     const strengthNarrow = "strengthNarrow" in highlight ? { stockNarrow: highlight.strengthNarrow } : {};
-    const cell = `.notes-calendar-cell[${attribute}]`;
+    // The current week's week number reads a text group of its own and comes first in its row, so the
+    // days' text is probed on a day.
+    const cell = `.notes-calendar-cell[${attribute}]${state === "current-week" ? ':not([data-kind="week"])' : ""}`;
     // Weight and italic land on the label: on the cell, an unset chain would unset a host's own weight.
     const label = `${cell} .cell-decoration__content`;
     // The text span owns the cell's color chain; the cell root holds only the part's own color.
