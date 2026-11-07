@@ -208,6 +208,8 @@
   "calendar_appearance_unchanged": "Без изменений",
   "calendar_appearance_narrow_only": "Только узкий",
   "calendar_appearance_narrow_only_clear": "Использовать значение для всех ширин",
+  "calendar_appearance_narrow_own": "У узкого своё значение",
+  "calendar_appearance_narrow_apply": "Использовать и для узкого",
   "calendar_appearance_all_widths": "Все ширины",
   "calendar_appearance_format_suggestions": "Варианты",
   "calendar_appearance_format_preview": "Предпросмотр:",

@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 import { calendarDisplaySlice, type CalendarDisplaySliceState, type WeekdayLabel } from "@/calendar";
 
-import { DEFAULT_WEEKDAY_PATTERN, defaultFormatPattern } from "../cell-format";
+import { DEFAULT_WEEKDAY_PATTERN, defaultFormatPattern, STOCK_NARROW_WEEKDAY } from "../cell-format";
 
 import {
   isFormat,
@@ -61,6 +61,11 @@ export function valueAt(
   return read(width === "wide" ? state.wide[part] : mergedPart(state, part), path);
 }
 
+/** Whether narrow ships a value of its own for this leaf, which wins over the wide one there. */
+export function hasStockNarrow(part: ValuePartKey, path: readonly string[]): boolean {
+  return read(STOCK_NARROW[part], path) !== undefined;
+}
+
 export function sourceAt(
   state: AppearanceSliceState,
   width: Width,
@@ -69,7 +74,7 @@ export function sourceAt(
 ): "stock" | "user" | "narrow" {
   if (width === "narrow" && (read(state.narrow[part], path) ?? null) !== null) return "narrow";
   // A stock narrow value wins over the user's wide one at narrow, so what shows there is stock.
-  if (width === "narrow" && read(STOCK_NARROW[part], path) !== undefined) return "stock";
+  if (width === "narrow" && hasStockNarrow(part, path)) return "stock";
   const stock = read(appearanceSlice.defaults.wide[part], path);
   return equal(read(state.wide[part], path), stock) ? "stock" : "user";
 }
@@ -140,11 +145,13 @@ export function withStructure(
 export const defaultPattern = (control: FormatControl): string =>
   control.label === "weekday" ? DEFAULT_WEEKDAY_PATTERN : defaultFormatPattern(control.label);
 
-/** A pattern string (`""` for the default), one letter, or null for a narrow weekday that follows wide. */
-export function formatAt(display: CalendarDisplaySliceState, control: FormatControl, width: Width): FormatValue | null {
+/**
+ * A pattern string (`""` for the default) or one letter: what renders, so an unset narrow weekday reads as
+ * its stock. Whether narrow has a label of its own is `weekdayLabelNarrow !== null`, not this value.
+ */
+export function formatAt(display: CalendarDisplaySliceState, control: FormatControl, width: Width): FormatValue {
   if (control.label !== "weekday") return display.labels[control.label];
-  const label = width === "wide" ? display.weekdayLabel : display.weekdayLabelNarrow;
-  if (label === null) return null;
+  const label = width === "wide" ? display.weekdayLabel : (display.weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY);
   return label.type === "letter" ? { type: "letter" } : label.pattern;
 }
 
@@ -157,11 +164,11 @@ export function withFormat(
 ): CalendarDisplaySliceState {
   // An empty narrow box means "no override", as a narrow null does everywhere; a typed "ddd" there
   // is still an override, so it is checked before the default folds into "".
-  const sameAsWide = control.label === "weekday" && width === "narrow";
-  if (sameAsWide && value === "") return { ...display, weekdayLabelNarrow: null };
+  const narrowWeekday = control.label === "weekday" && width === "narrow";
+  if (narrowWeekday && value === "") return { ...display, weekdayLabelNarrow: null };
   if (value === null) {
-    if (sameAsWide) return { ...display, weekdayLabelNarrow: null };
-    throw new TypeError(`the ${control.label} format at ${width} has no "same as wide"`);
+    if (narrowWeekday) return { ...display, weekdayLabelNarrow: null };
+    throw new TypeError(`the ${control.label} format at ${width} has no "no override"`);
   }
   const pattern = typeof value === "string" && value === defaultPattern(control) ? "" : value;
   if (control.label !== "weekday") {
@@ -244,4 +251,18 @@ export function withNarrowCleared(
   path: readonly string[],
 ): AppearanceSliceState {
   return withValue(state, "narrow", part, path, null);
+}
+
+/** Writes the wide value as a narrow override, so it wins over the stock narrow value too. */
+export function withNarrowFromWide(
+  state: AppearanceSliceState,
+  part: ValuePartKey,
+  path: readonly string[],
+): AppearanceSliceState {
+  return withValue(state, "narrow", part, path, read(state.wide[part], path));
+}
+
+/** Writes the wide weekday label as the narrow one, so narrow stops showing its stock one letter. */
+export function withNarrowWeekdayFromWide(display: CalendarDisplaySliceState): CalendarDisplaySliceState {
+  return { ...display, weekdayLabelNarrow: { ...display.weekdayLabel } };
 }

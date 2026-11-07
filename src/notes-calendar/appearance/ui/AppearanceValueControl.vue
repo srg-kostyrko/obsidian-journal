@@ -8,7 +8,6 @@ import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiSlider from "@/ui/UiSlider.vue";
@@ -16,15 +15,18 @@ import UiSlider from "@/ui/UiSlider.vue";
 import { appearanceCatalog, publicName } from "../appearance-catalog";
 import {
   fromControlValue,
+  hasStockNarrow,
   sourceAt,
   toControlValue,
   valueAt,
   withNarrowCleared,
+  withNarrowFromWide,
   withValue,
 } from "../appearance-editing";
 import { roleFor, type ValueControl, type ValuePartKey, type Width } from "../appearance-parts";
 import { appearanceSlice, UNCHANGED, type HighlightStyle } from "../slice";
 
+import AppearanceNarrowTag from "./AppearanceNarrowTag.vue";
 import { controlLabel, optionLabel as controlOptionLabel } from "./control-copy";
 import { AppearancePreviewRootKey } from "./preview-root-key";
 import { stockNumber } from "./stock-number";
@@ -49,13 +51,23 @@ const role = computed(() => {
 });
 
 const value = computed(() => toControlValue(control, valueAt(slice.state, width, part, control.path)));
-const narrowOnly = computed(() => width === "narrow" && sourceAt(slice.state, width, part, control.path) === "narrow");
+const narrowOverridden = computed(() => sourceAt(slice.state, "narrow", part, control.path) === "narrow");
+// At Wide, a stock narrow value would keep the user's wide one off narrow calendars without a word.
+const narrowTag = computed(() => {
+  if (width === "narrow") return narrowOverridden.value ? "only" : null;
+  return hasStockNarrow(part, control.path) && !narrowOverridden.value ? "own" : null;
+});
+// Narrow cannot hold Default, so a wide value at Default has nothing to apply.
+const canApplyToNarrow = computed(() => valueAt(slice.state, "wide", part, control.path) !== null);
 
 function write(next: unknown): void {
   slice.state = withValue(slice.state, width, part, control.path, fromControlValue(control, next));
 }
 function clearNarrow(): void {
   slice.state = withNarrowCleared(slice.state, part, control.path);
+}
+function applyToNarrow(): void {
+  slice.state = withNarrowFromWide(slice.state, part, control.path);
 }
 
 // A text part's leaves are nullable and null is its Default; a select cannot hold null, so "" stands in.
@@ -172,16 +184,7 @@ const sliderDefaultLabel = computed(() =>
   <UiSettingRow ref="row" class="appearance-control">
     <template #name>
       {{ label }}
-      <button
-        v-if="narrowOnly"
-        type="button"
-        class="appearance-control__tag"
-        :title="m.calendar_appearance_narrow_only_clear()"
-        @click="clearNarrow"
-      >
-        {{ m.calendar_appearance_narrow_only() }}
-        <UiIcon :name="icons.action.reset" />
-      </button>
+      <AppearanceNarrowTag :tag="narrowTag" :can-apply="canApplyToNarrow" @clear="clearNarrow" @apply="applyToNarrow" />
     </template>
     <template #description>
       <code v-if="variable" class="appearance-control__variable">{{ variable }}</code>
@@ -225,19 +228,6 @@ const sliderDefaultLabel = computed(() =>
 </template>
 
 <style scoped>
-.appearance-control__tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-1);
-  margin-inline-start: var(--size-4-1);
-  padding: 0 var(--size-4-1);
-  height: auto;
-  border-radius: var(--radius-s);
-  font-size: var(--font-ui-smaller);
-  background-color: var(--background-modifier-hover);
-  color: var(--text-accent);
-  box-shadow: none;
-}
 .appearance-control__variable {
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);

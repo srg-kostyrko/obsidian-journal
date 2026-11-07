@@ -208,6 +208,8 @@
   "calendar_appearance_unchanged": "Inalterado",
   "calendar_appearance_narrow_only": "Só estreito",
   "calendar_appearance_narrow_only_clear": "Usar o valor de todas as larguras",
+  "calendar_appearance_narrow_own": "Estreito tem valor próprio",
+  "calendar_appearance_narrow_apply": "Usar também em Estreito",
   "calendar_appearance_all_widths": "Todas as larguras",
   "calendar_appearance_format_suggestions": "Sugestões",
   "calendar_appearance_format_preview": "Pré-visualização:",

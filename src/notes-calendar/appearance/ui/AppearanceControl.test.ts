@@ -9,7 +9,7 @@ import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 import { themeColorGroupsFor } from "@/ui/theme-colors";
 
-import { isModified, withValue } from "../appearance-editing";
+import { isModified, withNarrowFromWide, withValue } from "../appearance-editing";
 import {
   isFormat,
   isStructure,
@@ -441,5 +441,57 @@ describe("AppearanceControl", () => {
     mount("cell", control("cell", "padding"), "wide");
 
     expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
+  });
+
+  describe("a value narrow keeps its own stock for", () => {
+    it("at Wide, a value with a stock narrow tweak says so and applies itself to narrow", async () => {
+      mount("date", control("date", "size"));
+      expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+      expect(slice().state.narrow.date.size).toBe("1.1em");
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("a value without a stock narrow tweak carries no tag", () => {
+      mount("today", control("today", "text", "color"));
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("applies Selected's wide style to narrow from the Style control", async () => {
+      slice().state = withValue(slice().state, "wide", "selected", ["style"], "ring");
+      mount("selected", control("selected", "style"));
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+      expect(slice().state.narrow.selected.style).toBe("ring");
+    });
+
+    it("is not tagged at Narrow, where the stock shows as the value", () => {
+      mount("date", control("date", "size"), "narrow");
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+    });
+
+    it("once applied, shows Narrow only at Narrow, whose clear brings the stock back", async () => {
+      slice().state = withNarrowFromWide(withValue(slice().state, "wide", "date", ["size"], "1.4em"), "date", ["size"]);
+      mount("date", control("date", "size"), "narrow");
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_only() }));
+
+      expect(slice().state.narrow.date.size).toBeNull();
+      expect(slice().state.wide.date.size).toBe("1.4em");
+    });
+
+    it("says so for a row height left at Default, but offers no apply that would change nothing", () => {
+      mount("cell", control("cell", "minHeight"));
+
+      expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
   });
 });

@@ -208,6 +208,8 @@
   "calendar_appearance_unchanged": "Unverändert",
   "calendar_appearance_narrow_only": "Nur schmal",
   "calendar_appearance_narrow_only_clear": "Wert für alle Breiten verwenden",
+  "calendar_appearance_narrow_own": "Schmal hat einen eigenen Wert",
+  "calendar_appearance_narrow_apply": "Auch bei Schmal verwenden",
   "calendar_appearance_all_widths": "Alle Breiten",
   "calendar_appearance_format_suggestions": "Vorschläge",
   "calendar_appearance_format_preview": "Vorschau:",

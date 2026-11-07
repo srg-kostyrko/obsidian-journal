@@ -11,8 +11,9 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { formatWeekday, weekFormatNeedsIsoWarning } from "../../cell-format";
-import { defaultPattern, formatAt, withFormat } from "../appearance-editing";
+import { defaultPattern, formatAt, withFormat, withNarrowWeekdayFromWide } from "../appearance-editing";
 
+import AppearanceNarrowTag from "./AppearanceNarrowTag.vue";
 import { controlLabel } from "./control-copy";
 
 import type { FormatControl, FormatValue, Width } from "../appearance-parts";
@@ -29,32 +30,44 @@ const offersSameAsWide = computed(() => isWeekday.value && width === "narrow");
 
 const stored = computed(() => formatAt(display.state, control, width));
 
+// `stored` shows the stock one letter for an unset narrow weekday, so whether narrow has its own label
+// is read from the slice.
+const narrowTag = computed(() => {
+  if (!isWeekday.value) return null;
+  const overridden = display.state.weekdayLabelNarrow !== null;
+  if (width === "narrow") return overridden ? "only" : null;
+  return overridden ? null : "own";
+});
+function clearNarrow(): void {
+  display.state = withFormat(display.state, control, "narrow", null);
+}
+function applyToNarrow(): void {
+  display.state = withNarrowWeekdayFromWide(display.state);
+}
+
 function asWeekdayLabel(value: FormatValue): WeekdayLabel {
   return typeof value === "string" ? { type: "pattern", pattern: value } : value;
 }
 
-function sample(value: FormatValue | null): string {
+function sample(value: FormatValue): string {
   if (control.label !== "weekday") {
     const pattern = typeof value === "string" && value !== "" ? value : defaultPattern(control);
     return today.value.format(pattern);
   }
-  return formatWeekday(today.value, value === null ? display.state.weekdayLabel : asWeekdayLabel(value));
+  return formatWeekday(today.value, asWeekdayLabel(value));
 }
 
-const boxText = (value: FormatValue | null): string => (typeof value === "string" ? value : "");
+const boxText = (value: FormatValue): string => (typeof value === "string" ? value : "");
 
 function placeholderFor(value: FormatValue): string {
   if (typeof value !== "string") return m.calendar_appearance_format_letter();
   return value === "" ? defaultPattern(control) : value;
 }
 
-// A narrow weekday that follows wide shows what wide renders, so the empty box reads as that value.
-const placeholder = computed(() =>
-  placeholderFor(stored.value ?? formatAt(display.state, control, "wide") ?? defaultPattern(control)),
-);
+const placeholder = computed(() => placeholderFor(stored.value));
 
-function sameFormat(a: FormatValue | null, b: FormatValue | null): boolean {
-  if (typeof a === "string" || typeof b === "string" || a === null || b === null) return a === b;
+function sameFormat(a: FormatValue, b: FormatValue): boolean {
+  if (typeof a === "string" || typeof b === "string") return a === b;
   return a.type === b.type;
 }
 
@@ -88,9 +101,13 @@ const picked = ref("");
 function onPick(key: string): void {
   picked.value = key;
   void nextTick(() => (picked.value = ""));
-  const value = key === SAME_AS_WIDE ? null : control.suggestions[Number(key)];
-  if (value === undefined) return;
-  display.state = withFormat(display.state, control, width, value);
+  if (key === SAME_AS_WIDE) {
+    display.state = withNarrowWeekdayFromWide(display.state);
+  } else {
+    const value = control.suggestions[Number(key)];
+    if (value === undefined) return;
+    display.state = withFormat(display.state, control, width, value);
+  }
   text.value = boxText(stored.value);
 }
 
@@ -105,7 +122,10 @@ const isoWarning = computed(
 
 <template>
   <UiSettingRow class="appearance-control">
-    <template #name>{{ label }}</template>
+    <template #name>
+      {{ label }}
+      <AppearanceNarrowTag :tag="narrowTag" can-apply @clear="clearNarrow" @apply="applyToNarrow" />
+    </template>
     <template #description>
       <div v-if="!isWeekday">{{ m.calendar_appearance_all_widths() }}</div>
       <div>

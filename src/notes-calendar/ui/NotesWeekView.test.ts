@@ -305,11 +305,11 @@ describe("NotesWeekView", () => {
       expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "M", narrow: "Mo" });
     });
 
-    it("renders the wide text at both widths when the narrow one is unset", async () => {
+    it("renders one letter at narrow when the narrow one is unset", async () => {
       const harness = await bootHarness(daily, { weekdayLabel: { type: "pattern", pattern: "dd" } });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
 
-      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "Mo", narrow: "Mo" });
+      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "Mo", narrow: "M" });
     });
   });
 

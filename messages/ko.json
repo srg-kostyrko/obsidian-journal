@@ -208,6 +208,8 @@
   "calendar_appearance_unchanged": "변경 없음",
   "calendar_appearance_narrow_only": "좁은 너비만",
   "calendar_appearance_narrow_only_clear": "모든 너비 공통 값 사용",
+  "calendar_appearance_narrow_own": "좁은 너비에는 별도 값이 있음",
+  "calendar_appearance_narrow_apply": "좁은 너비에도 사용",
   "calendar_appearance_all_widths": "모든 너비",
   "calendar_appearance_format_suggestions": "제안",
   "calendar_appearance_format_preview": "미리 보기:",

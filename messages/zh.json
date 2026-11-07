@@ -208,6 +208,8 @@
   "calendar_appearance_unchanged": "不变",
   "calendar_appearance_narrow_only": "仅窄",
   "calendar_appearance_narrow_only_clear": "使用所有宽度通用的值",
+  "calendar_appearance_narrow_own": "窄有单独的值",
+  "calendar_appearance_narrow_apply": "也用于窄",
   "calendar_appearance_all_widths": "所有宽度",
   "calendar_appearance_format_suggestions": "建议",
   "calendar_appearance_format_preview": "预览：",

@@ -208,6 +208,8 @@
   "calendar_appearance_unchanged": "変更なし",
   "calendar_appearance_narrow_only": "狭い幅のみ",
   "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",
+  "calendar_appearance_narrow_own": "狭い幅には独自の値があります",
+  "calendar_appearance_narrow_apply": "狭い幅にも使用",
   "calendar_appearance_all_widths": "すべての幅",
   "calendar_appearance_format_suggestions": "候補",
   "calendar_appearance_format_preview": "プレビュー:",

@@ -184,25 +184,26 @@ describe("AppearanceFormatControl", () => {
       expect(optionTexts()).not.toContain(m.calendar_appearance_format_same_as_wide());
     });
 
-    it("at narrow offers Same as wide and shows the wide label until set", async () => {
+    it("at narrow shows the stock one letter until set, and Same as wide copies the wide label", async () => {
       display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: "dddd" } };
       mount("weekday", "narrow");
       expect(optionTexts()).toContain(m.calendar_appearance_format_same_as_wide());
-      expect(box().placeholder).toBe("dddd");
-      expect(preview()).toBe(`${m.calendar_appearance_format_preview()} Monday`);
+      expect(box().placeholder).toBe(m.calendar_appearance_format_letter());
+      expect(preview()).toBe(`${m.calendar_appearance_format_preview()} M`);
 
-      await pick(m.calendar_appearance_format_letter());
-      expect(display().state.weekdayLabelNarrow).toEqual({ type: "letter" });
+      await pick("dd —");
+      expect(display().state.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "dd" });
       expect(display().state.weekdayLabel).toEqual({ type: "pattern", pattern: "dddd" });
 
       await pick(m.calendar_appearance_format_same_as_wide());
-      expect(display().state.weekdayLabelNarrow).toBeNull();
+      expect(display().state.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "dddd" });
+      expect(box().value).toBe("dddd");
     });
 
-    it("clears the narrow box back to same as wide, showing the wide value as placeholder", async () => {
+    it("clears the narrow box back to the stock one letter", async () => {
       display().state = {
         ...display().state,
-        weekdayLabel: { type: "letter" },
+        weekdayLabel: { type: "pattern", pattern: "dddd" },
         weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
       };
       mount("weekday", "narrow");
@@ -216,6 +217,35 @@ describe("AppearanceFormatControl", () => {
       expect(preview()).toBe(`${m.calendar_appearance_format_preview()} M`);
     });
 
+    it("at Wide, says narrow has its own value and applies the wide label to narrow", async () => {
+      display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: "dddd" } };
+      mount("weekday");
+      expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+      expect(display().state.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "dddd" });
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("carries no narrow tag once narrow has a label of its own", () => {
+      display().state = { ...display().state, weekdayLabelNarrow: { type: "pattern", pattern: "dd" } };
+      mount("weekday");
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+    });
+
+    it("at Narrow, tags a narrow label Narrow only, whose clear brings the stock back", async () => {
+      display().state = { ...display().state, weekdayLabelNarrow: { type: "pattern", pattern: "dd" } };
+      mount("weekday", "narrow");
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_only() }));
+
+      expect(display().state.weekdayLabelNarrow).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
+    });
+
     it("has no All widths note, since it has a value per width", () => {
       mount("weekday");
 
@@ -227,6 +257,12 @@ describe("AppearanceFormatControl", () => {
     mount(label, "narrow");
 
     expect(screen.getByText(m.calendar_appearance_all_widths())).toBeTruthy();
+  });
+
+  it.each(["day", "week", "month", "quarter", "year"] as const)("carries no narrow tag on the %s format", (label) => {
+    mount(label);
+
+    expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
   });
 
   describe("the ISO week warning", () => {

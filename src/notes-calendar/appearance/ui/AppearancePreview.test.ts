@@ -400,9 +400,9 @@ describe("AppearancePreview", () => {
       expect(weekdays(container)).toContainEqual({ wide: "M", narrow: "Mo" });
     });
 
-    it("renders the wide text at both widths when the narrow one is unset", () => {
+    it("renders one letter at narrow when the narrow one is unset", () => {
       const { container } = withDisplay({ weekdayLabel: { type: "pattern", pattern: "dd" }, weekdayLabelNarrow: null });
-      expect(weekdays(container)).toContainEqual({ wide: "Mo", narrow: "Mo" });
+      expect(weekdays(container)).toContainEqual({ wide: "Mo", narrow: "M" });
     });
   });
 
