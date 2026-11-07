@@ -52,6 +52,13 @@ describe("UiColorSettingsPicker", () => {
   });
 
   describe("theme variant", () => {
+    // Obsidian 1.14 stopped defining --text-highlight-bg, so a bare var() swatch drew nothing there.
+    it("draws the text highlight's swatch through Obsidian's fallback", () => {
+      mount({ type: "theme", name: "text-highlight-bg" }, "background");
+      const swatch = document.querySelector<HTMLElement>(".ui-color-settings-picker__swatch");
+      expect(swatch?.getAttribute("style")).toContain("var(--text-highlight-bg, var(--highlight-background-yellow))");
+    });
+
     it("emits the selected theme variable name when chosen from the dropdown", async () => {
       const { emitted } = mount({ type: "theme", name: "" });
       await userEvent.selectOptions(themeDropdown(), "text-accent");
