@@ -354,13 +354,19 @@ describe("AppearanceControl", () => {
     let root: HTMLElement;
     beforeEach(() => {
       const sheet = new CSSStyleSheet();
-      sheet.replaceSync(".row-height-under-test .notes-calendar-cell { min-height: 41px; }");
+      sheet.replaceSync(
+        ".row-height-under-test .notes-calendar-cell { min-height: 26px; } .row-height-under-test [data-preview-part='date'] { min-height: 41px; }",
+      );
       document.adoptedStyleSheets = [sheet];
       root = document.createElement("div");
       root.classList.add("row-height-under-test");
-      const cell = document.createElement("div");
-      cell.classList.add("notes-calendar-cell");
-      root.append(cell);
+      // The heading's cells come first in the preview and keep the flat floor, so only a day shows the row.
+      const heading = document.createElement("div");
+      heading.classList.add("notes-calendar-cell");
+      const day = document.createElement("div");
+      day.classList.add("notes-calendar-cell");
+      day.dataset.previewPart = "date";
+      root.append(heading, day);
       document.body.append(root);
       return () => {
         root.remove();
@@ -373,7 +379,7 @@ describe("AppearanceControl", () => {
         global: { provide: { [AppearancePreviewRootKey as symbol]: shallowRef(root) } },
       });
 
-    it("sits on the height the preview's cell renders at, and says it grows", async () => {
+    it("sits on the height the preview's day renders at, not its heading's, and says it grows", async () => {
       mountRowHeight("wide");
 
       expect(await screen.findByText("41px")).toBeTruthy();

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { appearanceCatalog, type CatalogEntry } from "../appearance/appearance-catalog";
+import { ROW_FLOOR_PX } from "../appearance/slice";
 import { calendarStyleRules, NARROW_QUERY, narrowReader, privateName, wideReader, type ScopedRule } from "../testing";
 
 const components = calendarStyleRules();
@@ -34,6 +35,14 @@ function renderers(entry: CatalogEntry): readonly Component[] {
   if (part.startsWith("week-number-divider-")) return ["divider"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix) ? GRIDS : ["cell"];
 }
+
+// A heading cell holds one line of text, so its row keeps the flat floor where a wide day row grows.
+const HEADING_CELLS: Readonly<Record<(typeof GRIDS)[number], string>> = {
+  monthView: ".notes-month-view__header .notes-calendar-cell",
+  weekView: ".notes-week-view__header .notes-calendar-cell",
+  preview: ".appearance-preview__header .notes-calendar-cell",
+};
+const headingCellSelectors: readonly string[] = Object.values(HEADING_CELLS);
 
 const cases = appearanceCatalog.flatMap((entry) =>
   renderers(entry).map((component) => [entry.name, component, entry] as const),
@@ -136,7 +145,10 @@ describe("calendar appearance readers", () => {
     (_name, component, entry) => {
       const rules: readonly ScopedRule[] = components[component];
       const name = privateName(entry);
-      const wide = rules.filter((rule) => rule.container === null && rule.declarations.has(name));
+      const wide = rules.filter(
+        (rule) =>
+          rule.container === null && rule.declarations.has(name) && !headingCellSelectors.includes(rule.selector),
+      );
       expect(wide.length).toBeGreaterThan(0);
       for (const rule of wide) {
         expect({ selector: rule.selector, value: rule.declarations.get(name) }).toEqual({
@@ -153,6 +165,19 @@ describe("calendar appearance readers", () => {
       }
     },
   );
+
+  it.each(GRIDS)("%s keeps its heading cells at the flat row floor at every width", (component) => {
+    const entry = appearanceCatalog.find((candidate) => candidate.name === "journal-cell-cell-min-height");
+    if (entry === undefined) throw new Error("no row-height entry in the catalog");
+    const declared = (container: string | null): string | undefined =>
+      components[component]
+        .find((rule) => rule.container === container && rule.selector === HEADING_CELLS[component])
+        ?.declarations.get(privateName(entry));
+    expect({ wide: declared(null), narrow: declared(NARROW_QUERY) }).toEqual({
+      wide: wideReader({ ...entry, stock: `${ROW_FLOOR_PX}px` }),
+      narrow: narrowReader(entry),
+    });
+  });
 
   it.each(cases)("%s is read by %s outside the private values", (_name, component, entry) => {
     const read = `var(${privateName(entry)})`;

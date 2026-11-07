@@ -468,7 +468,18 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
 [data-custom-day-label] .appearance-preview__day {
   min-width: 0;
 }
+/* A heading cell holds one line of text, so it keeps the flat floor where a wide day row grows with the
+   calendar's width. */
+.appearance-preview__header :deep(.notes-calendar-cell) {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+}
 @container journal-calendar (max-width: 28em) {
+  .appearance-preview__header :deep(.notes-calendar-cell) {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
+    );
+  }
   .appearance-preview__row {
     --_v-weekend-text-color: var(
       --journal-cell-weekend-text-color-narrow,

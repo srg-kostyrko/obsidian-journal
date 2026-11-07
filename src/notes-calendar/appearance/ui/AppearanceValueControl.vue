@@ -140,7 +140,8 @@ const growing = computed(() => {
 });
 function readMeasured(): number | undefined {
   const property = MEASURED[leaf];
-  const cell = previewRoot?.value?.querySelector(".notes-calendar-cell");
+  // A day, not the first cell: the heading's cells keep the flat floor while a day's row grows.
+  const cell = previewRoot?.value?.querySelector('[data-preview-part="date"]');
   const view = cell?.ownerDocument.defaultView;
   if (property === undefined || !cell || !view) return;
   const measured = Number.parseFloat(view.getComputedStyle(cell).getPropertyValue(property));
