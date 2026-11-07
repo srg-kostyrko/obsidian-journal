@@ -195,6 +195,10 @@ const BOX_CONTROLS: readonly ValueControl[] = inFamily("box", [
   },
 ]);
 
+class AppearancePartsInvariantError extends Error {
+  override name = "AppearancePartsInvariantError";
+}
+
 const currentWeekNumberEntry = (value: string): string => `journal-cell-current-week-week-number-text-${value}`;
 
 // Spliced in after the days' text, so the two text groups sit together ahead of the layer.
@@ -227,6 +231,9 @@ function currentWeekControls(): readonly ValueControl[] {
     },
   ]);
   const over = controls.findIndex((control) => control.path[0] === "over");
+  // slice(0, -1) would drop the last control and slot the week number's ahead of it, without a word.
+  if (over === -1)
+    throw new AppearancePartsInvariantError("the current week's highlight controls have no over control");
   return [...controls.slice(0, over), ...weekNumber, ...controls.slice(over)];
 }
 
