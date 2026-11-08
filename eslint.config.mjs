@@ -798,10 +798,10 @@ export default [
     },
   },
   {
-    // Reads docs/user off disk (node:fs/path/url) to check it against the plugin's fence
-    // definitions; it runs only under vitest/CI, never inside a vault, so the mobile-safety rule
-    // against Node built-ins does not apply here the way it does to shipped plugin code.
-    files: ["src/code-blocks/manual-fences.test.ts"],
+    // Read docs/user off disk (node:fs/path/url) to check it against the plugin's fence
+    // definitions and calendar variable catalog; they run only under vitest/CI, never inside a vault,
+    // so the mobile-safety rule against Node built-ins does not apply the way it does to plugin code.
+    files: ["src/code-blocks/manual-fences.test.ts", "src/notes-calendar/appearance/manual-variables.test.ts"],
     rules: {
       "obsidianmd/no-nodejs-modules": "off",
     },
