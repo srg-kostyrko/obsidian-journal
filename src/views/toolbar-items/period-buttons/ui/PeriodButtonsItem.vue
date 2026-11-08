@@ -102,24 +102,38 @@ function openPreview(badge: Badge, event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton
-    v-for="badge of badges"
-    :key="badge.key"
-    flat
-    :class="{ 'jv-period-inert': !badge.navigable }"
-    :data-period="badge.key"
-    :data-active="isActive(badge) || null"
-    @click="(event: MouseEvent) => open(badge, event)"
-    @auxclick.middle.prevent="(event: MouseEvent) => open(badge, event)"
-    @contextmenu.prevent="(event: MouseEvent) => openContextMenu(badge, event)"
-    @mouseenter="(event: MouseEvent) => openPreview(badge, event)"
-    @mouseleave="hover.leave()"
-  >
-    <CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>
-  </UiButton>
+  <div v-if="badges.length > 0" class="jv-period-group">
+    <UiButton
+      v-for="badge of badges"
+      :key="badge.key"
+      flat
+      :class="{ 'jv-period-inert': !badge.navigable }"
+      :data-period="badge.key"
+      :data-active="isActive(badge) || null"
+      @click="(event: MouseEvent) => open(badge, event)"
+      @auxclick.middle.prevent="(event: MouseEvent) => open(badge, event)"
+      @contextmenu.prevent="(event: MouseEvent) => openContextMenu(badge, event)"
+      @mouseenter="(event: MouseEvent) => openPreview(badge, event)"
+      @mouseleave="hover.leave()"
+    >
+      <CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>
+    </UiButton>
+  </div>
 </template>
 
 <style scoped>
+.jv-period-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+}
+.jv-period-group > button:not(:first-child) {
+  padding-inline-start: var(--size-2-1);
+}
+.jv-period-group > button:not(:last-child) {
+  padding-inline-end: var(--size-2-1);
+}
 /* A period with no journal of its kind stays visible but inert — not clickable, and no
    not-allowed cursor (it is not a disabled control, just nothing to open). Dimmed so it
    does not read as a clickable button. */
