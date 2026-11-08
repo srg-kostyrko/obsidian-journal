@@ -8,7 +8,7 @@ import { closeSettings, expandSection, openSettings } from "../support/settings.
 import { contentOf, seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { captureThemed, recordOutcome, widenRightSidebar } from "./capture.js";
+import { captureThemed, recordOutcome, sizeWindow, widenRightSidebar } from "./capture.js";
 
 const CHECKBOX_TRUE_HEX = "#2e7d32";
 const CHECKBOX_FALSE_HEX = "#888888";
@@ -335,6 +335,9 @@ describe("decorations examples", () => {
       // opposite corner, all at once.
       const openBoard = async (): Promise<void> => {
         await openSeededCalendarView();
+        // A 720px sidebar beside the default window's root pane runs past the window's edge, and the
+        // capture clamps to the window.
+        await sizeWindow(1360, 900);
         await widenRightSidebar(720, MONTH_VIEW);
         await waitForState(
           () => decorationBackgroundHex($(todayCell)),

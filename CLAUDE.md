@@ -450,7 +450,7 @@ on it.
   itself _can_ be resized, through the Electron bridge the capture already uses
   — `electron.remote.getCurrentWindow().setSize(w, h)`, which `innerWidth` then
   matches exactly — but that moves every pane at once, so it frames a screenshot
-  (`sizeWindow` in `e2e-tests/screenshots/readme.shot.ts`) rather than testing one
+  (`sizeWindow` in `e2e-tests/screenshots/capture.ts`) rather than testing one
   block's reflow.
 - Per [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)'s
   `reloadObsidian` behavior, notes written with `seedNote` do not survive a

@@ -8,7 +8,7 @@ import { openViaUri } from "../support/uri.js";
 import { activeNotePath, closeAllLeaves, seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { captureThemed, recordOutcome, textsOf, widenRightSidebar } from "./capture.js";
+import { captureThemed, recordOutcome, sizeWindow, textsOf, widenRightSidebar } from "./capture.js";
 
 // The README's images show Obsidian itself, not a cropped block, so each one is framed on a
 // workspace region rather than on the plugin's own root.
@@ -54,42 +54,8 @@ const HOST_CHROME_CSS =
   ".titlebar-button-container, .status-bar, .workspace-sidedock-vault-profile { display: none !important; }";
 // cspell:enable
 
-class WindowResizeUnavailableError extends Error {
-  constructor() {
-    super("electron.remote is unavailable, so the window cannot be sized for a screenshot");
-    this.name = "WindowResizeUnavailableError";
-  }
-}
-
-interface WindowHost {
-  electron?: { remote?: { getCurrentWindow(): { setSize(width: number, height: number): void } } };
-}
-
 interface VaultConfig {
   setConfig(key: string, value: unknown): void;
-}
-
-/**
- * Size the Obsidian window itself. `browser.setWindowSize` is unsupported by the harness, but
- * Electron's own window is reachable through the same remote bridge the capture uses.
- */
-async function sizeWindow(width: number, height: number): Promise<void> {
-  const resized = await browser.execute(
-    (w: number, h: number) => {
-      const remote = (window as unknown as WindowHost).electron?.remote;
-      if (remote === undefined) return false;
-      remote.getCurrentWindow().setSize(w, h);
-      return true;
-    },
-    width,
-    height,
-  );
-  if (!resized) throw new WindowResizeUnavailableError();
-  await waitForState(
-    () => browser.execute(() => ({ width: window.innerWidth, height: window.innerHeight })),
-    (size) => size.width === width && size.height === height,
-    `waited for the window to resize to ${width}x${height}`,
-  );
 }
 
 /** Hide desktop chrome, drop the properties panel, and open notes at full pane width. */

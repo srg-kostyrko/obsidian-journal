@@ -32,6 +32,26 @@ interface ElectronHost {
   electron?: { remote?: { getCurrentWebContents(): { capturePage(rect: object): Promise<CapturedImage> } } };
 }
 
+class WindowResizeUnavailableError extends Error {
+  constructor() {
+    super("electron.remote is unavailable, so the window cannot be sized for a screenshot");
+    this.name = "WindowResizeUnavailableError";
+  }
+}
+
+class WindowResizeRefusedError extends Error {
+  constructor(width: number, height: number, reached: { width: number; height: number }, cause: unknown) {
+    super(`the window did not resize to ${width}x${height}; it stayed at ${reached.width}x${reached.height}`, {
+      cause,
+    });
+    this.name = "WindowResizeRefusedError";
+  }
+}
+
+interface WindowHost {
+  electron?: { remote?: { getCurrentWindow(): { setSize(width: number, height: number): void } } };
+}
+
 class CaptureFailedError extends Error {
   constructor(selector: string, reason: string) {
     super(`capture of ${selector} failed: ${reason}`);
@@ -147,6 +167,37 @@ export async function widenRightSidebar(px: number, settleSelector: string): Pro
     (width) => width >= px - 40,
     "waited for the sidebar's content to settle at the widened width",
   );
+}
+
+/**
+ * Size the Obsidian window itself. `browser.setWindowSize` is unsupported by the harness, but
+ * Electron's own window is reachable through the same remote bridge the capture uses.
+ */
+export async function sizeWindow(width: number, height: number): Promise<void> {
+  const resized = await browser.execute(
+    (w: number, h: number) => {
+      const remote = (window as unknown as WindowHost).electron?.remote;
+      if (remote === undefined) return false;
+      remote.getCurrentWindow().setSize(w, h);
+      return true;
+    },
+    width,
+    height,
+  );
+  if (!resized) throw new WindowResizeUnavailableError();
+  let last = { width: 0, height: 0 };
+  await waitForState(
+    async () => {
+      last = await browser.execute(() => ({ width: window.innerWidth, height: window.innerHeight }));
+      return last;
+    },
+    // On a fractional display scale the window manager rounds to whole device pixels, which can land
+    // the viewport one CSS pixel off the size asked for (1041x700 for 1040x700 at 1.5).
+    (size) => Math.abs(size.width - width) <= 1 && Math.abs(size.height - height) <= 1,
+    `waited for the window to resize to ${width}x${height}`,
+  ).catch((error: unknown) => {
+    throw new WindowResizeRefusedError(width, height, last, error);
+  });
 }
 
 /** Write what an example actually did, for comparison with what its page claims. */
