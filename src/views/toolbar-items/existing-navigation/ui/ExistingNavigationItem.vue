@@ -62,6 +62,7 @@ function navigate(direction: "previous" | "next", event: MouseEvent): void {
 <template>
   <UiButton
     flat
+    :class="{ 'jv-toolbar-icon-only': config.icon && !config.label }"
     :tooltip="config.tooltip || undefined"
     :disabled="candidates.length === 0"
     :data-direction="config.direction"

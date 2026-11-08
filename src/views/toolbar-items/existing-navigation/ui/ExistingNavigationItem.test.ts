@@ -248,3 +248,23 @@ describe("ExistingNavigationItem", () => {
     expect(flows.mock.calls[0]?.[1]).toMatchObject({ anchor: "2030-03-20" });
   });
 });
+
+describe("ExistingNavigationItem icon-only spacing", () => {
+  it("marks an arrow that shows only an icon", async () => {
+    const { result } = await mountItem({
+      ...existingNavigationConfigFor("day", "next"),
+      icon: "chevron-right",
+      label: "",
+    });
+    expect(result.container.querySelector("button")?.classList.contains("jv-toolbar-icon-only")).toBe(true);
+  });
+
+  it("leaves an arrow with a label unmarked", async () => {
+    const { result } = await mountItem({
+      ...existingNavigationConfigFor("day", "next"),
+      icon: "chevron-right",
+      label: "Older",
+    });
+    expect(result.container.querySelector("button")?.classList.contains("jv-toolbar-icon-only")).toBe(false);
+  });
+});

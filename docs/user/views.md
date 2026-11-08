@@ -188,6 +188,10 @@ A container for toolbar items such as buttons and the shelf selector. **Add tool
 
 - **Spacer** — a flexible gap that pushes neighboring items apart.
 
+When a toolbar is too narrow for one row, it wraps the items between spacers as groups, so a pair of
+arrows stays together. A group that follows a spacer stays on the right. A toolbar with no spacers
+wraps item by item.
+
 ## Calendar appearance {#calendar-appearance}
 
 **Calendar appearance**, on the main settings page, opens an editor for how every calendar grid
