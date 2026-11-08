@@ -68,6 +68,16 @@ async function mountToolbar(
   return harness.render(Wrapper);
 }
 
+const stub = (id: string) => ({ id, key: "stub", config: { name: id } });
+const spacer = (id: string) => ({ id, key: "spacer", config: {} });
+const stubsIn = (group: Element) =>
+  [...group.querySelectorAll<HTMLElement>("[data-stub]")].map((element) => element.dataset.stub);
+
+async function groupsOf(items: Parameters<typeof mountToolbar>[0]) {
+  const { container } = await mountToolbar(items, [testItemsModule(stubItem)]);
+  return [...container.querySelectorAll(".jv-toolbar-group")];
+}
+
 describe("ToolbarBlock", () => {
   it("renders one component per registered item with a valid config", async () => {
     const { container } = await mountToolbar([
@@ -119,5 +129,32 @@ describe("ToolbarBlock", () => {
     );
     const stub = container.querySelector<HTMLElement>("[data-stub]");
     expect(stub?.dataset.stub).toBe("hello");
+  });
+
+  describe("wrap groups", () => {
+    it("puts each run of items between spacers in its own group", async () => {
+      const groups = await groupsOf([stub("a"), spacer("s1"), stub("b"), stub("c"), spacer("s2"), stub("d")]);
+      expect(groups.map(stubsIn)).toEqual([["a"], ["b", "c"], ["d"]]);
+    });
+
+    it("keeps a toolbar with no spacers as one group", async () => {
+      const groups = await groupsOf([stub("a"), stub("b")]);
+      expect(groups.map(stubsIn)).toEqual([["a", "b"]]);
+    });
+
+    it("leaves spacers outside the groups, so they still stretch across the toolbar", async () => {
+      const { container } = await mountToolbar([stub("a"), spacer("s1"), stub("b")], [testItemsModule(stubItem)]);
+      expect(container.querySelector(".journal-view-toolbar > .jv-toolbar-spacer")).not.toBeNull();
+    });
+
+    it("creates no empty group for leading or adjacent spacers", async () => {
+      const groups = await groupsOf([spacer("s1"), spacer("s2"), stub("a")]);
+      expect(groups.map(stubsIn)).toEqual([["a"]]);
+    });
+
+    it("marks only a group that follows a spacer", async () => {
+      const groups = await groupsOf([stub("a"), spacer("s1"), stub("b")]);
+      expect(groups.map((group) => group.classList.contains("is-after-spacer"))).toEqual([false, true]);
+    });
   });
 });

@@ -45,7 +45,7 @@
             {
               "type": "shape",
               "shape": "circle",
-              "size": 0.3,
+              "size": 0.25,
               "color": {
                 "type": "theme",
                 "name": "text-accent"
@@ -245,7 +245,7 @@
             {
               "type": "shape",
               "shape": "circle",
-              "size": 0.3,
+              "size": 0.25,
               "color": {
                 "type": "theme",
                 "name": "text-accent"

@@ -159,7 +159,13 @@ function onClick(event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton flat :tooltip="config.tooltip || undefined" @click="onClick" @auxclick.middle.prevent="onClick">
+  <UiButton
+    flat
+    :class="{ 'jv-toolbar-icon-only': config.icon && !config.label }"
+    :tooltip="config.tooltip || undefined"
+    @click="onClick"
+    @auxclick.middle.prevent="onClick"
+  >
     <UiIcon v-if="config.icon" :name="config.icon" />
     <span v-if="config.label">{{ config.label }}</span>
     <span v-else-if="!config.icon">{{ config.tooltip }}</span>

@@ -31,7 +31,7 @@ export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecor
     }))
     .with("shape", () => ({
       type: "shape",
-      size: 0.4,
+      size: 0.25,
       shape: "circle",
       color: accentInk(),
       placement_x: "center",

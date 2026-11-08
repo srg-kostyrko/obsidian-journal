@@ -373,3 +373,17 @@ describe("ButtonItem", () => {
     });
   });
 });
+
+describe("ButtonItem icon-only spacing", () => {
+  const iconOnly = buttonConfigFor({ type: "navigate-step", direction: "next", unit: "month", amount: 1 });
+
+  it("marks a button that shows only an icon", async () => {
+    const { result } = await mountItem(iconOnly);
+    expect(result.container.querySelector("button")?.classList.contains("jv-toolbar-icon-only")).toBe(true);
+  });
+
+  it("leaves a button with a label unmarked", async () => {
+    const { result } = await mountItem({ ...iconOnly, label: "Next" });
+    expect(result.container.querySelector("button")?.classList.contains("jv-toolbar-icon-only")).toBe(false);
+  });
+});
