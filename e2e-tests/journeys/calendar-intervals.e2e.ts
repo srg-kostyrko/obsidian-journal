@@ -200,6 +200,12 @@ describe("custom interval rows in the calendar appearance", () => {
 
   describe("after selecting a date in another interval", () => {
     before(async () => {
+      // Without a ring to start from, the today row "losing" it below would prove nothing.
+      await settleRow(
+        TODAY_ROW,
+        (read) => read.selected && read.layers.includes("selected-ring"),
+        "the today row was not selected before the move",
+      );
       await selectDay(OTHER_DAY);
       await settleRow(OTHER_ROW, (read) => read.selected, `selecting ${OTHER_DAY} did not mark its interval row`);
     });
