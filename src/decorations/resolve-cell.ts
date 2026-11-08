@@ -190,9 +190,16 @@ export function horizontalReservation(extents: PaddingExtents): string {
 // this reservation on a grid that has no cell of its own to ask.
 export const MARK_INSET_PX = 3;
 
+// A small dot reads as crowding the number at the gap that suits a large one.
+function markGap(mark: number): number {
+  return mark < 0.4 ? 0.15 : 0.1;
+}
+
 // A mark's reservation counts its inset too, or the inset pushes it into the text.
 function axisReservation(mark: number, border: number): string {
-  return mark > 0 ? `max(${mark + 0.1}em + ${MARK_INSET_PX}px, ${border + 2}px)` : `max(0.1em, ${border + 2}px)`;
+  if (mark <= 0) return `max(0.1em, ${border + 2}px)`;
+  const reserved = Number((mark + markGap(mark)).toFixed(3));
+  return `max(${reserved}em + ${MARK_INSET_PX}px, ${border + 2}px)`;
 }
 
 // Reserve the same padding on every cell — the per-side maximum across all cells — so a
