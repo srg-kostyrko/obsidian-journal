@@ -2,7 +2,7 @@
 
 Everything the [Calendar appearance](/views#calendar-appearance) editor sets is also a CSS variable, so a
 [CSS snippet](https://help.obsidian.md/snippets) can set it instead. A snippet wins over the editor without
-`!important`, from any selector — `body` is enough — and the editor's preview shows the snippet's value.
+`!important`, from any selector that reaches the calendar — `body` is enough — and the editor's preview shows the snippet's value.
 
 The variables reach the month and week calendars of views and the calendars of
 [timelines](/reference/code-blocks). Rows of the [Custom intervals](/views#custom-intervals) block read
@@ -11,7 +11,7 @@ The variables reach the month and week calendars of views and the calendars of
 
 ## How a value is chosen
 
-Each control in the editor shows its variable's name. The editor keeps its own values out of sight,
+Each control that a variable backs shows that variable's name in the editor. The editor keeps its own values out of sight,
 under names of its own, and a calendar reads the snippet's value first, then the editor's, then the
 stock one listed below.
 
@@ -20,7 +20,8 @@ Every variable also has a narrow form, its name ending in `-narrow`, for
 order is:
 
 1. the snippet's `-narrow` value;
-2. the editor's **Narrow** value;
+2. the editor's value for narrow calendars: what you set under **Narrow**, or what a narrow default
+   makes of an all-widths value, such as the selected date's narrow background style;
 3. the narrow stock value, for the five variables that have one;
 4. then the same three for all widths: the snippet's value, the editor's, the stock one.
 
@@ -31,20 +32,21 @@ A snippet cannot move the 28em breakpoint: CSS variables do not work in the cond
 
 ## Values
 
-- **Colors** take any CSS color, a theme variable such as `var(--color-orange)` included.
+- Colors take any CSS color, a theme variable such as `var(--color-orange)` included.
 - **Ring width** and the other sizes take a CSS length. A ring width of `0px` draws no ring.
 - **Strength** is how strongly a highlight's color fills the day, as a number from `0` to `1`; `0`
   draws no background. The editor offers 5% to 100%.
 - **Weight** takes a CSS font weight, such as `var(--font-bold)` or `600`. **Italic** takes `italic` or
   `normal`. **Case** takes `none`, `uppercase`, `lowercase` or `capitalize`.
-- **Layer** is `1` to draw a highlight's ring or background, and its text, over a day's
-  [decorations](/decorations), and `-1` to draw them under.
+- A `-layer` variable, the editor's **Over decorations**, is `1` to draw a highlight's ring or background,
+  and its text, over a day's [decorations](/decorations), and `-1` to draw them under. Other values are not
+  supported.
 - A highlight's text color, weight and italic also take `unchanged`, which leaves the text to the next
   highlight, as the editor's [**Unchanged**](/views#unchanged) does. It needs the same WebView support.
 
 A highlight's **Style** in the editor is not a variable of its own; it comes from the others. **Text
-only** is a ring width and a strength of `0`, **Ring** a ring width above `0`, **Background** a strength
-above `0`, and **None** is **Text only** with the text color, weight and italic set to `unchanged`.
+only** is a ring width and a strength of `0`, **Ring** a ring width above `0` with a strength of
+`0`, **Background** a strength above `0` with a ring width of `0`, and **None** is **Text only** with the text color, weight and italic set to `unchanged`.
 
 A stock value of _inherited_ means the calendar sets nothing there, and the text keeps what it
 inherits.
@@ -53,8 +55,7 @@ inherits.
 
 The highlights are `today`, `selected` (the selected date), `active` (the open note's day), `outside`
 (days outside the month), `weekend` and `current-week`. A weekend and a current-week color and
-strength fill a band across the grid rather than single days, and their layer only tells over from
-under. The current week's week number has text of its own, after the table.
+strength fill a band across the grid rather than single days. The current week's week number has text of its own, after the table.
 
 | Variable                                  | Changes             | Stock                       | Narrow stock |
 | ----------------------------------------- | ------------------- | --------------------------- | ------------ |
@@ -141,8 +142,8 @@ The text parts are `heading` (the month heading), `weekday` (the weekday header)
 
 The divider is the line between the week numbers and the days; a width of `0px` hides it. The cells'
 padding is the space around a day's label, inside its decorations. The row height is the smallest
-height a row of days takes: out of the box it grows with the calendar's width, from 26 pixels to 64,
-and the heading row keeps 26 pixels.
+height a row takes. Out of the box a row of days grows with the calendar's width, from 26 pixels to
+64, and the heading row stays at 26; a value you set applies to the heading row too.
 
 | Variable                                   | Changes           | Stock                               | Narrow stock |
 | ------------------------------------------ | ----------------- | ----------------------------------- | ------------ |
@@ -180,7 +181,9 @@ body {
 }
 ```
 
-Today keeps its accent text and gains an orange ring.
+Today keeps its accent text and gains an orange ring. Today is drawn under decorations, so on a day
+with a filled decoration the ring sits under the fill; add `--journal-cell-today-layer: 1;` to draw it
+over.
 
 ### A weekend band
 
@@ -202,5 +205,6 @@ body {
 }
 ```
 
-Narrow calendars, such as one in a slim sidebar, get rows 34 pixels high and wide calendars' date size.
+Narrow calendars, such as one in a slim sidebar, get rows at least 34 pixels high,
+the heading row included, and wide calendars' date size.
 Both variables have a narrow stock value, so the all-widths names would not reach narrow calendars.
