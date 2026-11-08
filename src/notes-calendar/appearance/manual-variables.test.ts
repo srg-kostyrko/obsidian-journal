@@ -27,7 +27,7 @@ function cellValue(cell: string): string {
   return code?.[1] ?? cell;
 }
 
-/** Rows of every table whose first cell is a `--journal-…` name: Variable | Changes | Stock | Narrow stock. */
+/** Rows of every table whose first cell is a `--journal-…` name: Variable | Changes | Default | Narrow default. */
 function documentedRows(page: string): DocumentedRow[] {
   return page
     .split("\n")
@@ -60,7 +60,7 @@ function byName(rows: DocumentedRow[]): DocumentedRow[] {
 describe("documentedRows", () => {
   it("reads name, stock and narrow stock, ignoring the description", () => {
     const page = [
-      "| Variable | Changes | Stock | Narrow stock |",
+      "| Variable | Changes | Default | Narrow default |",
       "| --- | --- | --- | --- |",
       "| `--journal-cell-date-size` | Size | `1.1em` | `1em` |",
       "| `--journal-cell-today-text-weight` | Weight | inherited | — |",

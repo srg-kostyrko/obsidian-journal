@@ -281,7 +281,7 @@ week**](#weekends-and-the-current-week) instead.
 The text parts — **Month heading**, **Weekday header**, **Week numbers** and **Date number** — offer
 **Size**, **Weight**, **Italic**, **Color** and **Case** (**As written**, **Uppercase**,
 **Lowercase** or **Title case**). **Weight**, **Italic**, **Color** and **Case** also offer
-**Default**, which leaves the value to the calendar's stock style. **Default** names what that
+**Default**, which leaves the value to the calendar's default style. **Default** names what that
 style comes to under your theme, such as **Default (Normal)** for the week numbers' weight, and a
 **Default** color shows a swatch of it; where the editor cannot tell, it reads plain **Default**.
 While you edit **Narrow**, a
@@ -468,7 +468,7 @@ defaults. Either is dimmed when there is nothing to reset.
 
 The variable a control shows is the one a [CSS snippet](https://help.obsidian.md/snippets) sets to
 override it. A snippet wins over the editor without `!important`, and the editor's preview shows it
-too. [CSS variables](/reference/css-variables) lists every one, with its stock value, the order a
+too. [CSS variables](/reference/css-variables) lists every one, with its default value, the order a
 narrow calendar reads them in, and a few snippets to start from.
 
 ## Examples
