@@ -5,7 +5,7 @@ import {
   publicName,
   type CatalogEntry,
 } from "../../src/notes-calendar/appearance/appearance-catalog.js";
-import { GATE_ATTRIBUTE, GATE_VIEW_ID } from "../../src/notes-calendar/appearance/gate-snippet.js";
+import { GATE_ATTRIBUTE, GATE_VIEW_ID, narrowGate } from "../../src/notes-calendar/appearance/gate-snippet.js";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -23,6 +23,8 @@ const MAX_MONTH_STEPS = 3;
 // The fixture also saves narrow values, which a public wide snippet does not beat by design, so the
 // gate reads its calendar above the breakpoint.
 const WIDE = "40em";
+// Below the breakpoint, where an entry with a stock narrow value reads its `-narrow` name instead.
+const NARROW = "20em";
 
 const V7_VIEW = "47e75fae-240a-410e-aecd-83797c50fc56";
 const V7_ROOT = `[data-journal-view="${V7_VIEW}"]`;
@@ -290,6 +292,29 @@ function gateCases(entries: readonly CatalogEntry[]): void {
   }
 }
 
+// An entry with a stock narrow value reads only its narrow pair below the breakpoint, so its `-narrow`
+// name is the one a snippet must set there, and it must stay off a wide calendar.
+function narrowGateCases(entries: readonly CatalogEntry[]): void {
+  const narrow = entries.filter((candidate) => candidate.stockNarrow !== undefined);
+  for (const entry of narrow) {
+    const probe = probeOf(entry);
+    const { selector, property, sample } = entry.probe;
+    const name = publicName(entry, true);
+    it(`${name}: ${sample} reaches ${property} of ${selector} on a narrow calendar`, async () => {
+      await expectProbe(GATE_ROOT, probe, `${name}: ${sample} did not reach ${property} at ${NARROW}`, {
+        gate: narrowGate(entry),
+        width: NARROW,
+      });
+      const without = await readProbe(GATE_ROOT, probe, { width: NARROW });
+      expect(without.found).toBe(true);
+      expect(matches(without)).toBe(false);
+      const wide = await readProbe(GATE_ROOT, probe, { gate: narrowGate(entry), width: WIDE });
+      expect(wide.found).toBe(true);
+      expect(matches(wide)).toBe(false);
+    });
+  }
+}
+
 describe("every documented calendar variable is live", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-appearance-snippets", plugins: ["journals"] });
@@ -310,6 +335,7 @@ describe("every documented calendar variable is live", () => {
     });
 
     gateCases(appearanceCatalog.filter((entry) => onCurrentMonth(entry)));
+    narrowGateCases(appearanceCatalog.filter((entry) => onCurrentMonth(entry)));
   });
 
   describe("on a month off the current one", () => {
@@ -320,6 +346,7 @@ describe("every documented calendar variable is live", () => {
     });
 
     gateCases(entries);
+    narrowGateCases(entries);
   });
 });
 

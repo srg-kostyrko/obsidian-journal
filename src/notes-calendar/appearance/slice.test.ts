@@ -8,14 +8,18 @@ import { testContainer } from "@/testing";
 import {
   appearanceSlice,
   appearanceSliceSchema,
+  STOCK_NARROW,
   type AppearanceParts,
   type AppearanceSliceState,
   type BoxValues,
+  type CurrentWeekValues,
   type HighlightValues,
+  type NarrowCurrentWeek,
   type NarrowHighlight,
   type NarrowOverrides,
   type Overrides,
   type TextValues,
+  type WeekNumberValues,
 } from "./slice";
 
 const transparent = { type: "transparent" };
@@ -62,18 +66,46 @@ describe("appearanceSlice", () => {
     expect(wide.heading).toEqual(asToday);
     // A stock a Default option covers is stored as Default, so a fresh install reads Default there.
     expect(wide.weekday).toEqual({ ...asToday, size: "0.6em" });
-    expect(wide.weekNumber).toEqual(asToday);
-    expect(wide.date).toEqual(asToday);
-    expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 });
+    expect(wide.weekNumber).toEqual({
+      ...asToday,
+      size: "0.85em",
+      divider: true,
+      dividerColor: theme("background-modifier-border"),
+      dividerWidth: 1,
+    });
+    expect(wide.date).toEqual({ ...asToday, size: "1.1em" });
+    // Null, not a number: Default is a row height that grows with the calendar's width.
+    expect(wide.cell).toEqual({ padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: null });
   });
 
-  it.each(["weekend", "currentWeek"] as const)("the %s band draws nothing at stock", (part) => {
-    expect(appearanceSlice.defaults.wide[part]).toEqual({
+  it("narrow keeps one-em dates, one-pixel gaps, 26px rows and a 20% Selected background as its stock", () => {
+    expect(STOCK_NARROW).toEqual({
+      selected: { style: "background", strength: 20 },
+      date: { size: "1em" },
+      cell: { gap: "1px", minHeight: 26 },
+    });
+  });
+
+  it("the weekend band draws nothing at stock", () => {
+    expect(appearanceSlice.defaults.wide.weekend).toEqual({
       style: "none",
       color: transparent,
       ringWidth: 2,
       strength: 100,
       text: unchangedText,
+      over: false,
+    });
+  });
+
+  // Text only, not None: None would pass every text value through, the week number's accent included.
+  it("the current week marks only its week number at stock, in accent and bold", () => {
+    expect(appearanceSlice.defaults.wide.currentWeek).toEqual({
+      style: "text",
+      color: transparent,
+      ringWidth: 2,
+      strength: 100,
+      text: unchangedText,
+      weekNumberText: { color: theme("text-accent"), weight: "bold", italic: "unchanged" },
       over: false,
     });
   });
@@ -121,10 +153,10 @@ describe("appearance slice types", () => {
       active: HighlightValues;
       outside: HighlightValues;
       weekend: HighlightValues;
-      currentWeek: HighlightValues;
+      currentWeek: CurrentWeekValues;
       heading: TextValues;
       weekday: TextValues;
-      weekNumber: TextValues;
+      weekNumber: WeekNumberValues;
       date: TextValues;
       cell: BoxValues;
     }>();
@@ -132,13 +164,19 @@ describe("appearance slice types", () => {
 
   it("every narrow part overrides exactly its wide part's fields", () => {
     expectTypeOf<NarrowOverrides>().toEqualTypeOf<{
-      [P in keyof AppearanceParts]: AppearanceParts[P] extends HighlightValues
-        ? NarrowHighlight
-        : Overrides<AppearanceParts[P]>;
+      [P in keyof AppearanceParts]: AppearanceParts[P] extends CurrentWeekValues
+        ? NarrowCurrentWeek
+        : AppearanceParts[P] extends HighlightValues
+          ? NarrowHighlight
+          : Overrides<AppearanceParts[P]>;
     }>();
+    expectTypeOf<Omit<NarrowCurrentWeek, "weekNumberText">>().toEqualTypeOf<NarrowHighlight>();
+    expectTypeOf<NarrowCurrentWeek["weekNumberText"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
+    expectTypeOf<CurrentWeekValues["weekNumberText"]>().toEqualTypeOf<HighlightValues["text"]>();
     expectTypeOf<keyof NarrowHighlight>().toEqualTypeOf<keyof HighlightValues>();
     expectTypeOf<Omit<NarrowHighlight, "text">>().toEqualTypeOf<Overrides<Omit<HighlightValues, "text">>>();
     expectTypeOf<NarrowHighlight["text"]>().toEqualTypeOf<Overrides<HighlightValues["text"]>>();
+    expectTypeOf<Omit<WeekNumberValues, "divider" | "dividerColor" | "dividerWidth">>().toEqualTypeOf<TextValues>();
   });
 });
 
@@ -192,6 +230,19 @@ describe("appearance slice repair on load", () => {
     expect(reset?.fields?.toSorted()).toEqual(["narrow.cell.minHeight", "narrow.selected.style"]);
   });
 
+  it("repairs an unreadable row height to the growing default alone", async () => {
+    const { state } = await loaded({ wide: { cell: { minHeight: "tall", padding: 4 } } });
+
+    expect(state.wide.cell.minHeight).toBeNull();
+    expect(state.wide.cell.padding).toBe(4);
+  });
+
+  it("keeps a set row height", async () => {
+    const { state } = await loaded({ wide: { cell: { minHeight: 40 } } });
+
+    expect(state.wide.cell.minHeight).toBe(40);
+  });
+
   it("an unreadable highlight text color resets only that color", async () => {
     const { state } = await loaded({
       wide: { active: { color: red, text: { color: { type: "custom", color: 5 }, weight: "bold" } } },
@@ -210,6 +261,37 @@ describe("appearance slice repair on load", () => {
 
     expect(state.wide.selected.text.weight).toBe("unchanged");
     expect(state.wide.selected.text.color).toEqual(appearanceSlice.defaults.wide.selected.text.color);
+  });
+
+  it("a corrupt week-number text leaf repairs that leaf alone", async () => {
+    const { state, repairs } = await loaded({ wide: { currentWeek: { weekNumberText: { weight: 7, italic: true } } } });
+
+    expect(state.wide.currentWeek.weekNumberText).toEqual({
+      ...appearanceSlice.defaults.wide.currentWeek.weekNumberText,
+      italic: true,
+    });
+    expect(repairs[0]?.fields).toMatchObject({ fields: ["wide.currentWeek.weekNumberText.weight"] });
+  });
+
+  it("a narrow week-number text leaf overrides that leaf alone", () => {
+    const state = v.parse(appearanceSliceSchema, {
+      narrow: { currentWeek: { weekNumberText: { color: "unchanged" } } },
+    });
+
+    expect(state.narrow.currentWeek.weekNumberText).toEqual({ color: "unchanged", weight: null, italic: null });
+  });
+
+  it("a corrupt divider width repairs that leaf alone", async () => {
+    const { state, repairs } = await loaded({ wide: { weekNumber: { divider: false, dividerWidth: -2 } } });
+
+    expect(state.wide.weekNumber).toMatchObject({ divider: false, dividerWidth: 1 });
+    expect(repairs[0]?.fields).toMatchObject({ fields: ["wide.weekNumber.dividerWidth"] });
+  });
+
+  it("a narrow divider overrides its three leaves alone", () => {
+    const state = v.parse(appearanceSliceSchema, { narrow: { weekNumber: { divider: false } } });
+
+    expect(state.narrow.weekNumber).toMatchObject({ divider: false, dividerColor: null, dividerWidth: null });
   });
 
   it("narrow keeps null as no override and accepts unchanged", () => {

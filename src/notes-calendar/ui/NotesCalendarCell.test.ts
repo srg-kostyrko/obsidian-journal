@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate, DayPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod, MonthPeriod, QuarterPeriod, WeekPeriod, YearPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date } from "@/calendar/testing";
 import { defineOpenMode } from "@/infrastructure/host";
@@ -189,6 +189,21 @@ describe("NotesCalendarCell", () => {
       expect(cell?.dataset.today).toBe("true");
     });
 
+    it("a week, month, quarter or year containing today is not today", () => {
+      const now = date("2026-05-25");
+      vi.spyOn(CalendarDate, "today").mockReturnValue(now);
+      for (const period of [
+        WeekPeriod.containing(now),
+        MonthPeriod.containing(now),
+        QuarterPeriod.containing(now),
+        YearPeriod.containing(now),
+      ]) {
+        const { container, unmount } = mount({ period, cell: stubApi() });
+        expect(container.querySelector<HTMLElement>(".notes-calendar-cell")?.dataset.today).toBeUndefined();
+        unmount();
+      }
+    });
+
     it("omits data-today when the cell's period does not contain today", () => {
       vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-01-01"));
       const { container } = mount({ period: may25, cell: stubApi() });
@@ -345,6 +360,13 @@ describe("NotesCalendarCell state layers", () => {
     expect(layers(container)).toEqual(["selected-fill", "active-fill", "today-ring", "selected-ring", "active-ring"]);
   });
 
+  // At narrow the selected ring is 0px and the open note's fill sits under a decoration's background, so on
+  // a decorated day the selected tint is the only mark the selection has.
+  it("keeps the selected fill on the open note", () => {
+    const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }), selected: true });
+    expect(layers(container)).toEqual(["selected-fill", "active-fill", "selected-ring", "active-ring"]);
+  });
+
   it("keeps today's ring but not its fill on the open note", () => {
     onMay25();
     const { container } = mount({ period: may25, cell: stubApi({ isActive: () => true }) });
@@ -407,6 +429,17 @@ describe("NotesCalendarCell bands", () => {
     }).toEqual({ weekend: true, currentWeek: true, layers: [] });
   });
 
+  it("names its period kind, so a current week can style its week number apart from its days", () => {
+    const week = WeekPeriod.containing(date("2026-05-25"));
+    const kinds = [may25, week].map((period) => {
+      const { container, unmount } = mount({ period, cell: stubApi(), currentWeek: true });
+      const kind = container.querySelector<HTMLElement>(".notes-calendar-cell")?.dataset.kind;
+      unmount();
+      return kind;
+    });
+    expect(kinds).toEqual(["day", "week"]);
+  });
+
   it("carries neither band state by default", () => {
     const { container } = mount({ period: may25, cell: stubApi() });
     const cell = container.querySelector(".notes-calendar-cell");
@@ -432,6 +465,12 @@ describe("NotesCalendarCell text precedence", () => {
     return inner ?? "";
   }
 
+  const currentWeekSlots = (selector: string) => ({
+    text: declaration(selector, "--_text-current-week"),
+    weight: declaration(selector, "--_weight-current-week"),
+    italic: declaration(selector, "--_italic-current-week"),
+  });
+
   it("ranks the text color open note, selected, today, current week, weekend, outside, then the part", () => {
     expect(declaration(".notes-calendar-cell__text", "color")).toBe(chain("text", "var(--_part-color)"));
   });
@@ -445,6 +484,24 @@ describe("NotesCalendarCell text precedence", () => {
       color: chain("r", "currentColor"),
       weight: chain("weight"),
       italic: chain("italic"),
+    });
+  });
+
+  it("a current week's week number reads the week-number text, its days the days' text", () => {
+    expect({
+      days: currentWeekSlots(".notes-calendar-cell[data-current-week]"),
+      weekNumber: currentWeekSlots('.notes-calendar-cell[data-current-week][data-kind="week"]'),
+    }).toEqual({
+      days: {
+        text: "var(--_v-current-week-text-color)",
+        weight: "var(--_v-current-week-text-weight)",
+        italic: "var(--_v-current-week-text-italic)",
+      },
+      weekNumber: {
+        text: "var(--_v-current-week-week-number-text-color)",
+        weight: "var(--_v-current-week-week-number-text-weight)",
+        italic: "var(--_v-current-week-week-number-text-italic)",
+      },
     });
   });
 

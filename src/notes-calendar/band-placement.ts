@@ -11,6 +11,8 @@ export interface BandPlacement {
   /** The index among `rows` of the row the current-week band crosses, or -1. */
   readonly currentWeekIndex: number;
   readonly currentWeekRow: string | undefined;
+  /** The divider's own track, from the first week row down, or undefined without week numbers. */
+  readonly divider: { readonly column: string; readonly row: string } | undefined;
 }
 
 /** Where a month or week grid draws its bands, by grid line. */
@@ -18,11 +20,12 @@ export function bandPlacement(input: {
   /** The weekday of each visible day column, 0 = Sunday. */
   readonly columns: readonly number[];
   readonly weekend: ReadonlySet<number>;
-  readonly weekNumbersLeft: boolean;
+  readonly weekNumbers: "left" | "right" | "none";
   readonly weekdayHeader: boolean;
   readonly rows: readonly BandRow[];
 }): BandPlacement {
-  const firstDayColumn = input.weekNumbersLeft ? 2 : 1;
+  // Left week numbers take the first column and their divider the second.
+  const firstDayColumn = input.weekNumbers === "left" ? 3 : 1;
   const weekend = weekendRuns(input.columns, input.weekend).map(({ start, span }) => ({
     key: String(start),
     column: `${start + firstDayColumn} / span ${span}`,
@@ -30,7 +33,12 @@ export function bandPlacement(input: {
   // A row of blanks shows no day of the week to mark, so it takes no band even when today falls in it.
   const currentWeekIndex = input.rows.findIndex((row) => row.isCurrentWeek && row.hasDay);
   // A visually hidden weekday header is absolutely positioned, so only a shown one takes the first row.
-  const currentWeekRow =
-    currentWeekIndex === -1 ? undefined : `${currentWeekIndex + (input.weekdayHeader ? 2 : 1)} / span 1`;
-  return { weekend, currentWeekIndex, currentWeekRow };
+  const firstWeekRow = input.weekdayHeader ? 2 : 1;
+  const currentWeekRow = currentWeekIndex === -1 ? undefined : `${currentWeekIndex + firstWeekRow} / span 1`;
+  // Down to `auto`, the grid's end edge, so a month that grows a sixth row needs no new placement.
+  const divider =
+    input.weekNumbers === "none"
+      ? undefined
+      : { column: input.weekNumbers === "left" ? "2 / 3" : "-3 / -2", row: `${firstWeekRow} / auto` };
+  return { weekend, currentWeekIndex, currentWeekRow, divider };
 }

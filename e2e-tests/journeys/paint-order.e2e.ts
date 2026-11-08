@@ -24,6 +24,7 @@ const ACTIVE_BG_HEX = "#00aa55";
 const SELECTED_TEXT = "#00aa00";
 const DAY = 15;
 const PLAIN_DAY = 16;
+const OTHER_DECORATED_DAY = 17;
 
 interface CapturedBitmap {
   toBitmap(): { length: number; readUInt8(offset: number): number };
@@ -53,6 +54,32 @@ async function paintedHex(anchor: string): Promise<string | undefined> {
   }, anchor);
   if (reply === null) return undefined;
   return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
+// The color the selected fill's tint over the open note's opaque fill composites to, from the two layers'
+// computed colors and the tint's opacity: what the cell should paint if the tint layer is drawn over it.
+async function tintOverActiveHex(anchor: string): Promise<string | undefined> {
+  const reply = await browser.execute((cellAnchor: string) => {
+    const cell = document.querySelector(`.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`);
+    const tint = cell?.querySelector('[data-layer="selected-fill"]');
+    const fill = cell?.querySelector('[data-layer="active-fill"]');
+    if (!tint || !fill) return null;
+    const channels = (color: string): number[] => (color.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+    const opacity = Number.parseFloat(getComputedStyle(tint).opacity);
+    const over = channels(getComputedStyle(tint).backgroundColor);
+    const under = channels(getComputedStyle(fill).backgroundColor);
+    return under.map((channel, at) => Math.round(channel * (1 - opacity) + (over[at] ?? 0) * opacity));
+  }, anchor);
+  if (reply === null) return undefined;
+  return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
+// Compositing rounds per channel, so a painted pixel can sit a step or two off the computed blend.
+function nearHex(actual: string, expected: string): boolean {
+  return [1, 3, 5].every(
+    (at) =>
+      Math.abs(Number.parseInt(actual.slice(at, at + 2), 16) - Number.parseInt(expected.slice(at, at + 2), 16)) <= 3,
+  );
 }
 
 const daySelector = (anchor: string): string => `.notes-month-view__day[data-anchor="${anchor}"]`;
@@ -214,6 +241,35 @@ describe("paint order of highlight states around a decoration", () => {
     );
     expect(width).toBe(2);
   });
+
+  // At narrow the selected ring is 0px and the open note's fill sits under the decoration's background, so
+  // the selected tint, painted over the decoration, is all that tells this day from any other decorated one.
+  it("a decorated open day at narrow still shows that it is selected", async () => {
+    const other = dayAnchor(
+      new Date().getDate() === OTHER_DECORATED_DAY ? OTHER_DECORATED_DAY + 1 : OTHER_DECORATED_DAY,
+    );
+    await seedNote(`day/${other}.md`, note("daily", other, "marker #layered"));
+    await waitForState(
+      () => decorationBackgroundHex(calendar.cell(other)),
+      (hex) => hex === DECORATED_BG,
+      `the second decorated day did not take the ${DECORATED_BG} background`,
+    );
+    await forceBlockWidth(BASE_VIEW_ROOT, NARROW_WIDTH);
+    try {
+      await waitForState(
+        () => paintedHex(other),
+        (hex) => hex === DECORATED_BG,
+        `the unselected decorated day did not paint ${DECORATED_BG}`,
+      );
+      await waitForState(
+        () => paintedHex(dayAnchor(DAY)),
+        (hex) => hex !== DECORATED_BG,
+        `the open and selected decorated day painted the same ${DECORATED_BG} as an unselected decorated day`,
+      );
+    } finally {
+      await forceBlockWidth(BASE_VIEW_ROOT, "");
+    }
+  });
 });
 
 describe("the open-note fill on a cell with no decoration", () => {
@@ -221,19 +277,40 @@ describe("the open-note fill on a cell with no decoration", () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
   });
 
-  after(closePopoutWindows);
+  after(async () => {
+    await forceBlockWidth(BASE_VIEW_ROOT, "");
+    await closePopoutWindows();
+  });
 
-  it("paints the saved active background", async () => {
+  // Opening the note selects its date too, and a narrow calendar marks the selected date with a tint that
+  // paints over the open note's fill: the cell shows the saved color shifted toward the selected one.
+  it("paints the saved active background under the selected tint", async () => {
     const anchor = dayAnchor(PLAIN_DAY);
     await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
     await openCalendarView();
-    await clickCell(anchor, false);
-    await waitForActiveNote(`day/${anchor}.md`);
-    await calendar.waitForActive(anchor);
+    await forceBlockWidth(BASE_VIEW_ROOT, NARROW_WIDTH);
+    await openDay(anchor);
+    await waitForState(
+      () => isSelected(anchor),
+      (selected) => selected,
+      "opening the note did not select its date",
+    );
+    const cell = calendar.cell(anchor);
+    expect(await layerZ(cell, "active-fill")).toBe("-1");
+    expect(await layerZ(cell, "selected-fill")).toBe("1");
+    let expected = "";
+    await waitForState(
+      () => tintOverActiveHex(anchor),
+      (hex) => {
+        expected = hex;
+        return hex !== ACTIVE_BG_HEX;
+      },
+      `the open note's selected date drew no selected tint over ${ACTIVE_BG_HEX}`,
+    );
     await waitForState(
       () => paintedHex(anchor),
-      (hex) => hex === ACTIVE_BG_HEX,
-      `the open note's cell did not paint ${ACTIVE_BG_HEX}`,
+      (hex) => nearHex(hex, expected),
+      `the open note's selected date did not paint the selected tint over ${ACTIVE_BG_HEX} (${expected})`,
     );
   });
 
@@ -457,13 +534,21 @@ describe("date text on days outside the month", () => {
     expect(anchor).not.toBe("");
   });
 
+  // On a wide calendar: the sidebar's is narrow, where the date reads its own stock narrow size and a
+  // public wide one stays out by design.
   it("date size reaches days outside the month", async () => {
-    await waitForState(
-      () => outsideViewLabelSize(".notes-month-view__day:not([data-outside])"),
-      (px) => px === 21,
-      "an in-month date label did not take the snippet's 21px date size",
-    );
-    expect(await outsideViewLabelSize(`.notes-month-view__day[data-anchor="${anchor}"]`)).toBe(21);
+    await forceBlockWidth(OUTSIDE_VIEW_ROOT, WIDE_WIDTH);
+    // Restored here, not in a hook: the cases after this one read the calendar at its own width.
+    try {
+      await waitForState(
+        () => outsideViewLabelSize(".notes-month-view__day:not([data-outside])"),
+        (px) => px === 21,
+        "an in-month date label did not take the snippet's 21px date size",
+      );
+      expect(await outsideViewLabelSize(`.notes-month-view__day[data-anchor="${anchor}"]`)).toBe(21);
+    } finally {
+      await forceBlockWidth(OUTSIDE_VIEW_ROOT, "");
+    }
   });
 
   it("an outside day keeps the muted color over the date color", async () => {
@@ -734,21 +819,53 @@ describe("text precedence", () => {
       );
     });
 
-    it("Unchanged today keeps the week number's weight and part color", async () => {
+    // The part's own color and weight are set apart from the stock, so a pass-through and the
+    // current week's accent bold read differently.
+    it("the current week's number shows the current week's accent and bold over the part's own", async () => {
       await saveAppearance(baseline, {
-        "wide.today.text.color": "unchanged",
         "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
         "wide.weekNumber.weight": "semibold",
       });
-      const weekNumber = ".notes-month-view__week-number[data-today]";
-      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for today's week" });
+      const weekNumber = ".notes-month-view__week-number[data-current-week]";
+      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for the current week" });
       expect(await $(weekNumber).getAttribute("data-active")).toBeNull();
+      const message = "the current week's number did not take --text-accent";
+      let last: Record<"label" | "accent", string | undefined> | undefined;
+      await waitForState(
+        async () => {
+          last = await readColors({
+            label: { label: weekNumber },
+            accent: { variable: "--text-accent", near: weekNumber },
+          });
+          return last;
+        },
+        ({ label, accent }) => label !== undefined && label === accent && label !== WEEK_NUMBER_TEXT,
+        message,
+      ).catch((error: unknown) => {
+        throw asLabelMismatch(error, message, JSON.stringify(last));
+      });
+      await expectLabelWeight(weekNumber, BOLD, "the current week's number did not take the current week's bold");
+    });
+
+    it("an Unchanged current-week week number keeps the week-number part's color and weight", async () => {
+      await saveAppearance(baseline, {
+        "wide.weekNumber.color": custom(WEEK_NUMBER_TEXT),
+        "wide.weekNumber.weight": "semibold",
+        "wide.currentWeek.weekNumberText.color": "unchanged",
+        "wide.currentWeek.weekNumberText.weight": "unchanged",
+      });
+      const weekNumber = ".notes-month-view__week-number[data-current-week]";
+      await $(weekNumber).waitForExist({ timeoutMsg: "the base view showed no week number for the current week" });
       await expectLabelHex(
         weekNumber,
         WEEK_NUMBER_TEXT,
-        `today's week number did not keep the part's ${WEEK_NUMBER_TEXT} under an Unchanged today`,
+        `the Unchanged current week's number did not keep the part's ${WEEK_NUMBER_TEXT}`,
       );
-      await expectLabelWeight(weekNumber, SEMIBOLD, "today's week number did not keep the part's semibold weight");
+      await expectLabelWeight(
+        weekNumber,
+        SEMIBOLD,
+        "the Unchanged current week's number did not keep the part's semibold weight",
+      );
     });
 
     it("narrow none cancels a wide bold", async () => {

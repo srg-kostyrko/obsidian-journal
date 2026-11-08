@@ -9,7 +9,7 @@ import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 import { themeColorGroupsFor } from "@/ui/theme-colors";
 
-import { isModified, withValue } from "../appearance-editing";
+import { isModified, withNarrowFromWide, withValue } from "../appearance-editing";
 import {
   isFormat,
   isStructure,
@@ -74,6 +74,19 @@ describe("AppearanceControl", () => {
       expect(text.trim()).not.toBe("");
       expect(text).not.toMatch(/calendar_appearance_/);
     }
+  });
+
+  it("names the current week's week-number text controls apart from the days' text", () => {
+    const labels = PARTS.currentWeek.controls
+      .filter((target) => !isStructure(target) && !isFormat(target) && target.path[0] === "weekNumberText")
+      .map((target) => {
+        const { container, unmount } = mount("currentWeek", target);
+        const label = container.querySelector(".setting-item-name")?.textContent?.trim();
+        unmount();
+        return label;
+      });
+
+    expect(labels).toEqual(["Week number color", "Week number weight", "Week number italic"]);
   });
 
   describe("a visibility control", () => {
@@ -267,25 +280,25 @@ describe("AppearanceControl", () => {
       mount("weekNumber", control("weekNumber", "weight"));
 
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       expect(await screen.findByRole("option", { name: label })).toBeTruthy();
     });
 
-    it("is what a fresh week-number weight shows, unmodified, and Bold chosen outright modifies it", async () => {
+    it("is what a fresh week-number weight shows, unmodified, and Normal chosen outright modifies it", async () => {
       mount("weekNumber", control("weekNumber", "weight"));
       const select = screen.getByRole<HTMLSelectElement>("combobox");
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       await screen.findByRole("option", { name: label });
 
       expect(select.selectedOptions[0]?.textContent?.trim()).toBe(label);
       expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(false);
 
-      await userEvent.selectOptions(select, "bold");
+      await userEvent.selectOptions(select, "normal");
 
-      expect(slice().state.wide.weekNumber.weight).toBe("bold");
+      expect(slice().state.wide.weekNumber.weight).toBe("normal");
       expect(isModified(slice().state, calendarDisplaySlice.defaults, "wide", "weekNumber")).toBe(true);
     });
 
@@ -337,6 +350,86 @@ describe("AppearanceControl", () => {
     expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("0");
   });
 
+  describe("the growing row height", () => {
+    let root: HTMLElement;
+    beforeEach(() => {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(
+        ".row-height-under-test .notes-calendar-cell { min-height: 26px; } .row-height-under-test [data-preview-part='date'] { min-height: 41px; }",
+      );
+      document.adoptedStyleSheets = [sheet];
+      root = document.createElement("div");
+      root.classList.add("row-height-under-test");
+      // The heading's cells come first in the preview and keep the flat floor, so only a day shows the row.
+      const heading = document.createElement("div");
+      heading.classList.add("notes-calendar-cell");
+      const day = document.createElement("div");
+      day.classList.add("notes-calendar-cell");
+      day.dataset.previewPart = "date";
+      root.append(heading, day);
+      document.body.append(root);
+      return () => {
+        root.remove();
+        document.adoptedStyleSheets = [];
+      };
+    });
+    const mountRowHeight = (width: Width) =>
+      harness.render(AppearanceControl, {
+        props: { part: "cell", control: control("cell", "minHeight"), width },
+        global: { provide: { [AppearancePreviewRootKey as symbol]: shallowRef(root) } },
+      });
+
+    it("sits on the height the preview's day renders at, not its heading's, and says it grows", async () => {
+      mountRowHeight("wide");
+
+      expect(await screen.findByText("41px")).toBeTruthy();
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("41");
+      expect(screen.getByText(m.calendar_appearance_default_grows())).toBeTruthy();
+    });
+
+    it("a set row height goes back to the growing Default through its button", async () => {
+      slice().state = withValue(slice().state, "wide", "cell", ["minHeight"], 40);
+      mountRowHeight("wide");
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_default_grows() }));
+
+      expect(slice().state.wide.cell.minHeight).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_default_grows() })).toBeNull();
+    });
+
+    it("reads the preview's row again once the row height goes back to Default", async () => {
+      slice().state = withValue(slice().state, "wide", "cell", ["minHeight"], 40);
+      mountRowHeight("wide");
+      expect(await screen.findByText("40px")).toBeTruthy();
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      // The preview re-renders after the reset; its day now grows to 47px rather than the 41px read at mount.
+      const grown = new CSSStyleSheet();
+      grown.replaceSync(".row-height-under-test [data-preview-part='date'] { min-height: 47px; }");
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, grown];
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_default_grows() }));
+
+      expect(await screen.findByText("47px")).toBeTruthy();
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("47");
+    });
+
+    it("offers no Default button while the row height is Default", () => {
+      mountRowHeight("wide");
+
+      expect(screen.queryByRole("button")).toBeNull();
+    });
+
+    it("sits on the stock narrow height at Narrow, as a plain Default", async () => {
+      mountRowHeight("narrow");
+      await nextTick();
+
+      expect(screen.getByRole<HTMLInputElement>("slider").value).toBe("26");
+      expect(screen.getByText("26px")).toBeTruthy();
+      expect(screen.getByText(m.calendar_appearance_default())).toBeTruthy();
+      expect(screen.queryByText(m.calendar_appearance_default_grows())).toBeNull();
+    });
+  });
+
   it("writes a number to a numeric leaf", async () => {
     mount("cell", control("cell", "minHeight"));
 
@@ -362,13 +455,93 @@ describe("AppearanceControl", () => {
     expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
   });
 
-  it("does not tag a narrow override while Wide is edited", () => {
-    slice().state = {
-      ...slice().state,
-      narrow: { ...slice().state.narrow, cell: { ...slice().state.narrow.cell, padding: 6 } },
-    };
+  it("at Narrow, titles the tag of a leaf with a narrow default of its own as a return to that default", async () => {
+    mount("cell", control("cell", "minHeight"), "narrow");
+
+    await fireEvent.update(screen.getByRole("slider"), "40");
+
+    expect(slice().state.narrow.cell.minHeight).toBe(40);
+    const tag = screen.getByRole("button", { name: m.calendar_appearance_narrow_only() });
+    expect(tag.title).toBe(m.calendar_appearance_narrow_only_clear_stock());
+  });
+
+  it("at Wide, says a narrow override that differs from the wide value is narrow's own, and copies the wide value over it", async () => {
+    slice().state = withValue(slice().state, "narrow", "cell", ["padding"], 6);
+    mount("cell", control("cell", "padding"), "wide");
+    expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
+    expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+    expect(slice().state.narrow.cell.padding).toBe(0);
+    expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+  });
+
+  it("at Wide, carries no tag for a narrow override equal to the wide value", () => {
+    slice().state = withValue(slice().state, "narrow", "cell", ["padding"], 0);
     mount("cell", control("cell", "padding"), "wide");
 
+    expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
     expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_only() })).toBeNull();
+  });
+
+  describe("a value narrow keeps its own stock for", () => {
+    it("at Wide, a value with a stock narrow tweak says so and applies itself to narrow", async () => {
+      mount("date", control("date", "size"));
+      expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+      expect(slice().state.narrow.date.size).toBe("1.1em");
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("carries no tag at Wide when the wide value is already narrow's stock", () => {
+      slice().state = withValue(slice().state, "wide", "date", ["size"], "1em");
+      mount("date", control("date", "size"));
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("a value without a stock narrow tweak carries no tag", () => {
+      mount("today", control("today", "text", "color"));
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
+
+    it("applies Selected's wide style to narrow from the Style control", async () => {
+      slice().state = withValue(slice().state, "wide", "selected", ["style"], "ring");
+      mount("selected", control("selected", "style"));
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
+
+      expect(slice().state.narrow.selected.style).toBe("ring");
+    });
+
+    it("is not tagged at Narrow, where the stock shows as the value", () => {
+      mount("date", control("date", "size"), "narrow");
+
+      expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
+    });
+
+    it("once applied, shows Narrow only at Narrow, whose clear brings the stock back", async () => {
+      slice().state = withNarrowFromWide(withValue(slice().state, "wide", "date", ["size"], "1.4em"), "date", ["size"]);
+      mount("date", control("date", "size"), "narrow");
+
+      await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_only() }));
+
+      expect(slice().state.narrow.date.size).toBeNull();
+      expect(slice().state.wide.date.size).toBe("1.4em");
+    });
+
+    it("says so for a row height left at Default, but offers no apply that would change nothing", () => {
+      mount("cell", control("cell", "minHeight"));
+
+      expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
+      expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
+    });
   });
 });

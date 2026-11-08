@@ -53,7 +53,7 @@ describe("NotesMonthView under a native-digit locale", () => {
     const { container } = harness.render(NotesMonthView, { props: { shelf: null, month: august(), weeks: "left" } });
 
     const band = container.querySelector<HTMLElement>('.notes-calendar-band[data-band="weekend"]');
-    expect(band?.style.gridColumn).toBe("6 / span 2");
+    expect(band?.style.gridColumn).toBe("7 / span 2");
     // Six Monday-start rows, two weekend days each.
     expect(container.querySelectorAll(".notes-month-view__day[data-weekend]").length).toBe(12);
   });

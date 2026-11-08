@@ -367,7 +367,7 @@ describe("TimelineCodeBlock", () => {
         );
 
         const bands = [...container.querySelectorAll<HTMLElement>('.notes-calendar-band[data-band="weekend"]')];
-        expect(bands.map((band) => band.style.gridColumn)).toEqual(["6 / span 2"]);
+        expect(bands.map((band) => band.style.gridColumn)).toEqual(["7 / span 2"]);
       },
     );
   });

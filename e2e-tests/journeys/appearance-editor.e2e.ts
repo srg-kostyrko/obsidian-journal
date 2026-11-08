@@ -228,14 +228,14 @@ describe("the appearance editor drives the rendered calendar", () => {
     });
   });
 
-  // Also before any edit: the week numbers' stock weight is var(--font-bold), which Obsidian defines.
+  // Also before any edit: the week numbers' stock weight is var(--font-normal), which Obsidian defines.
   describe("a stock select", () => {
     it("names the value its Default resolves to", async () => {
       await chooseWidth("wide");
       await chooseFromList("weekNumber");
       const select = $(controlRowPath(m.calendar_appearance_control({ control: "text_weight" }))).$("select");
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       await expectRead(
         () => select.$('option[value=""]').getText(),
@@ -265,6 +265,35 @@ describe("the appearance editor drives the rendered calendar", () => {
       expect(Math.abs((gaps?.left ?? 0) - (gaps?.right ?? 0))).toBeLessThan(2);
       expect(gaps?.left).toBeGreaterThan(0);
     });
+  });
+
+  describe("the preview's divider", () => {
+    after(async () => {
+      await chooseWidth("wide");
+    });
+
+    // The preview gives its divider the pointer back, so a divider box over the cells would take their clicks.
+    for (const width of ["wide", "narrow"] as const) {
+      it(`takes no click meant for a cell beside it, ${width}`, async () => {
+        await chooseWidth(width);
+        const read = await browser.execute(() => {
+          const grid = document.querySelector(".appearance-preview [data-preview-grid]");
+          const divider = grid?.querySelector(".notes-calendar-divider");
+          const week = grid?.querySelector<HTMLElement>(".appearance-preview__week-number[data-current-week]");
+          if (!grid || !divider || !week) return null;
+          const line = divider.getBoundingClientRect();
+          const cells = [...grid.querySelectorAll(".appearance-preview__week-number, .appearance-preview__day")];
+          const overlapping = cells.filter((cell) => {
+            const box = cell.getBoundingClientRect();
+            return box.left < line.right && line.left < box.right && box.top < line.bottom && line.top < box.bottom;
+          }).length;
+          const box = week.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+          return { overlapping, hitsWeek: hit !== null && week.contains(hit) };
+        });
+        expect(read).toMatchObject({ overlapping: 0, hitsWeek: true });
+      });
+    }
   });
 
   describe("a color", () => {
