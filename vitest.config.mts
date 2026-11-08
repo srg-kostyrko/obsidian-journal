@@ -542,10 +542,12 @@ export default defineConfig({
         // Re-measured 2026-09-18; the floor had not been re-measured for several merged PRs before:
         // 94.47 / 90.01 / 91.62 / 96.36 (15645/16560 statements, 7723/8580 branches,
         // 5396/5889 functions, 13563/14074 lines).
-        statements: 94.47,
-        branches: 90.01,
-        functions: 91.62,
-        lines: 96.36,
+        // Interval offset data and repaint regressions: base 932a4112 measured
+        // 95.15 / 91.02 / 92.94 / 96.91; the fix measures 95.18 / 91.04 / 92.98 / 96.92.
+        statements: 95.18,
+        branches: 91.04,
+        functions: 92.98,
+        lines: 96.92,
       },
     },
     projects: [
