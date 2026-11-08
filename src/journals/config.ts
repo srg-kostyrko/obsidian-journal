@@ -366,7 +366,7 @@ const fixedDecorations: JournalDecoration[] = [
     styles: [
       {
         type: "shape",
-        size: 0.4,
+        size: 0.25,
         shape: "circle",
         color: { type: "theme", name: "interactive-accent" },
         placement_x: "center",
