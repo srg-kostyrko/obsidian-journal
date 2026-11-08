@@ -147,6 +147,46 @@ async function settleRow(anchor: string, accept: (read: RowRead) => boolean, mes
   return last as unknown as RowRead;
 }
 
+interface CapturedBitmap {
+  toBitmap(): { length: number; readUInt8(offset: number): number };
+}
+interface ElectronHost {
+  electron?: { remote?: { getCurrentWebContents(): { capturePage(rect: object): Promise<CapturedBitmap> } } };
+}
+
+// The painted pixel across a segment's text box that comes closest to `target`, and how far off it is on its
+// worst channel. A glyph's stems are fully covered, so text painted on top shows its exact color there; a
+// layer painted over the text shifts every pixel. Electron's capturePage, not chromedriver's screenshot,
+// which hangs against Obsidian; toBitmap() is blue-green-red-alpha.
+async function closestTextPixel(selector: string, target: string): Promise<{ hex: string; off: number } | null> {
+  return browser.execute(
+    async (textSelector: string, targetHex: string) => {
+      const box = document.querySelector(textSelector)?.getBoundingClientRect();
+      const remote = (window as unknown as ElectronHost).electron?.remote;
+      if (box === undefined || box.width === 0 || remote === undefined) return null;
+      const image = await remote.getCurrentWebContents().capturePage({
+        x: Math.floor(box.left),
+        y: Math.floor(box.top),
+        width: Math.ceil(box.width),
+        height: Math.ceil(box.height),
+      });
+      const bytes = image.toBitmap();
+      const wanted = [1, 3, 5].map((at) => Number.parseInt(targetHex.slice(at, at + 2), 16));
+      let best: { hex: string; off: number } | null = null;
+      for (let offset = 0; offset + 3 < bytes.length; offset += 4) {
+        const pixel = [bytes.readUInt8(offset + 2), bytes.readUInt8(offset + 1), bytes.readUInt8(offset)];
+        const off = Math.max(...pixel.map((channel, at) => Math.abs(channel - (wanted[at] ?? 0))));
+        if (best === null || off < best.off) {
+          best = { hex: `#${pixel.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`, off };
+        }
+      }
+      return best;
+    },
+    selector,
+    target,
+  );
+}
+
 async function selectDay(anchor: string): Promise<void> {
   // A shift-click selects the date without opening it.
   await browser.execute(
@@ -217,6 +257,8 @@ describe("custom interval rows in the calendar appearance", () => {
         "the selected row has no selected ring",
       );
       expect(selected.selectedRing).toBe(2);
+      // The tint is the narrow block's alone; a wide one's selected fill stays clear.
+      expect(selected.selectedFill).toBe(0);
       const today = await settleRow(TODAY_ROW, (read) => read.today, "the today row lost its today mark");
       expect({ selected: today.selected, layers: today.layers }).toEqual({
         selected: false,
@@ -257,6 +299,38 @@ describe("custom interval rows in the calendar appearance", () => {
         }
       } finally {
         await setTodayRedSnippet(false);
+      }
+    });
+
+    // Text paints above every highlight layer, as a calendar cell's label does: the narrow block's tint over the
+    // open note's fill must leave the segment text its own color, not a tinted one.
+    it("keeps the open note's text clear of the selected tint on a narrow block", async () => {
+      await openNote(TODAY_NOTE);
+      await selectDay(PINNED_TODAY);
+      await forceWidth(NARROW);
+      try {
+        const narrow = await settleRow(
+          TODAY_ROW,
+          (read) => read.active && read.selected && read.selectedFill === 0.2,
+          "the open note's row was not tinted as selected on a narrow block",
+        );
+        expect(narrow.layers).toEqual(["selected-fill", "active-fill", "today-ring", "selected-ring", "active-ring"]);
+        const text = `${defaultSegment(TODAY_ROW)} .nav-row__text`;
+        const message = "the open note's segment text did not paint in the theme's --text-on-accent under the tint";
+        let last: { onAccent?: string; pixel?: { hex: string; off: number } | null } = {};
+        await waitForState(
+          async () => {
+            const onAccent = await themeHex("--text-on-accent", defaultSegment(TODAY_ROW));
+            last = { onAccent, pixel: onAccent === undefined ? null : await closestTextPixel(text, onAccent) };
+            return last;
+          },
+          (read) => read.pixel != null && read.pixel.off <= 2,
+          message,
+        ).catch((error: unknown) => {
+          throw new IntervalRowError(`${message}: read ${JSON.stringify(last)}`, { cause: error });
+        });
+      } finally {
+        await forceWidth(WIDE);
       }
     });
   });

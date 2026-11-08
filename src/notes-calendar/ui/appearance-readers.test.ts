@@ -305,6 +305,7 @@ describe("calendar appearance weekend column headers", () => {
 });
 
 const ROW = ".journal-view-custom-intervals__entry";
+const ROW_TEXT = ".journal-interval-row__text";
 const rowRule = (selector: string) =>
   components.intervalRow.find((rule) => rule.container === null && rule.selector === selector);
 
@@ -345,8 +346,39 @@ describe("custom-interval row paint", () => {
     );
   });
 
-  it("intervalRow pads its label", () => {
-    expect(rowRule(`${ROW} .nav-block`)?.declarations.get("padding")).toBe("var(--_v-cell-padding)");
+  // Inside a whole-block decoration the padding pads its content, so the decoration's fill keeps the row's box.
+  it("intervalRow pads its label, never a whole-block decoration's box", () => {
+    const padded = components.intervalRow
+      .filter((rule) => rule.container === null && rule.declarations.has("padding"))
+      .map((rule) => [rule.selector, rule.declarations.get("padding")]);
+    expect(padded).toEqual([
+      [
+        `${ROW} .nav-block:not(:has(> .nav-block-inner)),\n${ROW} .nav-block-inner > .cell-decoration__content`,
+        "var(--_v-cell-padding)",
+      ],
+    ]);
+  });
+
+  it("intervalRow rounds a whole-block decoration with the row", () => {
+    expect({
+      wrapper: rowRule(ROW_TEXT)?.declarations.get("border-radius"),
+      block: rowRule(`${ROW} .nav-block`)?.declarations.get("border-radius"),
+    }).toEqual({ wrapper: "inherit", block: "inherit" });
+  });
+
+  // As in the cell: the text clears every highlight layer, and marks and corners clear the text. Only the
+  // text is raised, so a segment's own background and a segment decoration's fill stay under an over layer.
+  it("intervalRow raises segment text over the layers, and marks and corners over the text", () => {
+    const raised = components.intervalRow
+      .filter(
+        (rule) => rule.container === null && rule.declarations.has("z-index") && !rule.selector.includes("__layer"),
+      )
+      .map((rule) => [rule.selector, rule.declarations.get("position"), rule.declarations.get("z-index")]);
+    expect(raised).toEqual([
+      [`${ROW}:has(.mark-overflow__popover)`, undefined, "var(--layer-popover)"],
+      [`${ROW} .nav-row__text,\n${ROW} .nav-row .cell-decoration__content`, "relative", "2"],
+      [`${ROW} .cell-marks,\n${ROW} .decoration-corner`, undefined, "3"],
+    ]);
   });
 
   it("intervalRow lifts a row holding a popover, and the block lifts itself", () => {
@@ -369,7 +401,6 @@ describe("custom-interval row paint", () => {
 
 const ROW_STATES = ["today", "selected", "active"] as const;
 const mix = (state: string) => `color-mix(in srgb, var(--_text-${state}) var(--_over-${state}), currentColor)`;
-const ROW_TEXT = ".journal-interval-row__text";
 const rowPassThroughCases = ROW_STATES.flatMap((state) =>
   TEXT_VALUES.map(([value, slot]) => [`${state}-${value}`, `--_${slot}-${state}`, state] as const),
 );

@@ -360,6 +360,7 @@ const fills = computed(() => states.value.filter((state) => state !== "today" ||
 /* Resolved on the wrapper, below the queries, and read by each segment. Today's is left out of the chosen
    chain: a color the user gave a segment outranks today's text, never the open note's or the selection's. */
 .journal-interval-row__text {
+  border-radius: inherit;
   --_row-text: var(--_text-active, var(--_text-selected, var(--_text-today)));
   --_row-text-chosen: var(--_text-active, var(--_text-selected));
   --_row-weight: var(--_weight-active, var(--_weight-selected, var(--_weight-today)));
@@ -381,7 +382,25 @@ const fills = computed(() => states.value.filter((state) => state !== "today" ||
   z-index: var(--layer-popover);
 }
 .journal-view-custom-intervals__entry :deep(.nav-block) {
+  border-radius: inherit;
+}
+/* Label padding, as in the calendar cell: inside a whole-block decoration, on top of its own mark
+   reservation, so it never shrinks the decoration's fill. */
+.journal-view-custom-intervals__entry :deep(.nav-block:not(:has(> .nav-block-inner))),
+.journal-view-custom-intervals__entry :deep(.nav-block-inner > .cell-decoration__content) {
   padding: var(--_v-cell-padding);
+}
+/* Raised here, never in the shared segment or decoration, whose z-index would leak into every other
+   host. Only the text itself: a segment's background and a segment decoration's fill stay unraised, so a
+   layer over decorations still paints over them. Marks and corners sit above the text, as in the cell. */
+.journal-view-custom-intervals__entry :deep(.nav-row__text),
+.journal-view-custom-intervals__entry :deep(.nav-row .cell-decoration__content) {
+  position: relative;
+  z-index: 2;
+}
+.journal-view-custom-intervals__entry :deep(.cell-marks),
+.journal-view-custom-intervals__entry :deep(.decoration-corner) {
+  z-index: 3;
 }
 .journal-interval-row__layer {
   position: absolute;

@@ -187,7 +187,9 @@ describe("NavigationCodeBlock", () => {
 describe("NavigationCodeBlock columns", () => {
   it("leaves the rendered block's segments free of the editor's drag and edit affordance", async () => {
     await renderYearlyNav([[buildNavSegment({ template: "static text", color: transparent })]]);
-    expect(screen.getAllByText("static text").at(0)?.classList.contains("nav-row--editable")).toBe(false);
+    expect(screen.getAllByText("static text").at(0)?.closest(".nav-row")?.classList.contains("nav-row--editable")).toBe(
+      false,
+    );
   });
 
   it("renders the current journal date in 'create' mode with prev/next periods from CycleService", async () => {
@@ -655,7 +657,8 @@ describe("NavigationCodeBlock segment click routing", () => {
     });
     registerQuarterlyNote(index);
 
-    const target = screen.getAllByText("Q2")[1];
+    // pointerenter does not bubble, and a real pointer enters the segment itself before its text.
+    const target = screen.getAllByText("Q2")[1]?.closest(".nav-row");
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
     expect(hoverPreviewPaths(harness)).toEqual(["Quarterly/2025-Q2.md"]);
@@ -804,7 +807,7 @@ describe("NavigationCodeBlock hover preview", () => {
       entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
 
-    const target = screen.getAllByText("today")[1];
+    const target = screen.getAllByText("today")[1]?.closest(".nav-row");
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
     expect(hoverPreviewPaths(harness)).toEqual(["Daily/2026-05-27.md"]);

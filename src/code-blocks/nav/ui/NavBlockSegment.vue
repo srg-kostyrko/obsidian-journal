@@ -230,7 +230,8 @@ function onPointerEnter(event: PointerEvent): void {
     >
       {{ text }}
     </CellDecoration>
-    <template v-else>{{ text }}</template>
+    <!-- An element, not a bare text node, so a host can lift the text over its own layers. -->
+    <span v-else class="nav-row__text">{{ text }}</span>
     <span v-if="editable && text.length === 0" class="nav-segment-placeholder">—</span>
   </div>
 </template>
