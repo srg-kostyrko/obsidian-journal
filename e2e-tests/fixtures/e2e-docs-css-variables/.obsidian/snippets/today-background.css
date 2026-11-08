@@ -1,4 +1,4 @@
 body {
-  --journal-cell-today-ring-width: 2px;
   --journal-cell-today-color: var(--color-orange);
+  --journal-cell-today-strength: 0.3;
 }

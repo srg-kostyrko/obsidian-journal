@@ -21,7 +21,7 @@ const WIDE = "40em";
 const NARROW = "20em";
 
 const SNIPPET_MARKER = {
-  "today-ring": "--journal-cell-today-ring-width",
+  "today-background": "--journal-cell-today-strength",
   "weekend-band": "--journal-cell-weekend-strength",
   "narrow-rows": "--journal-cell-cell-min-height-narrow",
 } as const;
@@ -83,6 +83,21 @@ async function readWhen<T>(read: () => Promise<T>, predicate: (value: T) => bool
     timeoutMsg,
   );
   return last as T;
+}
+
+// A pointer left over a cell opens its tooltip, which the capture would keep, so park it at the window's
+// bottom edge, clear of the calendar, and wait for any open tooltip to close.
+async function settleForCapture(): Promise<void> {
+  const viewport = await browser.execute(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  await browser
+    .action("pointer")
+    .move({ x: Math.round(viewport.width / 2), y: viewport.height - 4 })
+    .perform();
+  await waitForState(
+    () => browser.execute(() => document.querySelectorAll(".tooltip").length),
+    (open) => open === 0,
+    "waited for an open tooltip to close",
+  );
 }
 
 // A theme variable resolved to the rgb() Chromium computes for it, in the calendar's own context.
@@ -198,60 +213,60 @@ describe("CSS variables examples", () => {
     );
   });
 
-  describe("today as a ring", () => {
-    after(() => setSnippet("today-ring", false));
+  describe("today with a background", () => {
+    after(() => setSnippet("today-background", false));
 
-    it("keeps today's accent text and adds an orange ring", async () => {
-      const ring = `${TODAY_CELL} [data-layer="today-ring"]`;
+    it("tints today orange inside the selected ring and keeps its accent text", async () => {
+      const fill = `${TODAY_CELL} [data-layer="today-fill"]`;
+      const selectedRing = `${TODAY_CELL} [data-layer="selected-ring"]`;
       const text = `${TODAY_CELL} > .notes-calendar-cell__text`;
-      const stockRing = await computed(ring, ["box-shadow"]);
+      const stockFill = await computed(fill, ["background-color", "opacity"]);
       const stockText = await computed(text, ["color"]);
 
-      await setSnippet("today-ring", true);
+      await setSnippet("today-background", true);
       const orange = await resolveColor("--color-orange");
       const accent = await resolveColor("--text-accent");
-      const ringRead = await readWhen(
-        () => computed(ring, ["box-shadow"]),
-        (read) => read.values["box-shadow"]?.includes(orange) ?? false,
-        "today's ring did not take the orange theme color",
+      const fillRead = await readWhen(
+        () => computed(fill, ["background-color", "opacity", "z-index"]),
+        (read) => read.values.opacity === "0.3",
+        "today's fill did not take the 0.3 strength",
       );
       const textRead = await computed(text, ["color"]);
-      const shadow = ringRead.values["box-shadow"] ?? "";
-      const ringWidth = /(-?[\d.]+)px inset/.exec(shadow)?.[1];
-      // The seeded view's reference date is today, and a calendar marks it as the selected date, whose
-      // stock ring is drawn in the same place, after today's.
-      const todayCell = await browser.execute((sel: string) => {
-        const cell = document.querySelector<HTMLElement>(sel);
-        const rings = [...(cell?.querySelectorAll<HTMLElement>('[data-layer$="-ring"]') ?? [])];
-        return {
-          selected: cell?.dataset.selected === "true",
-          ringLayersInPaintOrder: rings.map((ring) => ({
-            layer: ring.dataset.layer,
-            zIndex: getComputedStyle(ring).zIndex,
-            boxShadow: getComputedStyle(ring).boxShadow,
-          })),
-        };
-      }, TODAY_CELL);
+      const ringRead = await computed(selectedRing, ["box-shadow"]);
+      const ringShadow = ringRead.values["box-shadow"] ?? "";
+      const ringWidth = /(-?[\d.]+)px inset/.exec(ringShadow)?.[1];
+      // The seeded view's reference date is today, so a calendar marks today as the selected date too.
+      const todaySelected = await browser.execute(
+        (sel: string) => document.querySelector<HTMLElement>(sel)?.dataset.selected === "true",
+        TODAY_CELL,
+      );
 
-      await captureThemed(MONTH_VIEW, "css-variables-today-ring", { padding: 8 });
+      await settleForCapture();
+      await captureThemed(MONTH_VIEW, "css-variables-today-background", { padding: 8 });
 
       const outcome = {
         today: TODAY,
-        todayIsSelected: todayCell.selected,
-        ringLayersInPaintOrder: todayCell.ringLayersInPaintOrder,
-        stockRingBoxShadow: stockRing.values["box-shadow"],
+        stockFill: stockFill.values,
         stockTextColor: stockText.values.color,
-        snippetRingBoxShadow: shadow,
-        ringWidthPx: ringWidth === undefined ? undefined : Math.round(Number.parseFloat(ringWidth)),
+        snippetFill: fillRead.values,
         resolvedColorOrange: orange,
-        ringIsOrange: shadow.includes(orange),
+        fillIsOrange: fillRead.values["background-color"] === orange,
         snippetTextColor: textRead.values.color,
         resolvedTextAccent: accent,
         textKeepsAccent: textRead.values.color === accent,
+        todayIsSelected: todaySelected,
+        selectedRingBoxShadow: ringShadow,
+        // Rounded: Obsidian's zoom scales authored pixels.
+        selectedRingWidthPx: ringWidth === undefined ? undefined : Math.round(Number.parseFloat(ringWidth)),
       };
-      await recordOutcome("css-variables-today-ring", outcome);
-      if (!outcome.ringIsOrange || outcome.ringWidthPx !== 2 || !outcome.textKeepsAccent)
-        throw new ExampleMismatchError("today ring", outcome);
+      await recordOutcome("css-variables-today-background", outcome);
+      if (
+        !outcome.fillIsOrange ||
+        !outcome.textKeepsAccent ||
+        !outcome.todayIsSelected ||
+        outcome.selectedRingWidthPx !== 2
+      )
+        throw new ExampleMismatchError("today background", outcome);
     });
   });
 
@@ -294,6 +309,7 @@ describe("CSS variables examples", () => {
         DECORATED_WEEKEND_DAY,
       );
 
+      await settleForCapture();
       await captureThemed(MONTH_VIEW, "css-variables-weekend-band", { padding: 8 });
 
       const outcome = {
