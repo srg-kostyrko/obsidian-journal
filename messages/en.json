@@ -41,6 +41,17 @@
   "calendar_apply_globally_title": "Apply week configuration to all dates in vault",
   "calendar_appearance_section_title": "Calendar appearance",
   "calendar_appearance_open": "Open",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Weekend: {days}",
+        "mode=none": "No weekend"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "Change in calendar settings",
   "calendar_appearance_preview": "Preview",
   "calendar_appearance_width_label": "Width",
   "calendar_appearance_width": [
@@ -85,6 +96,8 @@
         "part=selected": "Selected date",
         "part=active": "Open note",
         "part=outside": "Days outside the month",
+        "part=currentWeek": "Current week",
+        "part=weekend": "Weekends",
         "part=heading": "Month heading",
         "part=weekday": "Weekday header",
         "part=weekNumber": "Week numbers",
@@ -1881,6 +1894,20 @@
   ],
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
+  "calendar_weekend_label": "Weekend days",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "No weekend"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Locale's weekend",
+  "calendar_weekend_custom": "Custom",
   "calendar_timeline_navigation_label": "Default timeline navigation",
   "calendar_timeline_navigation_description": "Show previous and next controls on calendar-timeline code blocks. A block can override this with its navigation option.",
   "view_block_config_show_heading_label": "Show month/year heading",

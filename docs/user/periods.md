@@ -44,6 +44,14 @@ With anything but **Follow system locale**, **Apply week configuration to all da
 appears: off, week-configuration settings apply only to dates inside journals and do not affect dates
 created by other plugins or Obsidian itself. You might need to restart Obsidian for it to take effect.
 
+**Weekend days** sets which days count as the weekend, for the calendar's
+[weekend bands](/views#weekends-and-the-current-week). **Locale's weekend** uses the weekend of Obsidian's
+language, and Saturday and Sunday where that is not available. **Custom** shows a button for each day of
+the week, in the week's order, for any set of days, or none at all for a calendar without a weekend;
+choosing **Custom** starts from the days the locale gave. The description lists the days Monday first,
+whatever day the week starts on. Changing the week configuration leaves the weekend as it is, and it
+takes no part in how week numbers or notes are dated.
+
 Two more rows of the same block set defaults explained elsewhere: **Default week numbers**, where the
 week-number column sits in calendar blocks left on **Use global default** — see [Month calendar and
 Week calendar](/views#month-calendar-and-week-calendar) — and **Default timeline navigation**, whether

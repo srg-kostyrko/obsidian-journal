@@ -93,6 +93,23 @@ describe("style round trip", () => {
   });
 });
 
+describe("the band parts", () => {
+  it("withReset restores a band part's stock", () => {
+    let state = withValue(fresh(), "wide", "currentWeek", ["style"], "background");
+    state = withValue(state, "wide", "currentWeek", ["strength"], 40);
+    const reset = withReset(state, stockDisplay(), "wide", "currentWeek").appearance;
+    expect(reset.wide.currentWeek).toEqual(appearanceSlice.defaults.wide.currentWeek);
+  });
+
+  it("isModified is true after setting the weekend's style", () => {
+    const base = fresh();
+    expect(isModified(base, stockDisplay(), "wide", "weekend")).toBe(false);
+    expect(isModified(withValue(base, "wide", "weekend", ["style"], "ring"), stockDisplay(), "wide", "weekend")).toBe(
+      true,
+    );
+  });
+});
+
 describe("isModified", () => {
   it("is false for defaults at both widths and true after any withValue", () => {
     const base = fresh();

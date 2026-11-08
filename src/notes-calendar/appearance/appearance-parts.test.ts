@@ -148,6 +148,38 @@ describe("familiesOf", () => {
   });
 });
 
+describe("the band parts", () => {
+  it.each(["weekend", "currentWeek"] as const)("%s at none is the highlight style alone", (part) => {
+    expect(familiesOf(part, "none").map((group) => group.family)).toEqual(["highlight"]);
+    expect(names(part, "none")).toEqual(["style"]);
+  });
+
+  it("feeds the weekend's variables from its own catalog entries", () => {
+    const entries = PARTS.weekend.controls.flatMap((control) => ("entry" in control ? [control.entry] : []));
+    expect(entries).toContain("journal-cell-weekend-color");
+    expect(PARTS.currentWeek.controls.flatMap((control) => ("entry" in control ? [control.entry] : []))).toContain(
+      "journal-cell-current-week-color",
+    );
+  });
+
+  it("orders the chips Current week before Weekends, after Today", () => {
+    expect(CHIP_ORDER).toEqual([
+      "active",
+      "selected",
+      "today",
+      "currentWeek",
+      "weekend",
+      "outside",
+      "date",
+      "weekNumber",
+      "weekday",
+      "heading",
+      "cell",
+      "grid",
+    ]);
+  });
+});
+
 describe("visibleControls", () => {
   it("none shows only the style", () => {
     expect(names("today", "none")).toEqual(["style"]);

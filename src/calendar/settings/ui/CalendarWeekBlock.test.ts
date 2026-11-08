@@ -1,8 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { WeekPresetApplierToken } from "@/calendar";
+import { Calendar } from "@/calendar/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { m } from "@/i18n";
 import { AsyncResult } from "@/infrastructure/result";
@@ -53,6 +55,8 @@ function toggleInRow(name: string): HTMLElement {
   return within(row as HTMLElement).getByRole("checkbox");
 }
 
+const weekendState = (harness: TestHarness) => harness.settings.getSlice(calendarDisplaySlice).state.weekend;
+
 describe("CalendarWeekBlock", () => {
   it("starts collapsed and hides the inner settings", async () => {
     const { harness } = await setupContainer();
@@ -102,7 +106,7 @@ describe("CalendarWeekBlock", () => {
     const { harness } = await setupContainer({ mode: "custom", dow: 3, doy: 7, global: false });
     harness.render(CalendarWeekBlock);
     await openSection();
-    expect(screen.getByText(m.calendar_preset_name({ preset: "custom" }))).toBeTruthy();
+    expect(screen.getByText(m.calendar_preset_name({ preset: "custom" }), { selector: ".preset-name" })).toBeTruthy();
     expect(screen.getByText(/Wednesday/)).toBeTruthy();
     expect(screen.getByText(/Jan 3\b/)).toBeTruthy();
   });
@@ -174,5 +178,93 @@ describe("CalendarWeekBlock", () => {
     await vi.waitFor(() =>
       expect(applier.apply).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false }),
     );
+  });
+
+  describe("weekend days", () => {
+    it("names the locale weekend through the conjunction in week order", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      expect(screen.getByText(m.calendar_weekend_label())).toBeTruthy();
+      expect(screen.getByText("Saturday and Sunday")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Friday" })).toBeNull();
+    });
+
+    it("seeds the custom days with the resolved locale weekend", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_locale()), "custom");
+      expect(weekendState(harness)).toEqual({ type: "custom", days: [0, 6] });
+    });
+
+    it("offers seven day toggles in week order and writes the picked days", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_locale()), "custom");
+      const group = screen.getByRole("group", { name: m.calendar_weekend_label() });
+      expect(
+        within(group)
+          .getAllByRole("button")
+          .map((b) => b.textContent?.trim()),
+      ).toEqual(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]);
+      await userEvent.click(within(group).getByRole("button", { name: "Friday" }));
+      await userEvent.click(within(group).getByRole("button", { name: "Sunday" }));
+      expect(weekendState(harness)).toEqual({ type: "custom", days: [5, 6] });
+    });
+
+    it("writes an empty weekend and says so when every day is off", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_locale()), "custom");
+      const group = screen.getByRole("group", { name: m.calendar_weekend_label() });
+      await userEvent.click(within(group).getByRole("button", { name: "Sunday" }));
+      await userEvent.click(within(group).getByRole("button", { name: "Saturday" }));
+      expect(weekendState(harness)).toEqual({ type: "custom", days: [] });
+      expect(screen.getByText("No weekend")).toBeTruthy();
+    });
+
+    it("reorders the day toggles when the week grid changes while open", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_locale()), "custom");
+      const names = () =>
+        within(screen.getByRole("group", { name: m.calendar_weekend_label() }))
+          .getAllByRole("button")
+          .map((b) => b.textContent?.trim());
+      expect(names()[0]).toBe("Sunday");
+      harness.resolve(Calendar).applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      await nextTick();
+      expect(names()[0]).toBe("Monday");
+      harness.resolve(Calendar).applyWeekConfig("locale", { propagateToGlobal: false });
+    });
+
+    it("returns to the locale weekend", async () => {
+      const { harness } = await setupContainer();
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_locale()), "custom");
+      await userEvent.selectOptions(screen.getByDisplayValue(m.calendar_weekend_custom()), "locale");
+      expect(weekendState(harness)).toEqual({ type: "locale" });
+    });
+
+    it("leaves the weekend alone when a week preset is applied", async () => {
+      const { harness } = await setupContainer();
+      harness.settings.getSlice(calendarDisplaySlice).state = {
+        ...harness.settings.getSlice(calendarDisplaySlice).state,
+        weekend: { type: "custom", days: [5] },
+      };
+      harness.render(CalendarWeekBlock);
+      await openSection();
+      await userEvent.click(screen.getByText(m.calendar_week_config_change()));
+      harness.modals
+        .lastOpen<{ current: CalendarSliceState }, CalendarSliceState>()
+        .submit({ mode: "custom", dow: 1, doy: 4, global: false });
+      await vi.waitFor(() => expect(harness.settings.getSlice(calendarSlice).state.mode).toBe("custom"));
+      expect(weekendState(harness)).toEqual({ type: "custom", days: [5] });
+    });
   });
 });

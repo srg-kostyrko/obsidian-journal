@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Wochenkonfiguration auf alle Datumsangaben im Vault anwenden",
   "calendar_appearance_section_title": "Kalenderdarstellung",
   "calendar_appearance_open": "Öffnen",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Wochenende: {days}",
+        "mode=none": "Kein Wochenende"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "In den Kalendereinstellungen ändern",
   "calendar_appearance_preview": "Vorschau",
   "calendar_appearance_width_label": "Breite",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "Ausgewähltes Datum",
         "part=active": "Geöffnete Notiz",
         "part=outside": "Tage außerhalb des Monats",
+        "part=currentWeek": "Aktuelle Woche",
+        "part=weekend": "Wochenenden",
         "part=heading": "Monatsüberschrift",
         "part=weekday": "Wochentagszeile",
         "part=weekNumber": "Wochennummern",
@@ -1877,6 +1890,20 @@
   ],
   "calendar_week_placement_label": "Standard-Wochennummern",
   "calendar_week_placement_description": "Legt fest, wo die Spalte mit den Wochennummern in Kalenderblöcken erscheint, die auf „Globalen Standard verwenden“ eingestellt sind.",
+  "calendar_weekend_label": "Wochenendtage",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Kein Wochenende"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Wochenende der Systemsprache",
+  "calendar_weekend_custom": "Benutzerdefiniert",
   "calendar_timeline_navigation_label": "Standardnavigation der Zeitleiste",
   "calendar_timeline_navigation_description": "Zeigt in calendar-timeline-Codeblöcken Schaltflächen für den vorherigen und nächsten Zeitraum an. Ein Block kann dies mit seiner Option navigation überschreiben.",
   "view_block_config_show_heading_label": "Monat/Jahr-Überschrift anzeigen",

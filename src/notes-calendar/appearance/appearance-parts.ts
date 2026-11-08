@@ -180,6 +180,8 @@ export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Contr
       ...highlightControls("outside"),
     ],
   },
+  weekend: { controls: highlightControls("weekend") },
+  currentWeek: { controls: highlightControls("current-week") },
   heading: {
     controls: [
       structure("showHeading", SHOWN),
@@ -214,6 +216,8 @@ export const CHIP_ORDER: readonly PartKey[] = [
   "active",
   "selected",
   "today",
+  "currentWeek",
+  "weekend",
   "outside",
   "date",
   "weekNumber",

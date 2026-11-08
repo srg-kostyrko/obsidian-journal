@@ -6,6 +6,15 @@ import { testContainer } from "@/testing";
 import { calendarDisplaySlice, calendarDisplaySliceSchema } from "./display-slice";
 import { calendarSettingsCoreModule } from "./module";
 
+async function repaired(weekend: unknown) {
+  const harness = await testContainer({
+    modules: [calendarSettingsCoreModule],
+    data: { calendarDisplay: { weekend, weekPlacement: "right" } },
+    allow: { dataRepair: true },
+  });
+  return harness.settings.getSlice(calendarDisplaySlice).state;
+}
+
 describe("calendarDisplaySlice", () => {
   it("fills the label fields from fresh objects, so filling one in place leaves the stock untouched", () => {
     const first = v.parse(calendarDisplaySliceSchema, {});
@@ -54,6 +63,7 @@ describe("calendarDisplaySlice", () => {
       labels: { day: "", week: "", month: "", quarter: "", year: "" },
       weekdayLabel: { type: "pattern", pattern: "" },
       weekdayLabelNarrow: null,
+      weekend: { type: "locale" },
     });
   });
 
@@ -108,5 +118,37 @@ describe("calendarDisplaySlice", () => {
     const state = harness.settings.getSlice(calendarDisplaySlice).state;
     expect(state.outsideDays).toBe("automatic");
     expect(state.weekPlacement).toBe("right");
+  });
+  describe("weekend", () => {
+    it("defaults to the locale's weekend", () => {
+      expect(calendarDisplaySlice.defaults.weekend).toEqual({ type: "locale" });
+      expect(v.parse(calendarDisplaySliceSchema, {}).weekend).toEqual({ type: "locale" });
+    });
+
+    it("keeps a custom weekend, including the empty one", () => {
+      expect(v.parse(calendarDisplaySliceSchema, { weekend: { type: "custom", days: [5, 6] } }).weekend).toEqual({
+        type: "custom",
+        days: [5, 6],
+      });
+      expect(v.parse(calendarDisplaySliceSchema, { weekend: { type: "custom", days: [] } }).weekend).toEqual({
+        type: "custom",
+        days: [],
+      });
+    });
+
+    it.each([[{ type: "custom", days: [5, 9] }], [{ type: "custom", days: "fri" }]])(
+      "repairs a corrupt custom weekend %j to the locale weekend, not a narrowed one",
+      async (weekend) => {
+        const state = await repaired(weekend);
+        expect(state.weekend).toEqual({ type: "locale" });
+        expect(state.weekPlacement).toBe("right");
+      },
+    );
+
+    it("repairs an unknown weekend shape to the stock", async () => {
+      const state = await repaired({ type: "nope" });
+      expect(state.weekend).toEqual({ type: "locale" });
+      expect(state.weekPlacement).toBe("right");
+    });
   });
 });

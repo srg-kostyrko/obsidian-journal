@@ -162,6 +162,8 @@ const WRITERS: Writers = {
   selected: highlightWriter("selected"),
   active: highlightWriter("active"),
   outside: highlightWriter("outside"),
+  weekend: highlightWriter("weekend"),
+  currentWeek: highlightWriter("current-week"),
   heading: textWriter("heading"),
   weekday: textWriter("weekday"),
   weekNumber: textWriter("week-number"),

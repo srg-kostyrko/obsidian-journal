@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
-import { climb } from "@/settings/repair";
+import { climb, whole } from "@/settings/repair";
 
 export type WeekPlacement = "none" | "left" | "right";
 export type OutsideDays = "automatic" | "interactive" | "inert" | "hidden";
@@ -10,6 +10,7 @@ export type WeekdayLabel = { type: "pattern"; pattern: string } | { type: "lette
 export type LabelKind = "day" | "week" | "month" | "quarter" | "year";
 export type Labels = Record<LabelKind, string>;
 export type OutsideDates = "active" | "inactive" | "blank";
+export type WeekendSetting = { type: "locale" } | { type: "custom"; days: number[] };
 
 const labelField = v.optional(v.string(), "");
 
@@ -18,6 +19,17 @@ const weekdayLabelSchema = v.variant("type", [
   v.object({ type: v.pipe(v.literal("letter"), climb("discriminant")) }),
 ]);
 
+const weekendDay = v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6));
+
+const weekendSchema = v.variant("type", [
+  v.object({ type: v.pipe(v.literal("locale"), climb("discriminant")) }),
+  v.object({
+    type: v.pipe(v.literal("custom"), climb("discriminant")),
+    days: v.pipe(v.array(weekendDay), whole("a custom weekend missing a day is a different weekend")),
+  }),
+]);
+
+const stockWeekend = (): WeekendSetting => ({ type: "locale" });
 const stockLabels = (): Labels => ({ day: "", week: "", month: "", quarter: "", year: "" });
 const stockWeekdayLabel = (): WeekdayLabel => ({ type: "pattern", pattern: "" });
 
@@ -38,6 +50,7 @@ export const calendarDisplaySliceSchema = v.object({
   weekdayLabel: v.optional(weekdayLabelSchema, stockWeekdayLabel),
   // null is "same as the wide label".
   weekdayLabelNarrow: v.optional(v.nullable(weekdayLabelSchema), null),
+  weekend: v.optional(weekendSchema, stockWeekend),
 });
 
 export type CalendarDisplaySliceState = v.InferOutput<typeof calendarDisplaySliceSchema>;
@@ -55,5 +68,6 @@ export const calendarDisplaySlice = defineSlice<"calendarDisplay", typeof calend
     labels: stockLabels(),
     weekdayLabel: stockWeekdayLabel(),
     weekdayLabelNarrow: null,
+    weekend: stockWeekend(),
   },
 );
