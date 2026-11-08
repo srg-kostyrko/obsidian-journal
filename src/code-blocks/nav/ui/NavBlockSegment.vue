@@ -17,6 +17,7 @@ import {
 } from "@/infrastructure/host";
 import {
   CycleService,
+  isDefaultSegmentColor,
   JournalsIndex,
   JournalsRepository,
   NotePathService,
@@ -142,6 +143,7 @@ const fontSize = computed(() => `${props.segment.fontSize}em`);
 const fontWeight = computed(() => (props.segment.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.segment.italic ? "italic" : "normal"));
 const color = computed(() => colorToString(props.segment.color));
+const defaultColor = computed(() => isDefaultSegmentColor(props.segment.color));
 const background = computed(() => colorToString(props.segment.background));
 // In the editor the whole segment is the drag handle, so it shows the grab cursor rather than
 // the link cursor its target would imply — dragging is the affordance a reader has no way to
@@ -212,6 +214,7 @@ function onPointerEnter(event: PointerEvent): void {
     :role="editable ? 'button' : undefined"
     :aria-label="editable && text.length === 0 ? m.block_lines_empty_segment() : undefined"
     :data-id="dragId"
+    :data-default-color="defaultColor || null"
     :data-drag-handle="editable ? '' : undefined"
     @click.prevent="onClick"
     @auxclick.middle.prevent="onClick"
@@ -227,20 +230,26 @@ function onPointerEnter(event: PointerEvent): void {
     >
       {{ text }}
     </CellDecoration>
-    <template v-else>{{ text }}</template>
+    <!-- An element, not a bare text node, so a host can lift the text over its own layers. -->
+    <span v-else class="nav-row__text">{{ text }}</span>
     <span v-if="editable && text.length === 0" class="nav-segment-placeholder">—</span>
   </div>
 </template>
 
 <style scoped>
+/* A custom-interval row hands down its highlight text; unset everywhere else, so the segment's own shows.
+   Today's text recolors only a segment still on the default color, never one the user chose. */
 .nav-row {
   font-size: v-bind(fontSize);
-  font-weight: v-bind(fontWeight);
-  font-style: v-bind(fontStyle);
-  color: v-bind(color);
+  font-weight: var(--_row-weight, v-bind(fontWeight));
+  font-style: var(--_row-italic, v-bind(fontStyle));
+  color: var(--_row-text-chosen, v-bind(color));
   background-color: v-bind(background);
   cursor: v-bind(cursor);
   position: relative;
+}
+.nav-row[data-default-color] {
+  color: var(--_row-text, v-bind(color));
 }
 /* Nothing else tells a reader a segment can be dragged or clicked to edit: it is plain text in
    a preview. An outline rather than a border so revealing it reflows nothing, and the same

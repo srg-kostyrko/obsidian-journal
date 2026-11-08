@@ -1,5 +1,7 @@
 import { compileStyle, parse } from "vue/compiler-sfc";
 
+import intervalRowSource from "@/views/blocks/custom-intervals/ui/IntervalRow.vue?raw";
+
 import { publicName, savedName, type CatalogEntry } from "./appearance/appearance-catalog";
 import previewSource from "./appearance/ui/AppearancePreview.vue?raw";
 import bandSource from "./ui/NotesCalendarBand.vue?raw";
@@ -47,11 +49,12 @@ export function scopedStyleRules(source: string): readonly ScopedRule[] {
 
 /** The scoped rules of every component that reads the appearance catalog. */
 export function calendarStyleRules(): Record<
-  "cell" | "band" | "divider" | "monthView" | "weekView" | "preview",
+  "cell" | "intervalRow" | "band" | "divider" | "monthView" | "weekView" | "preview",
   readonly ScopedRule[]
 > {
   return {
     cell: scopedStyleRules(cellSource),
+    intervalRow: scopedStyleRules(intervalRowSource),
     band: scopedStyleRules(bandSource),
     divider: scopedStyleRules(dividerSource),
     monthView: scopedStyleRules(monthViewSource),

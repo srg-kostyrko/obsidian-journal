@@ -5,7 +5,13 @@ import type { AnchorString } from "@/calendar";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { testContainer } from "@/testing";
 
-import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
+import {
+  isDefaultSegmentColor,
+  journalConfigCollection,
+  journalConfigSchema,
+  journalDefaultsFor,
+  navBlockSchema,
+} from "./config";
 import { journalsCoreModule } from "./module";
 import { JournalsRepository } from "./repository";
 import { buildNavSegment, buildNoteletType, fixedJournal, unwrap } from "./testing";
@@ -1059,5 +1065,19 @@ describe("journal write repair on load", () => {
     expect(journal.write).toEqual({ type: "day" });
     expect(journal.folder).toBe("Sprints");
     expect(repair?.fields).toMatchObject({ fields: ["write"] });
+  });
+});
+
+describe("isDefaultSegmentColor", () => {
+  it("recognizes the color a new segment starts with", () => {
+    expect(isDefaultSegmentColor({ type: "theme", name: "text-normal" })).toBe(true);
+  });
+
+  it.each([
+    ["another theme color", { type: "theme", name: "text-accent" }],
+    ["transparent", { type: "transparent" }],
+    ["a custom color equal to the stock text", { type: "custom", color: "#dcddde" }],
+  ] as const)("treats %s as chosen", (_label, color) => {
+    expect(isDefaultSegmentColor(color)).toBe(false);
   });
 });

@@ -140,5 +140,12 @@ useCellDecorations({
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
+  container: journal-calendar / inline-size;
+}
+/* Chromium 120 still makes a size container a stacking context, which traps the lifted row of an open
+   mark popover (IntervalRow) inside this block, under whatever follows it. Lift the block with it. */
+.journal-view-custom-intervals:has(.mark-overflow__popover) {
+  position: relative;
+  z-index: var(--layer-popover);
 }
 </style>

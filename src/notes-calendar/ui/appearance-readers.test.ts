@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 
+import blockSource from "@/views/blocks/custom-intervals/ui/CustomIntervalsBlock.vue?raw";
+
 import { appearanceCatalog, type CatalogEntry } from "../appearance/appearance-catalog";
 import { ROW_FLOOR_PX } from "../appearance/slice";
-import { calendarStyleRules, NARROW_QUERY, narrowReader, privateName, wideReader, type ScopedRule } from "../testing";
+import {
+  calendarStyleRules,
+  NARROW_QUERY,
+  scopedStyleRules,
+  narrowReader,
+  privateName,
+  wideReader,
+  type ScopedRule,
+} from "../testing";
 
 const components = calendarStyleRules();
 type Component = keyof typeof components;
@@ -31,8 +41,10 @@ function renderers(entry: CatalogEntry): readonly Component[] {
   const part = entry.name.replace(/^journal-cell-/, "");
   const band = BANDS.find((state) => part.startsWith(`${state}-`));
   if (band !== undefined) return bandRenderers(band, part.slice(band.length + 1));
-  if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
-  if (part === "cell-radius") return ["cell", "band"];
+  if (part === "cell-padding") return ["cell", "intervalRow", "monthView", "preview"];
+  if (part === "cell-min-height") return ["cell", "monthView", "preview"];
+  if (part === "cell-radius") return ["cell", "intervalRow", "band"];
+  if (/^(today|selected|active)-/.test(part) && !part.endsWith("-narrow")) return ["cell", "intervalRow"];
   if (part === "week-number-divider-width") return ["divider", ...GRIDS];
   if (part.startsWith("week-number-divider-")) return ["divider"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix) ? GRIDS : ["cell"];
@@ -62,6 +74,7 @@ describe("calendar appearance readers", () => {
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(25);
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("band")).length).toBe(9);
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("divider")).length).toBe(2);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("intervalRow")).length).toBe(23);
   });
 
   it.each([
@@ -288,5 +301,165 @@ describe("calendar appearance weekend column headers", () => {
       weight: "var(--_weekend-weight, var(--_v-weekday-weight))",
       italic: "var(--_weekend-italic, var(--_v-weekday-italic))",
     });
+  });
+});
+
+const ROW = ".journal-view-custom-intervals__entry";
+const ROW_TEXT = ".journal-interval-row__text";
+const rowRule = (selector: string) =>
+  components.intervalRow.find((rule) => rule.container === null && rule.selector === selector);
+
+describe("custom-interval row paint", () => {
+  it("intervalRow is isolated and rounds its layers", () => {
+    const declarations = rowRule(ROW)?.declarations;
+    expect({
+      isolation: declarations?.get("isolation"),
+      position: declarations?.get("position"),
+      radius: declarations?.get("border-radius"),
+    }).toEqual({ isolation: "isolate", position: "relative", radius: "var(--_v-cell-radius)" });
+  });
+
+  it.each(["today", "selected", "active"])("intervalRow layers read the %s values", (state) => {
+    const declarations = rowRule(`.journal-interval-row__layer[data-layer^="${state}-"]`)?.declarations;
+    expect({
+      color: declarations?.get("--_color"),
+      strength: declarations?.get("--_strength"),
+      ring: declarations?.get("--_ring-width"),
+      layer: declarations?.get("z-index"),
+    }).toEqual({
+      color: `var(--_v-${state}-color)`,
+      strength: `var(--_v-${state}-strength)`,
+      ring: `var(--_v-${state}-ring-width)`,
+      layer: `var(--_v-${state}-layer)`,
+    });
+  });
+
+  it("intervalRow paints fills as an opacity and rings as an inset shadow", () => {
+    expect(rowRule('.journal-interval-row__layer[data-layer$="-fill"]')?.declarations).toEqual(
+      new Map([
+        ["background-color", "var(--_color)"],
+        ["opacity", "var(--_strength)"],
+      ]),
+    );
+    expect(rowRule('.journal-interval-row__layer[data-layer$="-ring"]')?.declarations.get("box-shadow")).toBe(
+      "inset 0 0 0 var(--_ring-width) var(--_color)",
+    );
+  });
+
+  // Inside a whole-block decoration the padding pads its content, so the decoration's fill keeps the row's box.
+  it("intervalRow pads its label, never a whole-block decoration's box", () => {
+    const padded = components.intervalRow
+      .filter((rule) => rule.container === null && rule.declarations.has("padding"))
+      .map((rule) => [rule.selector, rule.declarations.get("padding")]);
+    expect(padded).toEqual([
+      [
+        `${ROW} .nav-block:not(:has(> .nav-block-inner)),\n${ROW} .nav-block-inner > .cell-decoration__content`,
+        "var(--_v-cell-padding)",
+      ],
+    ]);
+  });
+
+  it("intervalRow rounds a whole-block decoration with the row", () => {
+    expect({
+      wrapper: rowRule(ROW_TEXT)?.declarations.get("border-radius"),
+      block: rowRule(`${ROW} .nav-block`)?.declarations.get("border-radius"),
+    }).toEqual({ wrapper: "inherit", block: "inherit" });
+  });
+
+  // As in the cell: the text clears every highlight layer, and marks and corners clear the text. Only the
+  // text is raised, so a segment's own background and a segment decoration's fill stay under an over layer.
+  it("intervalRow raises segment text over the layers, and marks and corners over the text", () => {
+    const raised = components.intervalRow
+      .filter(
+        (rule) => rule.container === null && rule.declarations.has("z-index") && !rule.selector.includes("__layer"),
+      )
+      .map((rule) => [rule.selector, rule.declarations.get("position"), rule.declarations.get("z-index")]);
+    expect(raised).toEqual([
+      [`${ROW}:has(.mark-overflow__popover)`, undefined, "var(--layer-popover)"],
+      [`${ROW} .nav-row__text,\n${ROW} .nav-row .cell-decoration__content`, "relative", "2"],
+      [`${ROW} .cell-marks,\n${ROW} .decoration-corner`, undefined, "3"],
+    ]);
+  });
+
+  it("intervalRow lifts a row holding a popover, and the block lifts itself", () => {
+    const lifted = [...components.intervalRow, ...scopedStyleRules(blockSource)]
+      .filter((rule) => rule.selector.includes(":has(.mark-overflow__popover)"))
+      .map((rule) => [rule.selector, rule.declarations.get("position"), rule.declarations.get("z-index")]);
+    expect(lifted).toEqual([
+      [`${ROW}:has(.mark-overflow__popover)`, undefined, "var(--layer-popover)"],
+      [".journal-view-custom-intervals:has(.mark-overflow__popover)", "relative", "var(--layer-popover)"],
+    ]);
+  });
+
+  it("intervalRow adds no !important", () => {
+    const important = components.intervalRow.flatMap((rule) =>
+      [...rule.declarations].filter(([, value]) => value.includes("!important")).map(([property]) => property),
+    );
+    expect(important).toEqual([]);
+  });
+});
+
+const ROW_STATES = ["today", "selected", "active"] as const;
+const mix = (state: string) => `color-mix(in srgb, var(--_text-${state}) var(--_over-${state}), currentColor)`;
+const rowPassThroughCases = ROW_STATES.flatMap((state) =>
+  TEXT_VALUES.map(([value, slot]) => [`${state}-${value}`, `--_${slot}-${state}`, state] as const),
+);
+
+describe("custom-interval row text", () => {
+  it.each(ROW_STATES)("intervalRow resolves the %s text values on a row in that state", (state) => {
+    expect(rowRule(`${ROW}[data-${state}]`)?.declarations).toEqual(
+      new Map([
+        [`--_text-${state}`, `var(--_v-${state}-text-color)`],
+        [`--_weight-${state}`, `var(--_v-${state}-text-weight)`],
+        [`--_italic-${state}`, `var(--_v-${state}-text-italic)`],
+        [`--_over-${state}`, `calc(clamp(0, var(--_v-${state}-layer), 1) * 100%)`],
+      ]),
+    );
+  });
+
+  // The query is answered by the wrapper's parent, the row, which is where `--_v-*` lives.
+  it.each(rowPassThroughCases)(
+    "%s clears %s on the row's text wrapper when it reads unchanged",
+    (value, slot, state) => {
+      const container = `style(--_v-${value}: unchanged)`;
+      const rules = components.intervalRow.filter((rule) => rule.container === container);
+      expect(rules.map((rule) => ({ selector: rule.selector, value: rule.declarations.get(slot) }))).toEqual([
+        { selector: `${ROW}[data-${state}] > ${ROW_TEXT}`, value: "initial" },
+      ]);
+    },
+  );
+
+  it("intervalRow hands the segments the highest state's text, and Today's only to default-color segments", () => {
+    const declarations = rowRule(ROW_TEXT)?.declarations;
+    expect({
+      text: declarations?.get("--_row-text"),
+      chosen: declarations?.get("--_row-text-chosen"),
+      weight: declarations?.get("--_row-weight"),
+      italic: declarations?.get("--_row-italic"),
+    }).toEqual({
+      text: "var(--_text-active, var(--_text-selected, var(--_text-today)))",
+      chosen: "var(--_text-active, var(--_text-selected))",
+      weight: "var(--_weight-active, var(--_weight-selected, var(--_weight-today)))",
+      italic: "var(--_italic-active, var(--_italic-selected, var(--_italic-today)))",
+    });
+    expect(declarations?.get("--_row-text-chosen")).not.toContain("--_text-today");
+  });
+
+  it("intervalRow re-resolves a segment decoration's text against each state's layer", () => {
+    const declarations = rowRule(`${ROW_TEXT} .nav-row .cell-decoration__content`)?.declarations;
+    expect(declarations).toEqual(
+      new Map([
+        ["--_r-today", mix("today")],
+        ["--_r-selected", mix("selected")],
+        ["--_r-active", mix("active")],
+        ["color", "var(--_r-active, var(--_r-selected, var(--_r-today, currentColor)))"],
+      ]),
+    );
+  });
+
+  it("intervalRow leaves Today out of a chosen-color segment's decoration text", () => {
+    expect(rowRule(`${ROW_TEXT} .nav-row:not([data-default-color]) .cell-decoration__content`)?.declarations).toEqual(
+      new Map([["color", "var(--_r-active, var(--_r-selected, currentColor))"]]),
+    );
   });
 });

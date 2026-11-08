@@ -1,0 +1,86 @@
+{
+  "version": 8,
+  "logging": { "level": "debug" },
+  "journals": {
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2026-01-05" },
+      "folder": "sprint",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-05",
+        "allowBefore": false,
+        "sources": [
+          { "variable": "index", "frontmatterKey": "journal-index", "anchorValue": 1, "reset": { "kind": "never" } }
+        ]
+      },
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "lines": [
+          [
+            {
+              "template": "{{journal_name}} {{index}}",
+              "fontSize": 1,
+              "bold": true,
+              "italic": false,
+              "link": "self",
+              "journal": "",
+              "linkDate": "",
+              "color": { "type": "theme", "name": "text-normal" },
+              "background": { "type": "transparent" },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{start_date}} to {{end_date}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "none",
+              "journal": "",
+              "linkDate": "",
+              "color": { "type": "custom", "color": "#57ab5a" },
+              "background": { "type": "transparent" },
+              "addDecorations": false
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "views": {
+    "7e2b9c41-5d3a-4f8e-a1c6-3b9d0e4f7a25": {
+      "id": "7e2b9c41-5d3a-4f8e-a1c6-3b9d0e4f7a25",
+      "name": "Intervals",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "8f3c0d52-6e4b-4a9f-b2d7-4c0e1f5a8b36",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "default", "showHeading": "default" }
+        },
+        {
+          "id": "904d1e63-7f5c-4b0a-83e8-5d1f2a6b9c47",
+          "key": "custom-intervals",
+          "config": { "window": "month" }
+        }
+      ]
+    }
+  }
+}

@@ -2,24 +2,16 @@
 import type { AnchorString } from "@/calendar";
 import { navBlockDecorationScope } from "@/code-blocks/nav/decoration-scopes";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
-import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
-import { useService } from "@/infrastructure/di";
 import type { JournalConfig } from "@/journals";
-import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
+
+import IntervalRow from "./IntervalRow.vue";
 
 const props = defineProps<{
   journal: JournalConfig;
   entries: readonly { anchor: AnchorString }[];
   shelf: string | null;
 }>();
-
-const activeEntry = useService(ActiveEntryViewModel);
-
-function isEntryActive(anchor: AnchorString): boolean {
-  const current = activeEntry.active.value;
-  return current !== null && current.journalName === props.journal.name && current.anchor === anchor;
-}
 
 // One section per journal, and the map lives here rather than in the parent because an interval
 // is a "day"-kind period at its start anchor: two custom journals whose intervals begin on the
@@ -38,22 +30,13 @@ useCellDecorations({
 
 <template>
   <section class="journal-view-custom-intervals__section" :data-journal="journal.name">
-    <div
+    <IntervalRow
       v-for="entry of entries"
       :key="entry.anchor"
-      class="journal-view-custom-intervals__entry"
-      :data-anchor="entry.anchor"
-      :data-active="isEntryActive(entry.anchor) || null"
-    >
-      <NavBlock
-        :block="journal.intervalBlock"
-        :journal="journal"
-        :ref-date="entry.anchor"
-        :period="periodForJournal(journal.write, entry.anchor)"
-        :block-scope="navBlockDecorationScope"
-        :shelf="shelf"
-      />
-    </div>
+      :journal="journal"
+      :anchor="entry.anchor"
+      :shelf="shelf"
+    />
   </section>
 </template>
 
@@ -67,17 +50,5 @@ useCellDecorations({
 }
 .journal-view-custom-intervals__section:last-child {
   border-bottom: 0;
-}
-.journal-view-custom-intervals__entry[data-active] {
-  color: var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)));
-  background-color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)));
-}
-/* The nav rows set their own per-row color, so the active highlight forces its color on
-   the nested content to win. */
-.journal-view-custom-intervals__entry[data-active] :deep(*) {
-  color: var(
-    --journal-cell-active-text-color,
-    var(--journal-saved-cell-active-text-color, var(--text-on-accent))
-  ) !important;
 }
 </style>
