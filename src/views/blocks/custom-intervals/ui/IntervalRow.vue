@@ -89,16 +89,244 @@ const fills = computed(() => states.value.filter((state) => state !== "today" ||
 </template>
 
 <style scoped>
-.journal-view-custom-intervals__entry[data-active] {
-  color: var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)));
-  background-color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)));
+.journal-view-custom-intervals__entry {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--_v-cell-radius);
 }
-/* The nav rows set their own per-row color, so the active highlight forces its color on
-   the nested content to win. */
-.journal-view-custom-intervals__entry[data-active] :deep(*) {
-  color: var(
+.journal-view-custom-intervals__entry {
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  --_v-cell-radius: var(--journal-cell-cell-radius, var(--journal-saved-cell-cell-radius, var(--radius-s)));
+  --_v-today-color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent));
+  --_v-today-ring-width: var(--journal-cell-today-ring-width, var(--journal-saved-cell-today-ring-width, 0px));
+  --_v-today-strength: var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0));
+  --_v-today-text-color: var(
+    --journal-cell-today-text-color,
+    var(--journal-saved-cell-today-text-color, var(--text-accent))
+  );
+  --_v-today-text-weight: var(--journal-cell-today-text-weight, var(--journal-saved-cell-today-text-weight));
+  --_v-today-text-italic: var(--journal-cell-today-text-italic, var(--journal-saved-cell-today-text-italic));
+  --_v-today-layer: var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1));
+  --_v-selected-color: var(
+    --journal-cell-selected-color,
+    var(--journal-saved-cell-selected-color, var(--interactive-accent))
+  );
+  --_v-selected-ring-width: var(--journal-cell-selected-ring-width, var(--journal-saved-cell-selected-ring-width, 2px));
+  --_v-selected-strength: var(--journal-cell-selected-strength, var(--journal-saved-cell-selected-strength, 0));
+  --_v-selected-text-color: var(--journal-cell-selected-text-color, var(--journal-saved-cell-selected-text-color));
+  --_v-selected-text-weight: var(--journal-cell-selected-text-weight, var(--journal-saved-cell-selected-text-weight));
+  --_v-selected-text-italic: var(--journal-cell-selected-text-italic, var(--journal-saved-cell-selected-text-italic));
+  --_v-selected-layer: var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1));
+  --_v-active-color: var(
+    --journal-cell-active-color,
+    var(--journal-saved-cell-active-color, var(--interactive-accent))
+  );
+  --_v-active-ring-width: var(--journal-cell-active-ring-width, var(--journal-saved-cell-active-ring-width, 0px));
+  --_v-active-strength: var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 1));
+  --_v-active-text-color: var(
     --journal-cell-active-text-color,
     var(--journal-saved-cell-active-text-color, var(--text-on-accent))
-  ) !important;
+  );
+  --_v-active-text-weight: var(--journal-cell-active-text-weight, var(--journal-saved-cell-active-text-weight));
+  --_v-active-text-italic: var(--journal-cell-active-text-italic, var(--journal-saved-cell-active-text-italic));
+  --_v-active-layer: var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1));
+}
+@container journal-calendar (max-width: 28em) {
+  .journal-view-custom-intervals__entry {
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
+      )
+    );
+    --_v-cell-radius: var(
+      --journal-cell-cell-radius-narrow,
+      var(
+        --journal-saved-cell-cell-radius-narrow,
+        var(--journal-cell-cell-radius, var(--journal-saved-cell-cell-radius, var(--radius-s)))
+      )
+    );
+    --_v-today-color: var(
+      --journal-cell-today-color-narrow,
+      var(
+        --journal-saved-cell-today-color-narrow,
+        var(--journal-cell-today-color, var(--journal-saved-cell-today-color, transparent))
+      )
+    );
+    --_v-today-ring-width: var(
+      --journal-cell-today-ring-width-narrow,
+      var(
+        --journal-saved-cell-today-ring-width-narrow,
+        var(--journal-cell-today-ring-width, var(--journal-saved-cell-today-ring-width, 0px))
+      )
+    );
+    --_v-today-strength: var(
+      --journal-cell-today-strength-narrow,
+      var(
+        --journal-saved-cell-today-strength-narrow,
+        var(--journal-cell-today-strength, var(--journal-saved-cell-today-strength, 0))
+      )
+    );
+    --_v-today-text-color: var(
+      --journal-cell-today-text-color-narrow,
+      var(
+        --journal-saved-cell-today-text-color-narrow,
+        var(--journal-cell-today-text-color, var(--journal-saved-cell-today-text-color, var(--text-accent)))
+      )
+    );
+    --_v-today-text-weight: var(
+      --journal-cell-today-text-weight-narrow,
+      var(
+        --journal-saved-cell-today-text-weight-narrow,
+        var(--journal-cell-today-text-weight, var(--journal-saved-cell-today-text-weight))
+      )
+    );
+    --_v-today-text-italic: var(
+      --journal-cell-today-text-italic-narrow,
+      var(
+        --journal-saved-cell-today-text-italic-narrow,
+        var(--journal-cell-today-text-italic, var(--journal-saved-cell-today-text-italic))
+      )
+    );
+    --_v-today-layer: var(
+      --journal-cell-today-layer-narrow,
+      var(
+        --journal-saved-cell-today-layer-narrow,
+        var(--journal-cell-today-layer, var(--journal-saved-cell-today-layer, -1))
+      )
+    );
+    --_v-selected-color: var(
+      --journal-cell-selected-color-narrow,
+      var(
+        --journal-saved-cell-selected-color-narrow,
+        var(--journal-cell-selected-color, var(--journal-saved-cell-selected-color, var(--interactive-accent)))
+      )
+    );
+    --_v-selected-ring-width: var(
+      --journal-cell-selected-ring-width-narrow,
+      var(--journal-saved-cell-selected-ring-width-narrow, 0px)
+    );
+    --_v-selected-strength: var(
+      --journal-cell-selected-strength-narrow,
+      var(--journal-saved-cell-selected-strength-narrow, 0.2)
+    );
+    --_v-selected-text-color: var(
+      --journal-cell-selected-text-color-narrow,
+      var(
+        --journal-saved-cell-selected-text-color-narrow,
+        var(--journal-cell-selected-text-color, var(--journal-saved-cell-selected-text-color))
+      )
+    );
+    --_v-selected-text-weight: var(
+      --journal-cell-selected-text-weight-narrow,
+      var(
+        --journal-saved-cell-selected-text-weight-narrow,
+        var(--journal-cell-selected-text-weight, var(--journal-saved-cell-selected-text-weight))
+      )
+    );
+    --_v-selected-text-italic: var(
+      --journal-cell-selected-text-italic-narrow,
+      var(
+        --journal-saved-cell-selected-text-italic-narrow,
+        var(--journal-cell-selected-text-italic, var(--journal-saved-cell-selected-text-italic))
+      )
+    );
+    --_v-selected-layer: var(
+      --journal-cell-selected-layer-narrow,
+      var(
+        --journal-saved-cell-selected-layer-narrow,
+        var(--journal-cell-selected-layer, var(--journal-saved-cell-selected-layer, 1))
+      )
+    );
+    --_v-active-color: var(
+      --journal-cell-active-color-narrow,
+      var(
+        --journal-saved-cell-active-color-narrow,
+        var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)))
+      )
+    );
+    --_v-active-ring-width: var(
+      --journal-cell-active-ring-width-narrow,
+      var(
+        --journal-saved-cell-active-ring-width-narrow,
+        var(--journal-cell-active-ring-width, var(--journal-saved-cell-active-ring-width, 0px))
+      )
+    );
+    --_v-active-strength: var(
+      --journal-cell-active-strength-narrow,
+      var(
+        --journal-saved-cell-active-strength-narrow,
+        var(--journal-cell-active-strength, var(--journal-saved-cell-active-strength, 1))
+      )
+    );
+    --_v-active-text-color: var(
+      --journal-cell-active-text-color-narrow,
+      var(
+        --journal-saved-cell-active-text-color-narrow,
+        var(--journal-cell-active-text-color, var(--journal-saved-cell-active-text-color, var(--text-on-accent)))
+      )
+    );
+    --_v-active-text-weight: var(
+      --journal-cell-active-text-weight-narrow,
+      var(
+        --journal-saved-cell-active-text-weight-narrow,
+        var(--journal-cell-active-text-weight, var(--journal-saved-cell-active-text-weight))
+      )
+    );
+    --_v-active-text-italic: var(
+      --journal-cell-active-text-italic-narrow,
+      var(
+        --journal-saved-cell-active-text-italic-narrow,
+        var(--journal-cell-active-text-italic, var(--journal-saved-cell-active-text-italic))
+      )
+    );
+    --_v-active-layer: var(
+      --journal-cell-active-layer-narrow,
+      var(
+        --journal-saved-cell-active-layer-narrow,
+        var(--journal-cell-active-layer, var(--journal-saved-cell-active-layer, -1))
+      )
+    );
+  }
+}
+/* The isolated row traps the popover's z-index, so later rows would paint over its overhang. */
+.journal-view-custom-intervals__entry:has(.mark-overflow__popover) {
+  z-index: var(--layer-popover);
+}
+.journal-view-custom-intervals__entry :deep(.nav-block) {
+  padding: var(--_v-cell-padding);
+}
+.journal-interval-row__layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.journal-interval-row__layer[data-layer^="today-"] {
+  --_color: var(--_v-today-color);
+  --_strength: var(--_v-today-strength);
+  --_ring-width: var(--_v-today-ring-width);
+  z-index: var(--_v-today-layer);
+}
+.journal-interval-row__layer[data-layer^="selected-"] {
+  --_color: var(--_v-selected-color);
+  --_strength: var(--_v-selected-strength);
+  --_ring-width: var(--_v-selected-ring-width);
+  z-index: var(--_v-selected-layer);
+}
+.journal-interval-row__layer[data-layer^="active-"] {
+  --_color: var(--_v-active-color);
+  --_strength: var(--_v-active-strength);
+  --_ring-width: var(--_v-active-ring-width);
+  z-index: var(--_v-active-layer);
+}
+/* Opacity rather than color-mix: a WebView without color-mix drops the whole declaration. */
+.journal-interval-row__layer[data-layer$="-fill"] {
+  background-color: var(--_color);
+  opacity: var(--_strength);
+}
+.journal-interval-row__layer[data-layer$="-ring"] {
+  box-shadow: inset 0 0 0 var(--_ring-width) var(--_color);
 }
 </style>

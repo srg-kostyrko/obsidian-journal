@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 
+import blockSource from "@/views/blocks/custom-intervals/ui/CustomIntervalsBlock.vue?raw";
+
 import { appearanceCatalog, type CatalogEntry } from "../appearance/appearance-catalog";
 import { ROW_FLOOR_PX } from "../appearance/slice";
-import { calendarStyleRules, NARROW_QUERY, narrowReader, privateName, wideReader, type ScopedRule } from "../testing";
+import {
+  calendarStyleRules,
+  NARROW_QUERY,
+  scopedStyleRules,
+  narrowReader,
+  privateName,
+  wideReader,
+  type ScopedRule,
+} from "../testing";
 
 const components = calendarStyleRules();
 type Component = keyof typeof components;
@@ -31,8 +41,10 @@ function renderers(entry: CatalogEntry): readonly Component[] {
   const part = entry.name.replace(/^journal-cell-/, "");
   const band = BANDS.find((state) => part.startsWith(`${state}-`));
   if (band !== undefined) return bandRenderers(band, part.slice(band.length + 1));
-  if (part === "cell-min-height" || part === "cell-padding") return ["cell", "monthView", "preview"];
-  if (part === "cell-radius") return ["cell", "band"];
+  if (part === "cell-padding") return ["cell", "intervalRow", "monthView", "preview"];
+  if (part === "cell-min-height") return ["cell", "monthView", "preview"];
+  if (part === "cell-radius") return ["cell", "intervalRow", "band"];
+  if (/^(today|selected|active)-/.test(part) && !part.endsWith("-narrow")) return ["cell", "intervalRow"];
   if (part === "week-number-divider-width") return ["divider", ...GRIDS];
   if (part.startsWith("week-number-divider-")) return ["divider"];
   return GRID_PARTS.some((prefix) => part.startsWith(`${prefix}-`) || part === prefix) ? GRIDS : ["cell"];
@@ -57,11 +69,16 @@ const cellDeclarations = (selector: string): Record<string, string> =>
     )?.declarations ?? [],
   );
 
+// The row resolves its text values for the label to read; nothing reads them yet.
+const unreadByRow = (name: string, component: Component): boolean =>
+  component === "intervalRow" && /^journal-cell-(today|selected|active)-text-/.test(name);
+
 describe("calendar appearance readers", () => {
   it("assigns every catalog entry to the components that render it, the weekend's text to every grid's headers", () => {
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("weekView")).length).toBe(25);
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("band")).length).toBe(9);
     expect(appearanceCatalog.filter((entry) => renderers(entry).includes("divider")).length).toBe(2);
+    expect(appearanceCatalog.filter((entry) => renderers(entry).includes("intervalRow")).length).toBe(23);
   });
 
   it.each([
@@ -199,13 +216,16 @@ describe("calendar appearance readers", () => {
     expect(fallback?.declarations.get(privateName(entry))).toBe(wideReader({ ...entry, stock: `${ROW_FLOOR_PX}px` }));
   });
 
-  it.each(cases)("%s is read by %s outside the private values", (_name, component, entry) => {
-    const read = `var(${privateName(entry)})`;
-    const readers = components[component].flatMap((rule) =>
-      [...rule.declarations].filter(([property, value]) => !property.startsWith("--_v-") && value.includes(read)),
-    );
-    expect(readers.length).toBeGreaterThan(0);
-  });
+  it.each(cases.filter(([name, component]) => !unreadByRow(name, component)))(
+    "%s is read by %s outside the private values",
+    (_name, component, entry) => {
+      const read = `var(${privateName(entry)})`;
+      const readers = components[component].flatMap((rule) =>
+        [...rule.declarations].filter(([property, value]) => !property.startsWith("--_v-") && value.includes(read)),
+      );
+      expect(readers.length).toBeGreaterThan(0);
+    },
+  );
 
   it.each(Object.entries(components))("%s reads no public variable outside its private values", (_name, rules) => {
     const leaks = rules.flatMap((rule) =>
@@ -288,5 +308,68 @@ describe("calendar appearance weekend column headers", () => {
       weight: "var(--_weekend-weight, var(--_v-weekday-weight))",
       italic: "var(--_weekend-italic, var(--_v-weekday-italic))",
     });
+  });
+});
+
+const ROW = ".journal-view-custom-intervals__entry";
+const rowRule = (selector: string) =>
+  components.intervalRow.find((rule) => rule.container === null && rule.selector === selector);
+
+describe("custom-interval row paint", () => {
+  it("intervalRow is isolated and rounds its layers", () => {
+    const declarations = rowRule(ROW)?.declarations;
+    expect({
+      isolation: declarations?.get("isolation"),
+      position: declarations?.get("position"),
+      radius: declarations?.get("border-radius"),
+    }).toEqual({ isolation: "isolate", position: "relative", radius: "var(--_v-cell-radius)" });
+  });
+
+  it.each(["today", "selected", "active"])("intervalRow layers read the %s values", (state) => {
+    const declarations = rowRule(`.journal-interval-row__layer[data-layer^="${state}-"]`)?.declarations;
+    expect({
+      color: declarations?.get("--_color"),
+      strength: declarations?.get("--_strength"),
+      ring: declarations?.get("--_ring-width"),
+      layer: declarations?.get("z-index"),
+    }).toEqual({
+      color: `var(--_v-${state}-color)`,
+      strength: `var(--_v-${state}-strength)`,
+      ring: `var(--_v-${state}-ring-width)`,
+      layer: `var(--_v-${state}-layer)`,
+    });
+  });
+
+  it("intervalRow paints fills as an opacity and rings as an inset shadow", () => {
+    expect(rowRule('.journal-interval-row__layer[data-layer$="-fill"]')?.declarations).toEqual(
+      new Map([
+        ["background-color", "var(--_color)"],
+        ["opacity", "var(--_strength)"],
+      ]),
+    );
+    expect(rowRule('.journal-interval-row__layer[data-layer$="-ring"]')?.declarations.get("box-shadow")).toBe(
+      "inset 0 0 0 var(--_ring-width) var(--_color)",
+    );
+  });
+
+  it("intervalRow pads its label", () => {
+    expect(rowRule(`${ROW} .nav-block`)?.declarations.get("padding")).toBe("var(--_v-cell-padding)");
+  });
+
+  it("intervalRow lifts a row holding a popover, and the block lifts itself", () => {
+    const lifted = [...components.intervalRow, ...scopedStyleRules(blockSource)]
+      .filter((rule) => rule.selector.includes(":has(.mark-overflow__popover)"))
+      .map((rule) => [rule.selector, rule.declarations.get("z-index")]);
+    expect(lifted).toEqual([
+      [`${ROW}:has(.mark-overflow__popover)`, "var(--layer-popover)"],
+      [".journal-view-custom-intervals:has(.mark-overflow__popover)", "var(--layer-popover)"],
+    ]);
+  });
+
+  it("intervalRow adds no !important", () => {
+    const important = components.intervalRow.flatMap((rule) =>
+      [...rule.declarations].filter(([, value]) => value.includes("!important")).map(([property]) => property),
+    );
+    expect(important).toEqual([]);
   });
 });

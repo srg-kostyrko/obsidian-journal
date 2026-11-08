@@ -140,5 +140,10 @@ useCellDecorations({
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
+  container: journal-calendar / inline-size;
+}
+/* A row's popover is trapped in the row's isolated context, so the block must clear later siblings too. */
+.journal-view-custom-intervals:has(.mark-overflow__popover) {
+  z-index: var(--layer-popover);
 }
 </style>
