@@ -359,10 +359,10 @@ describe("custom-interval row paint", () => {
   it("intervalRow lifts a row holding a popover, and the block lifts itself", () => {
     const lifted = [...components.intervalRow, ...scopedStyleRules(blockSource)]
       .filter((rule) => rule.selector.includes(":has(.mark-overflow__popover)"))
-      .map((rule) => [rule.selector, rule.declarations.get("z-index")]);
+      .map((rule) => [rule.selector, rule.declarations.get("position"), rule.declarations.get("z-index")]);
     expect(lifted).toEqual([
-      [`${ROW}:has(.mark-overflow__popover)`, "var(--layer-popover)"],
-      [".journal-view-custom-intervals:has(.mark-overflow__popover)", "var(--layer-popover)"],
+      [`${ROW}:has(.mark-overflow__popover)`, undefined, "var(--layer-popover)"],
+      [".journal-view-custom-intervals:has(.mark-overflow__popover)", "relative", "var(--layer-popover)"],
     ]);
   });
 
