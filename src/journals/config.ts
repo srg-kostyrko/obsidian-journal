@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import type { AnchorString } from "@/calendar";
-import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
+import { colorSchema, decorationSchema, type ColorSettings, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 import { climb } from "@/settings/repair";
 import { taskRuleSchema } from "@/tasks/conditions";
@@ -257,6 +257,12 @@ const emptyNavSegment: NavBlockSegment = {
   background: { type: "transparent" },
   addDecorations: false,
 };
+
+/** Whether a segment still has the color a new segment starts with, rather than one the user chose. */
+export function isDefaultSegmentColor(color: ColorSettings): boolean {
+  const stock = emptyNavSegment.color;
+  return color.type === "theme" && stock.type === "theme" && color.name === stock.name;
+}
 
 const segNavWeek: NavBlockSegment = { ...emptyNavSegment, template: "{{date:[W]w}}", link: "week" };
 const segNavMonth: NavBlockSegment = { ...emptyNavSegment, template: "{{date:MMMM}}", link: "month" };

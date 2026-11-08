@@ -77,14 +77,16 @@ const fills = computed(() => states.value.filter((state) => state !== "today" ||
       :data-layer="`${state}-ring`"
       aria-hidden="true"
     />
-    <NavBlock
-      :block="journal.intervalBlock"
-      :journal="journal"
-      :ref-date="anchor"
-      :period="periodForJournal(journal.write, anchor)"
-      :block-scope="navBlockDecorationScope"
-      :shelf="shelf"
-    />
+    <div class="journal-interval-row__text">
+      <NavBlock
+        :block="journal.intervalBlock"
+        :journal="journal"
+        :ref-date="anchor"
+        :period="periodForJournal(journal.write, anchor)"
+        :block-scope="navBlockDecorationScope"
+        :shelf="shelf"
+      />
+    </div>
   </div>
 </template>
 
@@ -289,6 +291,90 @@ const fills = computed(() => states.value.filter((state) => state !== "today" ||
       )
     );
   }
+}
+.journal-view-custom-intervals__entry[data-today] {
+  --_text-today: var(--_v-today-text-color);
+  --_weight-today: var(--_v-today-text-weight);
+  --_italic-today: var(--_v-today-text-italic);
+  --_over-today: calc(clamp(0, var(--_v-today-layer), 1) * 100%);
+}
+.journal-view-custom-intervals__entry[data-selected] {
+  --_text-selected: var(--_v-selected-text-color);
+  --_weight-selected: var(--_v-selected-text-weight);
+  --_italic-selected: var(--_v-selected-text-italic);
+  --_over-selected: calc(clamp(0, var(--_v-selected-layer), 1) * 100%);
+}
+.journal-view-custom-intervals__entry[data-active] {
+  --_text-active: var(--_v-active-text-color);
+  --_weight-active: var(--_v-active-text-weight);
+  --_italic-active: var(--_v-active-text-italic);
+  --_over-active: calc(clamp(0, var(--_v-active-layer), 1) * 100%);
+}
+/* A style query is answered by the parent, so these clear the private values on the text wrapper, whose
+   parent (the row) holds the resolved `--_v-*` at either width. */
+@container style(--_v-today-text-color: unchanged) {
+  .journal-view-custom-intervals__entry[data-today] > .journal-interval-row__text {
+    --_text-today: initial;
+  }
+}
+@container style(--_v-today-text-weight: unchanged) {
+  .journal-view-custom-intervals__entry[data-today] > .journal-interval-row__text {
+    --_weight-today: initial;
+  }
+}
+@container style(--_v-today-text-italic: unchanged) {
+  .journal-view-custom-intervals__entry[data-today] > .journal-interval-row__text {
+    --_italic-today: initial;
+  }
+}
+@container style(--_v-selected-text-color: unchanged) {
+  .journal-view-custom-intervals__entry[data-selected] > .journal-interval-row__text {
+    --_text-selected: initial;
+  }
+}
+@container style(--_v-selected-text-weight: unchanged) {
+  .journal-view-custom-intervals__entry[data-selected] > .journal-interval-row__text {
+    --_weight-selected: initial;
+  }
+}
+@container style(--_v-selected-text-italic: unchanged) {
+  .journal-view-custom-intervals__entry[data-selected] > .journal-interval-row__text {
+    --_italic-selected: initial;
+  }
+}
+@container style(--_v-active-text-color: unchanged) {
+  .journal-view-custom-intervals__entry[data-active] > .journal-interval-row__text {
+    --_text-active: initial;
+  }
+}
+@container style(--_v-active-text-weight: unchanged) {
+  .journal-view-custom-intervals__entry[data-active] > .journal-interval-row__text {
+    --_weight-active: initial;
+  }
+}
+@container style(--_v-active-text-italic: unchanged) {
+  .journal-view-custom-intervals__entry[data-active] > .journal-interval-row__text {
+    --_italic-active: initial;
+  }
+}
+/* Resolved on the wrapper, below the queries, and read by each segment. Today's is left out of the chosen
+   chain: a color the user gave a segment outranks today's text, never the open note's or the selection's. */
+.journal-interval-row__text {
+  --_row-text: var(--_text-active, var(--_text-selected, var(--_text-today)));
+  --_row-text-chosen: var(--_text-active, var(--_text-selected));
+  --_row-weight: var(--_weight-active, var(--_weight-selected, var(--_weight-today)));
+  --_row-italic: var(--_italic-active, var(--_italic-selected, var(--_italic-today)));
+}
+/* A decoration paints its text with !important around the label, which beats the segment's color, so
+   the label re-resolves the winner: each state's text mixed by its layer, over or under the decoration's. */
+.journal-interval-row__text :deep(.nav-row .cell-decoration__content) {
+  --_r-today: color-mix(in srgb, var(--_text-today) var(--_over-today), currentColor);
+  --_r-selected: color-mix(in srgb, var(--_text-selected) var(--_over-selected), currentColor);
+  --_r-active: color-mix(in srgb, var(--_text-active) var(--_over-active), currentColor);
+  color: var(--_r-active, var(--_r-selected, var(--_r-today, currentColor)));
+}
+.journal-interval-row__text :deep(.nav-row:not([data-default-color]) .cell-decoration__content) {
+  color: var(--_r-active, var(--_r-selected, currentColor));
 }
 /* The isolated row traps the popover's z-index, so later rows would paint over its overhang. */
 .journal-view-custom-intervals__entry:has(.mark-overflow__popover) {

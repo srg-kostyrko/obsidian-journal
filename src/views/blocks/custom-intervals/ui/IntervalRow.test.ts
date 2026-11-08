@@ -30,7 +30,7 @@ const MODULES = [
   tasksCoreModule,
 ];
 
-const renderStub = () => h("div");
+const renderStub = () => h("div", { class: "nav-row" });
 
 const RowStub = defineComponent({
   props: { journal: { type: Object, required: true }, segment: { type: Object, required: true } },
@@ -119,6 +119,23 @@ describe("IntervalRow", () => {
     await nextTick();
 
     expect(flagged(container, "today")).toEqual(["2026-11-16"]);
+  });
+
+  // The color itself is proven in e2e: happy-dom resolves no custom-property chain.
+  it("a set state text reaches the segment", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 4, 12, 0, 0));
+    const { harness, container } = await mountRows({ refDate: ref("2026-12-30" as AnchorString) });
+
+    const path = "foo/2026-11-02.md" as VaultPath;
+    harness.resolve(JournalsIndex).register({ journalName: "foo", anchor: "2026-11-02" as AnchorString, path });
+    harness.host.emitFileOpen(harness.host.putFile(path));
+    await nextTick();
+
+    const segments = container.querySelectorAll(
+      ".journal-view-custom-intervals__entry[data-active] > .journal-interval-row__text .nav-row",
+    );
+    expect(segments.length).toBeGreaterThan(0);
   });
 
   it("paints every fill before every ring and drops only today's fill on the open note", async () => {
