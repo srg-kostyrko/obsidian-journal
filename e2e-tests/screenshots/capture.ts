@@ -169,10 +169,9 @@ export async function widenRightSidebar(px: number, settleSelector: string): Pro
   );
 }
 
-/**
- * Size the Obsidian window itself. `browser.setWindowSize` is unsupported by the harness, but
- * Electron's own window is reachable through the same remote bridge the capture uses.
- */
+// `browser.setWindowSize` is unsupported by the harness, but Electron's own window is reachable
+// through the same remote bridge the capture uses.
+/** Size the Obsidian window itself. */
 export async function sizeWindow(width: number, height: number): Promise<void> {
   const resized = await browser.execute(
     (w: number, h: number) => {

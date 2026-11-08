@@ -804,6 +804,8 @@ export default [
     files: ["src/code-blocks/manual-fences.test.ts", "src/notes-calendar/appearance/manual-variables.test.ts"],
     rules: {
       "obsidianmd/no-nodejs-modules": "off",
+      // The variables page's examples are compared with the fixture vault snippets that run them.
+      "obsidianmd/hardcoded-config-path": "off",
     },
   },
   {

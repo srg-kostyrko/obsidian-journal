@@ -13,6 +13,12 @@ import { appearanceCatalog } from "./appearance-catalog";
 const here = import.meta.url;
 const PAGE = fileURLToPath(new URL("../../../docs/user/reference/css-variables.md", here));
 
+// The page's examples are run by e2e-tests/screenshots/css-variables.shot.ts from these snippets, in
+// the order the page shows them.
+const EXAMPLE_SNIPPETS = ["today-background", "weekend-band", "narrow-rows"].map((name) =>
+  fileURLToPath(new URL(`../../../e2e-tests/fixtures/e2e-docs-css-variables/.obsidian/snippets/${name}.css`, here)),
+);
+
 const INHERITED = "inherited";
 const NONE = "—";
 
@@ -57,6 +63,10 @@ function byName(rows: DocumentedRow[]): DocumentedRow[] {
   return rows.toSorted((left, right) => left.name.localeCompare(right.name));
 }
 
+function cssFences(page: string): string[] {
+  return [...page.matchAll(/^```css\n([\s\S]*?)^```$/gm)].map((match) => match[1] ?? "");
+}
+
 describe("documentedRows", () => {
   it("reads name, stock and narrow stock, ignoring the description", () => {
     const page = [
@@ -74,7 +84,8 @@ describe("documentedRows", () => {
 });
 
 describe("the CSS variables page", () => {
-  const documented = documentedRows(readFileSync(PAGE, "utf8"));
+  const page = readFileSync(PAGE, "utf8");
+  const documented = documentedRows(page);
 
   it("lists every catalog variable once, and nothing else", () => {
     const names = documented.map((row) => row.name);
@@ -84,5 +95,9 @@ describe("the CSS variables page", () => {
 
   it("gives each variable its stock and narrow stock values", () => {
     expect(byName(documented)).toEqual(byName(catalogRows()));
+  });
+
+  it("shows the examples exactly as the screenshot spec runs them", () => {
+    expect(cssFences(page)).toEqual(EXAMPLE_SNIPPETS.map((file) => readFileSync(file, "utf8")));
   });
 });
