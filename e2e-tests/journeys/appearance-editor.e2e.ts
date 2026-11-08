@@ -1,8 +1,17 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
+import {
+  chooseColorKind,
+  chooseFromList,
+  controlRowPath,
+  openEditor,
+  partsList,
+  setCustomColor,
+  setSlider,
+} from "../support/appearance-editor.js";
 import { reloadObsidianOn } from "../support/clock.js";
-import { clickSectionButton, closeSettings, openSettings } from "../support/settings.js";
+import { closeSettings } from "../support/settings.js";
 import { waitForState } from "../support/wait.js";
 
 import { labelHexOf } from "./calendar.js";
@@ -87,24 +96,12 @@ async function pageViewForward(): Promise<void> {
   await waitForState(firstDayAnchor, (anchor) => anchor !== before, "the view did not page to the next month");
 }
 
-async function openEditor(): Promise<void> {
-  await openSettings();
-  await clickSectionButton(m.calendar_appearance_section_title(), m.calendar_appearance_open());
-  await $(".appearance-preview").waitForDisplayed({ timeoutMsg: "the appearance subpage showed no preview" });
-}
-
 const previewWidth = (): Promise<string> =>
   browser.execute(() => document.querySelector<HTMLElement>(".appearance-preview")?.style.width ?? "");
 
 async function chooseWidth(width: Width): Promise<void> {
   await $(`.ui-segmented-control__label=${m.calendar_appearance_width({ width })}`).click();
   await expectRead(previewWidth, PREVIEW_WIDTH[width], `the preview did not switch to ${width}`);
-}
-
-const partsList = () => $(`//select[@id=//label[normalize-space(.)="${m.calendar_appearance_part_label()}"]/@for]`);
-
-async function chooseFromList(part: PartKey): Promise<void> {
-  await partsList().selectByAttribute("value", part);
 }
 
 // Clicks a cell of the preview, then the part's "also here" chip when the click edits another part.
@@ -120,46 +117,8 @@ async function pickInPreview(cellSelector: string, part: PartKey): Promise<void>
   );
 }
 
-// The control's row, by its visible label; a "Narrow only" tag may follow the label.
-const controlRowPath = (label: string): string =>
-  `//div[contains(@class,"appearance-control")][.//div[contains(@class,"setting-item-name")][starts-with(normalize-space(.), "${label}")]]`;
-
 const TEXT_COLOR = m.calendar_appearance_control({ control: "highlight_text_color" });
 const ROW_HEIGHT = m.calendar_appearance_control({ control: "box_min_height" });
-
-async function chooseColorKind(label: string, kind: "custom" | "unchanged"): Promise<void> {
-  await $(controlRowPath(label)).$(".ui-color-settings-picker > select").selectByAttribute("value", kind);
-}
-
-// Writes a control's native input the way Vue's v-model listens for it: input[type="color"] would
-// pop an OS dialog, and a range input takes no typed value.
-async function setNativeInput(label: string, selector: string, value: string): Promise<void> {
-  await $(controlRowPath(label))
-    .$(selector)
-    .waitForExist({ timeoutMsg: `${label} showed no ${selector}` });
-  await browser.execute(
-    (rowPath: string, inputSelector: string, next: string) => {
-      const row = document.evaluate(rowPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
-        .singleNodeValue as Element | null;
-      const input = row?.querySelector<HTMLInputElement>(inputSelector);
-      if (!input) return;
-      input.value = next;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    },
-    controlRowPath(label),
-    selector,
-    value,
-  );
-}
-
-async function setCustomColor(label: string, hex: string): Promise<void> {
-  await chooseColorKind(label, "custom");
-  await setNativeInput(label, 'input[type="color"]', hex);
-}
-
-async function setSlider(label: string, value: number): Promise<void> {
-  await setNativeInput(label, 'input[type="range"]', String(value));
-}
 
 async function forceViewWidth(width: string): Promise<void> {
   await browser.execute(
@@ -269,14 +228,14 @@ describe("the appearance editor drives the rendered calendar", () => {
     });
   });
 
-  // Also before any edit: the week numbers' stock weight is var(--font-bold), which Obsidian defines.
+  // Also before any edit: the week numbers' stock weight is var(--font-normal), which Obsidian defines.
   describe("a stock select", () => {
     it("names the value its Default resolves to", async () => {
       await chooseWidth("wide");
       await chooseFromList("weekNumber");
       const select = $(controlRowPath(m.calendar_appearance_control({ control: "text_weight" }))).$("select");
       const label = m.calendar_appearance_default_resolved({
-        value: m.calendar_appearance_option({ option: "weight_bold" }),
+        value: m.calendar_appearance_option({ option: "weight_normal" }),
       });
       await expectRead(
         () => select.$('option[value=""]').getText(),
@@ -306,6 +265,35 @@ describe("the appearance editor drives the rendered calendar", () => {
       expect(Math.abs((gaps?.left ?? 0) - (gaps?.right ?? 0))).toBeLessThan(2);
       expect(gaps?.left).toBeGreaterThan(0);
     });
+  });
+
+  describe("the preview's divider", () => {
+    after(async () => {
+      await chooseWidth("wide");
+    });
+
+    // The preview gives its divider the pointer back, so a divider box over the cells would take their clicks.
+    for (const width of ["wide", "narrow"] as const) {
+      it(`takes no click meant for a cell beside it, ${width}`, async () => {
+        await chooseWidth(width);
+        const read = await browser.execute(() => {
+          const grid = document.querySelector(".appearance-preview [data-preview-grid]");
+          const divider = grid?.querySelector(".notes-calendar-divider");
+          const week = grid?.querySelector<HTMLElement>(".appearance-preview__week-number[data-current-week]");
+          if (!grid || !divider || !week) return null;
+          const line = divider.getBoundingClientRect();
+          const cells = [...grid.querySelectorAll(".appearance-preview__week-number, .appearance-preview__day")];
+          const overlapping = cells.filter((cell) => {
+            const box = cell.getBoundingClientRect();
+            return box.left < line.right && line.left < box.right && box.top < line.bottom && line.top < box.bottom;
+          }).length;
+          const box = week.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+          return { overlapping, hitsWeek: hit !== null && week.contains(hit) };
+        });
+        expect(read).toMatchObject({ overlapping: 0, hitsWeek: true });
+      });
+    }
   });
 
   describe("a color", () => {

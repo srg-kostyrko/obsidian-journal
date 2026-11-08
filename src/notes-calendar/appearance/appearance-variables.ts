@@ -9,18 +9,24 @@ import { SettingsService } from "@/settings";
 import { appearanceCatalog, savedName, type CatalogEntry } from "./appearance-catalog";
 import {
   appearanceSlice,
+  STOCK_NARROW,
   UNCHANGED,
   type Unchanged,
   type AppearanceParts,
   type AppearanceSliceState,
   type BoxValues,
+  type CurrentWeekValues,
+  type DeepPartialNonNull,
   type HighlightValues,
+  type NarrowCurrentWeek,
   type NarrowHighlight,
   type NarrowOverrides,
   type Overrides,
+  type StockNarrow,
   type TextCase,
   type TextValues,
   type Weight,
+  type WeekNumberValues,
 } from "./slice";
 
 /** A CSS value, or undefined for "write nothing" so the reader's own fallback applies. */
@@ -48,7 +54,7 @@ interface Value<Part, Narrow> {
 interface PartWriter<Part, Narrow> {
   readonly name: string;
   readonly values: readonly Value<Part, Narrow>[];
-  readonly merge: (wide: Part, narrow: Narrow) => Part;
+  readonly merge: (wide: Part, narrow: Narrow, stock?: DeepPartialNonNull<Narrow>) => Part;
 }
 
 const WEIGHT_CSS = {
@@ -86,11 +92,35 @@ function styleValues(h: HighlightValues): { ring: number; strength: number; text
 
 const orNull = <T>(value: T | Unchanged): T | null => (value === UNCHANGED ? null : value);
 
-const textOf = (h: HighlightValues): HighlightValues["text"] | undefined => (styleValues(h).text ? h.text : undefined);
+type HighlightText = HighlightValues["text"];
 
-const textColor = (h: HighlightValues): Css | Pass => color(orNull(textOf(h)?.color ?? null)) ?? PASS;
-const textWeight = (h: HighlightValues): Css | Pass => weight(orNull(textOf(h)?.weight ?? null)) ?? PASS;
-const textItalic = (h: HighlightValues): Css | Pass => italic(orNull(textOf(h)?.italic ?? null)) ?? PASS;
+const gated = (h: HighlightValues, group: HighlightText): HighlightText | undefined =>
+  styleValues(h).text ? group : undefined;
+
+const textColor = (h: HighlightValues, group = h.text): Css | Pass =>
+  color(orNull(gated(h, group)?.color ?? null)) ?? PASS;
+const textWeight = (h: HighlightValues, group = h.text): Css | Pass =>
+  weight(orNull(gated(h, group)?.weight ?? null)) ?? PASS;
+const textItalic = (h: HighlightValues, group = h.text): Css | Pass =>
+  italic(orNull(gated(h, group)?.italic ?? null)) ?? PASS;
+
+// A highlight's text groups are never null themselves, so they merge leaf by leaf like the part does.
+const GROUPS: ReadonlySet<string> = new Set(["text", "weekNumberText"]);
+
+/** Each leaf resolves as the user's narrow override, then the stock narrow value, then the wide value. */
+function overlay<T extends object, N extends object>(wide: T, narrow: N, stock: DeepPartialNonNull<N> = {}): T {
+  // The keys are walked by name, which forgets their types; every writer's narrow shape mirrors its wide one.
+  const n = narrow as Record<string, unknown>;
+  const s = stock as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(wide)) {
+    out[key] =
+      GROUPS.has(key) && typeof value === "object" && value !== null
+        ? overlay(value, n[key] ?? {}, s[key] ?? {})
+        : (n[key] ?? s[key] ?? value);
+  }
+  return out as T;
+}
 
 function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighlight> {
   return {
@@ -99,33 +129,39 @@ function highlightWriter(name: string): PartWriter<HighlightValues, NarrowHighli
       { suffix: "color", css: (h) => colorToString(h.color), reads: (n) => [n.color] },
       { suffix: "ring-width", css: (h) => px(styleValues(h).ring), reads: (n) => [n.style, n.ringWidth] },
       { suffix: "strength", css: (h) => String(styleValues(h).strength / 100), reads: (n) => [n.style, n.strength] },
-      { suffix: "text-color", css: textColor, reads: (n) => [n.style, n.text.color] },
-      { suffix: "text-weight", css: textWeight, reads: (n) => [n.style, n.text.weight] },
-      { suffix: "text-italic", css: textItalic, reads: (n) => [n.style, n.text.italic] },
+      { suffix: "text-color", css: (h) => textColor(h), reads: (n) => [n.style, n.text.color] },
+      { suffix: "text-weight", css: (h) => textWeight(h), reads: (n) => [n.style, n.text.weight] },
+      { suffix: "text-italic", css: (h) => textItalic(h), reads: (n) => [n.style, n.text.italic] },
       { suffix: "layer", css: (h) => (h.over ? "1" : "-1"), reads: (n) => [n.over] },
     ],
-    merge: (wide, narrow) => ({
-      style: narrow.style ?? wide.style,
-      color: narrow.color ?? wide.color,
-      ringWidth: narrow.ringWidth ?? wide.ringWidth,
-      strength: narrow.strength ?? wide.strength,
-      text: {
-        color: narrow.text.color ?? wide.text.color,
-        weight: narrow.text.weight ?? wide.text.weight,
-        italic: narrow.text.italic ?? wide.text.italic,
-      },
-      over: narrow.over ?? wide.over,
-    }),
+    merge: overlay,
   };
 }
 
-function overlay<T extends object>(wide: T, narrow: Overrides<T>): T {
-  const out = { ...wide };
-  for (const key of Object.keys(narrow) as (keyof T)[]) {
-    const value = narrow[key];
-    if (value !== null) out[key] = value;
-  }
-  return out;
+function currentWeekWriter(): PartWriter<CurrentWeekValues, NarrowCurrentWeek> {
+  const base = highlightWriter("current-week");
+  return {
+    name: base.name,
+    values: [
+      ...base.values,
+      {
+        suffix: "week-number-text-color",
+        css: (h) => textColor(h, h.weekNumberText),
+        reads: (n) => [n.style, n.weekNumberText.color],
+      },
+      {
+        suffix: "week-number-text-weight",
+        css: (h) => textWeight(h, h.weekNumberText),
+        reads: (n) => [n.style, n.weekNumberText.weight],
+      },
+      {
+        suffix: "week-number-text-italic",
+        css: (h) => textItalic(h, h.weekNumberText),
+        reads: (n) => [n.style, n.weekNumberText.italic],
+      },
+    ],
+    merge: overlay,
+  };
 }
 
 function textWriter(name: string): PartWriter<TextValues, Overrides<TextValues>> {
@@ -142,13 +178,35 @@ function textWriter(name: string): PartWriter<TextValues, Overrides<TextValues>>
   };
 }
 
+// Hidden is a zero width rather than a value of its own, so a snippet can show or hide the line by width alone.
+function weekNumberWriter(): PartWriter<WeekNumberValues, Overrides<WeekNumberValues>> {
+  const base = textWriter("week-number");
+  return {
+    name: base.name,
+    values: [
+      ...base.values,
+      { suffix: "divider-color", css: (w) => colorToString(w.dividerColor), reads: (n) => [n.dividerColor] },
+      {
+        suffix: "divider-width",
+        css: (w) => px(w.divider ? w.dividerWidth : 0),
+        reads: (n) => [n.divider, n.dividerWidth],
+      },
+    ],
+    merge: overlay,
+  };
+}
+
 const boxWriter: PartWriter<BoxValues, Overrides<BoxValues>> = {
   name: "cell",
   values: [
     { suffix: "padding", css: (b) => px(b.padding), reads: (n) => [n.padding] },
     { suffix: "radius", css: (b) => b.radius, reads: (n) => [n.radius] },
     { suffix: "gap", css: (b) => b.gap, reads: (n) => [n.gap] },
-    { suffix: "min-height", css: (b) => px(b.minHeight), reads: (n) => [n.minHeight] },
+    {
+      suffix: "min-height",
+      css: (b) => (b.minHeight === null ? undefined : px(b.minHeight)),
+      reads: (n) => [n.minHeight],
+    },
   ],
   merge: overlay,
 };
@@ -162,25 +220,35 @@ const WRITERS: Writers = {
   selected: highlightWriter("selected"),
   active: highlightWriter("active"),
   outside: highlightWriter("outside"),
+  weekend: highlightWriter("weekend"),
+  currentWeek: currentWeekWriter(),
   heading: textWriter("heading"),
   weekday: textWriter("weekday"),
-  weekNumber: textWriter("week-number"),
+  weekNumber: weekNumberWriter(),
   date: textWriter("date"),
   cell: boxWriter,
 };
 
-/** The part as the cell sees it at narrow width: narrow overrides laid over the wide values. */
-export function mergedPart<P extends keyof AppearanceParts>(state: AppearanceSliceState, part: P): AppearanceParts[P] {
+/** The part as the cell sees it at narrow width: narrow overrides, then stock narrow values, over the wide values. */
+export function mergedPart<P extends keyof AppearanceParts>(
+  state: AppearanceSliceState,
+  part: P,
+  stock: StockNarrow = STOCK_NARROW,
+): AppearanceParts[P] {
   const writer: PartWriter<AppearanceParts[P], NarrowOverrides[P]> = WRITERS[part];
-  return writer.merge(state.wide[part], state.narrow[part]);
+  return writer.merge(state.wide[part], state.narrow[part], stock[part]);
 }
 
 const PARTS = Object.keys(WRITERS) as (keyof AppearanceParts)[];
 
-const catalogByName = new Map(appearanceCatalog.map((entry) => [entry.name, entry]));
+type EntryOf = (part: string, suffix: string) => CatalogEntry | undefined;
 
-const entryOf = (part: string, suffix: string): CatalogEntry | undefined =>
-  catalogByName.get(`journal-cell-${part}-${suffix}`);
+function lookup(catalog: readonly CatalogEntry[]): EntryOf {
+  const byName = new Map(catalog.map((entry) => [entry.name, entry]));
+  return (part, suffix) => byName.get(`journal-cell-${part}-${suffix}`);
+}
+
+const entryOf = lookup(appearanceCatalog);
 
 /** Every catalog name the writer produces; a catalog entry missing here would never be saved. */
 export function writtenEntryNames(): ReadonlySet<string> {
@@ -196,39 +264,77 @@ export function writtenEntryNames(): ReadonlySet<string> {
   return names;
 }
 
+/** A catalog value as the writer sees it, so tests can pin a catalog string to the values it comes from. */
+export interface WrittenValue {
+  /** What the writer makes of the value from the part's values, before it compares it with any stock. */
+  readonly wideCss: (state: AppearanceSliceState) => string | undefined;
+  /** The same at narrow width, from the part as merged with the stock narrow values. */
+  readonly narrowCss: (state: AppearanceSliceState, stock?: StockNarrow) => string | undefined;
+}
+
+const token = (css: Css | Pass): Css => (typeof css === "object" ? PASS_TOKEN : css);
+
+// A pass and an empty stock both leave the property to what it inherits.
+const isNothing = (css: string): boolean => css === "" || css === PASS_TOKEN;
+
+function valueOf<P extends keyof AppearanceParts>(part: P, name: string): WrittenValue | undefined {
+  const writer = WRITERS[part];
+  const value = writer.values.find((candidate) => entryOf(writer.name, candidate.suffix)?.name === name);
+  if (value === undefined) return;
+  return {
+    wideCss: (state) => token(value.css(state.wide[part])),
+    narrowCss: (state, stock) => token(value.css(mergedPart(state, part, stock))),
+  };
+}
+
+export function writtenValue(name: string): WrittenValue | undefined {
+  for (const part of PARTS) {
+    const found = valueOf(part, name);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
 function writePart<Part, Narrow>(
   out: Record<string, string>,
   writer: PartWriter<Part, Narrow>,
   wide: Part,
   narrow: Narrow,
+  stock: DeepPartialNonNull<Narrow> | undefined,
+  entryAt: EntryOf,
 ): void {
-  const merged = writer.merge(wide, narrow);
+  const merged = writer.merge(wide, narrow, stock);
   for (const value of writer.values) {
-    const entry = entryOf(writer.name, value.suffix);
+    const entry = entryAt(writer.name, value.suffix);
     if (entry === undefined) continue;
     const wideCss = value.css(wide);
     let written: string | undefined;
     if (typeof wideCss === "string") written = wideCss === entry.stock ? undefined : wideCss;
     else if (wideCss !== undefined && entry.stock !== "") written = PASS_TOKEN;
     if (written !== undefined) out[savedName(entry)] = written;
-    if (value.reads(narrow).every((leaf) => leaf === null)) continue;
-    const narrowCss = value.css(merged);
-    if (typeof narrowCss === "string") out[savedName(entry, true)] = narrowCss;
-    else if (narrowCss !== undefined && (entry.stock !== "" || written !== undefined)) {
-      out[savedName(entry, true)] = PASS_TOKEN;
-    }
+    const narrowCss = token(value.css(merged));
+    if (narrowCss === undefined) continue;
+    // What the reader resolves at narrow width when no narrow variable is written.
+    const fallback = entry.stockNarrow ?? written ?? entry.stock;
+    // A stock narrow leaf can change a value it carries no string for (a style gating the text), so a
+    // value is written whenever it differs, not only when a narrow leaf of the user's feeds it.
+    const differs = isNothing(narrowCss) ? !isNothing(fallback) : narrowCss !== fallback;
+    const userSet = value.reads(narrow).some((leaf) => leaf !== null);
+    if (differs || (userSet && !isNothing(narrowCss))) out[savedName(entry, true)] = narrowCss;
   }
 }
 
-/**
- * One saved variable per wide value that differs from the catalog's stock, and one narrow saved
- * variable per value a narrow override feeds. Stock values are left out, so they resolve through
- * the calendar's own fallback.
- */
-export function appearanceVariables(state: AppearanceSliceState): Record<string, string> {
+// Stock values are left out, so they resolve through the calendar's own fallback.
+/** The saved variables for every value that differs from what the calendar would resolve without them. */
+export function appearanceVariables(
+  state: AppearanceSliceState,
+  stock: StockNarrow = STOCK_NARROW,
+  catalog: readonly CatalogEntry[] = appearanceCatalog,
+): Record<string, string> {
   const out: Record<string, string> = {};
+  const entryAt = catalog === appearanceCatalog ? entryOf : lookup(catalog);
   const write = <P extends keyof AppearanceParts>(part: P): void => {
-    writePart(out, WRITERS[part], state.wide[part], state.narrow[part]);
+    writePart(out, WRITERS[part], state.wide[part], state.narrow[part], stock[part], entryAt);
   };
   for (const part of PARTS) write(part);
   return out;

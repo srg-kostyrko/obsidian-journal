@@ -8,6 +8,8 @@ import { date } from "@/calendar/testing";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey } from "@/decorations/ui/cell-decoration-map-key";
 
+import { calendarStyleRules } from "../../testing";
+
 import AppearancePreview from "./AppearancePreview.vue";
 import { partsAt } from "./preview-sample";
 
@@ -73,7 +75,7 @@ describe("AppearancePreview", () => {
     await userEvent.click(today);
 
     expect(emitted("pick")).toEqual([[partsAt(today), "2026-05-13"]]);
-    expect(partsAt(today)).toEqual(["today", "date", "cell", "grid"]);
+    expect(partsAt(today)).toEqual(["today", "currentWeek", "date", "cell", "grid"]);
   });
 
   it.each(["{Enter}", " "])("emits the same parts for %j on a focused cell as for a click", async (key) => {
@@ -83,7 +85,93 @@ describe("AppearancePreview", () => {
     today.focus();
     await userEvent.keyboard(key);
 
-    expect(emitted("pick")).toEqual([[["today", "date", "cell", "grid"], "2026-05-13"]]);
+    expect(emitted("pick")).toEqual([[["today", "currentWeek", "date", "cell", "grid"], "2026-05-13"]]);
+  });
+
+  it("picks the week numbers from their divider", async () => {
+    const { container, emitted } = render(AppearancePreview, { props: { width: "wide" } });
+    const divider = container.querySelector<HTMLElement>(".notes-calendar-divider");
+    if (!divider) throw new Error("no divider");
+
+    await userEvent.click(divider);
+
+    expect(emitted("pick")).toEqual([[["weekNumber", "grid"], undefined]]);
+  });
+
+  // The divider takes the pointer here, so it must sit beside the week numbers, not over them.
+  it("keeps the current week among the parts of a clicked current week's number", async () => {
+    const { container, emitted } = render(AppearancePreview, { props: { width: "wide" } });
+    const week = container.querySelector<HTMLElement>(".appearance-preview__week-number[data-current-week]");
+    if (!week) throw new Error("no current week's number");
+
+    await userEvent.click(week);
+
+    expect(emitted("pick")).toEqual([[["weekNumber", "currentWeek", "grid"], undefined]]);
+  });
+
+  it.each([
+    ["left", "2 / 3"],
+    ["right", "-3 / -2"],
+  ] as const)("draws the divider in its own track beside week numbers on the %s", (weekPlacement, column) => {
+    const { container } = withDisplay({ weekPlacement });
+    expect(
+      [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")].map(
+        (divider) => divider.style.gridColumn,
+      ),
+    ).toEqual([column]);
+  });
+
+  // Laid out as the month view lays it out, so a band or the divider means the same grid lines here.
+  it("gives the divider a track of its own and keeps every cell out of it", () => {
+    const rules = calendarStyleRules().preview.filter((rule) => rule.container === null && rule.supports === null);
+    const declared = (selector: string, property: string): string | undefined =>
+      rules
+        .find((rule) => rule.selector.split(",").some((part) => part.trim() === selector))
+        ?.declarations.get(property);
+    expect({
+      track: rules
+        .find((rule) => rule.selector === ".appearance-preview__grid" && rule.declarations.has("--_divider-track"))
+        ?.declarations.get("--_divider-track"),
+      left: declared('.appearance-preview__grid[data-weeks="left"]', "grid-template-columns"),
+      right: declared('.appearance-preview__grid[data-weeks="right"]', "grid-template-columns"),
+      leftDay: declared(
+        '.appearance-preview__grid[data-weeks="left"] .appearance-preview__week-number + *',
+        "grid-column-start",
+      ),
+      leftWeekday: declared(
+        '.appearance-preview__grid[data-weeks="left"] .appearance-preview__weekday-spacer + *',
+        "grid-column-start",
+      ),
+      rightWeek: declared(
+        '.appearance-preview__grid[data-weeks="right"] .appearance-preview__week-number',
+        "grid-column",
+      ),
+      rightSpacer: declared(
+        '.appearance-preview__grid[data-weeks="right"] .appearance-preview__weekday-spacer',
+        "grid-column",
+      ),
+    }).toEqual({
+      track: "min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000)",
+      left: "1fr var(--_divider-track) repeat(7, 1fr)",
+      right: "repeat(7, 1fr) var(--_divider-track) 1fr",
+      leftDay: "3",
+      leftWeekday: "3",
+      rightWeek: "-2 / -1",
+      rightSpacer: "-2 / -1",
+    });
+  });
+
+  it("draws no divider without week numbers", () => {
+    const { container } = withDisplay({ weekPlacement: "none" });
+    expect(container.querySelector(".notes-calendar-divider")).toBeNull();
+  });
+
+  // The divider takes no pointer in a calendar, so the preview gives it one back for picking.
+  it("lets the divider take the pointer in the preview", () => {
+    const rule = calendarStyleRules().preview.find(
+      (candidate) => candidate.container === null && candidate.selector.endsWith(".appearance-preview__divider"),
+    );
+    expect(rule?.declarations.get("pointer-events")).toBe("auto");
   });
 
   it("marks the open note two days after today, unselected", () => {
@@ -94,9 +182,9 @@ describe("AppearancePreview", () => {
     expect(container.querySelectorAll("[data-active]")).toHaveLength(1);
   });
 
-  it("selects the month's first day, which is not the open note's", () => {
+  it("selects a weekend day in today's week, which is not the open note's", () => {
     const { container } = render(AppearancePreview, { props: { width: "wide" } });
-    const selected = cellAt(container, "2026-05-01");
+    const selected = cellAt(container, "2026-05-16");
     expect(selected.dataset.selected).toBe("true");
     expect(selected.dataset.active).toBeUndefined();
     expect(container.querySelectorAll("[data-selected]")).toHaveLength(1);
@@ -129,7 +217,7 @@ describe("AppearancePreview", () => {
     expect(decorated).toHaveLength(1);
     const [anchor, styles] = decorated.at(0) ?? [];
     expect(styles).toBe("background,color");
-    expect(anchor).toBe("2026-05-01");
+    expect(anchor).toBe("2026-05-16");
   });
 
   describe("outlines the part being edited", () => {
@@ -201,11 +289,42 @@ describe("AppearancePreview", () => {
       });
     });
 
-    it("outlines every week number", () => {
+    it("outlines every week number and their divider, lightly", () => {
       const { container } = render(AppearancePreview, { props: { width: "wide", picked: "weekNumber" } });
-      const weekNumbers = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekNumber"]')];
+      const weekNumbers = [...container.querySelectorAll<HTMLElement>(".appearance-preview__week-number")];
+      const divider = container.querySelector<HTMLElement>(".notes-calendar-divider");
+      if (!divider) throw new Error("no divider");
       expect(weekNumbers.length).toBeGreaterThan(3);
-      expect(picked(container)).toEqual(weekNumbers);
+      expect(picked(container)).toEqual([divider, ...weekNumbers]);
+      expect(isLight(divider)).toBe(true);
+    });
+
+    it("outlines the weekend days and their weekday headers, and nothing else", () => {
+      const { container } = render(AppearancePreview, {
+        props: {
+          width: "wide",
+          picked: "weekend",
+          display: { ...calendarDisplaySlice.defaults, weekend: { type: "custom", days: [5] } },
+        },
+      });
+      const fridays = [...container.querySelectorAll<HTMLElement>('[data-preview-part="date"]')].filter(
+        (cell) => cell.dataset.weekend !== undefined,
+      );
+      const header = [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekday"]')].filter(
+        (span) => span.dataset.weekend !== undefined,
+      );
+      expect(header).toHaveLength(1);
+      expect(fridays.length).toBeGreaterThan(3);
+      expect(new Set(picked(container))).toEqual(new Set([...header, ...fridays]));
+      expect(picked(container).every(isLight)).toBe(true);
+    });
+
+    it("outlines today's week, its days and its week number, and nothing else", () => {
+      const { container } = render(AppearancePreview, { props: { width: "wide", picked: "currentWeek" } });
+      const week = [...container.querySelectorAll<HTMLElement>("[data-current-week]")];
+      expect(week).toHaveLength(8);
+      expect(week.some((element) => element.dataset.previewPart === "weekNumber")).toBe(true);
+      expect(new Set(picked(container))).toEqual(new Set(week));
     });
 
     it("outlines the month grid", () => {
@@ -315,7 +434,7 @@ describe("AppearancePreview", () => {
 
       expect(cellAt(container, "2026-05-01").textContent?.trim()).toBe("01");
       expect(cellAt(container, "2026-05-01").getAttribute("aria-label")).toBe("May 1, 2026");
-      expect(container.querySelector('[data-preview-part="weekNumber"]')?.textContent?.trim()).toMatch(/^\d+$/);
+      expect(container.querySelector(".appearance-preview__week-number")?.textContent?.trim()).toMatch(/^\d+$/);
       expect(
         [...(heading?.querySelectorAll(".notes-calendar-cell") ?? [])].map((cell) => cell.textContent?.trim()),
       ).toEqual(["05", "26"]);
@@ -337,9 +456,9 @@ describe("AppearancePreview", () => {
       expect(weekdays(container)).toContainEqual({ wide: "M", narrow: "Mo" });
     });
 
-    it("renders the wide text at both widths when the narrow one is unset", () => {
+    it("renders one letter at narrow when the narrow one is unset", () => {
       const { container } = withDisplay({ weekdayLabel: { type: "pattern", pattern: "dd" }, weekdayLabelNarrow: null });
-      expect(weekdays(container)).toContainEqual({ wide: "Mo", narrow: "Mo" });
+      expect(weekdays(container)).toContainEqual({ wide: "Mo", narrow: "M" });
     });
   });
 
@@ -366,5 +485,75 @@ describe("AppearancePreview", () => {
     const root = container.querySelector<HTMLElement>(".appearance-preview");
     expect(root?.style.width).toBe("100%");
     expect(root?.style.minWidth).toBe("30em");
+  });
+});
+
+const bands = (container: Element, kind: "weekend" | "current-week") =>
+  [...container.querySelectorAll<HTMLElement>(`.notes-calendar-band[data-band="${CSS.escape(kind)}"]`)].map((band) => ({
+    column: band.style.gridColumn,
+    row: band.style.gridRow,
+  }));
+
+describe("AppearancePreview bands", () => {
+  beforeEach(() => {
+    vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-13"));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("draws the weekend band and the current-week band as the month view does, ahead of the rows", () => {
+    const { container } = withDisplay({});
+    expect({ weekend: bands(container, "weekend"), currentWeek: bands(container, "current-week") }).toEqual({
+      weekend: [{ column: "8 / span 2", row: "auto" }],
+      currentWeek: [{ column: "1 / -1", row: "4 / span 1" }],
+    });
+    const children = [...(container.querySelector(".appearance-preview__grid")?.children ?? [])];
+    expect(children.slice(0, 2).map((child) => (child as HTMLElement).dataset.band)).toEqual([
+      "weekend",
+      "current-week",
+    ]);
+  });
+
+  it("follows the display's weekend, week placement and weekday header", () => {
+    const { container } = withDisplay({
+      weekend: { type: "custom", days: [5, 6] },
+      weekPlacement: "right",
+      showWeekdays: false,
+    });
+    expect({ weekend: bands(container, "weekend"), currentWeek: bands(container, "current-week") }).toEqual({
+      weekend: [{ column: "5 / span 2", row: "auto" }],
+      currentWeek: [{ column: "1 / -1", row: "3 / span 1" }],
+    });
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-preview-part="weekday"]')].map(
+        (header) => header.dataset.weekend !== undefined,
+      ),
+    ).toEqual([false, false, false, false, true, true, false]);
+  });
+
+  it("marks today's week number and days with the current week, and the weekend days", () => {
+    const { container } = withDisplay({});
+    const row = rowsOf(container).at(3);
+    expect(row?.querySelectorAll("[data-current-week]").length).toBe(8);
+    expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
+    expect(cellAt(container, "2026-05-16").dataset.weekend).toBe("true");
+    expect(cellAt(container, "2026-05-15").dataset.weekend).toBeUndefined();
+  });
+
+  it("shows several states on the selected day: selected, current week and weekend", () => {
+    const { container } = withDisplay({});
+    const selected = container.querySelector<HTMLElement>("[data-selected]");
+    expect({
+      weekend: selected?.dataset.weekend,
+      currentWeek: selected?.dataset.currentWeek,
+    }).toEqual({ weekend: "true", currentWeek: "true" });
+  });
+
+  it("draws no weekend band for an empty weekend", () => {
+    const { container } = withDisplay({ weekend: { type: "custom", days: [] } });
+    expect(bands(container, "weekend")).toEqual([]);
+    expect(container.querySelector("[data-weekend]")).toBeNull();
   });
 });

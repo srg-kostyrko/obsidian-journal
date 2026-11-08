@@ -33,6 +33,7 @@ export {
   type OutsideDates,
   type OutsideDays,
   type WeekPlacement,
+  type WeekendSetting,
 } from "./settings/display-slice";
 export { calendarSettingsModule } from "./settings/module";
 export { WeekPresetApplierToken, type WeekPresetApplier } from "./settings/week-preset-applier";
@@ -43,3 +44,4 @@ export {
   type StructureKey,
   type StructureValue,
 } from "./structure";
+export { localeWeekend, resolveWeekend, weekendDayNames, weekendRuns } from "./weekend";

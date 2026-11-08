@@ -6,8 +6,8 @@ import type { AppearanceParts, HighlightStyle } from "./slice";
 export type ValuePartKey = keyof AppearanceParts;
 export type PartKey = ValuePartKey | "grid";
 export type Width = "wide" | "narrow";
-export type Family = "visibility" | "label" | "text" | "highlight" | "box";
-export const FAMILY_ORDER: readonly Family[] = ["visibility", "label", "text", "highlight", "box"];
+export type Family = "visibility" | "label" | "text" | "divider" | "highlight" | "box";
+export const FAMILY_ORDER: readonly Family[] = ["visibility", "label", "text", "divider", "highlight", "box"];
 export type ControlKind = "color" | "slider" | "select";
 
 export interface ValueControl {
@@ -30,7 +30,12 @@ export interface ValueControl {
   readonly options?: readonly string[];
   /** Absent means shown for every style. */
   readonly shownFor?: readonly HighlightStyle[];
+  /** Absent means shown whatever the part's other values. */
+  readonly shownWhen?: (values: PartValues) => boolean;
 }
+
+/** A part's values at the width being edited, which a `shownWhen` reads. */
+export type PartValues = Readonly<Record<string, unknown>>;
 
 /** Writes the calendar display slice rather than the appearance slice, so it has one value for every width. */
 export interface StructureControl {
@@ -148,6 +153,26 @@ function textControls(part: string): readonly ValueControl[] {
   ]);
 }
 
+const dividerShown = (values: PartValues): boolean => values.divider === true;
+
+const DIVIDER_CONTROLS: readonly ValueControl[] = inFamily("divider", [
+  { path: ["divider"], kind: "select", options: SHOWN },
+  {
+    path: ["dividerColor"],
+    kind: "color",
+    entry: "journal-cell-week-number-divider-color",
+    role: "border",
+    shownWhen: dividerShown,
+  },
+  {
+    path: ["dividerWidth"],
+    kind: "slider",
+    entry: "journal-cell-week-number-divider-width",
+    range: { min: 1, max: 4, step: 1, unit: "px" },
+    shownWhen: dividerShown,
+  },
+]);
+
 const BOX_CONTROLS: readonly ValueControl[] = inFamily("box", [
   {
     path: ["padding"],
@@ -170,6 +195,48 @@ const BOX_CONTROLS: readonly ValueControl[] = inFamily("box", [
   },
 ]);
 
+class AppearancePartsInvariantError extends Error {
+  override name = "AppearancePartsInvariantError";
+}
+
+const currentWeekNumberEntry = (value: string): string => `journal-cell-current-week-week-number-text-${value}`;
+
+// Spliced in after the days' text, so the two text groups sit together ahead of the layer.
+function currentWeekControls(): readonly ValueControl[] {
+  const controls = highlightControls("current-week");
+  const weekNumber = inFamily("highlight", [
+    {
+      path: ["weekNumberText", "color"],
+      kind: "color",
+      entry: currentWeekNumberEntry("color"),
+      role: "text",
+      unchanged: true,
+      shownFor: WITH_TEXT,
+    },
+    {
+      path: ["weekNumberText", "weight"],
+      kind: "select",
+      entry: currentWeekNumberEntry("weight"),
+      options: WEIGHTS,
+      unchanged: true,
+      shownFor: WITH_TEXT,
+    },
+    {
+      path: ["weekNumberText", "italic"],
+      kind: "select",
+      entry: currentWeekNumberEntry("italic"),
+      options: ITALIC,
+      unchanged: true,
+      shownFor: WITH_TEXT,
+    },
+  ]);
+  const over = controls.findIndex((control) => control.path[0] === "over");
+  // slice(0, -1) would drop the last control and slot the week number's ahead of it, without a word.
+  if (over === -1)
+    throw new AppearancePartsInvariantError("the current week's highlight controls have no over control");
+  return [...controls.slice(0, over), ...weekNumber, ...controls.slice(over)];
+}
+
 export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Control[] }>> = {
   today: { controls: highlightControls("today") },
   selected: { controls: highlightControls("selected") },
@@ -180,6 +247,8 @@ export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Contr
       ...highlightControls("outside"),
     ],
   },
+  weekend: { controls: highlightControls("weekend") },
+  currentWeek: { controls: currentWeekControls() },
   heading: {
     controls: [
       structure("showHeading", SHOWN),
@@ -202,6 +271,7 @@ export const PARTS: Readonly<Record<PartKey, { readonly controls: readonly Contr
       // No ISO `W`: it disagrees with the week grid unless that grid is ISO.
       format("week", ["[W]w", "w", "[W]ww", "wo"]),
       ...textControls("week-number"),
+      ...DIVIDER_CONTROLS,
     ],
   },
   date: { controls: [format("day", ["D", "DD", "Do"]), ...textControls("date")] },
@@ -214,6 +284,8 @@ export const CHIP_ORDER: readonly PartKey[] = [
   "active",
   "selected",
   "today",
+  "currentWeek",
+  "weekend",
   "outside",
   "date",
   "weekNumber",
@@ -223,20 +295,29 @@ export const CHIP_ORDER: readonly PartKey[] = [
   "grid",
 ];
 
-export function visibleControls(part: PartKey, style: HighlightStyle | undefined): readonly Control[] {
+/** Without the part's values, every control a style allows shows. */
+export function visibleControls(
+  part: PartKey,
+  style: HighlightStyle | undefined,
+  values?: PartValues,
+): readonly Control[] {
   const { controls } = PARTS[part];
-  if (style === undefined) return controls;
+  if (style === undefined && values === undefined) return controls;
   return controls.filter(
     (control) =>
-      isStructure(control) || isFormat(control) || control.shownFor === undefined || control.shownFor.includes(style),
+      isStructure(control) ||
+      isFormat(control) ||
+      ((style === undefined || control.shownFor === undefined || control.shownFor.includes(style)) &&
+        (values === undefined || control.shownWhen === undefined || control.shownWhen(values))),
   );
 }
 
 export function familiesOf(
   part: PartKey,
   style: HighlightStyle | undefined,
+  values?: PartValues,
 ): readonly { family: Family; controls: readonly Control[] }[] {
-  const controls = visibleControls(part, style);
+  const controls = visibleControls(part, style, values);
   return FAMILY_ORDER.map((family) => ({
     family,
     controls: controls.filter((control) => control.family === family),

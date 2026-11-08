@@ -31,7 +31,7 @@ const createStyleIn: Record<StyleSlotKey, () => Promise<void>> = {
   corner: () => userEvent.click(screen.getByRole("button", { name: "Top left" })),
 };
 
-async function mount(styles: JournalDecoration["styles"] = [], minHeight?: number) {
+async function mount(styles: JournalDecoration["styles"] = [], minHeight?: number | null) {
   const exposed = {} as { values: JournalDecoration };
   const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
   if (minHeight !== undefined) {
@@ -58,6 +58,12 @@ describe("DecorationCanvas", () => {
     const canvas = document.querySelector<HTMLElement>(".decoration-canvas");
     expect(canvas?.style.getPropertyValue("--cell-source-size")).toBe("26px");
     expect(document.body.getHTML()).not.toContain("Infinity");
+  });
+
+  it("falls back to the stock row height when the row height is Default", async () => {
+    await mount([], null);
+    const canvas = document.querySelector<HTMLElement>(".decoration-canvas");
+    expect(canvas?.style.getPropertyValue("--cell-source-size")).toBe("26px");
   });
 
   it("magnification uses the saved cell min-height", async () => {

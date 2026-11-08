@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Applica la configurazione settimanale a tutte le date presenti nel vault",
   "calendar_appearance_section_title": "Aspetto del calendario",
   "calendar_appearance_open": "Apri",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Fine settimana: {days}",
+        "mode=none": "Nessun fine settimana"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "Modifica nelle impostazioni del calendario",
   "calendar_appearance_preview": "Anteprima",
   "calendar_appearance_width_label": "Larghezza",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "Data selezionata",
         "part=active": "Nota aperta",
         "part=outside": "Giorni fuori dal mese",
+        "part=currentWeek": "Settimana corrente",
+        "part=weekend": "Fine settimana",
         "part=heading": "Intestazione del mese",
         "part=weekday": "Intestazione dei giorni della settimana",
         "part=weekNumber": "Numeri di settimana",
@@ -103,6 +116,7 @@
         "family=visibility": "Visibilità",
         "family=label": "Etichetta",
         "family=text": "Testo",
+        "family=divider": "Divisore",
         "family=highlight": "Evidenziazione",
         "family=box": "Riquadro"
       }
@@ -131,12 +145,18 @@
         "control=highlight_text_color": "Colore del testo",
         "control=highlight_text_weight": "Peso del testo",
         "control=highlight_text_italic": "Testo in corsivo",
+        "control=highlight_week_number_text_color": "Colore del numero di settimana",
+        "control=highlight_week_number_text_weight": "Peso del numero di settimana",
+        "control=highlight_week_number_text_italic": "Numero di settimana in corsivo",
         "control=highlight_over": "Sopra le decorazioni",
         "control=text_size": "Dimensione",
         "control=text_weight": "Peso",
         "control=text_italic": "Corsivo",
         "control=text_color": "Colore",
         "control=text_case": "Maiuscole e minuscole",
+        "control=divider_divider": "Divisore",
+        "control=divider_divider_color": "Colore",
+        "control=divider_divider_width": "Spessore",
         "control=box_padding": "Spaziatura interna",
         "control=box_radius": "Raggio degli angoli",
         "control=box_gap": "Spazio tra le celle",
@@ -173,6 +193,8 @@
         "option=italic_off": "Disattivo",
         "option=over_over": "Sì",
         "option=over_under": "No",
+        "option=divider_shown": "Mostrato",
+        "option=divider_hidden": "Nascosto",
         "option=case_none": "Come scritto",
         "option=case_upper": "Maiuscolo",
         "option=case_lower": "Minuscolo",
@@ -182,14 +204,18 @@
   ],
   "calendar_appearance_default": "Predefinito",
   "calendar_appearance_default_resolved": "Predefinito ({value})",
+  "calendar_appearance_default_grows": "Predefinito (cresce con la larghezza)",
   "calendar_appearance_unchanged": "Invariato",
   "calendar_appearance_narrow_only": "Solo stretto",
   "calendar_appearance_narrow_only_clear": "Usa il valore per tutte le larghezze",
+  "calendar_appearance_narrow_only_clear_stock": "Usa il valore predefinito di stretto",
+  "calendar_appearance_narrow_own": "Stretto ha un valore proprio",
+  "calendar_appearance_narrow_apply": "Usa anche in Stretto",
   "calendar_appearance_all_widths": "Tutte le larghezze",
   "calendar_appearance_format_suggestions": "Suggerimenti",
   "calendar_appearance_format_preview": "Anteprima:",
   "calendar_appearance_format_letter": "Una lettera",
-  "calendar_appearance_format_same_as_wide": "Come in Largo",
+  "calendar_appearance_format_same_as_wide": "Copia il formato di Largo",
   "calendar_appearance_format_iso_warning": "W conta le settimane ISO, che possono differire dalle righe delle settimane mostrate da questo calendario.",
   "calendar_appearance_reset": [
     {
@@ -1875,6 +1901,20 @@
   ],
   "calendar_week_placement_label": "Numeri di settimana predefiniti",
   "calendar_week_placement_description": "Dove appare la colonna del numero della settimana nei blocchi calendario impostati su \"Utilizza le impostazioni predefinite globali\".",
+  "calendar_weekend_label": "Giorni del fine settimana",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Nessun fine settimana"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Fine settimana delle impostazioni locali",
+  "calendar_weekend_custom": "Personalizzato",
   "calendar_timeline_navigation_label": "Navigazione predefinita della cronologia",
   "calendar_timeline_navigation_description": "Mostra i controlli per il periodo precedente e successivo nei blocchi di codice calendar-timeline. Un blocco può ignorarlo con la sua opzione navigation.",
   "view_block_config_show_heading_label": "Mostra l'intestazione del mese/anno",

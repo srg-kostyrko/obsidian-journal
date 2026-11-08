@@ -1,13 +1,14 @@
 import { moment } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 
-import { CalendarDate, type AnchorString } from "@/calendar";
+import { activeLocale, CalendarDate, type AnchorString } from "@/calendar";
 
 import {
   DEFAULT_WEEKDAY_PATTERN,
   defaultFormatPattern,
   formatWeekday,
   labelPattern,
+  STOCK_NARROW_WEEKDAY,
   weekdayTexts,
   weekFormatNeedsIsoWarning,
 } from "./cell-format";
@@ -111,8 +112,11 @@ describe("weekdayTexts", () => {
     });
   });
 
-  it("renders the wide text at narrow when the narrow one is unset", () => {
-    expect(weekdayTexts(monday, { type: "pattern", pattern: "dd" }, null)).toMatchObject({ wide: "Mo", narrow: "Mo" });
+  it("a narrow weekday with no override is one letter", () => {
+    const texts = weekdayTexts(monday, { type: "pattern", pattern: "dddd" }, null);
+    expect(texts.wide).toBe("Monday");
+    expect(texts.narrow).toBe(new Intl.DateTimeFormat(activeLocale(), { weekday: "narrow" }).format(monday.toJSDate()));
+    expect(STOCK_NARROW_WEEKDAY).toEqual({ type: "letter" });
   });
 });
 

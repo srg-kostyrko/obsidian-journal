@@ -54,6 +54,11 @@ export class CalendarDate {
     return date;
   }
 
+  /** 0 = Sunday. Never `Number(format("d"))`: a native-digit locale such as `ar` formats it as "٦". */
+  weekday(): number {
+    return localMoment(this.#anchor, ANCHOR_FORMAT, true).day();
+  }
+
   format(pattern: string): string {
     return localMoment(this.#anchor, ANCHOR_FORMAT, true).format(pattern);
   }

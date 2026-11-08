@@ -14,15 +14,19 @@ import {
   type PeriodKind,
   type WeekPeriod,
 } from "@/calendar";
+import { useToday, useWeekend } from "@/calendar/ui";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 
+import { bandPlacement } from "../band-placement";
 import { accessibleFormatPattern, labelPattern, weekdayTexts } from "../cell-format";
 import { useNotesCell, type NotesDateSelect } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
+import NotesCalendarBand from "./NotesCalendarBand.vue";
 import NotesCalendarCell from "./NotesCalendarCell.vue";
+import NotesCalendarDivider from "./NotesCalendarDivider.vue";
 import {
   useCalendarGridNavigation,
   type CalendarGridItem,
@@ -41,6 +45,7 @@ const props = withDefaults(
     sixRows?: boolean;
     selectedDate?: AnchorString;
     selectDate?: NotesDateSelect;
+    currentWeekBand?: boolean;
   }>(),
   {
     outsideDates: "active",
@@ -51,6 +56,7 @@ const props = withDefaults(
     sixRows: false,
     selectedDate: undefined,
     selectDate: undefined,
+    currentWeekBand: true,
   },
 );
 
@@ -91,7 +97,7 @@ const rows = computed<readonly WeekRow[]>(() => {
         period: DayPeriod.containing(d),
         isOutside: !rawMonth.value.contains(d),
       }))
-      .filter(({ period }) => !hiddenWeekdays.value.has(Number(period.start.format("d"))));
+      .filter(({ period }) => !hiddenWeekdays.value.has(period.start.weekday()));
     out.push({ key: week.anchor.toAnchor(), weekPeriod: week, days });
   }
   return out;
@@ -100,10 +106,29 @@ const rows = computed<readonly WeekRow[]>(() => {
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
 const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
+const weekend = useWeekend();
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
-  return (rows.value[0]?.days ?? []).map(({ period }) => weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow));
+  return (rows.value[0]?.days ?? []).map(({ period }) => ({
+    ...weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow),
+    weekend: isWeekend(period),
+  }));
 });
+
+const today = useToday();
+const bands = computed(() =>
+  bandPlacement({
+    columns: (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
+    weekend: weekend.value,
+    weekNumbers: weeksPos.value,
+    weekdayHeader: props.showWeekdays,
+    rows: rows.value.map((row) => ({
+      isCurrentWeek: props.currentWeekBand && row.weekPeriod.contains(today.value),
+      hasDay: row.days.some((day) => !(blankOutside.value && day.isOutside)),
+    })),
+  }),
+);
 
 const monthPeriod = computed(() => rawMonth.value);
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawMonth.value.anchor));
@@ -219,6 +244,15 @@ const isSelected = (period: Period): boolean =>
       @focusin="navigation.onFocusIn"
       @keydown.capture="navigation.onKeyDown"
     >
+      <NotesCalendarBand
+        v-for="band in bands.weekend"
+        :key="band.key"
+        kind="weekend"
+        :column="band.column"
+        row="auto"
+      />
+      <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
+      <NotesCalendarDivider v-if="bands.divider" :column="bands.divider.column" :row="bands.divider.row" />
       <div
         class="notes-month-view__row"
         :class="{ 'notes-month-view__row--visually-hidden': !showWeekdays }"
@@ -235,6 +269,7 @@ const isSelected = (period: Period): boolean =>
           class="notes-month-view__weekday"
           role="columnheader"
           :aria-label="day.name"
+          :data-weekend="day.weekend || null"
         >
           <span class="notes-month-view__weekday-wide" aria-hidden="true">{{ day.wide }}</span>
           <span class="notes-month-view__weekday-narrow" aria-hidden="true">{{ day.narrow }}</span>
@@ -245,7 +280,7 @@ const isSelected = (period: Period): boolean =>
           aria-hidden="true"
         ></div>
       </div>
-      <div v-for="row in rows" :key="row.key" class="notes-month-view__row" role="row">
+      <div v-for="(row, index) in rows" :key="row.key" class="notes-month-view__row" role="row">
         <NotesCalendarCell
           v-if="showWeekNumber && weeksPos === 'left'"
           data-testid="week-number-cell"
@@ -256,6 +291,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
+          :current-week="index === bands.currentWeekIndex"
         />
         <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
           <span
@@ -268,6 +304,8 @@ const isSelected = (period: Period): boolean =>
             class="notes-month-view__day"
             outside
             disabled
+            :weekend="isWeekend(day.period)"
+            :current-week="index === bands.currentWeekIndex"
             :period="day.period"
             :cell="inertDay"
             :format="format('day')"
@@ -277,6 +315,8 @@ const isSelected = (period: Period): boolean =>
             v-else
             class="notes-month-view__day"
             :outside="day.isOutside"
+            :weekend="isWeekend(day.period)"
+            :current-week="index === bands.currentWeekIndex"
             :period="day.period"
             :cell="dayCell"
             :format="format('day')"
@@ -296,6 +336,7 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
+          :current-week="index === bands.currentWeekIndex"
         />
       </div>
     </div>
@@ -340,17 +381,35 @@ const isSelected = (period: Period): boolean =>
 .notes-month-view__header[data-flanked] {
   justify-content: center;
 }
+/* Positioned for its bands, never isolated: a cell with an open mark popover lifts itself out of the grid. */
 .notes-month-view__grid {
   --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  --_v-week-number-divider-width: var(
+    --journal-cell-week-number-divider-width,
+    var(--journal-saved-cell-week-number-divider-width, 1px)
+  );
+  /* The divider's own track, so a filled cell beside it keeps clear of its line: 8px while it shows, and
+     none once its width is 0, which is how a hidden divider is written. */
+  --_divider-track: min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000);
+  position: relative;
   display: grid;
   grid-template-columns: repeat(var(--day-columns, 7), 1fr);
   gap: var(--_v-cell-gap);
 }
 .notes-month-view__grid[data-weeks="left"] {
-  grid-template-columns: auto repeat(var(--day-columns, 7), 1fr);
+  grid-template-columns: 1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr);
 }
 .notes-month-view__grid[data-weeks="right"] {
-  grid-template-columns: repeat(var(--day-columns, 7), 1fr) auto;
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr;
+}
+/* Cells place themselves in source order, so whatever follows the week numbers steps over the divider's track. */
+.notes-month-view__grid[data-weeks="left"] .notes-month-view__week-number + *,
+.notes-month-view__grid[data-weeks="left"] .notes-month-view__weekday-spacer + * {
+  grid-column-start: 3;
+}
+.notes-month-view__grid[data-weeks="right"] .notes-month-view__week-number,
+.notes-month-view__grid[data-weeks="right"] .notes-month-view__weekday-spacer {
+  grid-column: -2 / -1;
 }
 .notes-month-view__row {
   display: grid;
@@ -374,7 +433,9 @@ const isSelected = (period: Period): boolean =>
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Positioned, so it paints above an under weekend band, which is positioned and precedes it. */
 .notes-month-view__weekday {
+  position: relative;
   --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
   --_v-weekday-weight: var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit));
   --_v-weekday-italic: var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit));
@@ -391,6 +452,36 @@ const isSelected = (period: Period): boolean =>
   justify-content: center;
   align-items: end;
 }
+/* A weekend column's header takes the weekend's text over the weekday part's own, since the band starts
+   there. Its values sit on the row, so the Unchanged queries below are answered by the header's parent. */
+.notes-month-view__row {
+  --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
+  --_v-weekend-text-weight: var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight));
+  --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
+}
+.notes-month-view__weekday[data-weekend] {
+  --_weekend-text: var(--_v-weekend-text-color);
+  --_weekend-weight: var(--_v-weekend-text-weight);
+  --_weekend-italic: var(--_v-weekend-text-italic);
+  color: var(--_weekend-text, var(--_v-weekday-color));
+  font-weight: var(--_weekend-weight, var(--_v-weekday-weight));
+  font-style: var(--_weekend-italic, var(--_v-weekday-italic));
+}
+@container style(--_v-weekend-text-color: unchanged) {
+  .notes-month-view__weekday[data-weekend] {
+    --_weekend-text: initial;
+  }
+}
+@container style(--_v-weekend-text-weight: unchanged) {
+  .notes-month-view__weekday[data-weekend] {
+    --_weekend-weight: initial;
+  }
+}
+@container style(--_v-weekend-text-italic: unchanged) {
+  .notes-month-view__weekday[data-weekend] {
+    --_weekend-italic: initial;
+  }
+}
 /* Both texts render, and the narrow query swaps which one shows. */
 .notes-month-view__weekday-narrow {
   display: none;
@@ -400,16 +491,19 @@ const isSelected = (period: Period): boolean =>
    outside the month take the date values too; the outside highlight's text sits above `--_part-color`,
    so they stay muted. */
 .notes-month-view__week-number {
-  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit));
+  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em));
   --_v-week-number-weight: var(
     --journal-cell-week-number-weight,
-    var(--journal-saved-cell-week-number-weight, var(--font-bold))
+    var(--journal-saved-cell-week-number-weight, var(--font-normal))
   );
   --_v-week-number-italic: var(
     --journal-cell-week-number-italic,
     var(--journal-saved-cell-week-number-italic, inherit)
   );
-  --_v-week-number-color: var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit));
+  --_v-week-number-color: var(
+    --journal-cell-week-number-color,
+    var(--journal-saved-cell-week-number-color, var(--text-muted))
+  );
   --_v-week-number-case: var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit));
   --_part-color: var(--_v-week-number-color);
   font-size: var(--_v-week-number-size);
@@ -418,7 +512,7 @@ const isSelected = (period: Period): boolean =>
   text-transform: var(--_v-week-number-case);
 }
 .notes-month-view__day {
-  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, 1.1em));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
@@ -433,7 +527,10 @@ const isSelected = (period: Period): boolean =>
    plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
    short of its neighbours, when no week number holds the row open. */
 .notes-month-view__day--blank {
-  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  --_v-cell-min-height: var(
+    --journal-cell-cell-min-height,
+    var(--journal-saved-cell-cell-min-height, clamp(26px, 7cqi, 64px))
+  );
   --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
   min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
 }
@@ -442,7 +539,48 @@ const isSelected = (period: Period): boolean =>
 [data-custom-day-label] .notes-month-view__day {
   min-width: 0;
 }
+/* A heading cell holds one line of text, so it keeps the flat floor where a wide day row grows with the
+   calendar's width. */
+.notes-month-view__header :deep(.notes-calendar-cell) {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+}
+/* The growing stock is sized in cqi. A WebView without the unit finds the min-height it reaches invalid
+   and leaves the row no floor at all, so there the stock is the flat floor. */
+@supports not (width: 1cqi) {
+  .notes-month-view__day--blank {
+    --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  }
+}
 @container journal-calendar (max-width: 28em) {
+  .notes-month-view__header :deep(.notes-calendar-cell) {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
+    );
+  }
+  .notes-month-view__row {
+    --_v-weekend-text-color: var(
+      --journal-cell-weekend-text-color-narrow,
+      var(
+        --journal-saved-cell-weekend-text-color-narrow,
+        var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color))
+      )
+    );
+    --_v-weekend-text-weight: var(
+      --journal-cell-weekend-text-weight-narrow,
+      var(
+        --journal-saved-cell-weekend-text-weight-narrow,
+        var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight))
+      )
+    );
+    --_v-weekend-text-italic: var(
+      --journal-cell-weekend-text-italic-narrow,
+      var(
+        --journal-saved-cell-weekend-text-italic-narrow,
+        var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic))
+      )
+    );
+  }
   .notes-month-view__weekday-wide {
     display: none;
   }
@@ -452,10 +590,7 @@ const isSelected = (period: Period): boolean =>
   .notes-month-view__day--blank {
     --_v-cell-min-height: var(
       --journal-cell-cell-min-height-narrow,
-      var(
-        --journal-saved-cell-cell-min-height-narrow,
-        var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px))
-      )
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
     );
     --_v-cell-padding: var(
       --journal-cell-cell-padding-narrow,
@@ -503,11 +638,12 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-month-view__grid {
-    --_v-cell-gap: var(
-      --journal-cell-cell-gap-narrow,
+    --_v-cell-gap: var(--journal-cell-cell-gap-narrow, var(--journal-saved-cell-cell-gap-narrow, 1px));
+    --_v-week-number-divider-width: var(
+      --journal-cell-week-number-divider-width-narrow,
       var(
-        --journal-saved-cell-cell-gap-narrow,
-        var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)))
+        --journal-saved-cell-week-number-divider-width-narrow,
+        var(--journal-cell-week-number-divider-width, var(--journal-saved-cell-week-number-divider-width, 1px))
       )
     );
   }
@@ -553,14 +689,14 @@ const isSelected = (period: Period): boolean =>
       --journal-cell-week-number-size-narrow,
       var(
         --journal-saved-cell-week-number-size-narrow,
-        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, inherit))
+        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em))
       )
     );
     --_v-week-number-weight: var(
       --journal-cell-week-number-weight-narrow,
       var(
         --journal-saved-cell-week-number-weight-narrow,
-        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-bold)))
+        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-normal)))
       )
     );
     --_v-week-number-italic: var(
@@ -574,7 +710,7 @@ const isSelected = (period: Period): boolean =>
       --journal-cell-week-number-color-narrow,
       var(
         --journal-saved-cell-week-number-color-narrow,
-        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, inherit))
+        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, var(--text-muted)))
       )
     );
     --_v-week-number-case: var(
@@ -586,13 +722,7 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-month-view__day {
-    --_v-date-size: var(
-      --journal-cell-date-size-narrow,
-      var(
-        --journal-saved-cell-date-size-narrow,
-        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
-      )
-    );
+    --_v-date-size: var(--journal-cell-date-size-narrow, var(--journal-saved-cell-date-size-narrow, 1em));
     --_v-date-weight: var(
       --journal-cell-date-weight-narrow,
       var(

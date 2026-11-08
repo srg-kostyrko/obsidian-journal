@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "将周配置应用于库中的所有日期",
   "calendar_appearance_section_title": "日历外观",
   "calendar_appearance_open": "打开",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "周末：{days}",
+        "mode=none": "无周末"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "在日历设置中更改",
   "calendar_appearance_preview": "预览",
   "calendar_appearance_width_label": "宽度",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "所选日期",
         "part=active": "已打开的笔记",
         "part=outside": "本月以外的日期",
+        "part=currentWeek": "本周",
+        "part=weekend": "周末",
         "part=heading": "月份标题",
         "part=weekday": "星期标题",
         "part=weekNumber": "周数",
@@ -103,6 +116,7 @@
         "family=visibility": "可见性",
         "family=label": "文字标签",
         "family=text": "文本",
+        "family=divider": "分隔线",
         "family=highlight": "高亮",
         "family=box": "单元格框"
       }
@@ -131,12 +145,18 @@
         "control=highlight_text_color": "文本颜色",
         "control=highlight_text_weight": "文本字重",
         "control=highlight_text_italic": "文本斜体",
+        "control=highlight_week_number_text_color": "周数颜色",
+        "control=highlight_week_number_text_weight": "周数字重",
+        "control=highlight_week_number_text_italic": "周数斜体",
         "control=highlight_over": "显示在装饰之上",
         "control=text_size": "尺寸",
         "control=text_weight": "字重",
         "control=text_italic": "斜体",
         "control=text_color": "颜色",
         "control=text_case": "大小写",
+        "control=divider_divider": "分隔线",
+        "control=divider_divider_color": "颜色",
+        "control=divider_divider_width": "宽度",
         "control=box_padding": "内边距",
         "control=box_radius": "圆角半径",
         "control=box_gap": "单元格间距",
@@ -173,6 +193,8 @@
         "option=italic_off": "关",
         "option=over_over": "是",
         "option=over_under": "否",
+        "option=divider_shown": "显示",
+        "option=divider_hidden": "隐藏",
         "option=case_none": "原样",
         "option=case_upper": "大写",
         "option=case_lower": "小写",
@@ -182,14 +204,18 @@
   ],
   "calendar_appearance_default": "默认",
   "calendar_appearance_default_resolved": "默认（{value}）",
+  "calendar_appearance_default_grows": "默认（随宽度增长）",
   "calendar_appearance_unchanged": "不变",
   "calendar_appearance_narrow_only": "仅窄",
   "calendar_appearance_narrow_only_clear": "使用所有宽度通用的值",
+  "calendar_appearance_narrow_only_clear_stock": "使用窄的默认值",
+  "calendar_appearance_narrow_own": "窄有单独的值",
+  "calendar_appearance_narrow_apply": "也用于窄",
   "calendar_appearance_all_widths": "所有宽度",
   "calendar_appearance_format_suggestions": "建议",
   "calendar_appearance_format_preview": "预览：",
   "calendar_appearance_format_letter": "单字",
-  "calendar_appearance_format_same_as_wide": "与宽相同",
+  "calendar_appearance_format_same_as_wide": "复制宽的格式",
   "calendar_appearance_format_iso_warning": "W 按 ISO 周计数，可能与此日历显示的周行不同。",
   "calendar_appearance_reset": [
     {
@@ -1722,6 +1748,20 @@
   ],
   "calendar_week_placement_label": "默认周数",
   "calendar_week_placement_description": "在设置为“使用全局默认值”的日历块中，周数列的显示位置。",
+  "calendar_weekend_label": "周末日",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "无周末"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "区域设置的周末",
+  "calendar_weekend_custom": "自定义",
   "calendar_timeline_navigation_label": "默认时间线导航",
   "calendar_timeline_navigation_description": "在 calendar-timeline 代码块中显示上一个和下一个时段的按钮。块可以通过其 navigation 选项覆盖此设置。",
   "view_block_config_show_heading_label": "显示月份/年份标题",

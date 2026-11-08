@@ -61,7 +61,10 @@ export function formatWeekday(date: CalendarDate, label: WeekdayLabel): string {
   return narrowWeekdayFormat(activeLocale()).format(date.toJSDate());
 }
 
-/** A weekday column's texts: `name` is its accessible name, `narrow` follows `wide` when unset. */
+/** What a narrow calendar's weekday shows when narrow has no label of its own. */
+export const STOCK_NARROW_WEEKDAY: WeekdayLabel = { type: "letter" };
+
+/** A weekday column's texts: `name` is its accessible name, `narrow` is the stock one letter when unset. */
 export function weekdayTexts(
   date: CalendarDate,
   weekdayLabel: WeekdayLabel,
@@ -69,7 +72,7 @@ export function weekdayTexts(
 ): { wide: string; narrow: string; name: string } {
   return {
     wide: formatWeekday(date, weekdayLabel),
-    narrow: formatWeekday(date, weekdayLabelNarrow ?? weekdayLabel),
+    narrow: formatWeekday(date, weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY),
     name: date.format("dddd"),
   };
 }

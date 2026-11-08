@@ -36,6 +36,9 @@ const highlightEntries = {
   over: v.boolean(),
 };
 
+// Only the current week spans a week number, so only it carries a second text group.
+const currentWeekEntries = { ...highlightEntries, weekNumberText: v.object(highlightTextEntries) };
+
 const textEntries = {
   size: v.string(),
   weight: v.nullable(weightSchema),
@@ -44,17 +47,28 @@ const textEntries = {
   case: v.nullable(caseSchema),
 };
 
+// Only week numbers sit beside the days in a column of their own, so only they carry a divider.
+const weekNumberEntries = {
+  ...textEntries,
+  divider: v.boolean(),
+  dividerColor: colorSchema,
+  dividerWidth: pixelsSchema,
+};
+
 const boxEntries = {
   padding: pixelsSchema,
   radius: v.string(),
   gap: v.string(),
-  minHeight: pixelsSchema,
+  // Null is Default, a row height that grows with the calendar's width; no number can say that.
+  minHeight: v.nullable(pixelsSchema),
 };
 
 type Shape<E extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<E, undefined>>;
 
 export type HighlightValues = Shape<typeof highlightEntries>;
+export type CurrentWeekValues = Shape<typeof currentWeekEntries>;
 export type TextValues = Shape<typeof textEntries>;
+export type WeekNumberValues = Shape<typeof weekNumberEntries>;
 export type BoxValues = Shape<typeof boxEntries>;
 
 export type Overrides<T> = { [K in keyof T]: T[K] | null };
@@ -102,9 +116,8 @@ function overriddenPart<E extends v.ObjectEntries>(entries: E) {
   return v.optional(part, fresh(empty));
 }
 
-// `text` is the only nested group given per-leaf defaults and overrides; a new nested group in
-// `highlightEntries` needs the same spread here and in `narrowHighlightPart`, or it defaults and
-// overrides as a whole.
+// A nested group defaults and overrides as a whole unless it is spread like `text` here and in
+// `narrowHighlightPart`; the current week's parts spread `weekNumberText` the same way.
 function highlightPart(defaults: HighlightValues) {
   return v.optional(
     v.object({
@@ -117,6 +130,26 @@ function highlightPart(defaults: HighlightValues) {
 
 const narrowHighlightPart = v.optional(
   v.object({ ...asOverrides(highlightEntries), text: overriddenPart(highlightTextEntries) }),
+  () => ({}),
+);
+
+function currentWeekPart(defaults: CurrentWeekValues) {
+  return v.optional(
+    v.object({
+      ...withDefaults(currentWeekEntries, defaults),
+      text: defaultedPart(highlightTextEntries, defaults.text),
+      weekNumberText: defaultedPart(highlightTextEntries, defaults.weekNumberText),
+    }),
+    fresh(defaults),
+  );
+}
+
+const narrowCurrentWeekPart = v.optional(
+  v.object({
+    ...asOverrides(currentWeekEntries),
+    text: overriddenPart(highlightTextEntries),
+    weekNumberText: overriddenPart(highlightTextEntries),
+  }),
   () => ({}),
 );
 
@@ -148,12 +181,23 @@ const wideDefaults = {
     text: { color: theme("text-on-accent"), weight: UNCHANGED, italic: UNCHANGED },
   }),
   outside: highlight({ text: { color: theme("text-muted"), weight: UNCHANGED, italic: UNCHANGED } }),
+  weekend: highlight({ style: "none" }),
+  // Text only, not None: None passes every text value through, so the week number's accent could not be stock.
+  currentWeek: {
+    ...highlight({}),
+    weekNumberText: { color: theme("text-accent"), weight: "bold", italic: UNCHANGED },
+  } satisfies CurrentWeekValues,
   heading: text({}),
   // Null, not a copy of the stock: Default is the stock, so an explicit copy would read as a change.
   weekday: text({ size: "0.6em" }),
-  weekNumber: text({}),
-  date: text({}),
-  cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: 26 },
+  weekNumber: {
+    ...text({ size: "0.85em" }),
+    divider: true,
+    dividerColor: theme("background-modifier-border"),
+    dividerWidth: 1,
+  } satisfies WeekNumberValues,
+  date: text({ size: "1.1em" }),
+  cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: null },
 };
 
 const wideSchema = v.object({
@@ -161,9 +205,11 @@ const wideSchema = v.object({
   selected: highlightPart(wideDefaults.selected),
   active: highlightPart(wideDefaults.active),
   outside: highlightPart(wideDefaults.outside),
+  weekend: highlightPart(wideDefaults.weekend),
+  currentWeek: currentWeekPart(wideDefaults.currentWeek),
   heading: defaultedPart(textEntries, wideDefaults.heading),
   weekday: defaultedPart(textEntries, wideDefaults.weekday),
-  weekNumber: defaultedPart(textEntries, wideDefaults.weekNumber),
+  weekNumber: defaultedPart(weekNumberEntries, wideDefaults.weekNumber),
   date: defaultedPart(textEntries, wideDefaults.date),
   cell: defaultedPart(boxEntries, wideDefaults.cell),
 });
@@ -173,9 +219,11 @@ const narrowSchema = v.object({
   selected: narrowHighlightPart,
   active: narrowHighlightPart,
   outside: narrowHighlightPart,
+  weekend: narrowHighlightPart,
+  currentWeek: narrowCurrentWeekPart,
   heading: overriddenPart(textEntries),
   weekday: overriddenPart(textEntries),
-  weekNumber: overriddenPart(textEntries),
+  weekNumber: overriddenPart(weekNumberEntries),
   date: overriddenPart(textEntries),
   cell: overriddenPart(boxEntries),
 });
@@ -183,6 +231,7 @@ const narrowSchema = v.object({
 export type AppearanceParts = v.InferOutput<typeof wideSchema>;
 export type NarrowOverrides = v.InferOutput<typeof narrowSchema>;
 export type NarrowHighlight = NarrowOverrides["today"];
+export type NarrowCurrentWeek = NarrowOverrides["currentWeek"];
 
 const narrowDefaults: NarrowOverrides = v.parse(narrowSchema, {});
 
@@ -193,6 +242,28 @@ export const appearanceSliceSchema = v.object({
 });
 
 export type AppearanceSliceState = v.InferOutput<typeof appearanceSliceSchema>;
+
+/** The shortest row a date fits in: narrow's stock row height, and the floor a wide row grows from. */
+export const ROW_FLOOR_PX = 26;
+
+/** A leaf left out keeps its narrow null; a group recurses, since a group is never null itself. */
+export type DeepPartialNonNull<T> = {
+  readonly [K in keyof T]?: null extends T[K]
+    ? NonNullable<T[K]>
+    : T[K] extends object
+      ? DeepPartialNonNull<T[K]>
+      : T[K];
+};
+
+export type StockNarrow = { readonly [P in keyof NarrowOverrides]?: DeepPartialNonNull<NarrowOverrides[P]> };
+
+// In code, not in `narrow`, so a saved narrow null keeps meaning "no override" and a later stock can still change.
+/** What narrow shows where the user set nothing at narrow, ahead of their wide value. */
+export const STOCK_NARROW: StockNarrow = {
+  selected: { style: "background", strength: 20 },
+  date: { size: "1em" },
+  cell: { gap: "1px", minHeight: ROW_FLOOR_PX },
+};
 
 export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceSchema>(
   "appearance",

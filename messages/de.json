@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Wochenkonfiguration auf alle Datumsangaben im Vault anwenden",
   "calendar_appearance_section_title": "Kalenderdarstellung",
   "calendar_appearance_open": "Öffnen",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Wochenende: {days}",
+        "mode=none": "Kein Wochenende"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "In den Kalendereinstellungen ändern",
   "calendar_appearance_preview": "Vorschau",
   "calendar_appearance_width_label": "Breite",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "Ausgewähltes Datum",
         "part=active": "Geöffnete Notiz",
         "part=outside": "Tage außerhalb des Monats",
+        "part=currentWeek": "Aktuelle Woche",
+        "part=weekend": "Wochenenden",
         "part=heading": "Monatsüberschrift",
         "part=weekday": "Wochentagszeile",
         "part=weekNumber": "Wochennummern",
@@ -103,6 +116,7 @@
         "family=visibility": "Sichtbarkeit",
         "family=label": "Beschriftung",
         "family=text": "Text",
+        "family=divider": "Trennlinie",
         "family=highlight": "Hervorhebung",
         "family=box": "Box"
       }
@@ -131,12 +145,18 @@
         "control=highlight_text_color": "Textfarbe",
         "control=highlight_text_weight": "Textstärke",
         "control=highlight_text_italic": "Text kursiv",
+        "control=highlight_week_number_text_color": "Farbe der Wochennummer",
+        "control=highlight_week_number_text_weight": "Schriftstärke der Wochennummer",
+        "control=highlight_week_number_text_italic": "Wochennummer kursiv",
         "control=highlight_over": "Über Dekorationen",
         "control=text_size": "Größe",
         "control=text_weight": "Schriftstärke",
         "control=text_italic": "Kursiv",
         "control=text_color": "Farbe",
         "control=text_case": "Groß-/Kleinschreibung",
+        "control=divider_divider": "Trennlinie",
+        "control=divider_divider_color": "Farbe",
+        "control=divider_divider_width": "Breite",
         "control=box_padding": "Innenabstand",
         "control=box_radius": "Eckenradius",
         "control=box_gap": "Abstand zwischen Zellen",
@@ -173,6 +193,8 @@
         "option=italic_off": "Aus",
         "option=over_over": "Ja",
         "option=over_under": "Nein",
+        "option=divider_shown": "Angezeigt",
+        "option=divider_hidden": "Ausgeblendet",
         "option=case_none": "Wie geschrieben",
         "option=case_upper": "Großbuchstaben",
         "option=case_lower": "Kleinbuchstaben",
@@ -182,14 +204,18 @@
   ],
   "calendar_appearance_default": "Standard",
   "calendar_appearance_default_resolved": "Standard ({value})",
+  "calendar_appearance_default_grows": "Standard (wächst mit der Breite)",
   "calendar_appearance_unchanged": "Unverändert",
   "calendar_appearance_narrow_only": "Nur schmal",
   "calendar_appearance_narrow_only_clear": "Wert für alle Breiten verwenden",
+  "calendar_appearance_narrow_only_clear_stock": "Standard für schmal verwenden",
+  "calendar_appearance_narrow_own": "Schmal hat einen eigenen Wert",
+  "calendar_appearance_narrow_apply": "Auch bei Schmal verwenden",
   "calendar_appearance_all_widths": "Alle Breiten",
   "calendar_appearance_format_suggestions": "Vorschläge",
   "calendar_appearance_format_preview": "Vorschau:",
   "calendar_appearance_format_letter": "Ein Buchstabe",
-  "calendar_appearance_format_same_as_wide": "Wie bei Breit",
+  "calendar_appearance_format_same_as_wide": "Format von Breit übernehmen",
   "calendar_appearance_format_iso_warning": "W zählt ISO-Wochen, die von den Wochenzeilen dieses Kalenders abweichen können.",
   "calendar_appearance_reset": [
     {
@@ -1877,6 +1903,20 @@
   ],
   "calendar_week_placement_label": "Standard-Wochennummern",
   "calendar_week_placement_description": "Legt fest, wo die Spalte mit den Wochennummern in Kalenderblöcken erscheint, die auf „Globalen Standard verwenden“ eingestellt sind.",
+  "calendar_weekend_label": "Wochenendtage",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Kein Wochenende"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Wochenende der Systemsprache",
+  "calendar_weekend_custom": "Benutzerdefiniert",
   "calendar_timeline_navigation_label": "Standardnavigation der Zeitleiste",
   "calendar_timeline_navigation_description": "Zeigt in calendar-timeline-Codeblöcken Schaltflächen für den vorherigen und nächsten Zeitraum an. Ein Block kann dies mit seiner Option navigation überschreiben.",
   "view_block_config_show_heading_label": "Monat/Jahr-Überschrift anzeigen",

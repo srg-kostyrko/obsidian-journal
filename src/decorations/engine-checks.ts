@@ -157,7 +157,7 @@ export function checkDate(condition: JournalDecorationDateCondition, period: Per
 
 export function checkWeekday(condition: JournalDecorationWeekdayCondition, period: Period): boolean {
   if (condition.weekdays.length === 0) return false;
-  const weekday = Number(period.anchor.format("d"));
+  const weekday = period.anchor.weekday();
   return condition.weekdays.includes(weekday);
 }
 

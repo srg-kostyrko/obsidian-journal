@@ -1,4 +1,4 @@
-import { MonthPeriod, type AnchorString, type CalendarDate } from "@/calendar";
+import { MonthPeriod, WeekPeriod, type AnchorString, type CalendarDate } from "@/calendar";
 
 import { CHIP_ORDER, type PartKey } from "../appearance-parts";
 
@@ -10,7 +10,7 @@ export interface PreviewSample {
 }
 
 /** Sample states around the real today, each on a day of its own. */
-export function sampleDays(today: CalendarDate): PreviewSample {
+export function sampleDays(today: CalendarDate, weekend: ReadonlySet<number>): PreviewSample {
   const month = MonthPeriod.containing(today);
   const ahead = today.shift(2, "d");
   const clamped = month.contains(ahead) ? ahead : month.end;
@@ -18,7 +18,12 @@ export function sampleDays(today: CalendarDate): PreviewSample {
   const active = clamped.isSame(today) ? today.shift(-2, "d") : clamped;
   // A day of its own: the open note outranks Selected's text and fills under its accent ring, so a
   // shared day would hide edits to Selected. It carries the decoration, which Selected draws over.
-  const selected = [...month.days()].find((day) => !day.isSame(today) && !day.isSame(active)) ?? month.start;
+  // A weekend day in today's week where there is one, so this one day also shows Current week and Weekends.
+  const free = (day: CalendarDate): boolean => month.contains(day) && !day.isSame(today) && !day.isSame(active);
+  const selected =
+    [...WeekPeriod.containing(today).days()].find((day) => free(day) && weekend.has(day.weekday())) ??
+    [...month.days()].find(free) ??
+    month.start;
   return {
     month,
     selected: selected.toAnchor(),
@@ -27,7 +32,14 @@ export function sampleDays(today: CalendarDate): PreviewSample {
   };
 }
 
-const STATES = ["active", "selected", "today", "outside"] as const;
+const STATES = [
+  ["active", "data-active"],
+  ["selected", "data-selected"],
+  ["today", "data-today"],
+  ["currentWeek", "data-current-week"],
+  ["weekend", "data-weekend"],
+  ["outside", "data-outside"],
+] as const;
 
 const PREVIEW_PARTS: Readonly<Record<string, readonly PartKey[]>> = {
   date: ["date", "cell"],
@@ -41,8 +53,9 @@ const PREVIEW_PARTS: Readonly<Record<string, readonly PartKey[]>> = {
 /** Every part the element belongs to, in the order a click should offer them. */
 export function partsAt(target: Element): readonly PartKey[] {
   const parts = new Set<PartKey>();
-  const cell = target.closest(".notes-calendar-cell");
-  for (const state of STATES) if (cell?.hasAttribute(`data-${state}`) === true) parts.add(state);
+  // A weekend column's header is no cell but carries the band's state all the same.
+  const cell = target.closest(".notes-calendar-cell, [data-preview-part='weekday']");
+  for (const [state, attribute] of STATES) if (cell?.hasAttribute(attribute) === true) parts.add(state);
   const part = target.closest<HTMLElement>("[data-preview-part]")?.dataset.previewPart;
   const keys = PREVIEW_PARTS[part ?? ""] ?? [];
   for (const key of keys) parts.add(key);
@@ -50,5 +63,5 @@ export function partsAt(target: Element): readonly PartKey[] {
   const ordered = CHIP_ORDER.filter((key) => parts.has(key));
   // A day is mostly its state, so a state leads there; a label (the month name, a week number) is
   // what was clicked, so it leads and the today it contains follows.
-  return part === "date" ? ordered : [...keys, ...ordered.filter((key) => !keys.includes(key))];
+  return part === "date" || part === "weekday" ? ordered : [...keys, ...ordered.filter((key) => !keys.includes(key))];
 }

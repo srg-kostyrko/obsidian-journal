@@ -2,7 +2,9 @@ import { compileStyle, parse } from "vue/compiler-sfc";
 
 import { publicName, savedName, type CatalogEntry } from "./appearance/appearance-catalog";
 import previewSource from "./appearance/ui/AppearancePreview.vue?raw";
+import bandSource from "./ui/NotesCalendarBand.vue?raw";
 import cellSource from "./ui/NotesCalendarCell.vue?raw";
+import dividerSource from "./ui/NotesCalendarDivider.vue?raw";
 import monthViewSource from "./ui/NotesMonthView.vue?raw";
 import weekViewSource from "./ui/NotesWeekView.vue?raw";
 
@@ -14,6 +16,8 @@ export interface ScopedRule {
   readonly selector: string;
   /** The `@container` params the rule sits under, or null outside any container query. */
   readonly container: string | null;
+  /** The `@supports` params the rule sits under, or null outside any feature query. */
+  readonly supports: string | null;
   readonly declarations: ReadonlyMap<string, string>;
 }
 
@@ -27,6 +31,7 @@ export function scopedStyleRules(source: string): readonly ScopedRule[] {
     compiled.rawResult?.root.walkRules((rule) => {
       const parent = rule.parent;
       const container = parent && "params" in parent && parent.name === "container" ? parent.params : null;
+      const supports = parent && "params" in parent && parent.name === "supports" ? parent.params : null;
       const declarations = new Map<string, string>();
       rule.walkDecls((declaration) => {
         declarations.set(
@@ -34,16 +39,21 @@ export function scopedStyleRules(source: string): readonly ScopedRule[] {
           declaration.value.replaceAll(/\s+/g, " ").replaceAll(/\(\s/g, "(").replaceAll(/\s\)/g, ")").trim(),
         );
       });
-      rules.push({ selector: rule.selector.replaceAll("[data-v-t]", ""), container, declarations });
+      rules.push({ selector: rule.selector.replaceAll("[data-v-t]", ""), container, supports, declarations });
     });
   }
   return rules;
 }
 
 /** The scoped rules of every component that reads the appearance catalog. */
-export function calendarStyleRules(): Record<"cell" | "monthView" | "weekView" | "preview", readonly ScopedRule[]> {
+export function calendarStyleRules(): Record<
+  "cell" | "band" | "divider" | "monthView" | "weekView" | "preview",
+  readonly ScopedRule[]
+> {
   return {
     cell: scopedStyleRules(cellSource),
+    band: scopedStyleRules(bandSource),
+    divider: scopedStyleRules(dividerSource),
     monthView: scopedStyleRules(monthViewSource),
     weekView: scopedStyleRules(weekViewSource),
     preview: scopedStyleRules(previewSource),

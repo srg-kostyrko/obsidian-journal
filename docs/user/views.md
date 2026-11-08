@@ -196,7 +196,8 @@ to all of them at once; there is no per-view appearance.
 
 At the top is a panel headed **Preview**, whose switch moves between **Wide** and **Narrow**. A calendar counts as narrow when the
 calendar itself is narrower than about 28em, however wide the window is — a calendar in a slim
-sidebar, say. Changes made under **Wide** apply at every width. Changes made under **Narrow** apply
+sidebar, say. Changes made under **Wide** apply at every width, except for the few values
+[narrow calendars](#narrow-calendars) keep a default of their own for. Changes made under **Narrow** apply
 only to narrow calendars, and take the place of the all-widths value there.
 
 Below the switch is the preview: a sample month around today, drawn at the width you are editing —
@@ -211,17 +212,20 @@ and picked with Enter or Space. Where a click lands on more than one part, one i
 here**, under the preview, lists the others so you can switch to the one you meant. On a day, its
 state comes first: today's date edits **Today**, the open note's day **Open note**, and the selected
 date **Selected date**, each with **Date number** and **Cells** under **Also here**. On the month name
-or a week number, that label comes first, and the **Today** it contains is under **Also here**.
+or a week number, that label comes first; the current week's number lists **Current week** under **Also
+here**. A click on the divider beside the week numbers edits **Week numbers**.
 **Editing** lists every part too, so you can pick one without the preview:
 
 - **Month heading** — the month and year above the grid.
 - **Weekday header** — the row of weekday names.
-- **Week numbers**
+- **Week numbers** — the week numbers and the divider between them and the days.
 - **Month grid** — how many rows a month takes. It has no look of its own to edit, so it is reached from
   **Editing**, or as the last part under **Also here** after a click inside the grid.
 - **Date number** — the day's number in each cell.
 - **Today**, **Selected date** (the view's selected date), **Open note** (the note open in the
   editor) and **Days outside the month** — the four highlights.
+- **Current week** and **Weekends** — two more highlights, drawn as
+  [bands](#weekends-and-the-current-week) across the grid.
 - **Cells** — the size and spacing of every cell.
 
 An outline in the preview marks the part you are editing: every day a highlight applies to, the
@@ -239,16 +243,16 @@ value.
 ### What each part offers
 
 The controls are headed by the part's name and the width they apply to, **All widths** or
-**Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Label**, **Text**, **Highlight** or
+**Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Label**, **Text**, **Divider**, **Highlight** or
 **Box**), each open to start with and folded away by clicking its name. Every one but a highlight's **Style** shows, beneath its name, the
 CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
 **Narrow**, the name shown is the narrow one, ending in `-narrow`.
 
-The four highlights share one set:
+The highlights share one set:
 
 - **Style** — **Text only**, **Ring**, **Background** or **None**. Out of the box, today is
-  text only, the selected date a ring, the open note a background, and days outside the month text
-  only. **None** turns the highlight off.
+  text only, the selected date a ring (a background on [narrow calendars](#narrow-calendars)), the open
+  note a background, and days outside the month text only. **None** turns the highlight off.
 - **Highlight color** — the ring's or the background's color. Shown for **Ring** and **Background**.
 - **Ring width** — 1 to 4 pixels. Shown for **Ring**.
 - **Strength** — how strongly the background color fills the day, from 5% to 100%. Shown for
@@ -257,22 +261,70 @@ The four highlights share one set:
   Not shown for **None**.
 - **Over decorations** — whether the ring or background, and this highlight's text, are drawn over a
   day's [decorations](/decorations) or under them. Shown for **Ring** and **Background**; out of the
-  box, only the selected date's ring is drawn over.
+  box, only the selected date's ring, or its tint on narrow calendars, is drawn over.
+
+**Today** marks today's day alone. The week number and the month, quarter and year headings that hold
+today look like any other; the current week's number is marked by [**Current
+week**](#weekends-and-the-current-week) instead.
 
 The text parts — **Month heading**, **Weekday header**, **Week numbers** and **Date number** — offer
 **Size**, **Weight**, **Italic**, **Color** and **Case** (**As written**, **Uppercase**,
 **Lowercase** or **Title case**). **Weight**, **Italic**, **Color** and **Case** also offer
 **Default**, which leaves the value to the calendar's stock style. **Default** names what that
-style comes to under your theme, such as **Default (Bold)** for the week numbers' weight, and a
+style comes to under your theme, such as **Default (Normal)** for the week numbers' weight, and a
 **Default** color shows a swatch of it; where the editor cannot tell, it reads plain **Default**.
 While you edit **Narrow**, a
 narrow-only value goes back to the all-widths one through its
 [**Narrow only**](#narrow-only-values-and-resetting) tag instead.
 
+Out of the box the week numbers are smaller than the dates, in normal weight and the theme's muted
+color, and their column is as wide as a day's. **Week numbers** also has a **Divider** section, after
+**Text**, for the line between the week numbers and the days: **Divider** (**Shown** or **Hidden**), and,
+while it is shown, its **Color** and its **Width**, 1 to 4 pixels. It is shown out of the box, one pixel
+in the theme's border color. It runs from the first row of weeks to the bottom of the grid, in the gap
+beside the week numbers, so a filled week number, such as an open weekly note, never covers it; with
+week numbers after the weekdays it moves with them.
+
 **Cells** offers **Padding**, **Corner radius**, **Gap between cells** and **Row height**, the
-smallest height a row of cells takes. The decoration editor's style canvas draws its sample cell at
-the all-widths row height, so a style is previewed at the size a wide calendar shows it; a
-narrow-only row height does not change the canvas.
+smallest height a row of cells takes. Out of the box the row height is **Default (grows with width)**:
+rows grow with the calendar's width, from 26 pixels up to 64, and the slider sits on the height the
+preview's rows have now. Once you move it, a button beside it puts **Default** back. Dates are drawn a
+little larger than the surrounding text on wide calendars. The decoration editor's style canvas draws
+its sample cell at the all-widths row height, or at 26 pixels while that is **Default**, so a style is
+previewed at a size a calendar shows it; a narrow-only row height does not change the canvas.
+
+### Weekends and the current week {#weekends-and-the-current-week}
+
+**Current week** and **Weekends** have the same controls as the other highlights, but they color a stretch
+of the grid, not a single day. Out of the box **Weekends** is **None**, so nothing changes until you style
+it, and **Current week** is **Text only**, which draws no band and leaves the days alone but shows the
+current week's number in the accent color and bold.
+
+- **Weekends** draws one band down each run of adjacent weekend columns, from the weekday header to the
+  last row, gaps between cells included. Which days are the weekend is the **Weekend days** setting in the
+  Calendar block of the main settings page — see [Weeks](/periods#weeks). The editor shows the current
+  weekend days and a button, **Change in calendar settings**, that takes you back there. Weekend days that
+  are not next to each other each get a band: in a week that starts on Sunday, a Saturday and Sunday weekend
+  gives one band at each edge of the grid. When a Month calendar or Week calendar block hides days with **Days of the week**, or a
+  [timeline](/reference/code-blocks) with `hiddenWeekdays`, runs are counted over the columns that remain, so in a week that starts on Monday, with Saturday hidden, a Friday,
+  Saturday and Sunday weekend is one band over Friday and Sunday. Hiding every weekend day leaves no band. The weekday names of a weekend column
+  take the band's text color, weight and italic, but not its fill.
+- **Current week** draws one band across the row that holds today, the week number included. It styles the
+  week number apart from its days: **Text color**, **Text weight** and **Text italic** apply to the days, and
+  **Week number color**, **Week number weight** and **Week number italic** to the week number. Choosing
+  **None** turns both off, so the current week's number goes back to looking like the others.
+  In a grid that hides the days outside the month, any row of today's week that shows at least one day gets
+  the band, so a week split across two months of a timeline is marked in both; a row of hidden days alone
+  gets none. A Week calendar block, which shows a single week, never draws one, and its days take none of the
+  current week's text, but its week number still takes the week number's text while the week shown holds
+  today. A timeline that shows a single week draws the band.
+
+A day that is several things at once takes its text from the order the [**Unchanged**](#unchanged)
+section lists. Like the other highlights, a band is drawn under the days by default, behind everything in them; with **Over decorations** on it is
+drawn above the whole day, so a background there also tints the day's number and its marks, not just the
+decorations, and a weekend band also tints the weekday name at the head of its column.
+When both bands are under the days, or both over, the weekend band sits below the current-week band, so a day
+in both shows the current week's fill on top. A band drawn over the days sits above any band drawn under them.
 
 ### Visibility
 
@@ -324,11 +376,15 @@ The weekday's suggestions include **One letter**, which shows the locale's narro
 `M` for Monday in English. It is a choice, not a pattern: the box stays empty, and no typed text can
 mean it.
 
-The weekday is the only label with a value of its own at narrow width. Under **Narrow**, its box and
-suggestions edit the format used by narrow calendars. **Same as wide** in the list, or clearing the box,
-makes narrow calendars use the wide format again; typing a pattern, even the default `ddd`, sets a format for
-narrow calendars alone. Out of the box the narrow weekday is the same as wide. The other formats have a
-single value and carry an **All widths** note under both widths.
+The weekday is the only label with a value of its own at narrow width, and out of the box narrow
+calendars show **One letter**. Under **Narrow**, its box and suggestions edit the format used by narrow
+calendars: typing a pattern, even the default `ddd`, or choosing a suggestion sets a format for narrow
+calendars alone, and clearing the box goes back to one letter. **Copy wide format** in the list copies the
+format chosen under **Wide** to narrow calendars; a later change under **Wide** does not follow it. Under
+**Wide**, while narrow calendars show a weekday other than the wide format's, whether their one letter or
+a format set under **Narrow**, the weekday's name carries a
+[**Narrow has its own value**](#narrow-only-values-and-resetting) tag. The other formats have a single
+value and carry an **All widths** note under both widths.
 
 The week numbers' **Format** warns when it contains an ISO week token outside square brackets, such as `W`
 or `WW`, and the week grid is not ISO, because those count ISO weeks, which can differ from the weeks the
@@ -345,26 +401,56 @@ override them.
 
 A highlight's **Text color**, **Text weight** and **Text italic** can be **Unchanged**: this highlight
 leaves that part of the text alone. A day that is several things at once then shows the next
-highlight's value instead, in this order — the open note, the selected date, today, then days outside
-the month — and, when none of them sets one, the part's own, such as the date number's. Out of the
-box, every highlight's weight and italic are **Unchanged**, as is the selected date's text color, so
-the ring changes nothing about the number inside it.
+highlight's value instead, in this order — the open note, the selected date, today, the current week,
+the weekend, then days outside the month — and, when none of them sets one, the part's own, such as the date number's. Out of the
+box, every highlight's weight and italic are **Unchanged**, as are the text colors of the selected date,
+the weekends and the current week's days, so the ring changes nothing about the number inside it. The
+current week's number is the exception: its color is the accent and its weight bold.
 
 **Unchanged** needs a WebView that supports CSS container style queries: Obsidian on desktop, iOS 18
 or later, or Android with WebView 111 or later. On older ones, an **Unchanged** text shows the
 part's own color and weight, never a lower highlight's, so a selected day that is also today shows
 the plain number color rather than today's accent.
 
+### Narrow calendars {#narrow-calendars}
+
+A narrow calendar is drawn tighter than a wide one, and out of the box it differs in five ways:
+
+- rows are 26 pixels high, rather than growing with the width;
+- dates are the size of the surrounding text, a little smaller than on a wide calendar;
+- the gap between cells is one pixel;
+- weekday names are one letter, such as `M` for Monday;
+- the selected date is a 20% tint of the accent color, drawn over decorations, rather than a ring.
+
+Opening a note selects its date too, so on the open note's own day the tint draws over the open note's
+fill and shades it toward the accent color. On a decorated day the open note's fill sits under the
+decoration, and the tint is what still shows the day is selected. On a wide calendar the selected date's
+ring shows around the open note's fill instead.
+
+These narrow defaults win over a value set under **Wide**: a date size chosen under **Wide**, say, does
+not reach narrow calendars, which keep their own. Under **Wide**, each control this applies to — the
+selected date's **Style** and **Strength**, the date number's **Size**, and the cells' **Gap between
+cells** and **Row height** — and the weekday's format carry a **Narrow has its own value** tag, with
+**Use at narrow too** beside it to copy the wide value to narrow calendars as a narrow-only value. A
+**Row height** left at **Default** has nothing to copy, so it shows the tag alone. A wide value that is
+already the narrow default carries no tag, since narrow calendars show it either way.
+
+A [timeline](/reference/code-blocks) in `calendar` or `quarter` mode draws each month at about a third
+of the note's width, so in all but a very wide note its months are narrow calendars and look this way.
+
 ### Narrow-only values and resetting
 
 While you edit **Narrow**, a control that has a narrow-only value carries a **Narrow only** tag next
-to its name. Click the tag to remove that value, so the all-widths value applies at narrow width too.
+to its name. Click the tag to remove that value, so narrow calendars go back to their own default where
+they have [one](#narrow-calendars), and take the all-widths value everywhere else. Under **Wide**, the
+same control says **Narrow has its own value** while that value differs from the wide one, and **Use at
+narrow too** beside it copies the wide value over it.
 
 The button beside the part's name, above its controls, resets that part for the width you are editing:
 **Reset to default** under **Wide** puts the part's all-widths values back to their defaults, and
 **Reset narrow overrides** under **Narrow** removes the part's narrow-only values and leaves the
-all-widths ones alone. Under **Narrow**, the **Weekday header** also clears its narrow weekday format, so
-it follows the wide one. Under **Wide**, **Reset to default** also puts the part's formats back to their
+all-widths ones alone, so narrow calendars go back to their own defaults. Under **Narrow**, the
+**Weekday header** also clears its narrow weekday format, so narrow calendars show one letter again. Under **Wide**, **Reset to default** also puts the part's formats back to their
 defaults. Either is dimmed when there is nothing to reset.
 
 ### Changing it with a CSS snippet
@@ -376,8 +462,13 @@ snippet that sets one, on `body` or anywhere else, wins over the value chosen in
 `!important`, and the editor's preview shows it too. Most names follow the part and the control, but
 three do not: **Over decorations** is `--journal-cell-<state>-layer`, `1` for over and `-1` for under,
 as in `--journal-cell-today-layer`; **Row height** is `--journal-cell-cell-min-height`; and **Week
-numbers** are `--journal-cell-week-number-*`. A snippet can also set a highlight's text color,
-weight or italic to `unchanged`.
+numbers** are `--journal-cell-week-number-*`, the divider included, which a width of `0px` hides. A
+snippet can also set a highlight's text color, weight or italic to `unchanged`.
+
+Five values have a default of their own on [narrow calendars](#narrow-calendars), so their wide names do
+not reach them: `--journal-cell-date-size`, `--journal-cell-cell-gap`, `--journal-cell-cell-min-height`,
+`--journal-cell-selected-ring-width` and `--journal-cell-selected-strength`. To change one there, set its
+`-narrow` name as well.
 
 ## Examples
 

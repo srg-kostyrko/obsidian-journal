@@ -40,6 +40,17 @@
   "calendar_apply_globally_title": "Застосувати конфігурацію тижня до всіх дат у сховищі",
   "calendar_appearance_section_title": "Відображення календаря",
   "calendar_appearance_open": "Відкрити",
+  "calendar_appearance_weekend_summary": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=some": "Вихідні: {days}",
+        "mode=none": "Без вихідних"
+      }
+    }
+  ],
+  "calendar_appearance_weekend_open_settings": "Змінити в налаштуваннях календаря",
   "calendar_appearance_preview": "Попередній перегляд",
   "calendar_appearance_width_label": "Ширина",
   "calendar_appearance_width": [
@@ -84,6 +95,8 @@
         "part=selected": "Вибрана дата",
         "part=active": "Відкрита нотатка",
         "part=outside": "Дні поза місяцем",
+        "part=currentWeek": "Поточний тиждень",
+        "part=weekend": "Вихідні",
         "part=heading": "Заголовок місяця",
         "part=weekday": "Заголовок днів тижня",
         "part=weekNumber": "Номери тижнів",
@@ -103,6 +116,7 @@
         "family=visibility": "Видимість",
         "family=label": "Підпис",
         "family=text": "Текст",
+        "family=divider": "Роздільник",
         "family=highlight": "Виділення",
         "family=box": "Комірка"
       }
@@ -131,12 +145,18 @@
         "control=highlight_text_color": "Колір тексту",
         "control=highlight_text_weight": "Насиченість тексту",
         "control=highlight_text_italic": "Курсив тексту",
+        "control=highlight_week_number_text_color": "Колір номера тижня",
+        "control=highlight_week_number_text_weight": "Насиченість номера тижня",
+        "control=highlight_week_number_text_italic": "Курсив номера тижня",
         "control=highlight_over": "Поверх оформлення",
         "control=text_size": "Розмір",
         "control=text_weight": "Насиченість",
         "control=text_italic": "Курсив",
         "control=text_color": "Колір",
         "control=text_case": "Регістр",
+        "control=divider_divider": "Роздільник",
+        "control=divider_divider_color": "Колір",
+        "control=divider_divider_width": "Товщина",
         "control=box_padding": "Внутрішній відступ",
         "control=box_radius": "Радіус кутів",
         "control=box_gap": "Проміжок між комірками",
@@ -173,6 +193,8 @@
         "option=italic_off": "Вимк.",
         "option=over_over": "Так",
         "option=over_under": "Ні",
+        "option=divider_shown": "Показано",
+        "option=divider_hidden": "Приховано",
         "option=case_none": "Як написано",
         "option=case_upper": "Великі літери",
         "option=case_lower": "Малі літери",
@@ -182,14 +204,18 @@
   ],
   "calendar_appearance_default": "За замовчуванням",
   "calendar_appearance_default_resolved": "За замовчуванням ({value})",
+  "calendar_appearance_default_grows": "За замовчуванням (росте з шириною)",
   "calendar_appearance_unchanged": "Без змін",
   "calendar_appearance_narrow_only": "Лише вузький",
   "calendar_appearance_narrow_only_clear": "Використати значення для всіх ширин",
+  "calendar_appearance_narrow_only_clear_stock": "Використати значення за замовчуванням для вузького",
+  "calendar_appearance_narrow_own": "Вузький має власне значення",
+  "calendar_appearance_narrow_apply": "Використати й для вузького",
   "calendar_appearance_all_widths": "Усі ширини",
   "calendar_appearance_format_suggestions": "Варіанти",
   "calendar_appearance_format_preview": "Попередній перегляд:",
   "calendar_appearance_format_letter": "Одна літера",
-  "calendar_appearance_format_same_as_wide": "Як у широкому",
+  "calendar_appearance_format_same_as_wide": "Скопіювати формат широкого",
   "calendar_appearance_format_iso_warning": "W рахує тижні за ISO, і вони можуть не збігатися з рядками тижнів у цьому календарі.",
   "calendar_appearance_reset": [
     {
@@ -1758,6 +1784,20 @@
   ],
   "calendar_week_placement_label": "Номери тижнів за замовчуванням",
   "calendar_week_placement_description": "Де стовпець із номером тижня відображається в блоках календаря, для яких встановлено значення «Використовувати глобальне значення за замовчуванням».",
+  "calendar_weekend_label": "Вихідні дні",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Без вихідних"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Вихідні за локаллю",
+  "calendar_weekend_custom": "Власні",
   "calendar_timeline_navigation_label": "Навігація часової шкали за замовчуванням",
   "calendar_timeline_navigation_description": "Показує кнопки переходу до попереднього та наступного періоду в блоках коду calendar-timeline. Блок може перевизначити це параметром navigation.",
   "view_block_config_show_heading_label": "Показати заголовок місяць/рік",

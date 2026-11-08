@@ -2,7 +2,7 @@ import { fireEvent } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, type AnchorString, type WeekPlacement } from "@/calendar";
+import { CalendarDate, type AnchorString, type WeekendSetting, type WeekPlacement } from "@/calendar";
 import type { MonthRows, OutsideDays } from "@/calendar/settings/display-slice";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
@@ -46,6 +46,8 @@ interface TimelineScenario {
   readonly showHeading?: boolean;
   readonly showWeekdays?: boolean;
   readonly monthRows?: MonthRows;
+  readonly weekend?: WeekendSetting;
+  readonly mondayStart?: boolean;
 }
 
 function journalEntry(journalName: string, anchorDate: string): JournalEntry {
@@ -58,6 +60,7 @@ async function renderTimeline(config: TimelineBlockConfig, scenario: TimelineSce
     data: {
       journals: scenario.journals,
       shelves: scenario.shelves ?? {},
+      ...(scenario.mondayStart === true && { calendar: { mode: "custom", dow: 1, doy: 4, global: false } }),
       calendarDisplay: {
         timelineNavigation: scenario.timelineNavigation ?? false,
         ...(scenario.weekPlacement !== undefined && { weekPlacement: scenario.weekPlacement }),
@@ -65,6 +68,7 @@ async function renderTimeline(config: TimelineBlockConfig, scenario: TimelineSce
         ...(scenario.showHeading !== undefined && { showHeading: scenario.showHeading }),
         ...(scenario.showWeekdays !== undefined && { showWeekdays: scenario.showWeekdays }),
         ...(scenario.monthRows !== undefined && { monthRows: scenario.monthRows }),
+        ...(scenario.weekend !== undefined && { weekend: scenario.weekend }),
       },
     },
   });
@@ -352,6 +356,20 @@ describe("TimelineCodeBlock", () => {
 
       expect(container.querySelectorAll(".notes-week-view__weekday").length).toBe(5);
     });
+
+    // Runs are counted over the visible columns, so in a Monday-start grid a hidden Saturday joins Friday and Sunday.
+    it.each(["month", "week"] as const)(
+      "draws one %s band over Friday and Sunday when Saturday is hidden",
+      async (mode) => {
+        const { container } = await renderDaily(
+          { mode, hiddenWeekdays: [6] },
+          { weekend: { type: "custom", days: [5, 6, 0] }, mondayStart: true },
+        );
+
+        const bands = [...container.querySelectorAll<HTMLElement>('.notes-calendar-band[data-band="weekend"]')];
+        expect(bands.map((band) => band.style.gridColumn)).toEqual(["7 / span 2"]);
+      },
+    );
   });
 
   describe("navigation row", () => {
