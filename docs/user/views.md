@@ -202,6 +202,9 @@ A container for toolbar items such as buttons and the shelf selector. **Add tool
 looks: the month and week calendars in views, and the calendars of timeline code blocks. It applies
 to all of them at once; there is no per-view appearance.
 
+![The Calendar appearance editor with Today chosen for editing](/assets/views-appearance-editor-light.png){.light-only}
+![The Calendar appearance editor with Today chosen for editing](/assets/views-appearance-editor-dark.png){.dark-only}
+
 At the top is a panel headed **Preview**, whose switch moves between **Wide** and **Narrow**. A calendar counts as narrow when the
 calendar itself is narrower than about 28em, however wide the window is — a calendar in a slim
 sidebar, say. Changes made under **Wide** apply at every width, except for the few values

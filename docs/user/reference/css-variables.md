@@ -172,18 +172,22 @@ are not part of it either.
 
 ## Examples
 
-### Today as a ring
+### Today with a background
 
 ```css
 body {
-  --journal-cell-today-ring-width: 2px;
   --journal-cell-today-color: var(--color-orange);
+  --journal-cell-today-strength: 0.3;
 }
 ```
 
-Today keeps its accent text and gains an orange ring. Today is drawn under decorations, so on a day
-with a filled decoration the ring sits under the fill; add `--journal-cell-today-layer: 1;` to draw it
-over.
+Today gets an orange tint and keeps its accent text. A view selects today when it opens, so the
+selected date's ring is drawn around the tint. Today is drawn under decorations, so on a day with a
+filled decoration the tint sits under the fill, and on the open note's day the open note's fill takes
+its place.
+
+![Today tinted orange inside the selected date's ring](/assets/css-variables-today-background-light.png){.light-only}
+![Today tinted orange inside the selected date's ring](/assets/css-variables-today-background-dark.png){.dark-only}
 
 ### A weekend band
 
@@ -195,6 +199,9 @@ body {
 ```
 
 A pale blue band runs down each run of weekend columns, under the days' decorations.
+
+![A blue band down the Saturday and Sunday columns](/assets/css-variables-weekend-band-light.png){.light-only}
+![A blue band down the Saturday and Sunday columns](/assets/css-variables-weekend-band-dark.png){.dark-only}
 
 ### Taller rows in narrow calendars
 
