@@ -1,0 +1,38 @@
+{
+  "version": 8,
+  "logging": { "level": "debug" },
+  "journals": {
+    "Daily": {
+      "name": "Daily",
+      "write": { "type": "day" },
+      "folder": "Journal/Daily",
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [{ "type": "has-note" }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": { "type": "theme", "name": "interactive-accent" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
