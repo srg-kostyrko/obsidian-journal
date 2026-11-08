@@ -131,6 +131,14 @@ around the selected date.
 Each entry is drawn with its journal's
 [Calendar interval lines](/navigation-blocks#calendar-interval-lines) and its decorations.
 
+The rows of the interval holding today, of the one holding the selected date and of the open note
+take the **Today**, **Selected date** and **Open note** highlights from
+[Calendar appearance](#calendar-appearance), and every row takes the **Corner radius** and **Padding**
+set under **Cells** — the narrow values when the block is narrower than about 28em. A row counts as
+today's or the selected one when its interval contains that date. Today's text color recolors only
+text still on the default color, so a segment given a text color of its own keeps it; the open note's and
+the selected date's text color win over every segment's.
+
 ### Notelets
 
 Lists the notelets of the note you are reading, or of a window around the view's date.
@@ -197,6 +205,9 @@ wraps item by item.
 **Calendar appearance**, on the main settings page, opens an editor for how every calendar grid
 looks: the month and week calendars in views, and the calendars of timeline code blocks. It applies
 to all of them at once; there is no per-view appearance.
+
+![The Calendar appearance editor with Today chosen for editing](/assets/views-appearance-editor-light.png){.light-only}
+![The Calendar appearance editor with Today chosen for editing](/assets/views-appearance-editor-dark.png){.dark-only}
 
 At the top is a panel headed **Preview**, whose switch moves between **Wide** and **Narrow**. A calendar counts as narrow when the
 calendar itself is narrower than about 28em, however wide the window is — a calendar in a slim
@@ -274,7 +285,7 @@ week**](#weekends-and-the-current-week) instead.
 The text parts — **Month heading**, **Weekday header**, **Week numbers** and **Date number** — offer
 **Size**, **Weight**, **Italic**, **Color** and **Case** (**As written**, **Uppercase**,
 **Lowercase** or **Title case**). **Weight**, **Italic**, **Color** and **Case** also offer
-**Default**, which leaves the value to the calendar's stock style. **Default** names what that
+**Default**, which leaves the value to the calendar's default style. **Default** names what that
 style comes to under your theme, such as **Default (Normal)** for the week numbers' weight, and a
 **Default** color shows a swatch of it; where the editor cannot tell, it reads plain **Default**.
 While you edit **Narrow**, a
@@ -459,20 +470,10 @@ defaults. Either is dimmed when there is nothing to reset.
 
 ### Changing it with a CSS snippet
 
-The editor keeps its values to itself; the variable a control shows is the public one a
-[CSS snippet](https://help.obsidian.md/snippets) sets to override it. Each is a `--journal-cell-*`
-variable, such as `--journal-cell-today-color`, and each has a narrow form ending in `-narrow`. A
-snippet that sets one, on `body` or anywhere else, wins over the value chosen in the editor, without
-`!important`, and the editor's preview shows it too. Most names follow the part and the control, but
-three do not: **Over decorations** is `--journal-cell-<state>-layer`, `1` for over and `-1` for under,
-as in `--journal-cell-today-layer`; **Row height** is `--journal-cell-cell-min-height`; and **Week
-numbers** are `--journal-cell-week-number-*`, the divider included, which a width of `0px` hides. A
-snippet can also set a highlight's text color, weight or italic to `unchanged`.
-
-Five values have a default of their own on [narrow calendars](#narrow-calendars), so their wide names do
-not reach them: `--journal-cell-date-size`, `--journal-cell-cell-gap`, `--journal-cell-cell-min-height`,
-`--journal-cell-selected-ring-width` and `--journal-cell-selected-strength`. To change one there, set its
-`-narrow` name as well.
+The variable a control shows is the one a [CSS snippet](https://help.obsidian.md/snippets) sets to
+override it. A snippet wins over the editor without `!important`, and the editor's preview shows it
+too. [CSS variables](/reference/css-variables) lists every one, with its default value, the order a
+narrow calendar reads them in, and a few snippets to start from.
 
 ## Examples
 
