@@ -190,7 +190,7 @@ describe("NavBlockLinesEditor", () => {
   it("invokes the flow when Enter is pressed on a focused segment", async () => {
     const { flows } = await mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
-    const segmentEl = screen.getByText("static text");
+    const segmentEl = screen.getByRole("button", { name: "static text" });
     segmentEl.focus();
     await userEvent.keyboard("{Enter}");
     expect(flows.invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
