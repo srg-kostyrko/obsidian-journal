@@ -363,10 +363,11 @@ describe("the calendar's stock look", () => {
         hostNote("daily", "2027-05-14", "```calendar-timeline\nmode: month\noutside: hidden\n```"),
       );
       await openInReadingMode(BLANKS_HOST);
-      await forceWidth(TIMELINE, NARROW_BUT_GROWN);
+      // The open resolves before the fence renders, so a width forced once can land on no block at all.
       const read = await settle(
-        () =>
-          browser.execute(
+        async () => {
+          await forceWidth(TIMELINE, NARROW_BUT_GROWN);
+          return browser.execute(
             (block: string, ems: number) => {
               const host = [...document.querySelectorAll<HTMLElement>(block)].find(
                 (candidate) => candidate.clientWidth > 0,
@@ -384,7 +385,8 @@ describe("the calendar's stock look", () => {
             },
             TIMELINE,
             BREAKPOINT_EMS,
-          ),
+          );
+        },
         (value) => value.inline < value.breakpoint && 0.07 * value.inline > 27,
         `the month timeline did not lay out under the breakpoint at ${NARROW_BUT_GROWN}`,
       );
