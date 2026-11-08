@@ -11,6 +11,17 @@ describe("colorToString", () => {
     expect(colorToString({ type: "theme", name: "text-accent" })).toBe("var(--text-accent)");
   });
 
+  // Obsidian 1.14 stopped defining --text-highlight-bg, so a bare var() painted nothing there.
+  it("falls back to Obsidian's highlight color for the text highlight", () => {
+    expect(colorToString({ type: "theme", name: "text-highlight-bg" })).toBe(
+      "var(--text-highlight-bg, var(--highlight-background-yellow))",
+    );
+  });
+
+  it("gives a name shared with an Object.prototype member no fallback", () => {
+    expect(colorToString({ type: "theme", name: "constructor" })).toBe("var(--constructor)");
+  });
+
   it("returns the raw color string for custom type", () => {
     expect(colorToString({ type: "custom", color: "#ff00aa" })).toBe("#ff00aa");
   });

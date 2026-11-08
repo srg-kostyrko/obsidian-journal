@@ -10,7 +10,8 @@
     "src/notes-calendar/appearance/appearance-catalog.ts",
     "src/notes-calendar/appearance/gate-snippet.ts",
     "src/settings/version.ts",
-    "src/ui/manual.ts"
+    "src/ui/manual.ts",
+    "src/ui/theme-color-list.ts"
   ],
   "compilerOptions": {
     "composite": true,
