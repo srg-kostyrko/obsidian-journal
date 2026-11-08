@@ -447,8 +447,9 @@ describe("readme screenshots — decorations", () => {
       "waited for every written day to carry its has-note dot",
     );
 
-    // Wider than the hero's sidebar: a full-size icon mark widens every cell with it.
-    await widenRightSidebar(520, VIEW_ROOT);
+    // Wider than the hero's sidebar: a full-size icon mark widens every cell with it, and the week-number
+    // column is as wide as a day, so the grid needs eight such tracks.
+    await widenRightSidebar(600, VIEW_ROOT);
     await assertGridFits();
     await settleForCapture();
 
