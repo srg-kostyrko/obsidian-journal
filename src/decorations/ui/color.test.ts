@@ -18,6 +18,10 @@ describe("colorToString", () => {
     );
   });
 
+  it("gives a name shared with an Object.prototype member no fallback", () => {
+    expect(colorToString({ type: "theme", name: "constructor" })).toBe("var(--constructor)");
+  });
+
   it("returns the raw color string for custom type", () => {
     expect(colorToString({ type: "custom", color: "#ff00aa" })).toBe("#ff00aa");
   });

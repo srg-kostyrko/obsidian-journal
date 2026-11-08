@@ -42,12 +42,10 @@ export type ThemeColorName = (typeof THEME_COLORS)[number]["name"];
 
 // Obsidian 1.14 dropped --text-highlight-bg from app.css and reads it only as a theme's override of
 // its successor, which 1.13 and earlier lack; the chain is Obsidian's own.
-const FALLBACKS: Readonly<Partial<Record<string, string>>> = {
-  "text-highlight-bg": "var(--highlight-background-yellow)",
-};
+const FALLBACKS: ReadonlyMap<string, string> = new Map([["text-highlight-bg", "var(--highlight-background-yellow)"]]);
 
 /** The CSS a theme color renders as, on every supported Obsidian. */
 export function themeColorCss(name: string): string {
-  const fallback = FALLBACKS[name];
+  const fallback = FALLBACKS.get(name);
   return fallback === undefined ? `var(--${name})` : `var(--${name}, ${fallback})`;
 }
