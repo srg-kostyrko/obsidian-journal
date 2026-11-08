@@ -150,6 +150,12 @@ describe("resolveCell", () => {
       expect(formatPadding(resolveCell([shape]).padding)).toBe(`max(${reservation} + 3px, 2px) max(0.1em, 2px)`);
     });
 
+    it("keeps a small mark's gap beside a larger mark on the same side", () => {
+      const small = buildStyle("shape", { size: 0.39, placement_y: "bottom", placement_x: "center" });
+      const large = buildStyle("shape", { size: 0.4, placement_y: "bottom", placement_x: "center" });
+      expect(formatPadding(resolveCell([small, large]).padding)).toBe("max(0.54em + 3px, 2px) max(0.1em, 2px)");
+    });
+
     it("mirrors a side mark's reservation onto the opposite side", () => {
       const shape = buildStyle("shape", { size: 0.6, placement_y: "middle", placement_x: "left" });
       expect(formatPadding(resolveCell([shape]).padding)).toBe("max(0.1em, 2px) max(0.7em + 3px, 2px)");
@@ -187,6 +193,13 @@ describe("mergePadding", () => {
     const larger = buildStyle("shape", { size: 0.6, placement_y: "top", placement_x: "center" });
     const padding = formatPadding(mergePadding([resolveCell([smaller]).padding, resolveCell([larger]).padding]));
     expect(padding).toBe("max(0.7em + 3px, 2px) max(0.1em, 2px)");
+  });
+
+  it("keeps a small mark's gap when a larger mark is on another cell", () => {
+    const small = buildStyle("shape", { size: 0.39, placement_y: "top", placement_x: "center" });
+    const large = buildStyle("shape", { size: 0.4, placement_y: "top", placement_x: "center" });
+    const padding = formatPadding(mergePadding([resolveCell([small]).padding, resolveCell([large]).padding]));
+    expect(padding).toBe("max(0.54em + 3px, 2px) max(0.1em, 2px)");
   });
 
   it("reserves the base extents when no cell is decorated", () => {

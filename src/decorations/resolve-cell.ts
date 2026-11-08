@@ -127,12 +127,20 @@ function applyBorder(
   padding.leftBorder = Math.max(padding.leftBorder, style.left.width);
 }
 
+// The gap is added per mark, before any maximum: it shrinks as a mark grows, so a smaller mark can
+// need more room than a larger one beside it.
 function applyMarkPadding(padding: PaddingExtents, mark: CellMark): void {
-  const { size } = mark;
-  if (mark.placement_y === "top") padding.top = Math.max(padding.top, size);
-  else if (mark.placement_y === "bottom") padding.bottom = Math.max(padding.bottom, size);
-  if (mark.placement_x === "left") padding.left = Math.max(padding.left, size);
-  else if (mark.placement_x === "right") padding.right = Math.max(padding.right, size);
+  const reserved = markReservation(mark.size);
+  if (mark.placement_y === "top") padding.top = Math.max(padding.top, reserved);
+  else if (mark.placement_y === "bottom") padding.bottom = Math.max(padding.bottom, reserved);
+  if (mark.placement_x === "left") padding.left = Math.max(padding.left, reserved);
+  else if (mark.placement_x === "right") padding.right = Math.max(padding.right, reserved);
+}
+
+// A small dot reads as crowding the number at the gap that suits a large one.
+function markReservation(size: number): number {
+  if (size <= 0) return 0;
+  return Number((size + (size < 0.4 ? 0.15 : 0.1)).toFixed(3));
 }
 
 // The cascade: decorations arrive vault-wide first and journal last, so plain overwriting
@@ -190,15 +198,9 @@ export function horizontalReservation(extents: PaddingExtents): string {
 // this reservation on a grid that has no cell of its own to ask.
 export const MARK_INSET_PX = 3;
 
-// A small dot reads as crowding the number at the gap that suits a large one.
-function markGap(mark: number): number {
-  return mark < 0.4 ? 0.15 : 0.1;
-}
-
 // A mark's reservation counts its inset too, or the inset pushes it into the text.
-function axisReservation(mark: number, border: number): string {
-  if (mark <= 0) return `max(0.1em, ${border + 2}px)`;
-  const reserved = Number((mark + markGap(mark)).toFixed(3));
+function axisReservation(reserved: number, border: number): string {
+  if (reserved <= 0) return `max(0.1em, ${border + 2}px)`;
   return `max(${reserved}em + ${MARK_INSET_PX}px, ${border + 2}px)`;
 }
 
