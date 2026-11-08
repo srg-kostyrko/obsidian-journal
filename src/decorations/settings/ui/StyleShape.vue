@@ -32,6 +32,6 @@ const { value: color } = useField<ColorSettings>(`${name}.color`, undefined, { k
   </UiSettingRow>
   <UiSettingRow :name="m.common_label_size()">
     <template #description>{{ m.decoration_style_size_hint({ kind: "shape" }) }}</template>
-    <UiNumberInput v-model="size" :min="0.1" :step="0.1" />
+    <UiNumberInput v-model="size" :min="0.1" :step="0.05" />
   </UiSettingRow>
 </template>
