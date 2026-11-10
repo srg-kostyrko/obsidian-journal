@@ -8,3 +8,4 @@ e2e-tests/fixtures/**/*.md text eol=lf
 # manual-variables.test.ts compares this page's CSS fences with these snippets byte for byte.
 docs/user/reference/css-variables.md text eol=lf
 e2e-tests/fixtures/e2e-docs-css-variables/.obsidian/snippets/*.css text eol=lf
+e2e-tests/fixtures/e2e-appearance-snippets/.obsidian/snippets/one-view.css text eol=lf

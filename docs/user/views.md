@@ -47,10 +47,13 @@ with **Rename view**; below it:
 - **Open in** — **Left sidebar**, **Right sidebar** or **New tab**.
 - **Blocks** — the view's blocks, top to bottom. **Add block** adds one; each block can be configured,
   moved and removed.
+- **CSS snippet** — the CSS rule that reaches this view and no other. Click it to copy it. See
+  [One view only](/reference/css-variables#one-view-only).
 
 Each view's row under **Views** also carries **Clone** _view_ and **Delete** _view_. **Clone** _view_
 makes a copy named after it with `(copy)` appended, with the same icon, settings and blocks; rename it
-from its own page. **Delete** _view_ asks first, then removes the view and its block configuration —
+from its own page. The copy's **CSS snippet** rule is its own, so a snippet written for the original
+does not reach it. **Delete** _view_ asks first, then removes the view and its block configuration —
 your notes are not affected. A tab still showing a deleted view says so and can be closed.
 
 Once a view is open, dragging it elsewhere in the workspace sticks: Obsidian restores it where you left

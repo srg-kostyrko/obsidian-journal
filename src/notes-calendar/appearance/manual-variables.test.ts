@@ -13,11 +13,15 @@ import { appearanceCatalog } from "./appearance-catalog";
 const here = import.meta.url;
 const PAGE = fileURLToPath(new URL("../../../docs/user/reference/css-variables.md", here));
 
-// The page's examples are run by e2e-tests/screenshots/css-variables.shot.ts from these snippets, in
-// the order the page shows them.
-const EXAMPLE_SNIPPETS = ["today-background", "weekend-band", "narrow-rows"].map((name) =>
-  fileURLToPath(new URL(`../../../e2e-tests/fixtures/e2e-docs-css-variables/.obsidian/snippets/${name}.css`, here)),
-);
+// The page's snippets, in the order it shows them. The one-view rule is asserted by
+// e2e-tests/journeys/appearance-snippets.e2e.ts; the examples are run by
+// e2e-tests/screenshots/css-variables.shot.ts.
+const EXAMPLE_SNIPPETS = [
+  "e2e-appearance-snippets/.obsidian/snippets/one-view",
+  ...["today-background", "weekend-band", "narrow-rows"].map(
+    (name) => `e2e-docs-css-variables/.obsidian/snippets/${name}`,
+  ),
+].map((path) => fileURLToPath(new URL(`../../../e2e-tests/fixtures/${path}.css`, here)));
 
 const INHERITED = "inherited";
 const NONE = "—";
