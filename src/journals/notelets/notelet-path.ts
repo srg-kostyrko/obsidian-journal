@@ -12,10 +12,10 @@ import { EmptyNoteNameError } from "../notes/errors";
 import { NotePathService, withNoteName } from "../notes/note-path";
 import { renderBindingFor } from "../prompts/prompt-binding";
 
-import type { NoteletType } from "./config";
 import type { JournalConfig } from "../config";
 import type { JournalNotFoundError } from "../errors";
 import type { JournalMetadata, NoteletMetadata } from "../types";
+import type { NoteletType } from "./config";
 
 export class NoteletPathService {
   readonly #paths = inject(NotePathService);

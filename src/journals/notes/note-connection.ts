@@ -28,10 +28,10 @@ import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { splitVaultPath } from "./vault-path";
 
-import type { NoteCreationError } from "./note-creation";
 import type { JournalNotFoundError } from "../errors";
 import type { TypeId } from "../notelets/config";
 import type { JournalMetadata, NoteletEntry, NoteletMetadata } from "../types";
+import type { NoteCreationError } from "./note-creation";
 
 export type ConnectError =
   | NoteCreationError

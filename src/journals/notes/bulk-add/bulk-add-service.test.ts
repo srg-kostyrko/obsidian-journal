@@ -15,10 +15,10 @@ import { NoteConnectionService } from "../note-connection";
 import { BulkAddService } from "./bulk-add-service";
 import { defaultBulkAddParameters } from "./config";
 
-import type { PlannedAction } from "./bulk-add-service";
-import type { BulkAddParameters } from "./config";
 import type { TypeId } from "../../notelets/config";
 import type { Prompt } from "../../prompts/config";
+import type { PlannedAction } from "./bulk-add-service";
+import type { BulkAddParameters } from "./config";
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 

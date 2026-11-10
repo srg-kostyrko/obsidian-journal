@@ -19,8 +19,8 @@ import { NoteConnectionService } from "../note-connection";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
 
-import type { BulkAddParameters } from "./config";
 import type { TypeId } from "../../notelets/config";
+import type { BulkAddParameters } from "./config";
 
 export type SkipReason =
   "already-connected" | "filtered" | "no-date" | "invalid-date" | "out-of-bounds" | "not-on-journal-path";

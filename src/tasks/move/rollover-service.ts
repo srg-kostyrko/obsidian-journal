@@ -50,8 +50,8 @@ import { blockOf, emittedLines, planSource, type PlannedRoot, type RollSource, t
 import { automaticBlocked, effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
 import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
-import type { AnchoredCount, ChangedSource, RollReport } from "./report";
 import type { TaskRule } from "../conditions";
+import type { AnchoredCount, ChangedSource, RollReport } from "./report";
 
 interface AnchoredPlan {
   readonly anchor: AnchorString;

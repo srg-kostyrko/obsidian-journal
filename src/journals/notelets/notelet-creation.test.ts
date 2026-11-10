@@ -14,9 +14,9 @@ import { VaultSubscriptionService } from "../vault-subscription";
 
 import { NoteletCreationService } from "./notelet-creation";
 
-import type { NoteletType, TypeId } from "./config";
 import type { JournalConfig } from "../config";
 import type { Prompt, PromptAnswer } from "../prompts/config";
+import type { NoteletType, TypeId } from "./config";
 
 const ANCHOR = "2026-08-30" as AnchorString;
 const TYPE = "nt_7f3a" as TypeId;
