@@ -466,12 +466,12 @@ describe("label formats in modified and reset", () => {
 
 describe("narrow's own stock value", () => {
   it("is known for the leaves stock narrow sets, and only those", () => {
-    expect(hasStockNarrow("date", ["size"])).toBe(true);
     expect(hasStockNarrow("cell", ["gap"])).toBe(true);
     expect(hasStockNarrow("cell", ["minHeight"])).toBe(true);
     expect(hasStockNarrow("selected", ["style"])).toBe(true);
     expect(hasStockNarrow("selected", ["strength"])).toBe(true);
     expect(hasStockNarrow("cell", ["padding"])).toBe(false);
+    expect(hasStockNarrow("date", ["size"])).toBe(false);
     expect(hasStockNarrow("today", TEXT_COLOR)).toBe(false);
   });
 

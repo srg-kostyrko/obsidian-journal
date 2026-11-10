@@ -487,26 +487,29 @@ describe("AppearanceControl", () => {
 
   describe("a value narrow keeps its own stock for", () => {
     it("at Wide, a value with a stock narrow tweak says so and applies itself to narrow", async () => {
-      mount("date", control("date", "size"));
+      mount("cell", control("cell", "gap"));
       expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
 
       await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_apply() }));
 
-      expect(slice().state.narrow.date.size).toBe("1.1em");
+      expect(slice().state.narrow.cell.gap).toBe("var(--size-2-1)");
       expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
       expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
     });
 
     it("carries no tag at Wide when the wide value is already narrow's stock", () => {
-      slice().state = withValue(slice().state, "wide", "date", ["size"], "1em");
-      mount("date", control("date", "size"));
+      slice().state = withValue(slice().state, "wide", "cell", ["gap"], "1px");
+      mount("cell", control("cell", "gap"));
 
       expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
       expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
     });
 
-    it("a value without a stock narrow tweak carries no tag", () => {
-      mount("today", control("today", "text", "color"));
+    it.each([
+      ["today", ["text", "color"]],
+      ["date", ["size"]],
+    ] as const)("%s %s, which has no stock narrow tweak, carries no tag", (part, path) => {
+      mount(part, control(part, ...path));
 
       expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
       expect(screen.queryByRole("button", { name: m.calendar_appearance_narrow_apply() })).toBeNull();
@@ -522,19 +525,19 @@ describe("AppearanceControl", () => {
     });
 
     it("is not tagged at Narrow, where the stock shows as the value", () => {
-      mount("date", control("date", "size"), "narrow");
+      mount("cell", control("cell", "gap"), "narrow");
 
       expect(screen.queryByText(m.calendar_appearance_narrow_own())).toBeNull();
     });
 
     it("once applied, shows Narrow only at Narrow, whose clear brings the stock back", async () => {
-      slice().state = withNarrowFromWide(withValue(slice().state, "wide", "date", ["size"], "1.4em"), "date", ["size"]);
-      mount("date", control("date", "size"), "narrow");
+      slice().state = withNarrowFromWide(withValue(slice().state, "wide", "cell", ["gap"], "3px"), "cell", ["gap"]);
+      mount("cell", control("cell", "gap"), "narrow");
 
       await userEvent.click(screen.getByRole("button", { name: m.calendar_appearance_narrow_only() }));
 
-      expect(slice().state.narrow.date.size).toBeNull();
-      expect(slice().state.wide.date.size).toBe("1.4em");
+      expect(slice().state.narrow.cell.gap).toBeNull();
+      expect(slice().state.wide.cell.gap).toBe("3px");
     });
 
     it("says so for a row height left at Default, but offers no apply that would change nothing", () => {

@@ -458,7 +458,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   text-transform: var(--_v-week-number-case);
 }
 .appearance-preview__day {
-  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, 1.1em));
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
@@ -667,7 +667,13 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
     );
   }
   .appearance-preview__day {
-    --_v-date-size: var(--journal-cell-date-size-narrow, var(--journal-saved-cell-date-size-narrow, 1em));
+    --_v-date-size: var(
+      --journal-cell-date-size-narrow,
+      var(
+        --journal-saved-cell-date-size-narrow,
+        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
+      )
+    );
     --_v-date-weight: var(
       --journal-cell-date-weight-narrow,
       var(

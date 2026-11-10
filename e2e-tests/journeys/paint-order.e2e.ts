@@ -534,8 +534,7 @@ describe("date text on days outside the month", () => {
     expect(anchor).not.toBe("");
   });
 
-  // On a wide calendar: the sidebar's is narrow, where the date reads its own stock narrow size and a
-  // public wide one stays out by design.
+  // On a wide calendar: the sidebar's is narrow, which reads the `-narrow` name before the snippet's.
   it("date size reaches days outside the month", async () => {
     await forceBlockWidth(OUTSIDE_VIEW_ROOT, WIDE_WIDTH);
     // Restored here, not in a hook: the cases after this one read the calendar at its own width.

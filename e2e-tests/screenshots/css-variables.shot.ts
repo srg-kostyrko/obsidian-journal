@@ -337,7 +337,7 @@ describe("CSS variables examples", () => {
       await forceBlockWidth("");
     });
 
-    it("gives narrow calendars 34px rows and the wide date size, and leaves wide ones alone", async () => {
+    it("gives narrow calendars 34px rows, and leaves wide ones alone", async () => {
       const stockWide = await rowsAt(WIDE);
       const stockNarrow = await rowsAt(NARROW);
 
@@ -357,12 +357,11 @@ describe("CSS variables examples", () => {
         snippetWide,
         // Rounded: Obsidian's zoom scales authored pixels.
         narrowRowMinHeightPx: Math.round(snippetNarrow.minHeight ?? 0),
-        narrowDateMatchesWideStock: snippetNarrow.dateFontSize === stockWide.dateFontSize,
         wideUnchanged:
           snippetWide.minHeight === stockWide.minHeight && snippetWide.dateFontSize === stockWide.dateFontSize,
       };
       await recordOutcome("css-variables-narrow-rows", outcome);
-      if (outcome.narrowRowMinHeightPx !== 34 || !outcome.narrowDateMatchesWideStock || !outcome.wideUnchanged)
+      if (outcome.narrowRowMinHeightPx !== 34 || !outcome.wideUnchanged)
         throw new ExampleMismatchError("narrow rows", outcome);
     });
   });

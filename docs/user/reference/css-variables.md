@@ -22,7 +22,7 @@ order is:
 1. the snippet's `-narrow` value;
 2. the editor's value for narrow calendars: what you set under **Narrow**, or what a narrow default
    makes of an all-widths value, such as the selected date's narrow background style;
-3. the narrow default, for the five variables that have one;
+3. the narrow default, for the four variables that have one;
 4. then the same three for all widths: the snippet's value, the editor's, the default.
 
 So a snippet that sets only the all-widths name does not reach a narrow calendar where the editor
@@ -150,7 +150,7 @@ The text parts are `heading` (the month heading), `weekday` (the weekday header)
 | `--journal-cell-week-number-italic` | Italic  | `inherit`            | —              |
 | `--journal-cell-week-number-color`  | Color   | `var(--text-muted)`  | —              |
 | `--journal-cell-week-number-case`   | Case    | `inherit`            | —              |
-| `--journal-cell-date-size`          | Size    | `1.1em`              | `1em`          |
+| `--journal-cell-date-size`          | Size    | `inherit`            | —              |
 | `--journal-cell-date-weight`        | Weight  | `inherit`            | —              |
 | `--journal-cell-date-italic`        | Italic  | `inherit`            | —              |
 | `--journal-cell-date-color`         | Color   | `inherit`            | —              |
@@ -226,10 +226,9 @@ A pale blue band runs down each run of weekend columns, under the days' decorati
 ```css
 body {
   --journal-cell-cell-min-height-narrow: 34px;
-  --journal-cell-date-size-narrow: 1.1em;
 }
 ```
 
 Narrow calendars, such as one in a slim sidebar, get rows at least 34 pixels high,
-the heading row included, and wide calendars' date size.
-Both variables have a narrow default, so the all-widths names would not reach narrow calendars.
+the heading row included.
+Row height has a narrow default, so the all-widths name would not reach narrow calendars.
