@@ -1210,7 +1210,8 @@
       "match": {
         "group=text": "テキスト",
         "group=background": "背景",
-        "group=border": "枠線"
+        "group=border": "枠線",
+        "group=palette": "パレット"
       }
     }
   ],
@@ -1244,6 +1245,14 @@
   "ui_theme_color_text_selection": "選択テキストの背景",
   "ui_theme_color_text_highlight_bg": "ハイライトテキストの背景",
   "ui_theme_color_caret_color": "キャレットの色",
+  "ui_theme_color_red": "赤",
+  "ui_theme_color_orange": "オレンジ",
+  "ui_theme_color_yellow": "黄",
+  "ui_theme_color_green": "緑",
+  "ui_theme_color_cyan": "シアン",
+  "ui_theme_color_blue": "青",
+  "ui_theme_color_purple": "紫",
+  "ui_theme_color_pink": "ピンク",
   "journal_add_modal_anchor_description": "この日付は、カスタム間隔のカウント開始日として使用されます。ジャーナル作成後は変更できません。",
   "common_label_today": "今日",
   "relative_date_yesterday": "昨日",

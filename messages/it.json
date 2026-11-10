@@ -1355,7 +1355,8 @@
       "match": {
         "group=text": "Testo",
         "group=background": "Sfondo",
-        "group=border": "Bordo"
+        "group=border": "Bordo",
+        "group=palette": "Tavolozza"
       }
     }
   ],
@@ -1389,6 +1390,14 @@
   "ui_theme_color_text_selection": "Sfondo del testo selezionato",
   "ui_theme_color_text_highlight_bg": "Sfondo del testo evidenziato",
   "ui_theme_color_caret_color": "Colore del cursore",
+  "ui_theme_color_red": "Rosso",
+  "ui_theme_color_orange": "Arancione",
+  "ui_theme_color_yellow": "Giallo",
+  "ui_theme_color_green": "Verde",
+  "ui_theme_color_cyan": "Ciano",
+  "ui_theme_color_blue": "Blu",
+  "ui_theme_color_purple": "Viola",
+  "ui_theme_color_pink": "Rosa",
   "journal_add_modal_anchor_description": "Questa data viene utilizzata per calcolare gli intervalli personalizzati. Non può essere modificata dopo la creazione del diario.",
   "common_label_today": "Oggi",
   "relative_date_yesterday": "Ieri",

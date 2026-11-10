@@ -1355,7 +1355,8 @@
       "match": {
         "group=text": "Text",
         "group=background": "Background",
-        "group=border": "Border"
+        "group=border": "Border",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1389,6 +1390,14 @@
   "ui_theme_color_text_selection": "Selected text background",
   "ui_theme_color_text_highlight_bg": "Highlighted text background",
   "ui_theme_color_caret_color": "Caret color",
+  "ui_theme_color_red": "Red",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Yellow",
+  "ui_theme_color_green": "Green",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Blue",
+  "ui_theme_color_purple": "Purple",
+  "ui_theme_color_pink": "Pink",
 
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
 

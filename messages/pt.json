@@ -1355,7 +1355,8 @@
       "match": {
         "group=text": "Texto",
         "group=background": "Fundo",
-        "group=border": "Borda"
+        "group=border": "Borda",
+        "group=palette": "Paleta"
       }
     }
   ],
@@ -1389,6 +1390,14 @@
   "ui_theme_color_text_selection": "Fundo do texto selecionado",
   "ui_theme_color_text_highlight_bg": "Fundo do texto realçado",
   "ui_theme_color_caret_color": "Cor do cursor de texto",
+  "ui_theme_color_red": "Vermelho",
+  "ui_theme_color_orange": "Laranja",
+  "ui_theme_color_yellow": "Amarelo",
+  "ui_theme_color_green": "Verde",
+  "ui_theme_color_cyan": "Ciano",
+  "ui_theme_color_blue": "Azul",
+  "ui_theme_color_purple": "Roxo",
+  "ui_theme_color_pink": "Rosa",
   "journal_add_modal_anchor_description": "Esta data é o ponto de partida para contar os intervalos personalizados. Ela não pode ser alterada depois que o diário é criado.",
   "common_label_today": "Hoje",
   "relative_date_yesterday": "Ontem",
