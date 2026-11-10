@@ -12,12 +12,12 @@ import { useMarkLimit } from "../use-mark-limit";
 
 import DecorationPreview from "./DecorationPreview.vue";
 
-import type { BreakdownCell } from "./breakdown-cell";
 import type { CellAttribution } from "../attribute-cell";
 import type { JournalDecoration } from "../config";
 import type { Contribution, DecorationSource } from "../engine";
 import type { DecorationOwner } from "../owner";
 import type { Placement } from "../resolve-cell";
+import type { BreakdownCell } from "./breakdown-cell";
 
 const props = defineProps<{ cell: BreakdownCell; index: number }>();
 

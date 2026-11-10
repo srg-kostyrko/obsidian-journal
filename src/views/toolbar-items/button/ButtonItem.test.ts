@@ -23,8 +23,8 @@ import { provideViewContext, type ViewContext } from "../../view-context";
 import { buttonConfigFor } from "./button-config";
 import { buttonItem } from "./button-item";
 
-import type { ButtonConfig } from "./button-config";
 import type { BlockInstanceId } from "../../config";
+import type { ButtonConfig } from "./button-config";
 
 // Mirrors the shelf scope every test in this suite saw under the old `useShelfScope` mock:
 // a day, a week and a month journal, nothing for quarter/year.

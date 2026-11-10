@@ -17,9 +17,9 @@ import { JournalsRepository } from "../repository";
 
 import { parseJournalUriRequest } from "./parse-request";
 
+import type { JournalConfig } from "../config";
 import type { UriError } from "./errors";
 import type { JournalUriRequest } from "./parse-request";
-import type { JournalConfig } from "../config";
 
 const URI_ACTION = "journals";
 

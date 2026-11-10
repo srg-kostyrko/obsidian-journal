@@ -12,8 +12,8 @@ import { promptsInPath } from "../prompts/prompts-in-path";
 
 import type { JournalConfig } from "../config";
 import type { CycleService } from "../cycle";
-import type { NotePathService } from "./note-path";
 import type { Prompt } from "../prompts/config";
+import type { NotePathService } from "./note-path";
 
 export type InvertibilityWarning =
   | {
