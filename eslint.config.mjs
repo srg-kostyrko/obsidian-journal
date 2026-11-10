@@ -145,6 +145,9 @@ const presetRestrictedGlobals = [...obsidianmd.configs.recommended]
   .slice(1)
   .filter((entry) => typeof entry === "object");
 
+// eslint-plugin-obsidianmd lints LICENSE as plain text, and unicorn's rules refuse any language but JS.
+const codeFiles = ["**/*.{js,mjs,cjs,ts,mts,cts,vue}"];
+
 export default [
   {
     ignores: [
@@ -170,7 +173,7 @@ export default [
   cspellConfigs.recommended,
   eslintConfigPrettier,
   ...pluginVue.configs["flat/recommended"].map((cfg) => ({ ...cfg, files: cfg.files ?? ["**/*.vue"] })),
-  eslintPluginUnicorn.configs.recommended,
+  { ...eslintPluginUnicorn.configs.recommended, files: codeFiles },
   eslintComments.recommended,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
@@ -215,6 +218,7 @@ export default [
     },
   },
   {
+    files: codeFiles,
     rules: {
       "no-console": "error",
 
