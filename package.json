@@ -50,7 +50,7 @@
   "author": "Sergii Kostyrko",
   "license": "MIT",
   "dependencies": {
-    "@inlang/paraglide-js": "^2.23.2",
+    "@inlang/paraglide-js": "^3.0.0",
     "@vee-validate/valibot": "^4.15.1",
     "@vueuse/core": "^15.0.0",
     "@vueuse/integrations": "^15.0.0",
