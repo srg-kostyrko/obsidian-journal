@@ -88,6 +88,7 @@ export const icons = {
     taskDates: "calendar-days",
     taskStatus: "circle-check",
     rollover: "redo-2",
+    cssSnippet: "file-code",
   },
 } as const;
 

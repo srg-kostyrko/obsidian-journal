@@ -98,7 +98,7 @@ describe("manual links in settings", () => {
       await expandSection(m.view_dashboard_section_title());
       await clickIcon(m.view_dashboard_open({ name: "Calendar" }));
 
-      await expectLinks([manual.view.settings, manual.view.blocks]);
+      await expectLinks([manual.view.settings, manual.view.blocks, manual.view.cssSnippet]);
     });
 
     it("links every section of the calendar appearance page", async () => {

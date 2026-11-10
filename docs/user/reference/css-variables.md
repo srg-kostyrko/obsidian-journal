@@ -30,6 +30,24 @@ has a **Narrow** value, or where the variable has a narrow default. Set the `-na
 
 A snippet cannot move the 28em breakpoint: CSS variables do not work in the condition of a container query.
 
+## One view only {#one-view-only}
+
+A snippet on `body` reaches every calendar. To reach one view's calendars and no others, put the
+variables under that view's own selector. Open the view's page in settings, expand **CSS snippet**
+at the bottom and click the rule to copy it. Its braces come empty; put the variables inside them:
+
+```css
+[data-journal-view="5a7e9c11-2b3d-4e5f-8a6b-7c8d9e0f1a2b"] {
+  --journal-cell-today-text-color: #0000ff;
+}
+```
+
+Today's date turns blue in that view only. A view in a slim sidebar may be a narrow calendar, which
+reads the `-narrow` names first; see [How a value is chosen](#how-a-value-is-chosen). The long value is the view's id, so yours differs. Renaming
+the view keeps it; a [cloned](/views#a-view-s-settings) view gets an id of its own. The rule reaches
+only views: a timeline in a note keeps the look set for all calendars, and so does the editor's
+preview.
+
 ## Values
 
 - Colors take any CSS color, a theme variable such as `var(--color-orange)` included.
@@ -167,8 +185,8 @@ may change them; the changelog says when it does. A snippet that relies on a def
 sets only a ring color, expecting the selected date to keep its ring — can change look on an update
 without any variable changing.
 
-The names the editor keeps its own values under, and every other class and attribute in the calendar,
-are not part of it either.
+The `data-journal-view` attribute that carries a view's id is part of the public surface too. The names the editor
+keeps its own values under, and every other class and attribute in the calendar, are not.
 
 ## Examples
 
