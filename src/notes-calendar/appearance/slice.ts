@@ -196,7 +196,7 @@ const wideDefaults = {
     dividerColor: theme("background-modifier-border"),
     dividerWidth: 1,
   } satisfies WeekNumberValues,
-  date: text({ size: "1.1em" }),
+  date: text({}),
   cell: { padding: 0, radius: "var(--radius-s)", gap: "var(--size-2-1)", minHeight: null },
 };
 
@@ -261,7 +261,6 @@ export type StockNarrow = { readonly [P in keyof NarrowOverrides]?: DeepPartialN
 /** What narrow shows where the user set nothing at narrow, ahead of their wide value. */
 export const STOCK_NARROW: StockNarrow = {
   selected: { style: "background", strength: 20 },
-  date: { size: "1em" },
   cell: { gap: "1px", minHeight: ROW_FLOOR_PX },
 };
 

@@ -306,10 +306,10 @@ week numbers after the weekdays it moves with them.
 **Cells** offers **Padding**, **Corner radius**, **Gap between cells** and **Row height**, the
 smallest height a row of cells takes. Out of the box the row height is **Default (grows with width)**:
 rows grow with the calendar's width, from 26 pixels up to 64, and the slider sits on the height the
-preview's rows have now. Once you move it, a button beside it puts **Default** back. Dates are drawn a
-little larger than the surrounding text on wide calendars. The decoration editor's style canvas draws
-its sample cell at the all-widths row height, or at 26 pixels while that is **Default**, so a style is
-previewed at a size a calendar shows it; a narrow-only row height does not change the canvas.
+preview's rows have now. Once you move it, a button beside it puts **Default** back. The decoration
+editor's style canvas draws its sample cell at the all-widths row height, or at 26 pixels while that is
+**Default**, so a style is previewed at a size a calendar shows it; a narrow-only row height does not
+change the canvas.
 
 ### Weekends and the current week {#weekends-and-the-current-week}
 
@@ -432,10 +432,9 @@ the plain number color rather than today's accent.
 
 ### Narrow calendars {#narrow-calendars}
 
-A narrow calendar is drawn tighter than a wide one, and out of the box it differs in five ways:
+A narrow calendar is drawn tighter than a wide one, and out of the box it differs in four ways:
 
 - rows are 26 pixels high, rather than growing with the width;
-- dates are the size of the surrounding text, a little smaller than on a wide calendar;
 - the gap between cells is one pixel;
 - weekday names are one letter, such as `M` for Monday;
 - the selected date is a 20% tint of the accent color, drawn over decorations, rather than a ring.
@@ -445,11 +444,11 @@ fill and shades it toward the accent color. On a decorated day the open note's f
 decoration, and the tint is what still shows the day is selected. On a wide calendar the selected date's
 ring shows around the open note's fill instead.
 
-These narrow defaults win over a value set under **Wide**: a date size chosen under **Wide**, say, does
-not reach narrow calendars, which keep their own. Under **Wide**, each control this applies to — the
-selected date's **Style** and **Strength**, the date number's **Size**, and the cells' **Gap between
-cells** and **Row height** — and the weekday's format carry a **Narrow has its own value** tag, with
-**Use at narrow too** beside it to copy the wide value to narrow calendars as a narrow-only value. A
+These narrow defaults win over a value set under **Wide**: a gap between cells chosen under **Wide**,
+say, does not reach narrow calendars, which keep their own. Under **Wide**, each control this applies
+to — the selected date's **Style** and **Strength**, and the cells' **Gap between cells** and **Row
+height** — and the weekday's format carry a **Narrow has its own value** tag, with **Use at narrow
+too** beside it to copy the wide value to narrow calendars as a narrow-only value. A
 **Row height** left at **Default** has nothing to copy, so it shows the tag alone. A wide value that is
 already the narrow default carries no tag, since narrow calendars show it either way.
 

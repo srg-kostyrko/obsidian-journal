@@ -240,9 +240,6 @@
   --journal-cell-selected-color: #ff0000;
   --journal-cell-selected-color-narrow: #ff0000;
 }
-[data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-date-size:narrow"] {
-  --journal-cell-date-size-narrow: 21px;
-}
 [data-journal-view="f761ecd9-f604-49c3-a157-f1a1e8b7b2fe"][data-appearance-gate="journal-cell-cell-gap:narrow"] {
   --journal-cell-cell-gap-narrow: 13px;
 }
