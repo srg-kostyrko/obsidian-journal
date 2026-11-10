@@ -218,7 +218,9 @@ first does not.
 - **Icon** — any Obsidian icon, in one of nine positions, sized the same way.
 - **Corner** — a triangle in a corner; click a corner to add one.
 
-Every color can be transparent, a theme color, or a custom color.
+Every color can be transparent, a theme color, or a custom color. Besides the interface colors, the
+theme colors include the theme's palette — red, orange, yellow, green, cyan, blue, purple and pink —
+which follow the theme and switch with light and dark mode.
 
 A shape or icon in a left or right position keeps clear of the date by reserving room on both sides
 of every cell in the calendar, week numbers included: about the mark's size plus a small gap. Every

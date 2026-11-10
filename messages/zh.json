@@ -1210,7 +1210,8 @@
       "match": {
         "group=text": "文本",
         "group=background": "背景",
-        "group=border": "边框"
+        "group=border": "边框",
+        "group=palette": "调色板"
       }
     }
   ],
@@ -1244,6 +1245,14 @@
   "ui_theme_color_text_selection": "选中文本的背景",
   "ui_theme_color_text_highlight_bg": "高亮文本的背景",
   "ui_theme_color_caret_color": "光标颜色",
+  "ui_theme_color_red": "红色",
+  "ui_theme_color_orange": "橙色",
+  "ui_theme_color_yellow": "黄色",
+  "ui_theme_color_green": "绿色",
+  "ui_theme_color_cyan": "青色",
+  "ui_theme_color_blue": "蓝色",
+  "ui_theme_color_purple": "紫色",
+  "ui_theme_color_pink": "粉色",
   "journal_add_modal_anchor_description": "此日期是计算自定义间隔的起点。创建日记后无法更改。",
   "common_label_today": "今天",
   "relative_date_yesterday": "昨天",

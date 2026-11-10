@@ -43,17 +43,26 @@ const LABELS: Readonly<Record<ThemeColorName, () => string>> = {
   "text-selection": () => m.ui_theme_color_text_selection(),
   "text-highlight-bg": () => m.ui_theme_color_text_highlight_bg(),
   "caret-color": () => m.ui_theme_color_caret_color(),
+  "color-red": () => m.ui_theme_color_red(),
+  "color-orange": () => m.ui_theme_color_orange(),
+  "color-yellow": () => m.ui_theme_color_yellow(),
+  "color-green": () => m.ui_theme_color_green(),
+  "color-cyan": () => m.ui_theme_color_cyan(),
+  "color-blue": () => m.ui_theme_color_blue(),
+  "color-purple": () => m.ui_theme_color_purple(),
+  "color-pink": () => m.ui_theme_color_pink(),
 };
 
 // Tags a field of each role accepts, in the order they are shown. A border reads well in an
 // accent or status color, and those live among the text-tagged variables (--text-accent,
 // --text-error, --text-success); a decorative mark has no inherent ink-or-surface nature —
-// so those two roles span two tags.
+// so those two roles span two tags. The palette hues are solid colors with no role of their
+// own, so every field offers them.
 const ROLE_TAGS: Record<ThemeColorFieldRole, readonly ThemeColorTag[]> = {
-  text: ["text"],
-  background: ["background"],
-  border: ["border", "text"],
-  fill: ["text", "background"],
+  text: ["text", "palette"],
+  background: ["background", "palette"],
+  border: ["border", "text", "palette"],
+  fill: ["text", "background", "palette"],
 };
 
 export function themeColorGroupsFor(role: ThemeColorFieldRole): readonly ThemeColorGroup[] {

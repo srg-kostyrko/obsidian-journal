@@ -1355,7 +1355,8 @@
       "match": {
         "group=text": "Texte",
         "group=background": "Arrière-plan",
-        "group=border": "Bordure"
+        "group=border": "Bordure",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1389,6 +1390,14 @@
   "ui_theme_color_text_selection": "Arrière-plan du texte sélectionné",
   "ui_theme_color_text_highlight_bg": "Arrière-plan du texte surligné",
   "ui_theme_color_caret_color": "Couleur du curseur",
+  "ui_theme_color_red": "Rouge",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Jaune",
+  "ui_theme_color_green": "Vert",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Bleu",
+  "ui_theme_color_purple": "Violet",
+  "ui_theme_color_pink": "Rose",
   "journal_add_modal_anchor_description": "Cette date sert de point de départ au comptage des intervalles personnalisés. Elle ne peut plus être modifiée après la création du journal.",
   "common_label_today": "Aujourd’hui",
   "relative_date_yesterday": "Hier",

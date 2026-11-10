@@ -1355,7 +1355,8 @@
       "match": {
         "group=text": "텍스트",
         "group=background": "배경",
-        "group=border": "테두리"
+        "group=border": "테두리",
+        "group=palette": "팔레트"
       }
     }
   ],
@@ -1389,6 +1390,14 @@
   "ui_theme_color_text_selection": "선택한 텍스트의 배경",
   "ui_theme_color_text_highlight_bg": "형광펜으로 표시한 텍스트의 배경",
   "ui_theme_color_caret_color": "캐럿 색상",
+  "ui_theme_color_red": "빨간색",
+  "ui_theme_color_orange": "주황색",
+  "ui_theme_color_yellow": "노란색",
+  "ui_theme_color_green": "초록색",
+  "ui_theme_color_cyan": "청록색",
+  "ui_theme_color_blue": "파란색",
+  "ui_theme_color_purple": "보라색",
+  "ui_theme_color_pink": "분홍색",
   "journal_add_modal_anchor_description": "사용자 지정 간격을 세는 기준이 되는 날짜입니다. 저널을 만든 뒤에는 변경할 수 없습니다.",
   "common_label_today": "오늘",
   "relative_date_yesterday": "어제",

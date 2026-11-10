@@ -1361,7 +1361,8 @@
       "match": {
         "group=text": "Текст",
         "group=background": "Фон",
-        "group=border": "Граница"
+        "group=border": "Граница",
+        "group=palette": "Палитра"
       }
     }
   ],
@@ -1395,6 +1396,14 @@
   "ui_theme_color_text_selection": "Фон выделенного текста",
   "ui_theme_color_text_highlight_bg": "Фон подсвеченного текста",
   "ui_theme_color_caret_color": "Цвет курсора",
+  "ui_theme_color_red": "Красный",
+  "ui_theme_color_orange": "Оранжевый",
+  "ui_theme_color_yellow": "Жёлтый",
+  "ui_theme_color_green": "Зелёный",
+  "ui_theme_color_cyan": "Голубой",
+  "ui_theme_color_blue": "Синий",
+  "ui_theme_color_purple": "Фиолетовый",
+  "ui_theme_color_pink": "Розовый",
   "journal_add_modal_anchor_description": "Эта дата используется для отсчёта пользовательских интервалов. Её нельзя изменить после создания журнала.",
   "common_label_today": "Сегодня",
   "relative_date_yesterday": "Вчера",
