@@ -2,7 +2,7 @@ name: Cache sweep
 
 on:
   schedule:
-    # Daily, offset from the stale-issue sweep (03:00 UTC) and the nightly e2e run (07:00 UTC).
+    # Daily, offset from the stale-issue sweep (03:00 UTC) and the nightly e2e run (20:37 UTC).
     - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
