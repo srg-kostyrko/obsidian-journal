@@ -1,7 +1,9 @@
 # CSS variables
 
-Everything the [Calendar appearance](/views#calendar-appearance) editor sets is also a CSS variable, so a
-[CSS snippet](https://help.obsidian.md/snippets) can set it instead. A snippet wins over the editor without
+Nearly everything the [Calendar appearance](/views#calendar-appearance) editor sets is also a CSS variable, so a
+[CSS snippet](https://help.obsidian.md/snippets) can set it instead. The exceptions are the **Visibility**
+choices, the **Label** formats, whether the week numbers' **Divider** is shown, and a highlight's
+**Style**, which [comes from the other variables](#values). A snippet wins over the editor without
 `!important`, from any selector that reaches the calendar — `body` is enough — and the editor's preview shows the snippet's value.
 
 The variables reach the month and week calendars of views and the calendars of

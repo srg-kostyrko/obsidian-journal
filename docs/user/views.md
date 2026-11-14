@@ -90,7 +90,8 @@ block shows the same span as week strips instead.
   global choice there changes every block left on it.
 - **Days outside the month** (Month calendar only) — **Use global default**, **Interactive**, **Inert**
   or **Hidden**: the neighboring months' days that fill a grid's first and last weeks are clickable and
-  decorated, shown but inert, or left blank. An inert day shows its date and nothing else: no
+  decorated, shown but inert, or left blank. An inert day shows its date in the outside-days style,
+  with today's highlight and the weekend and current-week bands where they apply, but no
   decorations, no response to a click, no selecting with **Shift**+click, and the keyboard skips it.
 - **Rows** (Month calendar only) — **Use global default**, **As needed** or **Always six**.
 
@@ -262,9 +263,11 @@ value.
 
 The controls are headed by the part's name and the width they apply to, **All widths** or
 **Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Label**, **Text**, **Divider**, **Highlight** or
-**Box**), each open to start with and folded away by clicking its name. Every one but a highlight's **Style** shows, beneath its name, the
-CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
-**Narrow**, the name shown is the narrow one, ending in `-narrow`.
+**Box**), each open to start with and folded away by clicking its name. Most show, beneath their name, the
+CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override them; while you edit
+**Narrow**, the name shown is the narrow one, ending in `-narrow`. A highlight's **Style**, the
+**Visibility** and **Label** controls and the week numbers' **Divider** (**Shown** or **Hidden**) have no
+variable and show none.
 
 The highlights share one set:
 
@@ -364,8 +367,9 @@ variable.
 **Automatic** gives each calendar the behavior it has had: a Month calendar block that shows one month
 has interactive outside days; one that shows several months hides them; a timeline in `month` mode has
 interactive ones; a timeline in `quarter` or `calendar` mode hides them. **Inert** days show their
-date in the outside-days style and nothing else: they carry no decorations, do nothing when clicked,
-cannot be selected with **Shift**+click, and the keyboard skips them. Out of the box nothing changes.
+date in the outside-days style, and take today's highlight and the weekend and current-week bands where
+they apply, but they carry no decorations, do nothing when clicked, cannot be selected with
+**Shift**+click, and the keyboard skips them. Out of the box nothing changes.
 
 A Month calendar or Week calendar block and a
 [timeline](/reference/code-blocks) can override these per block.
@@ -426,9 +430,12 @@ the weekends and the current week's days, so the ring changes nothing about the 
 current week's number is the exception: its color is the accent and its weight bold.
 
 **Unchanged** needs a WebView that supports CSS container style queries: Obsidian on desktop, iOS 18
-or later, or Android with WebView 111 or later. On older ones, an **Unchanged** text shows the
-part's own color and weight, never a lower highlight's, so a selected day that is also today shows
-the plain number color rather than today's accent.
+or later, or Android with WebView 111 or later. On older ones, **Unchanged** still works for a
+text value the highlight leaves alone out of the box. For one it sets out of the box — the text color of
+today, the open note and days outside the month, and the current week's number's color and weight — an
+**Unchanged** there shows the part's own value, never a lower highlight's: with the open note's text
+color **Unchanged**, an open note's day that is also today shows the plain number color rather than
+today's accent.
 
 ### Narrow calendars {#narrow-calendars}
 
@@ -442,7 +449,8 @@ A narrow calendar is drawn tighter than a wide one, and out of the box it differ
 Opening a note selects its date too, so on the open note's own day the tint draws over the open note's
 fill and shades it toward the accent color. On a decorated day the open note's fill sits under the
 decoration, and the tint is what still shows the day is selected. On a wide calendar the selected date's
-ring shows around the open note's fill instead.
+ring is drawn over the decoration instead. On an undecorated open note's day it does not stand out:
+out of the box the ring and the open note's fill are the same accent color.
 
 These narrow defaults win over a value set under **Wide**: a gap between cells chosen under **Wide**,
 say, does not reach narrow calendars, which keep their own. Under **Wide**, each control this applies
