@@ -544,10 +544,11 @@ export default defineConfig({
         // 5396/5889 functions, 13563/14074 lines).
         // Interval offset data and repaint regressions: base 932a4112 measured
         // 95.15 / 91.02 / 92.94 / 96.91; the fix measures 95.18 / 91.04 / 92.98 / 96.92.
-        statements: 95.18,
-        branches: 91.04,
+        // Batched index invalidation and OR regressions: 95.19 / 91.05 / 92.98 / 96.93.
+        statements: 95.19,
+        branches: 91.05,
         functions: 92.98,
-        lines: 96.92,
+        lines: 96.93,
       },
     },
     projects: [

@@ -1,9 +1,9 @@
 import { computed, onMounted, onUnmounted, provide, shallowRef, toRaw, toValue, watchEffect } from "vue";
 
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
-import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, isNotelet, JournalsIndex, JournalsRepository } from "@/journals";
 import { useTasksVersion } from "@/tasks/use-tasks-version";
 
 import { DecorationsStore } from "./decorations-store";
@@ -53,11 +53,13 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
   const tasksVersion = useTasksVersion();
+  const customIndexVersion = shallowRef(0);
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
   let keysByPath = new Map<VaultPath, Set<string>>();
   let journalNamesInScope = new Set<string>();
+  let visibleOwners = new Map<string, Set<AnchorString>>();
 
   function gatherDecorations(): readonly DecorationBinding[] {
     const calendar = options.calendarDecorations;
@@ -76,6 +78,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   function rebuildScopeMaps(periods: readonly Period[]): void {
     const journalNames = toValue(options.journalNames);
     journalNamesInScope = new Set(journalNames);
+    visibleOwners = new Map(journalNames.map((name) => [name, new Set<AnchorString>()]));
     keysByPath = new Map<VaultPath, Set<string>>();
     const addPath = (path: VaultPath, key: string): void => {
       const keys = keysByPath.get(path);
@@ -91,6 +94,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
         const key = cellKey(period.kind, anchor);
         const owner = cycle.anchorOf(name, period.anchor);
         if (owner.isNone()) continue;
+        visibleOwners.get(name)?.add(owner.value);
         const opt = index.entryByAnchor(name, owner.value);
         if (opt.isSome()) addPath(opt.value.path, key);
         // A tasks condition reads notelet structure, and a heading or tag edit there can leave the
@@ -105,6 +109,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
     // Reading the version here registers it as a dependency.
     void tasksVersion.value;
+    void customIndexVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
     periodsByKey = new Map<string, Period[]>();
@@ -178,13 +183,18 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   onMounted(() => {
     const offMeta = notes.events.on("metadata-changed", repaintCell);
     const offSize = size.events.on("size-changed", repaintCell);
-    const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
+    const offIndex = index.events.on("entryChanged", (event) => {
+      const { entry, kind } = event;
       if (!journalNamesInScope.has(entry.journalName)) return;
       const journalOpt = journals.get(entry.journalName);
       if (journalOpt.isNone()) return;
       // A stored interval end can move later intervals too, even when its anchor is offscreen.
       if (journalOpt.value.write.type === "custom") {
-        reseed();
+        const visible = visibleOwners.get(entry.journalName)?.has(entry.anchor) ?? false;
+        const storedEnd = !isNotelet(entry) && entry.endDate !== undefined;
+        const previous = event.kind === "added" ? event.previous : undefined;
+        const hadStoredEnd = previous !== undefined && !isNotelet(previous) && previous.endDate !== undefined;
+        if (visible || storedEnd || hadStoredEnd) customIndexVersion.value++;
         return;
       }
       const key = cellKey(periodKindForWrite(journalOpt.value.write.type), entry.anchor);

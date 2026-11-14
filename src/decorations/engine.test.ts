@@ -406,6 +406,30 @@ describe("DecorationEngine", () => {
       const anchor = "2026-01-05" as AnchorString;
       const path = "sprint/Planning.md" as VaultPath;
 
+      it.each(["or", "and"] as const)("combines offset and interval note presence with %s", async (mode) => {
+        const decoration = buildDecoration({
+          mode,
+          conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        harness.host.putFile(path);
+        harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor, path });
+        const days = Array.from({ length: 15 }, (_, i) =>
+          DayPeriod.containing(date(`2026-01-${String(i + 5).padStart(2, "0")}`)),
+        );
+
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange(days, [{ kind: "journal", journalName: "sprint", index: 0, decoration }]);
+
+        expect([...result.keys()]).toEqual(
+          mode === "or" ? days.slice(0, 14).map((day) => cellKey(day.kind, day.anchor.toAnchor())) : ["day:2026-01-06"],
+        );
+      });
+
       it.each([
         buildCondition("title", { value: "Planning" }),
         buildCondition("tag", { value: "work" }),

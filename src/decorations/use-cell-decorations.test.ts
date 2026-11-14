@@ -25,7 +25,7 @@ import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { DecorationsStore } from "./decorations-store";
-import { cellKey } from "./engine";
+import { cellKey, DecorationEngine } from "./engine";
 import { decorationsModule } from "./module";
 import { resolveCell } from "./resolve-cell";
 import { decorationsSettingsCoreModule } from "./settings/module";
@@ -293,6 +293,96 @@ describe("useCellDecorations", () => {
     const anchor = "2026-01-05" as AnchorString;
     const path = "sprint/Planning.md" as VaultPath;
     const periods = ["2026-01-06", "2026-01-18", "2026-01-20"].map((day) => DayPeriod.containing(date(day)));
+
+    it("ignores offscreen registrations without a stored end", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+      });
+      const evaluate = vi.spyOn(harness.resolve(DecorationEngine), "evaluateRange");
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      evaluate.mockClear();
+      const index = harness.resolve(JournalsIndex);
+      let offscreen = WeekPeriod.containing(date("2027-01-04"));
+
+      for (let i = 0; i < 100; i++) {
+        const offscreenAnchor = offscreen.anchor.toAnchor();
+        index.register({
+          journalName: "sprint",
+          anchor: offscreenAnchor,
+          path: `sprint/${offscreenAnchor}.md` as VaultPath,
+        });
+        offscreen = offscreen.next().next();
+      }
+      await nextTick();
+
+      expect(evaluate).not.toHaveBeenCalled();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+    });
+
+    it("batches visible registrations into one evaluation per tick", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+      });
+      const evaluate = vi.spyOn(harness.resolve(DecorationEngine), "evaluateRange");
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      evaluate.mockClear();
+
+      for (const entryAnchor of [anchor, "2026-01-19" as AnchorString]) {
+        const entryPath = `sprint/${entryAnchor}.md` as VaultPath;
+        harness.host.putFile(entryPath);
+        harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor: entryAnchor, path: entryPath });
+      }
+      expect(evaluate).not.toHaveBeenCalled();
+      await nextTick();
+
+      expect(evaluate).toHaveBeenCalledTimes(1);
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 0, 1]);
+    });
+
+    it.each(["removed", "cleared", "shortened"] as const)(
+      "repaints after an offscreen stored end is %s",
+      async (change) => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("offset", { offset: -1 })],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarnessFrom({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "sprint", anchor, path, endDate: "2026-01-20" as AnchorString });
+        const laterPeriods = ["2026-02-01", "2026-02-03"].map((day) => DayPeriod.containing(date(day)));
+        const cells = mountCells(harness, laterPeriods, ["sprint"]);
+        await nextTick();
+        expect(laterPeriods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 1]);
+
+        if (change === "removed") index.unregister(path);
+        else
+          index.register({
+            journalName: "sprint",
+            anchor,
+            path,
+            endDate: change === "shortened" ? ("2026-01-18" as AnchorString) : undefined,
+          });
+        await nextTick();
+
+        expect(laterPeriods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 0]);
+      },
+    );
 
     it.each(["metadata", "size"] as const)("repaints every offset day after %s changes", async (event) => {
       const condition =

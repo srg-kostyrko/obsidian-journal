@@ -120,25 +120,34 @@ describe("JournalsIndex", () => {
     it("re-registering an unmoved path with a changed answer stores it and announces the change", () => {
       const index = new JournalsIndex();
       const path = "Custom/2022-01-01.md";
-      index.register({ ...entry("custom", "2022-01-01", path), answers: { mood: "good" } });
+      const previous = { ...entry("custom", "2022-01-01", path), answers: { mood: "good" } };
+      index.register(previous);
       const captured = capture(index);
       const updated: JournalEntry = { ...entry("custom", "2022-01-01", path), answers: { mood: "sad" } };
       index.register(updated);
       const result = index.entryByPath(p(path));
       assert(result.isSome());
       expect(result.value.answers).toEqual({ mood: "sad" });
-      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added", reason: "changed", canonical: true }]);
+      expect(captured.entryChanged).toEqual([
+        { entry: updated, previous, kind: "added", reason: "changed", canonical: true },
+      ]);
     });
 
-    it("a payload-only change announces the new entry without removing the old", () => {
-      const index = new JournalsIndex();
-      const path = "Custom/2022-01-01.md";
-      index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-14") });
-      const captured = capture(index);
-      const updated: JournalEntry = { ...entry("custom", "2022-01-01", path), endDate: a("2022-01-21") };
-      index.register(updated);
-      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added", reason: "changed", canonical: true }]);
-    });
+    it.each([a("2022-01-21"), undefined])(
+      "a payload-only change carries the previous end when updated to %s",
+      (endDate) => {
+        const index = new JournalsIndex();
+        const path = "Custom/2022-01-01.md";
+        const previous = { ...entry("custom", "2022-01-01", path), endDate: a("2022-01-14") };
+        index.register(previous);
+        const captured = capture(index);
+        const updated: JournalEntry = { ...entry("custom", "2022-01-01", path), endDate };
+        index.register(updated);
+        expect(captured.entryChanged).toEqual([
+          { entry: updated, previous, kind: "added", reason: "changed", canonical: true },
+        ]);
+      },
+    );
 
     it("a payload-only change marks the journal dirty", async () => {
       const index = new JournalsIndex();
