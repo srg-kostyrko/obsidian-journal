@@ -1,9 +1,9 @@
 import { computed, onMounted, onUnmounted, provide, shallowRef, toRaw, toValue, watchEffect } from "vue";
 
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
-import { JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, isNotelet, JournalsIndex, JournalsRepository } from "@/journals";
 import { useTasksVersion } from "@/tasks/use-tasks-version";
 
 import { DecorationsStore } from "./decorations-store";
@@ -45,6 +45,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   const engine = useService(DecorationEngine);
   const journals = useService(JournalsRepository);
   const index = useService(JournalsIndex);
+  const cycle = useService(CycleService);
   const notes = useService(NotesService);
   const metadata = useService(NoteMetadataService);
   const size = useService(NoteSizeService);
@@ -52,11 +53,13 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
   const tasksVersion = useTasksVersion();
+  const customIndexVersion = shallowRef(0);
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
-  let keysByPath = new Map<VaultPath, string>();
+  let keysByPath = new Map<VaultPath, Set<string>>();
   let journalNamesInScope = new Set<string>();
+  let visibleOwners = new Map<string, Set<AnchorString>>();
 
   function gatherDecorations(): readonly DecorationBinding[] {
     const calendar = options.calendarDecorations;
@@ -75,7 +78,13 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   function rebuildScopeMaps(periods: readonly Period[]): void {
     const journalNames = toValue(options.journalNames);
     journalNamesInScope = new Set(journalNames);
-    keysByPath = new Map<VaultPath, string>();
+    visibleOwners = new Map(journalNames.map((name) => [name, new Set<AnchorString>()]));
+    keysByPath = new Map<VaultPath, Set<string>>();
+    const addPath = (path: VaultPath, key: string): void => {
+      const keys = keysByPath.get(path);
+      if (keys) keys.add(key);
+      else keysByPath.set(path, new Set([key]));
+    };
     for (const period of periods) {
       const anchor = period.anchor.toAnchor();
       for (const name of journalNames) {
@@ -83,11 +92,14 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
         if (journalOpt.isNone()) continue;
         if (!periodMatchesWrite(period.kind, journalOpt.value.write.type)) continue;
         const key = cellKey(period.kind, anchor);
-        const opt = index.entryByAnchor(name, anchor);
-        if (opt.isSome()) keysByPath.set(opt.value.path, key);
+        const owner = cycle.anchorOf(name, period.anchor);
+        if (owner.isNone()) continue;
+        visibleOwners.get(name)?.add(owner.value);
+        const opt = index.entryByAnchor(name, owner.value);
+        if (opt.isSome()) addPath(opt.value.path, key);
         // A tasks condition reads notelet structure, and a heading or tag edit there can leave the
         // published task items — and so tasksVersion — unchanged; only metadata-changed carries it.
-        for (const notelet of index.noteletsAt(name, anchor)) keysByPath.set(notelet.path, key);
+        for (const notelet of index.noteletsAt(name, owner.value)) addPath(notelet.path, key);
       }
     }
   }
@@ -97,6 +109,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
     // Reading the version here registers it as a dependency.
     void tasksVersion.value;
+    void customIndexVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
     periodsByKey = new Map<string, Period[]>();
@@ -143,14 +156,16 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   }
 
   // Shared by metadata-changed and size-changed: both name a path, and both mean
-  // "re-evaluate whichever cell owns it, if any is currently live."
+  // "re-evaluate every live cell reading it", including offset days sharing an interval note.
   function repaintCell(path: VaultPath): void {
-    const key = keysByPath.get(path);
-    if (key === undefined) return;
-    const periodsAtKey = periodsByKey.get(key);
-    const slot = cells.get(key);
-    if (!periodsAtKey || !slot) return;
-    slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
+    const keys = keysByPath.get(path);
+    if (!keys) return;
+    const periods = [...keys].flatMap((key) => periodsByKey.get(key) ?? []);
+    const result = engine.evaluateRange(periods, gatherDecorations());
+    for (const key of keys) {
+      const slot = cells.get(key);
+      if (slot) slot.value = result.get(key) ?? [];
+    }
   }
 
   watchEffect(reseed);
@@ -168,13 +183,23 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   onMounted(() => {
     const offMeta = notes.events.on("metadata-changed", repaintCell);
     const offSize = size.events.on("size-changed", repaintCell);
-    const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
+    const offIndex = index.events.on("entryChanged", (event) => {
+      const { entry, kind } = event;
       if (!journalNamesInScope.has(entry.journalName)) return;
       const journalOpt = journals.get(entry.journalName);
       if (journalOpt.isNone()) return;
+      // A stored interval end can move later intervals too, even when its anchor is offscreen.
+      if (journalOpt.value.write.type === "custom") {
+        const visible = visibleOwners.get(entry.journalName)?.has(entry.anchor) ?? false;
+        const storedEnd = !isNotelet(entry) && entry.endDate !== undefined;
+        const previous = event.kind === "added" ? event.previous : undefined;
+        const hadStoredEnd = previous !== undefined && !isNotelet(previous) && previous.endDate !== undefined;
+        if (visible || storedEnd || hadStoredEnd) customIndexVersion.value++;
+        return;
+      }
       const key = cellKey(periodKindForWrite(journalOpt.value.write.type), entry.anchor);
       if (!periodsByKey.has(key)) return;
-      if (kind === "added") keysByPath.set(entry.path, key);
+      if (kind === "added") keysByPath.set(entry.path, new Set([key]));
       else keysByPath.delete(entry.path);
       const periodsAtKey = periodsByKey.get(key);
       const slot = cells.get(key);

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "vue";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { date } from "@/calendar/testing";
 import {
   NoteMetadataService,
@@ -16,7 +16,7 @@ import { JournalsIndex, JournalsRepository } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { TaskIndex } from "@/tasks";
@@ -25,7 +25,7 @@ import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { DecorationsStore } from "./decorations-store";
-import { cellKey } from "./engine";
+import { cellKey, DecorationEngine } from "./engine";
 import { decorationsModule } from "./module";
 import { resolveCell } from "./resolve-cell";
 import { decorationsSettingsCoreModule } from "./settings/module";
@@ -286,6 +286,236 @@ describe("useCellDecorations", () => {
       await nextTick();
       expect(captured.value!.has(key(p1))).toBe(false);
       expect(captured.value!.has(key(p2))).toBe(true);
+    });
+  });
+
+  describe("custom interval changes", () => {
+    const anchor = "2026-01-05" as AnchorString;
+    const path = "sprint/Planning.md" as VaultPath;
+    const periods = ["2026-01-06", "2026-01-18", "2026-01-20"].map((day) => DayPeriod.containing(date(day)));
+
+    it("ignores offscreen registrations without a stored end", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+      });
+      const evaluate = vi.spyOn(harness.resolve(DecorationEngine), "evaluateRange");
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      evaluate.mockClear();
+      const index = harness.resolve(JournalsIndex);
+      let offscreen = WeekPeriod.containing(date("2027-01-04"));
+
+      for (let i = 0; i < 100; i++) {
+        const offscreenAnchor = offscreen.anchor.toAnchor();
+        index.register({
+          journalName: "sprint",
+          anchor: offscreenAnchor,
+          path: `sprint/${offscreenAnchor}.md` as VaultPath,
+        });
+        offscreen = offscreen.next().next();
+      }
+      await nextTick();
+
+      expect(evaluate).not.toHaveBeenCalled();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+    });
+
+    it("batches visible registrations into one evaluation per tick", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+      });
+      const evaluate = vi.spyOn(harness.resolve(DecorationEngine), "evaluateRange");
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      evaluate.mockClear();
+
+      for (const entryAnchor of [anchor, "2026-01-19" as AnchorString]) {
+        const entryPath = `sprint/${entryAnchor}.md` as VaultPath;
+        harness.host.putFile(entryPath);
+        harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor: entryAnchor, path: entryPath });
+      }
+      expect(evaluate).not.toHaveBeenCalled();
+      await nextTick();
+
+      expect(evaluate).toHaveBeenCalledTimes(1);
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 0, 1]);
+    });
+
+    it.each(["removed", "cleared", "shortened"] as const)(
+      "repaints after an offscreen stored end is %s",
+      async (change) => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("offset", { offset: -1 })],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarnessFrom({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "sprint", anchor, path, endDate: "2026-01-20" as AnchorString });
+        const laterPeriods = ["2026-02-01", "2026-02-03"].map((day) => DayPeriod.containing(date(day)));
+        const cells = mountCells(harness, laterPeriods, ["sprint"]);
+        await nextTick();
+        expect(laterPeriods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 1]);
+
+        if (change === "removed") index.unregister(path);
+        else
+          index.register({
+            journalName: "sprint",
+            anchor,
+            path,
+            endDate: change === "shortened" ? ("2026-01-18" as AnchorString) : undefined,
+          });
+        await nextTick();
+
+        expect(laterPeriods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 0]);
+      },
+    );
+
+    it.each(["metadata", "size"] as const)("repaints every offset day after %s changes", async (event) => {
+      const condition =
+        event === "metadata"
+          ? buildCondition("tag", { value: "ready" })
+          : buildCondition("note-size", { condition: "gt", value: 100 });
+      const decorations = [2, -1].map((offset) =>
+        buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("offset", { offset }), condition],
+          styles: [buildStyle("background")],
+        }),
+      );
+      const { harness, size } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations }),
+      });
+      harness.host.putFile(path);
+      harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor, path });
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+
+      if (event === "metadata") harness.host.emitMetadata(path, { frontmatter: { tags: ["ready"] } });
+      else size.setSize(path, { words: 150, characters: 900 });
+      await nextTick();
+
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 1, 0]);
+    });
+
+    it.each(["note", "notelet"] as const)("tracks an interval %s added after mount", async (kind) => {
+      const decorations = [2, -1].map((offset) =>
+        buildDecoration({
+          mode: "and",
+          conditions: [
+            buildCondition("offset", { offset }),
+            buildCondition(kind === "note" ? "has-note" : "has-notelet"),
+          ],
+          styles: [buildStyle("background")],
+        }),
+      );
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations }),
+      });
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+
+      harness.host.putFile(path);
+      const index = harness.resolve(JournalsIndex);
+      if (kind === "note") index.register({ journalName: "sprint", anchor, path });
+      else
+        index.register({
+          kind: "notelet",
+          journalName: "sprint",
+          anchor,
+          path,
+          typeName: "Standup",
+          typeId: "nt_a" as TypeId,
+        });
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 1, 0]);
+
+      index.unregister(path);
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+    });
+
+    it("rebuilds offset ownership when an offscreen interval is extended", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: -1 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+      });
+      harness.host.putFile(path);
+      const index = harness.resolve(JournalsIndex);
+      index.register({ journalName: "sprint", anchor, path });
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 1, 0]);
+
+      index.register({ journalName: "sprint", anchor, path, endDate: "2026-01-20" as AnchorString });
+      await nextTick();
+
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 1]);
+    });
+
+    it("repaints offset days after a newly added notelet's task heading changes", async () => {
+      const decorations = [2, -1].map((offset) =>
+        buildDecoration({
+          mode: "and",
+          conditions: [
+            buildCondition("offset", { offset }),
+            buildCondition("tasks", {
+              status: "open",
+              source: "notelets",
+              filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Work"] }] },
+            }),
+          ],
+          styles: [buildStyle("background")],
+        }),
+      );
+      const { harness, structures } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations }),
+      });
+      harness.host.putFile(path);
+      structures.setStructure(path, structureUnder("Home"));
+      harness.resolve(TaskIndex).publish("test", { path }, [
+        {
+          ...taskItem(path, "todo"),
+          display: { kind: "line", path, line: 2, endLine: 2, parentLine: null, markdown: null },
+        },
+      ]);
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "sprint",
+        anchor,
+        path,
+        typeName: "Standup",
+        typeId: "nt_a" as TypeId,
+      });
+      await nextTick();
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+
+      structures.setStructure(path, structureUnder("Work"));
+      harness.host.emitMetadata(path);
+      await nextTick();
+
+      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 1, 0]);
     });
   });
 

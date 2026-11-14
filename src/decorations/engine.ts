@@ -127,6 +127,7 @@ export class DecorationEngine {
     decoration: JournalDecoration,
     period: Period,
     journal: JournalConfig,
+    anchor: AnchorString,
     metadata: () => Option<NoteMetadata>,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
@@ -139,7 +140,7 @@ export class DecorationEngine {
     // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
     const test = (c: JournalDecorationCondition): boolean =>
-      this.#check(c, period, journal, metadata, size, path, taskDependencies);
+      this.#check(c, period, journal, anchor, metadata, size, path, taskDependencies);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -158,6 +159,7 @@ export class DecorationEngine {
     condition: JournalDecorationCondition,
     period: Period,
     journal: JournalConfig,
+    anchor: AnchorString,
     metadata: () => Option<NoteMetadata>,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
@@ -178,14 +180,12 @@ export class DecorationEngine {
       .with({ type: "tasks" }, (c) =>
         answerTaskQuestion(
           taskDependencies,
-          { journalName: journal.name, anchor: period.anchor.toAnchor(), path: path().getOrUndefined() ?? null },
+          { journalName: journal.name, anchor, path: path().getOrUndefined() ?? null },
           c,
         ),
       )
       .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
-      .with({ type: "has-notelet" }, (c) =>
-        checkHasNotelet(c, this.#index.noteletsAt(journal.name, period.anchor.toAnchor())),
-      )
+      .with({ type: "has-notelet" }, (c) => checkHasNotelet(c, this.#index.noteletsAt(journal.name, anchor)))
       .exhaustive();
   }
 
@@ -250,15 +250,15 @@ export class DecorationEngine {
     // periods those are — outside it the calendar already refuses to open or create anything.
     // A custom journal decorates day cells, so the bound is judged against the interval owning
     // the day, not the day itself; for a fixed journal anchorOf is the period's own anchor.
-    const timelineCache = new Map<string, boolean>();
-    const inTimeline = (journalName: string, period: Period): boolean => {
+    const anchorCache = new Map<string, Option<AnchorString>>();
+    const anchorFor = (journalName: string, period: Period): Option<AnchorString> => {
       const key = `${journalName}::${period.anchor.toAnchor()}`;
-      const hit = timelineCache.get(key);
+      const hit = anchorCache.get(key);
       if (hit !== undefined) return hit;
       const value = this.#cycle
         .anchorOf(journalName, period.anchor)
-        .match({ none: () => false, some: (anchor) => this.#timeline.contains(journalName, anchor) });
-      timelineCache.set(key, value);
+        .filter((anchor) => this.#timeline.contains(journalName, anchor));
+      anchorCache.set(key, value);
       return value;
     };
 
@@ -292,12 +292,15 @@ export class DecorationEngine {
       if (!config) continue;
       for (const period of uniquePeriods) {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
-        if (!inTimeline(binding.journalName, period)) continue;
-        const anchorString = period.anchor.toAnchor();
+        const anchor = anchorFor(binding.journalName, period);
+        if (anchor.isNone()) continue;
+        // Offset/date conditions use the displayed day; note data belongs to its interval.
+        const anchorString = anchor.value;
         const matched = this.#matches(
           binding.decoration,
           period,
           config,
+          anchorString,
           () => metadataFor(binding.journalName, anchorString),
           () => sizeFor(binding.journalName, anchorString),
           () => pathFor(binding.journalName, anchorString),
