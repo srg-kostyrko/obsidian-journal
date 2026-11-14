@@ -33,37 +33,54 @@ async function readNote(path: string): Promise<string> {
   return content;
 }
 
+async function expectRolledAtBoot(): Promise<void> {
+  await waitForContent(
+    TARGET,
+    (content) => content.split("\n").includes("- [ ] milk"),
+    "waited for the roll",
+    ROLL_WAIT_MS,
+  );
+  await waitForContent(
+    SOURCE,
+    (content) => content.split("\n").includes("- [ ] milk #rolled"),
+    "waited for the source stamp",
+  );
+  await waitForNotice(
+    m.tasks_auto_roll_prefix({
+      journal: "daily",
+      notice: m.tasks_roll_done({ count: 1, notes: 1, oldest: SOURCE_DATE }),
+    }),
+  );
+
+  const target = await readNote(TARGET);
+  expect(target).not.toContain("bread");
+  const source = await readNote(SOURCE);
+  expect(source.split("\n")).toContain("- [x] bread");
+}
+
 describe("automatic rollover at boot", () => {
+  before(async () => {
+    await reloadObsidianOn(TODAY, { vault: "./e2e-tests/fixtures/e2e-auto-rollover", plugins: ["journals"] });
+  });
+
+  it("copies the open task into today's note and marks the original, with no command run", async function () {
+    this.timeout(ROLL_WAIT_MS + 30_000);
+    await expectRolledAtBoot();
+  });
+});
+
+// A Reading view keeps a hidden editor that is never saved, so an edit made through it never
+// reaches disk; the roll must write the file instead.
+describe("automatic rollover at boot into a note open in Reading view", () => {
   before(async () => {
     await reloadObsidianOn(TODAY, { vault: "./e2e-tests/fixtures/e2e-auto-rollover", plugins: ["journals"] });
     await openInReadingMode(TARGET);
     await waitForActiveNote(TARGET);
   });
 
-  it("copies the open task into today's reading-mode note and marks the original, with no command run", async function () {
+  it("copies the open task into today's note and marks the original", async function () {
     this.timeout(ROLL_WAIT_MS + 30_000);
-    await waitForContent(
-      TARGET,
-      (content) => content.split("\n").includes("- [ ] milk"),
-      "waited for the roll",
-      ROLL_WAIT_MS,
-    );
-    await waitForContent(
-      SOURCE,
-      (content) => content.split("\n").includes("- [ ] milk #rolled"),
-      "waited for the source stamp",
-    );
-    await waitForNotice(
-      m.tasks_auto_roll_prefix({
-        journal: "daily",
-        notice: m.tasks_roll_done({ count: 1, notes: 1, oldest: SOURCE_DATE }),
-      }),
-    );
-
-    const target = await readNote(TARGET);
-    expect(target).not.toContain("bread");
-    const source = await readNote(SOURCE);
-    expect(source.split("\n")).toContain("- [x] bread");
+    await expectRolledAtBoot();
   });
 });
 

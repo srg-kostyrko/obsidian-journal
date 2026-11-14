@@ -14,14 +14,14 @@ const SOURCE = `daily/${SOURCE_DATE}.md`;
 const TODAY = "2026-09-26";
 const TARGET = `daily/${TODAY}.md`;
 
-describe("rolling tasks with a note open in reading mode", () => {
+describe("rolling tasks with a note open in Reading view", () => {
   beforeEach(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
     await pinClock(`${TODAY}T12:00:00`);
     await seedNote(TARGET, hostNote("daily", TODAY, "## Tasks\n\nToday's notes."));
   });
 
-  it("saves the task in the reading-mode destination before removing the original", async () => {
+  it("moves the task into a destination open in Reading view", async () => {
     await openInReadingMode(TARGET);
     await waitForActiveNote(TARGET);
 
@@ -34,7 +34,7 @@ describe("rolling tasks with a note open in reading mode", () => {
     expect(source?.split("\n")).not.toContain("- [ ] milk");
   });
 
-  it("removes the original from a reading-mode source after saving the destination", async () => {
+  it("moves the task out of a source open in Reading view", async () => {
     await openInReadingMode(SOURCE);
     await waitForActiveNote(SOURCE);
 
