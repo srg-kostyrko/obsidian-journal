@@ -22,6 +22,7 @@ import {
 import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import { v5ToV6Migration } from "./legacy/v5-to-v6";
 import { v6ToV7Migration } from "./legacy/v6-to-v7";
+import { v7ToV8Migration } from "./legacy/v7-to-v8";
 import { unreadable } from "./repair";
 import {
   defineCollection,
@@ -1298,7 +1299,10 @@ describe("SettingsService", () => {
     it("saves a behind-current payload byte-for-byte, not the object the validation pass mutated in place", async () => {
       const harness = await testContainer({
         modules: [
-          testSettingsModule({ collections: [], migrations: [v4ToV5Migration, v5ToV6Migration, v6ToV7Migration] }),
+          testSettingsModule({
+            collections: [],
+            migrations: [v4ToV5Migration, v5ToV6Migration, v6ToV7Migration, v7ToV8Migration],
+          }),
         ],
         data: { calendar: { dow: 1, global: true } },
       });

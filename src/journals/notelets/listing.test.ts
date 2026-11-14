@@ -9,8 +9,8 @@ import { customJournal, fixedJournal } from "../testing";
 import { buildNoteletListing, periodBoundsOf, type NoteletListingDependencies } from "./listing";
 
 import type { JournalConfig } from "../config";
-import type { TypeId } from "./config";
 import type { NoteletEntry } from "../types";
+import type { TypeId } from "./config";
 
 const daily = fixedJournal("Daily", { type: "day" });
 const weekly = fixedJournal("Weekly", { type: "week" });

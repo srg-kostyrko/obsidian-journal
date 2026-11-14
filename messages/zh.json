@@ -35,28 +35,198 @@
   "day_notes_settings_property_description": "用作创建日期的 Frontmatter 属性。没有有效值的笔记将使用文件创建时间。",
   "day_notes_settings_format_label": "创建日期格式",
   "day_notes_settings_format_description": "用于解析创建日期属性的日期格式。",
-  "calendar_appearance_selected_ring": "所选日期 — 边框",
-  "calendar_appearance_selected_ring_description": "与视图所选日期匹配的日历单元格边框颜色。",
   "calendar_apply_globally_desc": "如果禁用，周配置设置仅适用于日记中的日期，不会影响其他插件或 Obsidian 本身创建的日期。",
   "calendar_apply_globally_restart_hint": "您可能需要重启 Obsidian 才能使更改生效。",
   "calendar_apply_globally_title": "将周配置应用于库中的所有日期",
-  "calendar_appearance_active_background": "当前笔记背景颜色",
-  "calendar_appearance_active_text": "当前笔记文本颜色",
-  "calendar_appearance_section_title": "日历高亮显示",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "日历外观",
+  "calendar_appearance_open": "打开",
+  "calendar_appearance_weekend_summary": [
     {
-      "declarations": ["input target", "input layer"],
-      "selectors": ["target", "layer"],
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
       "match": {
-        "target=today,layer=text": "今天日期所在日历单元格的文本颜色。",
-        "target=today,layer=background": "今天日期所在日历单元格的背景颜色。",
-        "target=active,layer=text": "当前打开笔记所在日历单元格的文本颜色。",
-        "target=active,layer=background": "当前打开笔记所在日历单元格的背景颜色。"
+        "mode=some": "周末：{days}",
+        "mode=none": "无周末"
       }
     }
   ],
-  "calendar_appearance_today_background": "今日背景颜色",
-  "calendar_appearance_today_text": "今日文本颜色",
+  "calendar_appearance_weekend_open_settings": "在日历设置中更改",
+  "calendar_appearance_preview": "预览",
+  "calendar_appearance_width_label": "宽度",
+  "calendar_appearance_width": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "宽",
+        "width=narrow": "窄"
+      }
+    }
+  ],
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "更改适用于所有宽度。",
+        "width=narrow": "更改仅适用于窄日历，并覆盖所有宽度通用的值。"
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "所有宽度",
+        "width=narrow": "窄"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "正在编辑",
+  "calendar_appearance_part_placeholder": "选择部分",
+  "calendar_appearance_part_hint": "点击预览中的任意部分，或从列表中选择。",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "今天",
+        "part=selected": "所选日期",
+        "part=active": "已打开的笔记",
+        "part=outside": "本月以外的日期",
+        "part=currentWeek": "本周",
+        "part=weekend": "周末",
+        "part=heading": "月份标题",
+        "part=weekday": "星期标题",
+        "part=weekNumber": "周数",
+        "part=date": "日期数字",
+        "part=cell": "单元格",
+        "part=grid": "月份网格"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "此处的其他部分",
+  "calendar_appearance_modified": "已修改",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=visibility": "可见性",
+        "family=label": "文字标签",
+        "family=text": "文本",
+        "family=divider": "分隔线",
+        "family=highlight": "高亮",
+        "family=box": "单元格框"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=visibility_show_heading": "标题",
+        "control=visibility_show_weekdays": "星期标题",
+        "control=visibility_week_placement": "位置",
+        "control=visibility_outside_days": "本月以外的日期",
+        "control=visibility_month_rows": "行数",
+        "control=label_day": "格式",
+        "control=label_week": "格式",
+        "control=label_month": "月份格式",
+        "control=label_quarter": "季度格式",
+        "control=label_year": "年份格式",
+        "control=label_weekday": "格式",
+        "control=highlight_style": "样式",
+        "control=highlight_color": "高亮颜色",
+        "control=highlight_ring_width": "边框宽度",
+        "control=highlight_strength": "强度",
+        "control=highlight_text_color": "文本颜色",
+        "control=highlight_text_weight": "文本字重",
+        "control=highlight_text_italic": "文本斜体",
+        "control=highlight_week_number_text_color": "周数颜色",
+        "control=highlight_week_number_text_weight": "周数字重",
+        "control=highlight_week_number_text_italic": "周数斜体",
+        "control=highlight_over": "显示在装饰之上",
+        "control=text_size": "尺寸",
+        "control=text_weight": "字重",
+        "control=text_italic": "斜体",
+        "control=text_color": "颜色",
+        "control=text_case": "大小写",
+        "control=divider_divider": "分隔线",
+        "control=divider_divider_color": "颜色",
+        "control=divider_divider_width": "宽度",
+        "control=box_padding": "内边距",
+        "control=box_radius": "圆角半径",
+        "control=box_gap": "单元格间距",
+        "control=box_min_height": "行高"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=show_heading_shown": "显示",
+        "option=show_heading_hidden": "隐藏",
+        "option=show_weekdays_shown": "显示",
+        "option=show_weekdays_hidden": "隐藏",
+        "option=week_placement_left": "在星期列之前",
+        "option=week_placement_right": "在星期列之后",
+        "option=week_placement_none": "隐藏",
+        "option=outside_days_automatic": "自动",
+        "option=outside_days_interactive": "可交互",
+        "option=outside_days_inert": "不可交互",
+        "option=outside_days_hidden": "隐藏",
+        "option=month_rows_fit": "按需",
+        "option=month_rows_six": "始终六行",
+        "option=style_ring": "边框",
+        "option=style_background": "背景",
+        "option=style_text": "仅文本",
+        "option=style_none": "无",
+        "option=weight_normal": "常规",
+        "option=weight_semibold": "半粗体",
+        "option=weight_bold": "粗体",
+        "option=italic_on": "开",
+        "option=italic_off": "关",
+        "option=over_over": "是",
+        "option=over_under": "否",
+        "option=divider_shown": "显示",
+        "option=divider_hidden": "隐藏",
+        "option=case_none": "原样",
+        "option=case_upper": "大写",
+        "option=case_lower": "小写",
+        "option=case_title": "首字母大写"
+      }
+    }
+  ],
+  "calendar_appearance_default": "默认",
+  "calendar_appearance_default_resolved": "默认（{value}）",
+  "calendar_appearance_default_grows": "默认（随宽度增长）",
+  "calendar_appearance_unchanged": "不变",
+  "calendar_appearance_narrow_only": "仅窄",
+  "calendar_appearance_narrow_only_clear": "使用所有宽度通用的值",
+  "calendar_appearance_narrow_only_clear_stock": "使用窄的默认值",
+  "calendar_appearance_narrow_own": "窄有单独的值",
+  "calendar_appearance_narrow_apply": "也用于窄",
+  "calendar_appearance_all_widths": "所有宽度",
+  "calendar_appearance_format_suggestions": "建议",
+  "calendar_appearance_format_preview": "预览：",
+  "calendar_appearance_format_letter": "单字",
+  "calendar_appearance_format_same_as_wide": "复制宽的格式",
+  "calendar_appearance_format_iso_warning": "W 按 ISO 周计数，可能与此日历显示的周行不同。",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "恢复默认值",
+        "width=narrow": "重置窄宽度覆盖"
+      }
+    }
+  ],
   "common_label_back": "返回列表",
   "common_label_calendar": "日历",
   "common_pick_a_date": "选择日期",
@@ -1025,7 +1195,9 @@
       "match": {
         "kind=transparent": "透明",
         "kind=theme": "主题变量",
-        "kind=custom": "自定义"
+        "kind=custom": "自定义",
+        "kind=unchanged": "不变",
+        "kind=default": "默认"
       }
     }
   ],
@@ -1038,7 +1210,8 @@
       "match": {
         "group=text": "文本",
         "group=background": "背景",
-        "group=border": "边框"
+        "group=border": "边框",
+        "group=palette": "调色板"
       }
     }
   ],
@@ -1072,6 +1245,14 @@
   "ui_theme_color_text_selection": "选中文本的背景",
   "ui_theme_color_text_highlight_bg": "高亮文本的背景",
   "ui_theme_color_caret_color": "光标颜色",
+  "ui_theme_color_red": "红色",
+  "ui_theme_color_orange": "橙色",
+  "ui_theme_color_yellow": "黄色",
+  "ui_theme_color_green": "绿色",
+  "ui_theme_color_cyan": "青色",
+  "ui_theme_color_blue": "蓝色",
+  "ui_theme_color_purple": "紫色",
+  "ui_theme_color_pink": "粉色",
   "journal_add_modal_anchor_description": "此日期是计算自定义间隔的起点。创建日记后无法更改。",
   "common_label_today": "今天",
   "relative_date_yesterday": "昨天",
@@ -1270,6 +1451,9 @@
   "view_reposition_modal_confirm": "移动",
   "view_edit_blocks_title": "块",
   "view_edit_blocks_empty": "暂无块。",
+  "view_edit_css_title": "CSS 代码片段",
+  "view_edit_css_selector_label": "选择器",
+  "view_edit_css_selector_description": "仅匹配此视图。点击规则即可复制，然后在 CSS 代码片段中于其花括号内设置 CSS 变量。",
   "view_block_unknown_label": "未知块：{key}",
   "view_block_edit": "编辑块",
   "view_block_edit_title": "编辑块：{type}",
@@ -1547,8 +1731,49 @@
   "view_block_config_weeks_none": "隐藏",
   "view_block_config_weeks_left": "在星期列之前",
   "view_block_config_weeks_right": "在星期列之后",
+  "view_block_config_show_weekdays_label": "显示星期标题行",
+  "view_block_config_visibility_default": "使用全局默认值",
+  "view_block_config_visibility_shown": "显示",
+  "view_block_config_visibility_hidden": "隐藏",
+  "view_block_config_outside_days_label": "本月以外的日期",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "可交互",
+        "option=inert": "不可交互",
+        "option=hidden": "隐藏"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "行数",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "按需",
+        "option=six": "始终六行"
+      }
+    }
+  ],
   "calendar_week_placement_label": "默认周数",
   "calendar_week_placement_description": "在设置为“使用全局默认值”的日历块中，周数列的显示位置。",
+  "calendar_weekend_label": "周末日",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "无周末"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "区域设置的周末",
+  "calendar_weekend_custom": "自定义",
   "calendar_timeline_navigation_label": "默认时间线导航",
   "calendar_timeline_navigation_description": "在 calendar-timeline 代码块中显示上一个和下一个时段的按钮。块可以通过其 navigation 选项覆盖此设置。",
   "view_block_config_show_heading_label": "显示月份/年份标题",
@@ -1841,7 +2066,7 @@
   "journal_edit_code_block_reference_link": "支持的代码块。",
   "journal_edit_code_block_reference_modal_title": "支持的代码块",
   "journal_edit_code_block_copy_hint": "点击代码块即可将其复制到剪贴板。",
-  "journal_edit_code_block_copied": "已复制到剪贴板。",
+  "common_copied_to_clipboard": "已复制到剪贴板。",
   "journal_edit_code_block_nav_description": "导航块可帮助您在与当前笔记相邻的笔记之间移动。",
   "journal_edit_code_block_nav_current": "它在 {name} 日记中的配置如下：",
   "journal_edit_code_block_nav_aliases_lead": "这些旧的代码块名称是别名，它们的行为完全相同：",
@@ -1857,6 +2082,10 @@
   "journal_edit_code_block_timeline_option_before": "在当前时段上方添加指定数量的更早时段。仅适用于 week 和 month 模式。",
   "journal_edit_code_block_timeline_option_after": "在当前时段下方添加指定数量的更晚时段。仅适用于 week 和 month 模式。",
   "journal_edit_code_block_timeline_option_navigation": "在时间线上方显示上一个和下一个时段的按钮，让您无需打开笔记即可查看其他时段。支持的值：true、false。未设置时由插件的日历设置决定。",
+  "journal_edit_code_block_timeline_option_heading": "显示或隐藏月份或年份标题。支持的值：true、false。未设置时由“日历外观”决定。",
+  "journal_edit_code_block_timeline_option_weekdays": "显示或隐藏星期标题。支持的值：true、false。未设置时由“日历外观”决定。",
+  "journal_edit_code_block_timeline_option_outside": "设置本月以外的日期的行为。支持的值：interactive、inert、hidden。仅适用于 month、quarter 和 calendar 模式。未设置时由“日历外观”决定。",
+  "journal_edit_code_block_timeline_option_rows": "设置月份只显示所需的行还是始终显示六行。支持的值：fit、six。仅适用于 month、quarter 和 calendar 模式。未设置时由“日历外观”决定。",
   "journal_edit_code_block_timeline_navigation_lead": "显示导航按钮后，它看起来像这样：",
   "journal_edit_code_block_home_description": "主页块显示指向您日记中当前笔记的链接。",
   "journal_edit_code_block_home_default": "默认情况下，它看起来像这样：",

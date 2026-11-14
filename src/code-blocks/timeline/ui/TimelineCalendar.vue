@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { CalendarDate, YearPeriod, type AnchorString, type MonthPeriod } from "@/calendar";
+import { CalendarDate, YearPeriod, type AnchorString, type MonthPeriod, type OutsideDates } from "@/calendar";
 import { horizontalReservation, useCellPadding } from "@/decorations";
 import { NotesMonthView, useShelfScope } from "@/notes-calendar";
 
@@ -10,6 +10,10 @@ const props = defineProps<{
   shelf: string | null;
   weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
+  showHeader: boolean;
+  showWeekdays: boolean;
+  outsideDates?: OutsideDates;
+  sixRows?: boolean;
 }>();
 
 const months = computed<readonly MonthPeriod[]>(() => {
@@ -24,7 +28,7 @@ const padding = useCellPadding({
   journalNames: () => scope.all.value,
   calendarDecorations: { shelf: () => props.shelf },
 });
-const gridStyle = computed(() => ({ "--journal-cell-padding-inline": horizontalReservation(padding.value) }));
+const gridStyle = computed(() => ({ "--journal-timeline-mark-reservation": horizontalReservation(padding.value) }));
 </script>
 
 <template>
@@ -36,7 +40,10 @@ const gridStyle = computed(() => ({ "--journal-cell-padding-inline": horizontalR
       :month
       :weeks="weeks"
       :hidden-weekdays="hiddenWeekdays"
-      outside-dates="blank"
+      :outside-dates="outsideDates ?? 'blank'"
+      :six-rows="sixRows"
+      :show-header="showHeader"
+      :show-weekdays="showWeekdays"
     />
   </div>
 </template>
@@ -54,7 +61,7 @@ const gridStyle = computed(() => ({ "--journal-cell-padding-inline": horizontalR
      against a rendered month grid — the figure picks the column count alone, so drift costs
      a column, never a clipped month. The third of the row keeps three months as the maximum
      however wide the note is. */
-  --month-min: calc(10.7em + 16 * var(--journal-cell-padding-inline, 2px));
+  --month-min: calc(10.7em + 16 * var(--journal-timeline-mark-reservation, 2px));
   display: grid;
   gap: var(--gap);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--month-min), (100% - 2 * var(--gap)) / 3)), 1fr));

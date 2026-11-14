@@ -48,7 +48,15 @@ import {
   rightClickCell,
   seedDecorationFixture,
 } from "./decorations.js";
-import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, openSeededCalendarView, TOOLBAR } from "./view.js";
+import {
+  calendar,
+  LIVE_LEAF,
+  MONTH_VIEW,
+  openCalendarInPopout,
+  openCalendarView,
+  openSeededCalendarView,
+  TOOLBAR,
+} from "./view.js";
 
 import type { WorkspaceLeaf } from "obsidian";
 
@@ -86,45 +94,6 @@ async function shiftClickMainCalendarCell(anchor: string): Promise<void> {
     if (!cell) return;
     cell.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, shiftKey: true }));
   }, anchor);
-}
-
-async function openCalendarInPopout(): Promise<void> {
-  const opened = await browser.executeObsidian(async ({ app }) => {
-    const workspace = app.workspace as typeof app.workspace & {
-      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
-    };
-    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
-    let source: WorkspaceLeaf | undefined;
-    workspace.iterateAllLeaves((leaf) => {
-      if (
-        leaf.view.containerEl.ownerDocument.defaultView === mainWindow &&
-        leaf.view.getViewType().startsWith("journal-view:")
-      ) {
-        source = leaf;
-      }
-    });
-    if (!source) return false;
-    const popout = workspace.openPopoutLeaf();
-    await popout.setViewState(source.getViewState());
-    return true;
-  });
-  expect(opened).toBe(true);
-  await browser.waitUntil(
-    () =>
-      browser.executeObsidian(({ app }) => {
-        const workspace = app.workspace as typeof app.workspace & {
-          iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
-        };
-        const mainWindow = workspace.containerEl.ownerDocument.defaultView;
-        let rendered = false;
-        workspace.iterateAllLeaves((leaf) => {
-          if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
-          rendered ||= leaf.view.containerEl.querySelector(".notes-month-view") !== null;
-        });
-        return rendered;
-      }),
-    { timeoutMsg: "calendar view did not render in the popout window" },
-  );
 }
 
 function shiftClickPopoutCalendarCell(anchor: string): Promise<boolean> {
@@ -674,9 +643,8 @@ describe("calendar view", () => {
         "month period button did not become active",
       );
 
-      // --journal-cell-active-bg is bound per calendar surface, so it exists on the button
-      // itself, not on the document body. The probe resolves it from inside the button (custom
-      // properties inherit) so the assertion stays theme-independent.
+      // --journal-cell-active-color is saved on the window body (as --journal-saved-cell-active-color, absent while stock) and inherited, so the probe
+      // resolves it from inside the button and the assertion stays theme-independent.
       // The probe answers "no-button" when the toolbar has not painted, which is a render race
       // reported as a styling failure. Wait for the button itself first.
       await $(".journal-view-toolbar [data-period='month']").waitForDisplayed({
@@ -686,7 +654,8 @@ describe("calendar view", () => {
         const button = document.querySelector(".journal-view-toolbar [data-period='month']");
         if (!button) return "no-button";
         const probe = document.createElement("div");
-        probe.style.backgroundColor = "var(--journal-cell-active-bg)";
+        probe.style.backgroundColor =
+          "var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--interactive-accent)))";
         button.append(probe);
         const expected = getComputedStyle(probe).backgroundColor;
         probe.remove();
@@ -895,19 +864,21 @@ describe("calendar view", () => {
         "the open custom-interval note's entry did not become active",
       );
 
-      // The attribute above only says the component marked the entry; these two say the
-      // highlight is actually painted. Both rules live in the section component's `<style
-      // scoped>` while the entries are rendered by that same component, so a scope-id mismatch
-      // (styles owned by one component, markup by another) leaves the attribute set and the
-      // highlight invisible — which nothing in the unit suite can see, since jsdom applies no
-      // stylesheet. Compared against an idle sibling rather than a fixed hex: the colors come
-      // from the theme by default, so only the difference between the two is stable.
+      // The attribute above only says the component marked the entry; these say the highlight is
+      // actually painted, which jsdom cannot show since it applies no stylesheet. The open note's
+      // fill is a layer inside the entry, so it is read off that layer: opaque at stock, and a color
+      // where an idle entry, which has no such layer, paints nothing. Compared against the idle
+      // sibling rather than a fixed hex: the colors come from the theme by default, so only the
+      // difference between the two is stable.
       const activeEntry = `${sprintSection} [data-anchor="${anchor}"]`;
+      const activeFill = `${activeEntry} .journal-interval-row__layer[data-layer="active-fill"]`;
       const idleEntry = `${sprintSection} .journal-view-custom-intervals__entry:not([data-active])`;
       await $(idleEntry).waitForExist({ timeoutMsg: "no idle interval entry to compare the highlight against" });
-      expect(await cssValue(activeEntry, "background-color")).not.toBe(await cssValue(idleEntry, "background-color"));
-      // The nested rows set their own per-row color, so the highlight forces its color through
-      // `:deep(*)`; without it the row keeps the segment's color and the two match.
+      expect(await $(`${idleEntry} [data-layer="active-fill"]`).isExisting()).toBe(false);
+      expect(Number(await cssValue(activeFill, "opacity"))).toBe(1);
+      expect(await cssValue(activeFill, "background-color")).not.toBe(await cssValue(idleEntry, "background-color"));
+      // The segments set their own color, so the entry hands its highlight text down for each segment
+      // to read in place of its own; without it the row keeps the segment's color and the two match.
       expect(await cssValue(`${activeEntry} .nav-row`, "color")).not.toBe(
         await cssValue(`${idleEntry} .nav-row`, "color"),
       );

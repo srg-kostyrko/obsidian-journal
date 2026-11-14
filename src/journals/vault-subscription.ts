@@ -15,6 +15,11 @@ import { JournalsEventsToken } from "./tokens";
 
 import type { EntryOrigin, IndexedNote } from "./types";
 
+// How long a created note's claimless parses are read as stale before the cache is read again. Only
+// a parse already under way when the claim was written can be stale, and Obsidian parses one small
+// file in milliseconds; the margin is for a main thread busy with boot indexing.
+const CLAIMED_PARSE_WINDOW_MS = 10_000;
+
 export class VaultSubscriptionService {
   readonly #notes = inject(NotesService);
   readonly #app = inject(InternalObsidianAppToken);
@@ -31,6 +36,10 @@ export class VaultSubscriptionService {
   // Notes created after layout-ready but before the startup walk completes. Index readiness waits
   // for every note to resolve, so it cannot tell such a note from one that existed at launch.
   readonly #arrivedDuringStartup = new Set<VaultPath>();
+  // Notes registered as created whose claimed version Obsidian has not parsed yet, each with the
+  // timer that re-reads it from the cache if that parse never comes.
+  // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
+  readonly #awaitingClaimedParse = new Map<VaultPath, number>();
 
   #originOf(path: VaultPath): EntryOrigin {
     return this.#index.isReady() || this.#arrivedDuringStartup.has(path) ? "live" : "walk";
@@ -76,18 +85,52 @@ export class VaultSubscriptionService {
     return this.#notes.allMarkdownNotes().every((path) => this.#metadata.get(path).isSome());
   }
 
+  // Creation writes a note's file before its claim, and Obsidian parses one version at a time from
+  // a read that can predate the next write, so a parse of the unclaimed version can arrive after
+  // the entry was registered as created. Read as a removed claim, it unregisters the note and the
+  // claimed parse re-adds it as "appeared". The queue is sequential, so once the claimed version
+  // has parsed, every later parse read a later version. If none arrives within the window, the
+  // cache is read again, so a claim really removed meanwhile still unregisters the note.
+  #staleBeforeClaim(path: VaultPath): boolean {
+    if (!this.#awaitingClaimedParse.has(path)) return false;
+    this.#logger.debug("unclaimed version parsed after its claim was written", { path });
+    return true;
+  }
+
+  #awaitClaimedParse(path: VaultPath): void {
+    this.#stopAwaitingClaimedParse(path);
+    this.#awaitingClaimedParse.set(
+      path,
+      window.setTimeout(() => {
+        this.#awaitingClaimedParse.delete(path);
+        this.#scan(path, { reconcileCustom: true, origin: this.#originOf(path) });
+      }, CLAIMED_PARSE_WINDOW_MS),
+    );
+  }
+
+  #stopAwaitingClaimedParse(path: VaultPath): boolean {
+    const timer = this.#awaitingClaimedParse.get(path);
+    if (timer === undefined) return false;
+    window.clearTimeout(timer);
+    this.#awaitingClaimedParse.delete(path);
+    return true;
+  }
+
   #scan(path: VaultPath, options: { reconcileCustom: boolean; origin: EntryOrigin }): void {
     const fm = this.#readFrontmatter(path);
     if (!fm) {
+      if (this.#staleBeforeClaim(path)) return;
       this.#index.unregister(path);
       return;
     }
     const entry = this.#frontmatter.parseEntry(path, fm);
     if (entry.isNone()) {
+      if (this.#staleBeforeClaim(path)) return;
       this.#index.unregister(path);
       this.#logger.debug("frontmatter not parseable", { path });
       return;
     }
+    this.#stopAwaitingClaimedParse(path);
     const outcome = this.#index.register(entry.value, options.origin);
     if (outcome === "collision") {
       this.#logger.warn("note shares an anchor with another note; not the canonical entry", { path });
@@ -146,12 +189,17 @@ export class VaultSubscriptionService {
       this.#notes.events.on("metadata-changed", (path) =>
         this.#scan(path, { reconcileCustom: true, origin: this.#originOf(path) }),
       ),
+      this.#index.events.on("entryChanged", (event) => {
+        if (event.kind === "added" && event.reason === "created") this.#awaitClaimedParse(event.entry.path);
+      }),
       this.#notes.events.on("renamed", ({ from, to }) => {
         if (this.#arrivedDuringStartup.delete(from)) this.#arrivedDuringStartup.add(to);
+        if (this.#stopAwaitingClaimedParse(from)) this.#awaitClaimedParse(to);
         this.#index.transferPath(from, to);
       }),
       this.#notes.events.on("deleted", (path) => {
         this.#arrivedDuringStartup.delete(path);
+        this.#stopAwaitingClaimedParse(path);
         this.#index.unregister(path, "deleted");
       }),
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
@@ -177,5 +225,7 @@ export class VaultSubscriptionService {
   async [Symbol.asyncDispose](): Promise<void> {
     for (const off of this.#unsubscribes) off();
     this.#unsubscribes.length = 0;
+    for (const timer of this.#awaitingClaimedParse.values()) window.clearTimeout(timer);
+    this.#awaitingClaimedParse.clear();
   }
 }

@@ -1,8 +1,11 @@
-import { $ } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
 import { runCommand } from "../support/commands.js";
+import { waitForState } from "../support/wait.js";
 
 import { calendarSurface } from "./calendar.js";
+
+import type { WorkspaceLeaf } from "obsidian";
 
 const RIBBON_OPEN_CALENDAR = '[aria-label="Open Calendar"]';
 // Re-clicking the ribbon leaves Obsidian's previous (deferred) calendar leaf in the
@@ -29,6 +32,7 @@ export async function openCalendarView(): Promise<void> {
   await $(MONTH_VIEW).waitForExist({
     timeoutMsg: "calendar month view did not render after the Open Calendar ribbon click",
   });
+  await waitForViewPlaced();
 }
 
 // Fixtures with no persisted `views` get the auto-seeded default view, which has no ribbon
@@ -38,4 +42,65 @@ export async function openSeededCalendarView(): Promise<void> {
   await $(MONTH_VIEW).waitForExist({
     timeoutMsg: "calendar month view did not render after the open-calendar command",
   });
+  await waitForViewPlaced();
+}
+
+// Revealing a sidebar leaf expands its split on an animation, and the view mounts before it
+// ends, so the grid slides sideways while the split widens — 44px, more than a column, as
+// measured. WebDriver reads a click's coordinates once, so a click sent mid-slide lands on the
+// neighboring day. Obsidian marks the animation itself: `expand()` sets an inline
+// `overflow: hidden` on the split and clears it on completion (1.8.7 through 1.15.0).
+async function waitForViewPlaced(): Promise<void> {
+  await waitForState(
+    () =>
+      browser.execute((selector: string) => {
+        const view = document.querySelector(selector);
+        if (!view) return null;
+        const dock = view.closest<HTMLElement>(".mod-sidedock");
+        if (!dock) return true;
+        return !dock.classList.contains("is-sidedock-collapsed") && dock.style.overflow !== "hidden";
+      }, MONTH_VIEW),
+    (placed) => placed,
+    "the calendar's sidebar did not finish expanding",
+  );
+}
+
+// Opens a copy of the main window's journal view in a popout and waits for its month grid.
+export async function openCalendarInPopout(): Promise<void> {
+  const opened = await browser.executeObsidian(async ({ app }) => {
+    const workspace = app.workspace as typeof app.workspace & {
+      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+    };
+    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+    let source: WorkspaceLeaf | undefined;
+    workspace.iterateAllLeaves((leaf) => {
+      if (
+        leaf.view.containerEl.ownerDocument.defaultView === mainWindow &&
+        leaf.view.getViewType().startsWith("journal-view:")
+      ) {
+        source = leaf;
+      }
+    });
+    if (!source) return false;
+    const popout = workspace.openPopoutLeaf();
+    await popout.setViewState(source.getViewState());
+    return true;
+  });
+  expect(opened).toBe(true);
+  await browser.waitUntil(
+    () =>
+      browser.executeObsidian(({ app }) => {
+        const workspace = app.workspace as typeof app.workspace & {
+          iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+        };
+        const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+        let rendered = false;
+        workspace.iterateAllLeaves((leaf) => {
+          if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
+          rendered ||= leaf.view.containerEl.querySelector(".notes-month-view") !== null;
+        });
+        return rendered;
+      }),
+    { timeoutMsg: "calendar view did not render in the popout window" },
+  );
 }

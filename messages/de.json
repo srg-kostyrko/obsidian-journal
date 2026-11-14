@@ -35,28 +35,198 @@
   "day_notes_settings_property_description": "Frontmatter-Eigenschaft, die als Erstellungsdatum verwendet wird. Notizen ohne gültigen Wert verwenden ihre Dateierstellungszeit.",
   "day_notes_settings_format_label": "Format des Erstellungsdatums",
   "day_notes_settings_format_description": "Datumsformat zum Auslesen der Eigenschaft für das Erstellungsdatum.",
-  "calendar_appearance_selected_ring": "Ausgewähltes Datum – Ring",
-  "calendar_appearance_selected_ring_description": "Ringfarbe der Kalenderzelle, die dem ausgewählten Datum der Ansicht entspricht.",
   "calendar_apply_globally_desc": "Wenn diese Option deaktiviert ist, gilt die Wochenkonfiguration nur für Datumsangaben innerhalb von Journalen und wirkt sich nicht auf Datumsangaben aus, die von anderen Plugins oder von Obsidian selbst erstellt werden.",
   "calendar_apply_globally_restart_hint": "Möglicherweise musst du Obsidian neu starten, damit die Änderungen wirksam werden.",
   "calendar_apply_globally_title": "Wochenkonfiguration auf alle Datumsangaben im Vault anwenden",
-  "calendar_appearance_active_background": "Aktiv – Hintergrund",
-  "calendar_appearance_active_text": "Aktiv – Text",
-  "calendar_appearance_section_title": "Kalender-Hervorhebung",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "Kalenderdarstellung",
+  "calendar_appearance_open": "Öffnen",
+  "calendar_appearance_weekend_summary": [
     {
-      "declarations": ["input layer", "input target"],
-      "selectors": ["layer", "target"],
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
       "match": {
-        "layer=text,target=today": "Textfarbe der Kalenderzelle für das heutige Datum.",
-        "layer=background,target=today": "Hintergrundfarbe der Kalenderzelle für das heutige Datum.",
-        "layer=text,target=active": "Textfarbe der Kalenderzelle, deren Notiz aktuell geöffnet ist.",
-        "layer=background,target=active": "Hintergrundfarbe der Kalenderzelle, deren Notiz aktuell geöffnet ist."
+        "mode=some": "Wochenende: {days}",
+        "mode=none": "Kein Wochenende"
       }
     }
   ],
-  "calendar_appearance_today_background": "Heute – Hintergrund",
-  "calendar_appearance_today_text": "Heute – Text",
+  "calendar_appearance_weekend_open_settings": "In den Kalendereinstellungen ändern",
+  "calendar_appearance_preview": "Vorschau",
+  "calendar_appearance_width_label": "Breite",
+  "calendar_appearance_width": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Breit",
+        "width=narrow": "Schmal"
+      }
+    }
+  ],
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Änderungen gelten für jede Breite.",
+        "width=narrow": "Änderungen gelten nur für schmale Kalender und überschreiben den Wert für alle Breiten."
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Alle Breiten",
+        "width=narrow": "Schmal"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "Bearbeitung",
+  "calendar_appearance_part_placeholder": "Element auswählen",
+  "calendar_appearance_part_hint": "Klicke auf ein Element der Vorschau oder wähle es aus der Liste.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "Heute",
+        "part=selected": "Ausgewähltes Datum",
+        "part=active": "Geöffnete Notiz",
+        "part=outside": "Tage außerhalb des Monats",
+        "part=currentWeek": "Aktuelle Woche",
+        "part=weekend": "Wochenenden",
+        "part=heading": "Monatsüberschrift",
+        "part=weekday": "Wochentagszeile",
+        "part=weekNumber": "Wochennummern",
+        "part=date": "Tageszahl",
+        "part=cell": "Zellen",
+        "part=grid": "Monatsraster"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "Auch hier",
+  "calendar_appearance_modified": "Geändert",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=visibility": "Sichtbarkeit",
+        "family=label": "Beschriftung",
+        "family=text": "Text",
+        "family=divider": "Trennlinie",
+        "family=highlight": "Hervorhebung",
+        "family=box": "Box"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=visibility_show_heading": "Überschrift",
+        "control=visibility_show_weekdays": "Wochentagszeile",
+        "control=visibility_week_placement": "Position",
+        "control=visibility_outside_days": "Tage außerhalb des Monats",
+        "control=visibility_month_rows": "Zeilen",
+        "control=label_day": "Format",
+        "control=label_week": "Format",
+        "control=label_month": "Monatsformat",
+        "control=label_quarter": "Quartalsformat",
+        "control=label_year": "Jahresformat",
+        "control=label_weekday": "Format",
+        "control=highlight_style": "Stil",
+        "control=highlight_color": "Hervorhebungsfarbe",
+        "control=highlight_ring_width": "Ringbreite",
+        "control=highlight_strength": "Stärke",
+        "control=highlight_text_color": "Textfarbe",
+        "control=highlight_text_weight": "Textstärke",
+        "control=highlight_text_italic": "Text kursiv",
+        "control=highlight_week_number_text_color": "Farbe der Wochennummer",
+        "control=highlight_week_number_text_weight": "Schriftstärke der Wochennummer",
+        "control=highlight_week_number_text_italic": "Wochennummer kursiv",
+        "control=highlight_over": "Über Dekorationen",
+        "control=text_size": "Größe",
+        "control=text_weight": "Schriftstärke",
+        "control=text_italic": "Kursiv",
+        "control=text_color": "Farbe",
+        "control=text_case": "Groß-/Kleinschreibung",
+        "control=divider_divider": "Trennlinie",
+        "control=divider_divider_color": "Farbe",
+        "control=divider_divider_width": "Breite",
+        "control=box_padding": "Innenabstand",
+        "control=box_radius": "Eckenradius",
+        "control=box_gap": "Abstand zwischen Zellen",
+        "control=box_min_height": "Zeilenhöhe"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=show_heading_shown": "Angezeigt",
+        "option=show_heading_hidden": "Ausgeblendet",
+        "option=show_weekdays_shown": "Angezeigt",
+        "option=show_weekdays_hidden": "Ausgeblendet",
+        "option=week_placement_left": "Vor den Wochentagen",
+        "option=week_placement_right": "Nach den Wochentagen",
+        "option=week_placement_none": "Ausgeblendet",
+        "option=outside_days_automatic": "Automatisch",
+        "option=outside_days_interactive": "Interaktiv",
+        "option=outside_days_inert": "Inaktiv",
+        "option=outside_days_hidden": "Ausgeblendet",
+        "option=month_rows_fit": "Nach Bedarf",
+        "option=month_rows_six": "Immer sechs",
+        "option=style_ring": "Ring",
+        "option=style_background": "Hintergrund",
+        "option=style_text": "Nur Text",
+        "option=style_none": "Keine",
+        "option=weight_normal": "Normal",
+        "option=weight_semibold": "Halbfett",
+        "option=weight_bold": "Fett",
+        "option=italic_on": "An",
+        "option=italic_off": "Aus",
+        "option=over_over": "Ja",
+        "option=over_under": "Nein",
+        "option=divider_shown": "Angezeigt",
+        "option=divider_hidden": "Ausgeblendet",
+        "option=case_none": "Wie geschrieben",
+        "option=case_upper": "Großbuchstaben",
+        "option=case_lower": "Kleinbuchstaben",
+        "option=case_title": "Wortanfänge groß"
+      }
+    }
+  ],
+  "calendar_appearance_default": "Standard",
+  "calendar_appearance_default_resolved": "Standard ({value})",
+  "calendar_appearance_default_grows": "Standard (wächst mit der Breite)",
+  "calendar_appearance_unchanged": "Unverändert",
+  "calendar_appearance_narrow_only": "Nur schmal",
+  "calendar_appearance_narrow_only_clear": "Wert für alle Breiten verwenden",
+  "calendar_appearance_narrow_only_clear_stock": "Standard für schmal verwenden",
+  "calendar_appearance_narrow_own": "Schmal hat einen eigenen Wert",
+  "calendar_appearance_narrow_apply": "Auch bei Schmal verwenden",
+  "calendar_appearance_all_widths": "Alle Breiten",
+  "calendar_appearance_format_suggestions": "Vorschläge",
+  "calendar_appearance_format_preview": "Vorschau:",
+  "calendar_appearance_format_letter": "Ein Buchstabe",
+  "calendar_appearance_format_same_as_wide": "Format von Breit übernehmen",
+  "calendar_appearance_format_iso_warning": "W zählt ISO-Wochen, die von den Wochenzeilen dieses Kalenders abweichen können.",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Auf Standard zurücksetzen",
+        "width=narrow": "Schmale Überschreibungen zurücksetzen"
+      }
+    }
+  ],
   "common_label_back": "Zurück zur Liste",
   "common_label_calendar": "Kalender",
   "common_pick_a_date": "Datum auswählen",
@@ -1170,7 +1340,9 @@
       "match": {
         "kind=transparent": "Transparent",
         "kind=theme": "Theme-Variable",
-        "kind=custom": "Benutzerdefiniert"
+        "kind=custom": "Benutzerdefiniert",
+        "kind=unchanged": "Unverändert",
+        "kind=default": "Standard"
       }
     }
   ],
@@ -1183,7 +1355,8 @@
       "match": {
         "group=text": "Text",
         "group=background": "Hintergrund",
-        "group=border": "Rahmen"
+        "group=border": "Rahmen",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1217,6 +1390,14 @@
   "ui_theme_color_text_selection": "Hintergrund für markierten Text",
   "ui_theme_color_text_highlight_bg": "Hintergrund für hervorgehobenen Text",
   "ui_theme_color_caret_color": "Farbe des Textcursors",
+  "ui_theme_color_red": "Rot",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Gelb",
+  "ui_theme_color_green": "Grün",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Blau",
+  "ui_theme_color_purple": "Lila",
+  "ui_theme_color_pink": "Pink",
   "journal_add_modal_anchor_description": "Dieses Datum dient zur Berechnung benutzerdefinierter Intervalle. Es kann nach der Erstellung des Journals nicht mehr geändert werden.",
   "common_label_today": "Heute",
   "relative_date_yesterday": "Gestern",
@@ -1415,6 +1596,9 @@
   "view_reposition_modal_confirm": "Verschieben",
   "view_edit_blocks_title": "Blöcke",
   "view_edit_blocks_empty": "Noch keine Blöcke.",
+  "view_edit_css_title": "CSS-Snippet",
+  "view_edit_css_selector_label": "Selektor",
+  "view_edit_css_selector_description": "Trifft nur diese Ansicht. Klicke auf die Regel, um sie zu kopieren, und setze dann in einem CSS-Snippet CSS-Variablen zwischen ihre geschweiften Klammern.",
   "view_block_unknown_label": "Unbekannter Block: {key}",
   "view_block_edit": "Block bearbeiten",
   "view_block_edit_title": "Block bearbeiten: {type}",
@@ -1702,8 +1886,49 @@
   "view_block_config_weeks_none": "Ausgeblendet",
   "view_block_config_weeks_left": "Vor den Wochentagen",
   "view_block_config_weeks_right": "Nach den Wochentagen",
+  "view_block_config_show_weekdays_label": "Wochentagszeile anzeigen",
+  "view_block_config_visibility_default": "Globalen Standard verwenden",
+  "view_block_config_visibility_shown": "Angezeigt",
+  "view_block_config_visibility_hidden": "Ausgeblendet",
+  "view_block_config_outside_days_label": "Tage außerhalb des Monats",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interaktiv",
+        "option=inert": "Inaktiv",
+        "option=hidden": "Ausgeblendet"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Zeilen",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "Nach Bedarf",
+        "option=six": "Immer sechs"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Standard-Wochennummern",
   "calendar_week_placement_description": "Legt fest, wo die Spalte mit den Wochennummern in Kalenderblöcken erscheint, die auf „Globalen Standard verwenden“ eingestellt sind.",
+  "calendar_weekend_label": "Wochenendtage",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Kein Wochenende"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Wochenende der Systemsprache",
+  "calendar_weekend_custom": "Benutzerdefiniert",
   "calendar_timeline_navigation_label": "Standardnavigation der Zeitleiste",
   "calendar_timeline_navigation_description": "Zeigt in calendar-timeline-Codeblöcken Schaltflächen für den vorherigen und nächsten Zeitraum an. Ein Block kann dies mit seiner Option navigation überschreiben.",
   "view_block_config_show_heading_label": "Monat/Jahr-Überschrift anzeigen",
@@ -2005,7 +2230,7 @@
   "journal_edit_code_block_reference_link": "Unterstützte Codeblöcke.",
   "journal_edit_code_block_reference_modal_title": "Unterstützte Codeblöcke",
   "journal_edit_code_block_copy_hint": "Klicke auf einen Codeblock, um ihn in die Zwischenablage zu kopieren.",
-  "journal_edit_code_block_copied": "In die Zwischenablage kopiert.",
+  "common_copied_to_clipboard": "In die Zwischenablage kopiert.",
   "journal_edit_code_block_nav_description": "Der Navigationsblock hilft dir, zwischen den Notizen neben der aktuellen zu wechseln.",
   "journal_edit_code_block_nav_current": "Seine Konfiguration für das Journal {name} sieht so aus:",
   "journal_edit_code_block_nav_aliases_lead": "Diese älteren Blocknamen sind Aliase, die sich identisch verhalten:",
@@ -2021,6 +2246,10 @@
   "journal_edit_code_block_timeline_option_before": "fügt so viele frühere Zeiträume oberhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
   "journal_edit_code_block_timeline_option_after": "fügt so viele spätere Zeiträume unterhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
   "journal_edit_code_block_timeline_option_navigation": "zeigt oberhalb der Zeitleiste Schaltflächen für den vorherigen und nächsten Zeitraum, sodass du andere Zeiträume ansehen kannst, ohne eine Notiz zu öffnen. Unterstützte Werte: true, false. Ohne diese Option entscheidet die Kalendereinstellung des Plugins.",
+  "journal_edit_code_block_timeline_option_heading": "zeigt oder verbirgt die Monats- bzw. Jahresüberschrift. Unterstützte Werte: true, false. Ohne diese Option entscheidet Kalenderdarstellung.",
+  "journal_edit_code_block_timeline_option_weekdays": "zeigt oder verbirgt die Wochentagszeile. Unterstützte Werte: true, false. Ohne diese Option entscheidet Kalenderdarstellung.",
+  "journal_edit_code_block_timeline_option_outside": "legt fest, wie sich Tage außerhalb des Monats verhalten. Unterstützte Werte: interactive, inert, hidden. Gilt nur für die Modi month, quarter und calendar. Ohne diese Option entscheidet Kalenderdarstellung.",
+  "journal_edit_code_block_timeline_option_rows": "legt fest, ob ein Monat nur die nötigen Zeilen oder immer sechs zeigt. Unterstützte Werte: fit, six. Gilt nur für die Modi month, quarter und calendar. Ohne diese Option entscheidet Kalenderdarstellung.",
   "journal_edit_code_block_timeline_navigation_lead": "Mit Navigationsschaltflächen sieht er so aus:",
   "journal_edit_code_block_home_description": "Der Home-Block zeigt Links zu den aktuellen Notizen in deinen Journalen an.",
   "journal_edit_code_block_home_default": "Standardmäßig sieht es so aus:",

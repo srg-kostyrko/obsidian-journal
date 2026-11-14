@@ -1,0 +1,105 @@
+{
+  "version": 8,
+  "logging": {
+    "level": "debug"
+  },
+  "calendar": {
+    "mode": "custom",
+    "dow": 1,
+    "doy": 4,
+    "global": false
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
+    }
+  },
+  "views": {
+    "7c2a9e41-5b3d-4f8a-9c6e-0d1f2a3b4c5d": {
+      "id": "7c2a9e41-5b3d-4f8a-9c6e-0d1f2a3b4c5d",
+      "name": "Structure target",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "8d3b0f52-6c4e-4a9b-8d7f-1e2a3b4c5d6e",
+          "key": "toolbar",
+          "config": {
+            "items": [
+              {
+                "id": "9e4c1a63-7d5f-4b0c-9e8a-2f3b4c5d6e7f",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "prev",
+                    "unit": "month",
+                    "amount": 1
+                  },
+                  "icon": "chevron-left",
+                  "tooltip": "Structure previous month"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "0f5d2b74-8e6a-4c1d-8f9b-3a4b5c6d7e80",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "none",
+            "showHeading": "default",
+            "showWeekdays": "default",
+            "outsideDays": "default",
+            "monthRows": "default"
+          }
+        },
+        {
+          "id": "1a6e3c85-9f7b-4d2e-9a0c-4b5c6d7e8f91",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "default",
+            "showHeading": true,
+            "showWeekdays": "default",
+            "outsideDays": "interactive",
+            "monthRows": "default"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -17,7 +17,7 @@ function presetUseButton(preset: string): string {
 
 // calendar.mode=custom with dow=1 calls moment.updateLocale(week.dow=1) at boot (CalendarSettingsBridge),
 // which rotates the weekday header so Monday leads. NotesMonthView builds its weekday labels from
-// moment's localeData via .format("ddd"); the first .notes-month-view__weekday must read "Mon". This
+// moment's localeData; the first weekday header must name Monday. This
 // is a global moment-locale effect that a unit/component test cannot exercise through real rendering.
 describe("calendar locale", () => {
   before(async () => {
@@ -30,8 +30,10 @@ describe("calendar locale", () => {
     await firstWeekday.waitForExist({ timeoutMsg: "the weekday header did not render" });
     // The element exists before moment's localeData has supplied its label, so a read-once
     // `expect(await getText())` asserts on a plain string and never retries — it saw "" under
-    // load. The expect-webdriverio matcher polls to waitforTimeout instead.
-    await expect(firstWeekday).toHaveText("Mon");
+    // load. The expect-webdriverio matcher polls to waitforTimeout instead. The full name, not the shown
+    // label: the sidebar calendar is narrow, where the label is one letter, and "S" alone cannot tell the
+    // Sunday-first header the next case waits for from a Saturday-first one.
+    await expect(firstWeekday).toHaveAttribute("aria-label", "Monday");
   });
 
   // The week configuration lives in moment's locale registry, which Vue cannot observe: before
@@ -50,7 +52,7 @@ describe("calendar locale", () => {
     await $(presetUseButton("Western traditional")).click();
     await submitModal();
 
-    await browser.waitUntil(async () => (await firstWeekday.getText()) === "Sun", {
+    await browser.waitUntil(async () => (await firstWeekday.getAttribute("aria-label")) === "Sunday", {
       timeoutMsg: "the open view kept its old week start after the preset changed",
     });
     await closeSettings();
@@ -63,8 +65,9 @@ describe("calendar locale", () => {
     const grid = `${TIMELINE_BLOCK} .notes-month-view`;
     await renderBlock("timeline/week-preset.md", plainNote(TIMELINE_FENCE), grid);
     // Reading mode can mount the block in more than one render context; the first copy is
-    // offscreen, where getText() reads empty, so scope to one grid and read textContent.
-    const firstWeekday = $(`${grid} .notes-month-view__weekday`);
+    // offscreen, where getText() reads empty, so scope to one grid and read textContent. The header holds
+    // a wide and a narrow text, and textContent ignores which one shows, so read the wide one alone.
+    const firstWeekday = $(`${grid} .notes-month-view__weekday-wide`);
     await firstWeekday.waitForExist({ timeoutMsg: "the timeline weekday header did not render" });
     const weekdayLabel = async (): Promise<string> => String(await firstWeekday.getProperty("textContent")).trim();
     expect(await weekdayLabel()).toBe("Sun");

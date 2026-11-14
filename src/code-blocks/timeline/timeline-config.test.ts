@@ -116,6 +116,34 @@ describe("timelineBlockSchema", () => {
     });
   });
 
+  describe("visibility keys", () => {
+    it.each(["heading", "weekdays"] as const)("%s accepts a boolean and degrades anything else", (key) => {
+      expect(v.parse(timelineBlockSchema, { [key]: false })[key]).toBe(false);
+      expect(v.parse(timelineBlockSchema, { [key]: true })[key]).toBe(true);
+      expect(v.parse(timelineBlockSchema, { [key]: "yes" })[key]).toBeUndefined();
+    });
+
+    it.each(["interactive", "inert", "hidden"])("outside accepts %s", (value) => {
+      expect(v.parse(timelineBlockSchema, { outside: value }).outside).toBe(value);
+    });
+
+    it("outside degrades an unknown word to unset", () => {
+      expect(v.parse(timelineBlockSchema, { outside: "sideways" }).outside).toBeUndefined();
+    });
+
+    it.each(["fit", "six"])("rows accepts %s", (value) => {
+      expect(v.parse(timelineBlockSchema, { rows: value }).rows).toBe(value);
+    });
+
+    it("rows degrades an unknown word to unset", () => {
+      expect(v.parse(timelineBlockSchema, { rows: 6 }).rows).toBeUndefined();
+    });
+
+    it("are known keys", () => {
+      expect(timelineBlockKeys).toEqual(expect.arrayContaining(["heading", "weekdays", "outside", "rows"]));
+    });
+  });
+
   it("infers TimelineMode as the mode union", () => {
     expectTypeOf<TimelineMode>().toEqualTypeOf<"week" | "month" | "quarter" | "calendar">();
   });
@@ -129,6 +157,10 @@ describe("timelineBlockSchema", () => {
       before?: number | undefined;
       after?: number | undefined;
       navigation?: boolean | undefined;
+      heading?: boolean | undefined;
+      weekdays?: boolean | undefined;
+      outside?: "interactive" | "inert" | "hidden" | undefined;
+      rows?: "fit" | "six" | undefined;
     }>();
   });
 });

@@ -145,6 +145,9 @@ const presetRestrictedGlobals = [...obsidianmd.configs.recommended]
   .slice(1)
   .filter((entry) => typeof entry === "object");
 
+// eslint-plugin-obsidianmd lints LICENSE as plain text, and unicorn's rules refuse any language but JS.
+const codeFiles = ["**/*.{js,mjs,cjs,ts,mts,cts,vue}"];
+
 export default [
   {
     ignores: [
@@ -170,7 +173,7 @@ export default [
   cspellConfigs.recommended,
   eslintConfigPrettier,
   ...pluginVue.configs["flat/recommended"].map((cfg) => ({ ...cfg, files: cfg.files ?? ["**/*.vue"] })),
-  eslintPluginUnicorn.configs.recommended,
+  { ...eslintPluginUnicorn.configs.recommended, files: codeFiles },
   eslintComments.recommended,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
@@ -215,6 +218,7 @@ export default [
     },
   },
   {
+    files: codeFiles,
     rules: {
       "no-console": "error",
 
@@ -584,9 +588,9 @@ export default [
   },
   {
     // moment is available transitively through the "obsidian" devDependency (which pins its own
-    // "moment"), not declared directly; the ordinal round-trip test needs the real locale data
-    // from these subpath imports for its assertions to mean anything.
-    files: ["src/templates/kinds.isolated.test.ts"],
+    // "moment"), not declared directly; the ordinal round-trip and native-digit tests need the real
+    // locale data from these subpath imports for their assertions to mean anything.
+    files: ["src/templates/kinds.isolated.test.ts", "src/**/*.native-digits.isolated.test.ts"],
     rules: {
       "import/no-extraneous-dependencies": "off",
     },
@@ -798,12 +802,23 @@ export default [
     },
   },
   {
-    // Reads docs/user off disk (node:fs/path/url) to check it against the plugin's fence
-    // definitions; it runs only under vitest/CI, never inside a vault, so the mobile-safety rule
-    // against Node built-ins does not apply here the way it does to shipped plugin code.
-    files: ["src/code-blocks/manual-fences.test.ts"],
+    // Read docs/user off disk (node:fs/path/url) to check it against the plugin's fence
+    // definitions and calendar variable catalog; they run only under vitest/CI, never inside a vault,
+    // so the mobile-safety rule against Node built-ins does not apply the way it does to plugin code.
+    files: ["src/code-blocks/manual-fences.test.ts", "src/notes-calendar/appearance/manual-variables.test.ts"],
     rules: {
       "obsidianmd/no-nodejs-modules": "off",
+      // The variables page's examples are compared with the fixture vault snippets that run them.
+      "obsidianmd/hardcoded-config-path": "off",
+    },
+  },
+  {
+    // Compares the committed e2e gate snippet, a file in a fixture vault's config folder, with the
+    // catalog. Same reasoning as above: a vitest-only read of a repository path, not a vault's.
+    files: ["src/notes-calendar/appearance/gate-snippet.test.ts"],
+    rules: {
+      "obsidianmd/no-nodejs-modules": "off",
+      "obsidianmd/hardcoded-config-path": "off",
     },
   },
 ];

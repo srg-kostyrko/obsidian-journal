@@ -16,9 +16,9 @@ import RenameNoteletTypeModal from "./RenameNoteletTypeModal.vue";
 import TemplaterSupportModal from "./TemplaterSupportModal.vue";
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
-import type { VariableModalContext } from "./variable-context";
 import type { JournalWrite, NumberingReset } from "../../config";
 import type { Prompt, PromptKind } from "../../prompts/config";
+import type { VariableModalContext } from "./variable-context";
 
 export const addJournalModal = defineModal<{ name: string; write: JournalWrite }>()({
   component: AddJournalModal,

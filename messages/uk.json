@@ -35,28 +35,198 @@
   "day_notes_settings_property_description": "Властивість Фронтматеру, що використовується як дата створення. Для нотаток без припустимого значення використовується час створення файлу.",
   "day_notes_settings_format_label": "Формат дати створення",
   "day_notes_settings_format_description": "Формат дати, що використовується для розбору властивості дати створення.",
-  "calendar_appearance_selected_ring": "Вибрана дата — контур",
-  "calendar_appearance_selected_ring_description": "Колір контуру комірки календаря, що відповідає вибраній даті представлення.",
   "calendar_apply_globally_desc": "Якщо вимкнено, налаштування конфігурації тижня застосовуються лише до дат у журналах і не впливають на дати, створені іншими плагінами або самим Obsidian.",
   "calendar_apply_globally_restart_hint": "Можливо, вам доведеться перезапустити Obsidian, щоб зміни набули чинності.",
   "calendar_apply_globally_title": "Застосувати конфігурацію тижня до всіх дат у сховищі",
-  "calendar_appearance_active_background": "Активний — фон",
-  "calendar_appearance_active_text": "Активний — текст",
-  "calendar_appearance_section_title": "Виділення календаря",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "Відображення календаря",
+  "calendar_appearance_open": "Відкрити",
+  "calendar_appearance_weekend_summary": [
     {
-      "declarations": ["input layer", "input target"],
-      "selectors": ["layer", "target"],
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
       "match": {
-        "layer=text,target=today": "Колір тексту клітинки календаря для сьогоднішньої дати.",
-        "layer=background,target=today": "Колір фону клітинки календаря для сьогоднішньої дати.",
-        "layer=text,target=active": "Колір тексту клітинки календаря, нотатка якої наразі відкрита.",
-        "layer=background,target=active": "Колір фону клітинки календаря, нотатка якої наразі відкрита."
+        "mode=some": "Вихідні: {days}",
+        "mode=none": "Без вихідних"
       }
     }
   ],
-  "calendar_appearance_today_background": "Сьогодні — фон",
-  "calendar_appearance_today_text": "Сьогодні — текст",
+  "calendar_appearance_weekend_open_settings": "Змінити в налаштуваннях календаря",
+  "calendar_appearance_preview": "Попередній перегляд",
+  "calendar_appearance_width_label": "Ширина",
+  "calendar_appearance_width": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Широкий",
+        "width=narrow": "Вузький"
+      }
+    }
+  ],
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Зміни застосовуються за будь-якої ширини.",
+        "width=narrow": "Зміни застосовуються лише до вузьких календарів і замінюють значення для всіх ширин."
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Усі ширини",
+        "width=narrow": "Вузький"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "Редагується",
+  "calendar_appearance_part_placeholder": "Виберіть елемент",
+  "calendar_appearance_part_hint": "Натисніть будь-який елемент попереднього перегляду або виберіть його зі списку.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "Сьогодні",
+        "part=selected": "Вибрана дата",
+        "part=active": "Відкрита нотатка",
+        "part=outside": "Дні поза місяцем",
+        "part=currentWeek": "Поточний тиждень",
+        "part=weekend": "Вихідні",
+        "part=heading": "Заголовок місяця",
+        "part=weekday": "Заголовок днів тижня",
+        "part=weekNumber": "Номери тижнів",
+        "part=date": "Число дня",
+        "part=cell": "Комірки",
+        "part=grid": "Сітка місяця"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "Також тут",
+  "calendar_appearance_modified": "Змінено",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=visibility": "Видимість",
+        "family=label": "Підпис",
+        "family=text": "Текст",
+        "family=divider": "Роздільник",
+        "family=highlight": "Виділення",
+        "family=box": "Комірка"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=visibility_show_heading": "Заголовок",
+        "control=visibility_show_weekdays": "Заголовок днів тижня",
+        "control=visibility_week_placement": "Розташування",
+        "control=visibility_outside_days": "Дні поза місяцем",
+        "control=visibility_month_rows": "Рядки",
+        "control=label_day": "Формат",
+        "control=label_week": "Формат",
+        "control=label_month": "Формат місяця",
+        "control=label_quarter": "Формат кварталу",
+        "control=label_year": "Формат року",
+        "control=label_weekday": "Формат",
+        "control=highlight_style": "Стиль",
+        "control=highlight_color": "Колір виділення",
+        "control=highlight_ring_width": "Товщина контуру",
+        "control=highlight_strength": "Інтенсивність",
+        "control=highlight_text_color": "Колір тексту",
+        "control=highlight_text_weight": "Насиченість тексту",
+        "control=highlight_text_italic": "Курсив тексту",
+        "control=highlight_week_number_text_color": "Колір номера тижня",
+        "control=highlight_week_number_text_weight": "Насиченість номера тижня",
+        "control=highlight_week_number_text_italic": "Курсив номера тижня",
+        "control=highlight_over": "Поверх оформлення",
+        "control=text_size": "Розмір",
+        "control=text_weight": "Насиченість",
+        "control=text_italic": "Курсив",
+        "control=text_color": "Колір",
+        "control=text_case": "Регістр",
+        "control=divider_divider": "Роздільник",
+        "control=divider_divider_color": "Колір",
+        "control=divider_divider_width": "Товщина",
+        "control=box_padding": "Внутрішній відступ",
+        "control=box_radius": "Радіус кутів",
+        "control=box_gap": "Проміжок між комірками",
+        "control=box_min_height": "Висота ряду"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=show_heading_shown": "Показано",
+        "option=show_heading_hidden": "Приховано",
+        "option=show_weekdays_shown": "Показано",
+        "option=show_weekdays_hidden": "Приховано",
+        "option=week_placement_left": "Перед днями тижня",
+        "option=week_placement_right": "Після днів тижня",
+        "option=week_placement_none": "Прихований",
+        "option=outside_days_automatic": "Автоматично",
+        "option=outside_days_interactive": "Інтерактивні",
+        "option=outside_days_inert": "Неактивні",
+        "option=outside_days_hidden": "Приховані",
+        "option=month_rows_fit": "За потреби",
+        "option=month_rows_six": "Завжди шість",
+        "option=style_ring": "Контур",
+        "option=style_background": "Фон",
+        "option=style_text": "Лише текст",
+        "option=style_none": "Немає",
+        "option=weight_normal": "Звичайний",
+        "option=weight_semibold": "Напівжирний",
+        "option=weight_bold": "Жирний",
+        "option=italic_on": "Увімк.",
+        "option=italic_off": "Вимк.",
+        "option=over_over": "Так",
+        "option=over_under": "Ні",
+        "option=divider_shown": "Показано",
+        "option=divider_hidden": "Приховано",
+        "option=case_none": "Як написано",
+        "option=case_upper": "Великі літери",
+        "option=case_lower": "Малі літери",
+        "option=case_title": "З великої літери"
+      }
+    }
+  ],
+  "calendar_appearance_default": "За замовчуванням",
+  "calendar_appearance_default_resolved": "За замовчуванням ({value})",
+  "calendar_appearance_default_grows": "За замовчуванням (росте з шириною)",
+  "calendar_appearance_unchanged": "Без змін",
+  "calendar_appearance_narrow_only": "Лише вузький",
+  "calendar_appearance_narrow_only_clear": "Використати значення для всіх ширин",
+  "calendar_appearance_narrow_only_clear_stock": "Використати значення за замовчуванням для вузького",
+  "calendar_appearance_narrow_own": "Вузький має власне значення",
+  "calendar_appearance_narrow_apply": "Використати й для вузького",
+  "calendar_appearance_all_widths": "Усі ширини",
+  "calendar_appearance_format_suggestions": "Варіанти",
+  "calendar_appearance_format_preview": "Попередній перегляд:",
+  "calendar_appearance_format_letter": "Одна літера",
+  "calendar_appearance_format_same_as_wide": "Скопіювати формат широкого",
+  "calendar_appearance_format_iso_warning": "W рахує тижні за ISO, і вони можуть не збігатися з рядками тижнів у цьому календарі.",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Скинути до типових значень",
+        "width=narrow": "Скинути вузькі значення"
+      }
+    }
+  ],
   "common_label_back": "Назад до списку",
   "common_label_calendar": "Календар",
   "common_pick_a_date": "Вибрати дату",
@@ -1029,7 +1199,9 @@
       "match": {
         "kind=transparent": "Прозорий",
         "kind=theme": "Змінна теми",
-        "kind=custom": "Користувацька"
+        "kind=custom": "Користувацька",
+        "kind=unchanged": "Без змін",
+        "kind=default": "За замовчуванням"
       }
     }
   ],
@@ -1042,7 +1214,8 @@
       "match": {
         "group=text": "Текст",
         "group=background": "Фон",
-        "group=border": "Межа"
+        "group=border": "Межа",
+        "group=palette": "Палітра"
       }
     }
   ],
@@ -1076,6 +1249,14 @@
   "ui_theme_color_text_selection": "Фон виділеного тексту",
   "ui_theme_color_text_highlight_bg": "Фон підсвіченого тексту",
   "ui_theme_color_caret_color": "Колір курсора",
+  "ui_theme_color_red": "Червоний",
+  "ui_theme_color_orange": "Помаранчевий",
+  "ui_theme_color_yellow": "Жовтий",
+  "ui_theme_color_green": "Зелений",
+  "ui_theme_color_cyan": "Блакитний",
+  "ui_theme_color_blue": "Синій",
+  "ui_theme_color_purple": "Фіолетовий",
+  "ui_theme_color_pink": "Рожевий",
   "journal_add_modal_anchor_description": "Ця дата використовується для відліку користувацьких інтервалів. Її не можна змінити після створення журналу.",
   "common_label_today": "Сьогодні",
   "relative_date_yesterday": "Вчора",
@@ -1300,6 +1481,9 @@
   "view_reposition_modal_confirm": "Перемістити",
   "view_edit_blocks_title": "Блоки",
   "view_edit_blocks_empty": "Блоків поки що немає.",
+  "view_edit_css_title": "CSS-фрагмент",
+  "view_edit_css_selector_label": "Селектор",
+  "view_edit_css_selector_description": "Вибирає лише це представлення. Клацніть правило, щоб скопіювати його, а потім задайте змінні CSS між його фігурними дужками у CSS-фрагменті.",
   "view_block_unknown_label": "Невідомий блок: {key}",
   "view_block_edit": "Редагувати блок",
   "view_block_edit_title": "Редагувати блок: {type}",
@@ -1583,8 +1767,49 @@
   "view_block_config_weeks_none": "Прихований",
   "view_block_config_weeks_left": "Перед днями тижня",
   "view_block_config_weeks_right": "Після днів тижня",
+  "view_block_config_show_weekdays_label": "Показувати рядок днів тижня",
+  "view_block_config_visibility_default": "Використовувати глобальне значення за замовчуванням",
+  "view_block_config_visibility_shown": "Показано",
+  "view_block_config_visibility_hidden": "Приховано",
+  "view_block_config_outside_days_label": "Дні поза місяцем",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Інтерактивні",
+        "option=inert": "Неактивні",
+        "option=hidden": "Приховані"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Рядки",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "За потреби",
+        "option=six": "Завжди шість"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Номери тижнів за замовчуванням",
   "calendar_week_placement_description": "Де стовпець із номером тижня відображається в блоках календаря, для яких встановлено значення «Використовувати глобальне значення за замовчуванням».",
+  "calendar_weekend_label": "Вихідні дні",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "Без вихідних"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Вихідні за локаллю",
+  "calendar_weekend_custom": "Власні",
   "calendar_timeline_navigation_label": "Навігація часової шкали за замовчуванням",
   "calendar_timeline_navigation_description": "Показує кнопки переходу до попереднього та наступного періоду в блоках коду calendar-timeline. Блок може перевизначити це параметром navigation.",
   "view_block_config_show_heading_label": "Показати заголовок місяць/рік",
@@ -1896,7 +2121,7 @@
   "journal_edit_code_block_reference_link": "Підтримувані блоки коду.",
   "journal_edit_code_block_reference_modal_title": "Підтримувані блоки коду",
   "journal_edit_code_block_copy_hint": "Клацніть блок коду, щоб скопіювати його в буфер обміну.",
-  "journal_edit_code_block_copied": "Скопійовано в буфер обміну.",
+  "common_copied_to_clipboard": "Скопійовано в буфер обміну.",
   "journal_edit_code_block_nav_description": "Блок навігації допомагає переходити між нотатками, що прилягають до поточної.",
   "journal_edit_code_block_nav_current": "Його конфігурація для журналу {name} виглядає так:",
   "journal_edit_code_block_nav_aliases_lead": "Ці старіші назви блоків є псевдонімами, які поводяться ідентично:",
@@ -1912,6 +2137,10 @@
   "journal_edit_code_block_timeline_option_before": "додає вказану кількість попередніх періодів над поточним. Застосовується лише до режимів week і month.",
   "journal_edit_code_block_timeline_option_after": "додає вказану кількість наступних періодів під поточним. Застосовується лише до режимів week і month.",
   "journal_edit_code_block_timeline_option_navigation": "показує над часовою шкалою кнопки переходу до попереднього та наступного періоду, щоб переглядати інші періоди, не відкриваючи нотатку. Підтримувані значення: true, false. Без цього параметра вирішує налаштування календаря плагіна.",
+  "journal_edit_code_block_timeline_option_heading": "показує або приховує заголовок місяця чи року. Підтримувані значення: true, false. Без цього параметра вирішує розділ «Відображення календаря».",
+  "journal_edit_code_block_timeline_option_weekdays": "показує або приховує заголовок днів тижня. Підтримувані значення: true, false. Без цього параметра вирішує розділ «Відображення календаря».",
+  "journal_edit_code_block_timeline_option_outside": "задає поведінку днів поза місяцем. Підтримувані значення: interactive, inert, hidden. Діє лише в режимах month, quarter і calendar. Без цього параметра вирішує розділ «Відображення календаря».",
+  "journal_edit_code_block_timeline_option_rows": "задає, чи показує місяць лише потрібні рядки, чи завжди шість. Підтримувані значення: fit, six. Діє лише в режимах month, quarter і calendar. Без цього параметра вирішує розділ «Відображення календаря».",
   "journal_edit_code_block_timeline_navigation_lead": "З кнопками навігації він виглядає так:",
   "journal_edit_code_block_home_description": "У блоці «Головна» відображаються посилання на поточні нотатки у ваших журналах.",
   "journal_edit_code_block_home_default": "За замовчуванням це виглядає так:",

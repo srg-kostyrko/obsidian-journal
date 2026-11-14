@@ -1,0 +1,10 @@
+body {
+  --journal-cell-selected-text-color: #00aa00;
+}
+[data-journal-view="6d1c0e5a-3f2b-4c8d-9a7e-5b4c3d2e1f0a"] {
+  --journal-cell-date-size: 21px;
+  --journal-cell-date-color: #123456;
+}
+[data-text-precedence="public-today"] {
+  --journal-cell-today-text-color: #563412;
+}

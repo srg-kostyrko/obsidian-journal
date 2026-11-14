@@ -131,6 +131,22 @@ describe("ViewEditSubpage", () => {
     await vi.waitFor(() => expect(spy).toHaveBeenCalledWith(RepositionViewFlow, { viewId }));
   });
 
+  it("keeps the CSS snippet section collapsed until opened", async () => {
+    const { harness } = await setup();
+    mount(harness);
+    expect(screen.queryByText(m.view_edit_css_selector_label())).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: m.view_edit_css_title() }));
+    expect(screen.getByText(m.view_edit_css_selector_label())).toBeTruthy();
+  });
+
+  it("offers a rule whose selector carries this view's id", async () => {
+    const { harness } = await setup();
+    mount(harness);
+    await userEvent.click(screen.getByRole("button", { name: m.view_edit_css_title() }));
+    const rule = within(row(m.view_edit_css_selector_label())).getByRole("button");
+    expect(rule.textContent).toBe(`[data-journal-view="${viewId}"] {\n}`);
+  });
+
   it("invokes AddBlockToViewFlow from the blocks header control", async () => {
     const { harness } = await setup();
     mount(harness);

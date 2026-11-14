@@ -1,0 +1,6 @@
+body {
+  --journal-cell-selected-layer: -1;
+  --journal-cell-selected-text-color: #00aa00;
+  --journal-cell-today-color: #ff00ff;
+  --journal-cell-today-ring-width: 2px;
+}

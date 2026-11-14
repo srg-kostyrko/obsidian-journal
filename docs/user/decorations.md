@@ -218,7 +218,18 @@ first does not.
 - **Icon** — any Obsidian icon, in one of nine positions, sized the same way.
 - **Corner** — a triangle in a corner; click a corner to add one.
 
-Every color can be transparent, a theme color, or a custom color.
+Every color can be transparent, a theme color, or a custom color. Besides the interface colors, the
+theme colors include the theme's palette — red, orange, yellow, green, cyan, blue, purple and pink —
+which follow the theme and switch with light and dark mode.
+
+A shape or icon in a left or right position keeps clear of the date by reserving room on both sides
+of every cell in the calendar, week numbers included: about the mark's size plus a small gap. Every
+decoration the calendar can draw counts, even while no cell shows it. The columns do not shrink below
+that, so in a narrow pane a large mark at the side pushes the last column out of view. A timeline
+fits fewer months on each row instead, and a [custom day label](/views#label) is cut off. Make the
+mark smaller, move it to the center column — above, on or below the date — which reserves no width,
+or widen the pane. A mark in a top or bottom position reserves height the same way, which can make
+the rows taller.
 
 ## When several decorations apply
 

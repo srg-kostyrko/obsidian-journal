@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { calendarDisplayCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -15,6 +16,7 @@ import { testContainer } from "@/testing";
 import TimelineCalendar from "./TimelineCalendar.vue";
 
 const MODULES = [
+  calendarDisplayCoreModule,
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
@@ -39,9 +41,24 @@ describe("TimelineCalendar", () => {
       data: { journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) } },
     });
 
-    const { container } = harness.render(TimelineCalendar, { props: { refDate: anchor("2026-08-15"), shelf: null } });
+    const { container } = harness.render(TimelineCalendar, {
+      props: { refDate: anchor("2026-08-15"), shelf: null, showHeader: true, showWeekdays: true },
+    });
 
     const grid = container.querySelector<HTMLElement>(".timeline-calendar");
-    expect(grid?.style.getPropertyValue("--journal-cell-padding-inline")).toBe("max(0.6em + 3px, 2px)");
+    expect(grid?.style.getPropertyValue("--journal-timeline-mark-reservation")).toBe("max(0.6em + 3px, 2px)");
+  });
+
+  it("renders the heading and a visible weekday row when stock visibility is passed", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { container } = harness.render(TimelineCalendar, {
+      props: { refDate: anchor("2026-05-15"), shelf: null, showHeader: true, showWeekdays: true },
+    });
+
+    expect(container.querySelector(".notes-month-view__header")).not.toBeNull();
+    expect(container.querySelector(".notes-month-view__row--visually-hidden")).toBeNull();
   });
 });

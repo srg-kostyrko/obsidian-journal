@@ -6,8 +6,8 @@ import { dateModificationsModal } from "@/templates/ui/modals";
 
 import { variableReferenceModal } from "./modals";
 
-import type { VariableModalContext } from "./variable-context";
 import type { Prompt, PromptKind } from "../../prompts/config";
+import type { VariableModalContext } from "./variable-context";
 
 const props = withDefaults(
   defineProps<{

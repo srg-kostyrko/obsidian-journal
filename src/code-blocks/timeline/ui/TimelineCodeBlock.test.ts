@@ -2,7 +2,8 @@ import { fireEvent } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, type AnchorString, type WeekPlacement } from "@/calendar";
+import { CalendarDate, type AnchorString, type WeekendSetting, type WeekPlacement } from "@/calendar";
+import type { MonthRows, OutsideDays } from "@/calendar/settings/display-slice";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
@@ -41,6 +42,12 @@ interface TimelineScenario {
   readonly entries?: readonly JournalEntry[];
   readonly timelineNavigation?: boolean;
   readonly weekPlacement?: WeekPlacement;
+  readonly outsideDays?: OutsideDays;
+  readonly showHeading?: boolean;
+  readonly showWeekdays?: boolean;
+  readonly monthRows?: MonthRows;
+  readonly weekend?: WeekendSetting;
+  readonly mondayStart?: boolean;
 }
 
 function journalEntry(journalName: string, anchorDate: string): JournalEntry {
@@ -53,9 +60,15 @@ async function renderTimeline(config: TimelineBlockConfig, scenario: TimelineSce
     data: {
       journals: scenario.journals,
       shelves: scenario.shelves ?? {},
+      ...(scenario.mondayStart === true && { calendar: { mode: "custom", dow: 1, doy: 4, global: false } }),
       calendarDisplay: {
         timelineNavigation: scenario.timelineNavigation ?? false,
         ...(scenario.weekPlacement !== undefined && { weekPlacement: scenario.weekPlacement }),
+        ...(scenario.outsideDays !== undefined && { outsideDays: scenario.outsideDays }),
+        ...(scenario.showHeading !== undefined && { showHeading: scenario.showHeading }),
+        ...(scenario.showWeekdays !== undefined && { showWeekdays: scenario.showWeekdays }),
+        ...(scenario.monthRows !== undefined && { monthRows: scenario.monthRows }),
+        ...(scenario.weekend !== undefined && { weekend: scenario.weekend }),
       },
     },
   });
@@ -111,6 +124,9 @@ afterEach(() => {
 });
 
 beforeAll(() => initLocale("en"));
+
+const outsideCell = (c: Element) => c.querySelector<HTMLElement>(".notes-month-view__day[data-outside]");
+const rowCount = (c: Element) => c.querySelectorAll(".notes-month-view__row").length;
 
 describe("TimelineCodeBlock", () => {
   beforeEach(() => {
@@ -340,6 +356,20 @@ describe("TimelineCodeBlock", () => {
 
       expect(container.querySelectorAll(".notes-week-view__weekday").length).toBe(5);
     });
+
+    // Runs are counted over the visible columns, so in a Monday-start grid a hidden Saturday joins Friday and Sunday.
+    it.each(["month", "week"] as const)(
+      "draws one %s band over Friday and Sunday when Saturday is hidden",
+      async (mode) => {
+        const { container } = await renderDaily(
+          { mode, hiddenWeekdays: [6] },
+          { weekend: { type: "custom", days: [5, 6, 0] }, mondayStart: true },
+        );
+
+        const bands = [...container.querySelectorAll<HTMLElement>('.notes-calendar-band[data-band="weekend"]')];
+        expect(bands.map((band) => band.style.gridColumn)).toEqual(["7 / span 2"]);
+      },
+    );
   });
 
   describe("navigation row", () => {
@@ -581,6 +611,99 @@ describe("TimelineCodeBlock", () => {
 
         expect(weekAnchors(container)).toEqual(before);
       });
+    });
+  });
+
+  describe("visibility", () => {
+    const monthly = { monthly: fixedJournal("monthly", { type: "month" }) };
+    const quarterly = { quarterly: fixedJournal("quarterly", { type: "quarter" }) };
+    const monthScenario = (extra: Partial<TimelineScenario> = {}): TimelineScenario => ({
+      journals: monthly,
+      entries: [journalEntry("monthly", HOST_ANCHOR_DATE)],
+      ...extra,
+    });
+    const quarterScenario = (extra: Partial<TimelineScenario> = {}): TimelineScenario => ({
+      journals: quarterly,
+      entries: [journalEntry("quarterly", HOST_ANCHOR_DATE)],
+      ...extra,
+    });
+
+    it("automatic outside days stay interactive in month mode", async () => {
+      const { container } = await renderDaily({ mode: "month" });
+
+      expect(outsideCell(container)?.dataset.inactive).toBeUndefined();
+      expect(outsideCell(container)?.getAttribute("role")).toBe("gridcell");
+    });
+
+    it("automatic outside days are blank in quarter mode", async () => {
+      const { container } = await renderDaily({ mode: "quarter" });
+
+      expect(outsideCell(container)).toBeNull();
+    });
+
+    it("the fence's outside: inert makes quarter outside days inactive", async () => {
+      const { container } = await renderDaily({ mode: "quarter", outside: "inert" });
+
+      expect(outsideCell(container)?.dataset.inactive).toBe("true");
+    });
+
+    it("the global outside setting applies when the fence is silent", async () => {
+      const { container } = await renderTimeline({}, monthScenario({ outsideDays: "hidden" }));
+
+      expect(container.querySelector(".notes-month-view__day[data-outside]")).toBeNull();
+    });
+
+    it("the fence's heading: false hides the grid heading over a shown global", async () => {
+      const { container } = await renderTimeline({ heading: false }, monthScenario());
+
+      expect(monthHeader(container)).toBeNull();
+    });
+
+    it("the global heading setting applies when the fence is silent", async () => {
+      const { container } = await renderTimeline({}, monthScenario({ showHeading: false }));
+
+      expect(monthHeader(container)).toBeNull();
+    });
+
+    it("keeps the navigation controls in their own row when the heading is hidden", async () => {
+      const { container } = await renderTimeline({ navigation: true, heading: false }, monthScenario());
+
+      expect(monthHeader(container)).toBeNull();
+      expect(labelRow(container)).toBeTruthy();
+      expect(previous(container)).toBeTruthy();
+      expect(next(container)).toBeTruthy();
+    });
+
+    it("hides the weekday row visually when the fence says weekdays: false", async () => {
+      const { container } = await renderTimeline({ weekdays: false }, monthScenario());
+
+      expect(container.querySelector(".notes-month-view__row--visually-hidden")).toBeTruthy();
+    });
+
+    it("hides the week mode weekday row for the global setting", async () => {
+      const { container } = await renderDaily({}, { showWeekdays: false });
+
+      expect(container.querySelector(".notes-week-view__weekdays--visually-hidden")).toBeTruthy();
+    });
+
+    // The harness starts weeks on Sunday, where May 2026, the shared host month, already takes six
+    // weeks and February 2027 takes five; each count below includes the weekday row.
+    it("the fence's rows: six pads a month grid to six rows, over a fit global", async () => {
+      const february = { journals: monthly, entries: [journalEntry("monthly", "2027-02-10")] };
+      const fit = await renderTimeline({}, { ...february, monthRows: "fit" });
+      const six = await renderTimeline({ rows: "six" }, { ...february, monthRows: "fit" });
+
+      expect(rowCount(fit.container)).toBe(6);
+      expect(rowCount(six.container)).toBe(7);
+    });
+
+    // April and June 2026 take five weeks each, May six.
+    it("the global rows setting reaches quarter mode", async () => {
+      const fit = await renderTimeline({}, quarterScenario({ monthRows: "fit" }));
+      const six = await renderTimeline({}, quarterScenario({ monthRows: "six" }));
+
+      expect(rowCount(fit.container)).toBe(6 + 7 + 6);
+      expect(rowCount(six.container)).toBe(3 * 7);
     });
   });
 });

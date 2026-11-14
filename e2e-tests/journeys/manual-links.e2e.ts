@@ -3,8 +3,8 @@ import { browser, expect } from "@wdio/globals";
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { manual, manualUrl, type ManualPath } from "../../src/ui/manual.js";
 import {
-  clickButton,
   clickIcon,
+  clickSectionButton,
   closeSettings,
   expandSection,
   openJournalSubpage,
@@ -27,7 +27,7 @@ const DASHBOARD: ManualPath[] = [
   manual.period.weeks,
   manual.decorations.owners,
   manual.tasks.page,
-  manual.view.calendars,
+  manual.view.appearance,
   manual.troubleshooting.reportingBug,
   manual.troubleshooting.maintenance,
 ];
@@ -47,6 +47,24 @@ describe("manual links in settings", () => {
 
     it("links every section of the main settings page", async () => {
       await expectLinks(DASHBOARD);
+    });
+
+    // A link row's name is an icon row, a block; the help link must still share the title's line
+    // (within 5px: closeTo with precision -1). The bug this guards measured 18.75px.
+    it("keeps a link row's help on the line of its title", async () => {
+      await expectLinks(DASHBOARD);
+      for (const path of [manual.view.appearance, manual.troubleshooting.maintenance]) {
+        const offset = await browser.execute((href: string) => {
+          const link = document.querySelector(`.setting-item-name a.manual-link[href="${CSS.escape(href)}"]`);
+          const title = link?.parentElement?.querySelector(".iconed-row");
+          if (!link || !title) return null;
+          const a = link.getBoundingClientRect();
+          const t = title.getBoundingClientRect();
+          return Math.abs(a.top + a.height / 2 - (t.top + t.height / 2));
+        }, manualUrl(path));
+        expect({ path, found: offset !== null }).toEqual({ path, found: true });
+        expect({ path, offset }).toEqual({ path, offset: expect.closeTo(0, -1) as unknown });
+      }
     });
 
     it("links every section of a custom-interval journal's page", async () => {
@@ -80,11 +98,17 @@ describe("manual links in settings", () => {
       await expandSection(m.view_dashboard_section_title());
       await clickIcon(m.view_dashboard_open({ name: "Calendar" }));
 
-      await expectLinks([manual.view.settings, manual.view.blocks]);
+      await expectLinks([manual.view.settings, manual.view.blocks, manual.view.cssSnippet]);
+    });
+
+    it("links every section of the calendar appearance page", async () => {
+      await clickSectionButton(m.calendar_appearance_section_title(), m.calendar_appearance_open());
+
+      await expectLinks([manual.view.appearance]);
     });
 
     it("links every section of the maintenance page", async () => {
-      await clickButton(m.maintenance_open());
+      await clickSectionButton(m.maintenance_heading(), m.maintenance_open());
 
       await expectLinks([manual.troubleshooting.snapshots, manual.guides.importing, manual.troubleshooting.vaultCheck]);
     });

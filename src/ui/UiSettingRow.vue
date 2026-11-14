@@ -16,7 +16,7 @@ defineProps<{
 <template>
   <div class="setting-item" :class="{ 'setting-item-heading': heading, 'setting-item--stacked': stacked }">
     <div v-if="!controlsOnly" class="setting-item-info">
-      <div class="setting-item-name">
+      <div class="setting-item-name" :class="{ 'setting-item-name--with-help': help }">
         <slot name="name">{{ name ?? "" }}</slot>
         <UiManualLink v-if="help" :path="help" />
       </div>
@@ -35,6 +35,13 @@ defineProps<{
    strips that padding from a modal's plain rows, which leaves a modal's heading indented. */
 .modal:not(.mod-settings) .setting-item-heading:where(:not(.setting-group *)) {
   padding-inline: 0;
+}
+/* A name slot may hold a block (an icon row), which would push the help link onto a line of its
+   own; one centered line keeps it beside the title, as the collapsible blocks' triggers do. */
+.setting-item-name--with-help {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-1);
 }
 .setting-item--stacked {
   flex-direction: column;

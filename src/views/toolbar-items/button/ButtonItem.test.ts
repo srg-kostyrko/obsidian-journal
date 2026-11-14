@@ -23,8 +23,8 @@ import { provideViewContext, type ViewContext } from "../../view-context";
 import { buttonConfigFor } from "./button-config";
 import { buttonItem } from "./button-item";
 
-import type { ButtonConfig } from "./button-config";
 import type { BlockInstanceId } from "../../config";
+import type { ButtonConfig } from "./button-config";
 
 // Mirrors the shelf scope every test in this suite saw under the old `useShelfScope` mock:
 // a day, a week and a month journal, nothing for quarter/year.
@@ -371,5 +371,19 @@ describe("ButtonItem", () => {
       expect(parameters.anchor).toBe("2026-06-08");
       expect(parameters.journalNames).toEqual(["weekly"]);
     });
+  });
+});
+
+describe("ButtonItem icon-only spacing", () => {
+  const iconOnly = buttonConfigFor({ type: "navigate-step", direction: "next", unit: "month", amount: 1 });
+
+  it("marks a button that shows only an icon", async () => {
+    const { result } = await mountItem(iconOnly);
+    expect(result.container.querySelector("button")?.classList.contains("jv-toolbar-icon-only")).toBe(true);
+  });
+
+  it("leaves a button with a label unmarked", async () => {
+    const { result } = await mountItem({ ...iconOnly, label: "Next" });
+    expect(result.container.querySelector("button")?.classList.contains("jv-toolbar-icon-only")).toBe(false);
   });
 });

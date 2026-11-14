@@ -2,10 +2,17 @@ import * as v from "valibot";
 import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { decorationStyleSchema } from "@/decorations/config";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { testContainer } from "@/testing";
 
-import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
+import {
+  isDefaultSegmentColor,
+  journalConfigCollection,
+  journalConfigSchema,
+  journalDefaultsFor,
+  navBlockSchema,
+} from "./config";
 import { journalsCoreModule } from "./module";
 import { JournalsRepository } from "./repository";
 import { buildNavSegment, buildNoteletType, fixedJournal, unwrap } from "./testing";
@@ -373,8 +380,14 @@ describe("journalDefaultsFor fixed-interval decorations", () => {
     expect(decoration.styles[0]).toMatchObject({
       type: "shape",
       shape: "circle",
+      size: 0.25,
       color: { type: "theme", name: "interactive-accent" },
     });
+  });
+
+  it("leaves a stored shape with no size at the earlier default", () => {
+    const parsed = v.parse(decorationStyleSchema, { type: "shape" });
+    expect(parsed).toMatchObject({ size: 0.4 });
   });
 });
 
@@ -1059,5 +1072,19 @@ describe("journal write repair on load", () => {
     expect(journal.write).toEqual({ type: "day" });
     expect(journal.folder).toBe("Sprints");
     expect(repair?.fields).toMatchObject({ fields: ["write"] });
+  });
+});
+
+describe("isDefaultSegmentColor", () => {
+  it("recognizes the color a new segment starts with", () => {
+    expect(isDefaultSegmentColor({ type: "theme", name: "text-normal" })).toBe(true);
+  });
+
+  it.each([
+    ["another theme color", { type: "theme", name: "text-accent" }],
+    ["transparent", { type: "transparent" }],
+    ["a custom color equal to the stock text", { type: "custom", color: "#dcddde" }],
+  ] as const)("treats %s as chosen", (_label, color) => {
+    expect(isDefaultSegmentColor(color)).toBe(false);
   });
 });

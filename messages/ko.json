@@ -35,28 +35,198 @@
   "day_notes_settings_property_description": "생성 날짜로 사용하는 프런트매터 속성입니다. 유효한 값이 없는 노트는 파일 생성 시간을 사용합니다.",
   "day_notes_settings_format_label": "생성 날짜 형식",
   "day_notes_settings_format_description": "생성 날짜 속성을 분석하는 데 사용하는 날짜 형식입니다.",
-  "calendar_appearance_selected_ring": "선택한 날짜 — 테두리",
-  "calendar_appearance_selected_ring_description": "뷰에서 선택한 날짜와 일치하는 달력 셀의 테두리 색상입니다.",
   "calendar_apply_globally_desc": "이 옵션을 끄면 주 구성 설정이 저널 안의 날짜에만 적용되며, 다른 플러그인이나 Obsidian 자체가 만든 날짜에는 영향을 주지 않습니다.",
   "calendar_apply_globally_restart_hint": "변경 사항을 적용하려면 Obsidian을 다시 시작해야 할 수 있습니다.",
   "calendar_apply_globally_title": "보관함의 모든 날짜에 주 구성 적용",
-  "calendar_appearance_active_background": "활성 — 배경",
-  "calendar_appearance_active_text": "활성 — 텍스트",
-  "calendar_appearance_section_title": "달력 강조 표시",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "달력 모양",
+  "calendar_appearance_open": "열기",
+  "calendar_appearance_weekend_summary": [
     {
-      "declarations": ["input target", "input layer"],
-      "selectors": ["target", "layer"],
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
       "match": {
-        "target=today,layer=text": "오늘 날짜에 해당하는 달력 셀의 텍스트 색상입니다.",
-        "target=today,layer=background": "오늘 날짜에 해당하는 달력 셀의 배경색입니다.",
-        "target=active,layer=text": "노트가 현재 열려 있는 달력 셀의 텍스트 색상입니다.",
-        "target=active,layer=background": "노트가 현재 열려 있는 달력 셀의 배경색입니다."
+        "mode=some": "주말: {days}",
+        "mode=none": "주말 없음"
       }
     }
   ],
-  "calendar_appearance_today_background": "오늘 — 배경",
-  "calendar_appearance_today_text": "오늘 — 텍스트",
+  "calendar_appearance_weekend_open_settings": "캘린더 설정에서 변경",
+  "calendar_appearance_preview": "미리 보기",
+  "calendar_appearance_width_label": "너비",
+  "calendar_appearance_width": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "넓게",
+        "width=narrow": "좁게"
+      }
+    }
+  ],
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "변경 사항은 모든 너비에 적용됩니다.",
+        "width=narrow": "변경 사항은 좁은 달력에만 적용되며 모든 너비 공통 값보다 우선합니다."
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "모든 너비",
+        "width=narrow": "좁은 너비"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "편집 중",
+  "calendar_appearance_part_placeholder": "부분 선택",
+  "calendar_appearance_part_hint": "미리 보기의 부분을 클릭하거나 목록에서 선택하세요.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "오늘",
+        "part=selected": "선택한 날짜",
+        "part=active": "열린 노트",
+        "part=outside": "이번 달 밖의 날짜",
+        "part=currentWeek": "이번 주",
+        "part=weekend": "주말",
+        "part=heading": "월 제목",
+        "part=weekday": "요일 머리글",
+        "part=weekNumber": "주 번호",
+        "part=date": "날짜 숫자",
+        "part=cell": "셀",
+        "part=grid": "월 그리드"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "이 위치의 다른 부분",
+  "calendar_appearance_modified": "수정됨",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=visibility": "표시",
+        "family=label": "라벨",
+        "family=text": "텍스트",
+        "family=divider": "구분선",
+        "family=highlight": "강조",
+        "family=box": "박스"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=visibility_show_heading": "제목",
+        "control=visibility_show_weekdays": "요일 머리글",
+        "control=visibility_week_placement": "위치",
+        "control=visibility_outside_days": "해당 월 밖의 날짜",
+        "control=visibility_month_rows": "행",
+        "control=label_day": "형식",
+        "control=label_week": "형식",
+        "control=label_month": "월 형식",
+        "control=label_quarter": "분기 형식",
+        "control=label_year": "연도 형식",
+        "control=label_weekday": "형식",
+        "control=highlight_style": "스타일",
+        "control=highlight_color": "강조 색상",
+        "control=highlight_ring_width": "테두리 두께",
+        "control=highlight_strength": "강도",
+        "control=highlight_text_color": "텍스트 색상",
+        "control=highlight_text_weight": "텍스트 굵기",
+        "control=highlight_text_italic": "텍스트 기울임",
+        "control=highlight_week_number_text_color": "주 번호 색상",
+        "control=highlight_week_number_text_weight": "주 번호 굵기",
+        "control=highlight_week_number_text_italic": "주 번호 기울임",
+        "control=highlight_over": "장식 위에 표시",
+        "control=text_size": "크기",
+        "control=text_weight": "굵기",
+        "control=text_italic": "기울임",
+        "control=text_color": "색상",
+        "control=text_case": "대소문자",
+        "control=divider_divider": "구분선",
+        "control=divider_divider_color": "색상",
+        "control=divider_divider_width": "두께",
+        "control=box_padding": "안쪽 여백",
+        "control=box_radius": "모서리 반경",
+        "control=box_gap": "셀 간격",
+        "control=box_min_height": "행 높이"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=show_heading_shown": "표시",
+        "option=show_heading_hidden": "숨김",
+        "option=show_weekdays_shown": "표시",
+        "option=show_weekdays_hidden": "숨김",
+        "option=week_placement_left": "요일 앞",
+        "option=week_placement_right": "요일 뒤",
+        "option=week_placement_none": "숨김",
+        "option=outside_days_automatic": "자동",
+        "option=outside_days_interactive": "상호작용 가능",
+        "option=outside_days_inert": "상호작용 없음",
+        "option=outside_days_hidden": "숨김",
+        "option=month_rows_fit": "필요한 만큼",
+        "option=month_rows_six": "항상 6행",
+        "option=style_ring": "테두리",
+        "option=style_background": "배경",
+        "option=style_text": "텍스트만",
+        "option=style_none": "없음",
+        "option=weight_normal": "보통",
+        "option=weight_semibold": "약간 굵게",
+        "option=weight_bold": "굵게",
+        "option=italic_on": "켜기",
+        "option=italic_off": "끄기",
+        "option=over_over": "예",
+        "option=over_under": "아니요",
+        "option=divider_shown": "표시",
+        "option=divider_hidden": "숨김",
+        "option=case_none": "입력한 그대로",
+        "option=case_upper": "대문자",
+        "option=case_lower": "소문자",
+        "option=case_title": "단어 첫 글자 대문자"
+      }
+    }
+  ],
+  "calendar_appearance_default": "기본값",
+  "calendar_appearance_default_resolved": "기본값 ({value})",
+  "calendar_appearance_default_grows": "기본값 (너비에 따라 커짐)",
+  "calendar_appearance_unchanged": "변경 없음",
+  "calendar_appearance_narrow_only": "좁은 너비만",
+  "calendar_appearance_narrow_only_clear": "모든 너비 공통 값 사용",
+  "calendar_appearance_narrow_only_clear_stock": "좁은 너비 기본값 사용",
+  "calendar_appearance_narrow_own": "좁은 너비에는 별도 값이 있음",
+  "calendar_appearance_narrow_apply": "좁은 너비에도 사용",
+  "calendar_appearance_all_widths": "모든 너비",
+  "calendar_appearance_format_suggestions": "제안",
+  "calendar_appearance_format_preview": "미리 보기:",
+  "calendar_appearance_format_letter": "한 글자",
+  "calendar_appearance_format_same_as_wide": "넓게 형식 복사",
+  "calendar_appearance_format_iso_warning": "W는 ISO 주를 세므로 이 캘린더에 표시되는 주 행과 다를 수 있습니다.",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "기본값으로 재설정",
+        "width=narrow": "좁은 너비 재정의 재설정"
+      }
+    }
+  ],
   "common_label_back": "목록으로 돌아가기",
   "common_label_calendar": "달력",
   "common_pick_a_date": "날짜 선택",
@@ -1170,7 +1340,9 @@
       "match": {
         "kind=transparent": "투명",
         "kind=theme": "테마 변수",
-        "kind=custom": "사용자 지정"
+        "kind=custom": "사용자 지정",
+        "kind=unchanged": "변경 없음",
+        "kind=default": "기본값"
       }
     }
   ],
@@ -1183,7 +1355,8 @@
       "match": {
         "group=text": "텍스트",
         "group=background": "배경",
-        "group=border": "테두리"
+        "group=border": "테두리",
+        "group=palette": "팔레트"
       }
     }
   ],
@@ -1217,6 +1390,14 @@
   "ui_theme_color_text_selection": "선택한 텍스트의 배경",
   "ui_theme_color_text_highlight_bg": "형광펜으로 표시한 텍스트의 배경",
   "ui_theme_color_caret_color": "캐럿 색상",
+  "ui_theme_color_red": "빨간색",
+  "ui_theme_color_orange": "주황색",
+  "ui_theme_color_yellow": "노란색",
+  "ui_theme_color_green": "초록색",
+  "ui_theme_color_cyan": "청록색",
+  "ui_theme_color_blue": "파란색",
+  "ui_theme_color_purple": "보라색",
+  "ui_theme_color_pink": "분홍색",
   "journal_add_modal_anchor_description": "사용자 지정 간격을 세는 기준이 되는 날짜입니다. 저널을 만든 뒤에는 변경할 수 없습니다.",
   "common_label_today": "오늘",
   "relative_date_yesterday": "어제",
@@ -1415,6 +1596,9 @@
   "view_reposition_modal_confirm": "이동",
   "view_edit_blocks_title": "블록",
   "view_edit_blocks_empty": "아직 블록이 없습니다.",
+  "view_edit_css_title": "CSS 스니펫",
+  "view_edit_css_selector_label": "선택자",
+  "view_edit_css_selector_description": "이 뷰에만 일치합니다. 규칙을 클릭해 복사한 다음, CSS 스니펫에서 중괄호 안에 CSS 변수를 설정하세요.",
   "view_block_unknown_label": "알 수 없는 블록: {key}",
   "view_block_edit": "블록 편집",
   "view_block_edit_title": "블록 편집: {type}",
@@ -1692,8 +1876,49 @@
   "view_block_config_weeks_none": "숨김",
   "view_block_config_weeks_left": "요일 앞",
   "view_block_config_weeks_right": "요일 뒤",
+  "view_block_config_show_weekdays_label": "요일 머리글 표시",
+  "view_block_config_visibility_default": "전역 기본값 사용",
+  "view_block_config_visibility_shown": "표시",
+  "view_block_config_visibility_hidden": "숨김",
+  "view_block_config_outside_days_label": "해당 월 밖의 날짜",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "상호작용 가능",
+        "option=inert": "상호작용 없음",
+        "option=hidden": "숨김"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "행",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "필요한 만큼",
+        "option=six": "항상 6행"
+      }
+    }
+  ],
   "calendar_week_placement_label": "기본 주 번호 위치",
   "calendar_week_placement_description": "\"전역 기본값 사용\"으로 설정된 달력 블록에서 주 번호 열이 표시되는 위치입니다.",
+  "calendar_weekend_label": "주말 요일",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "주말 없음"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "로캘의 주말",
+  "calendar_weekend_custom": "사용자 지정",
   "calendar_timeline_navigation_label": "기본 타임라인 탐색",
   "calendar_timeline_navigation_description": "calendar-timeline 코드 블록에 이전/다음 기간 이동 버튼을 표시합니다. 블록의 navigation 옵션으로 재정의할 수 있습니다.",
   "view_block_config_show_heading_label": "월/연도 제목 표시",
@@ -1989,7 +2214,7 @@
   "journal_edit_code_block_reference_link": "지원되는 코드 블록.",
   "journal_edit_code_block_reference_modal_title": "지원되는 코드 블록",
   "journal_edit_code_block_copy_hint": "코드 블록을 클릭하면 클립보드에 복사됩니다.",
-  "journal_edit_code_block_copied": "클립보드에 복사되었습니다.",
+  "common_copied_to_clipboard": "클립보드에 복사되었습니다.",
   "journal_edit_code_block_nav_description": "탐색 블록을 사용하면 현재 노트와 인접한 노트 사이를 오갈 수 있습니다.",
   "journal_edit_code_block_nav_current": "{name} 저널에 대한 구성은 다음과 같습니다:",
   "journal_edit_code_block_nav_aliases_lead": "다음 옛 블록 이름들은 동일하게 동작하는 별칭입니다:",
@@ -2005,6 +2230,10 @@
   "journal_edit_code_block_timeline_option_before": "현재 기간 위에 지정한 수만큼 이전 기간을 추가합니다. week 및 month 모드에서만 적용됩니다.",
   "journal_edit_code_block_timeline_option_after": "현재 기간 아래에 지정한 수만큼 이후 기간을 추가합니다. week 및 month 모드에서만 적용됩니다.",
   "journal_edit_code_block_timeline_option_navigation": "타임라인 위에 이전/다음 기간 이동 버튼을 표시하여 노트를 열지 않고도 다른 기간을 볼 수 있습니다. 지원되는 값: true, false. 지정하지 않으면 플러그인의 달력 설정을 따릅니다.",
+  "journal_edit_code_block_timeline_option_heading": "월 또는 연도 제목을 표시하거나 숨깁니다. 지원되는 값: true, false. 지정하지 않으면 '달력 모양' 설정을 따릅니다.",
+  "journal_edit_code_block_timeline_option_weekdays": "요일 머리글을 표시하거나 숨깁니다. 지원되는 값: true, false. 지정하지 않으면 '달력 모양' 설정을 따릅니다.",
+  "journal_edit_code_block_timeline_option_outside": "해당 월 밖의 날짜가 동작하는 방식을 설정합니다. 지원되는 값: interactive, inert, hidden. month, quarter, calendar 모드에서만 적용됩니다. 지정하지 않으면 '달력 모양' 설정을 따릅니다.",
+  "journal_edit_code_block_timeline_option_rows": "월에 필요한 행만 표시할지 항상 6행을 표시할지 설정합니다. 지원되는 값: fit, six. month, quarter, calendar 모드에서만 적용됩니다. 지정하지 않으면 '달력 모양' 설정을 따릅니다.",
   "journal_edit_code_block_timeline_navigation_lead": "탐색 버튼을 표시하면 다음과 같이 보입니다:",
   "journal_edit_code_block_home_description": "홈 블록은 저널의 현재 노트로 연결되는 링크를 표시합니다.",
   "journal_edit_code_block_home_default": "기본적으로는 다음과 같습니다:",

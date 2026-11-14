@@ -161,6 +161,25 @@ describe("Calendar", () => {
     });
   });
 
+  describe("isIsoWeekGrid", () => {
+    it("is true for Monday-first with day-of-year 4 and false otherwise", () => {
+      const calendar = new Calendar();
+      calendar.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      expect(calendar.isIsoWeekGrid()).toBe(true);
+      calendar.applyWeekConfig({ dow: 0, doy: 6 }, { propagateToGlobal: false });
+      expect(calendar.isIsoWeekGrid()).toBe(false);
+    });
+
+    it("updates a computed that reads it when the grid changes", () => {
+      const calendar = new Calendar();
+      calendar.applyWeekConfig({ dow: 0, doy: 6 }, { propagateToGlobal: false });
+      const iso = computed(() => calendar.isIsoWeekGrid());
+      expect(iso.value).toBe(false);
+      calendar.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      expect(iso.value).toBe(true);
+    });
+  });
+
   describe("months", () => {
     it("returns the 12 localized month names", () => {
       const calendar = new Calendar();

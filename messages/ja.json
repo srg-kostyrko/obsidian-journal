@@ -35,28 +35,198 @@
   "day_notes_settings_property_description": "作成日として使用するフロントマターのプロパティです。有効な値がないノートでは、ファイルの作成日時を使用します。",
   "day_notes_settings_format_label": "作成日の形式",
   "day_notes_settings_format_description": "作成日のプロパティを解析するために使用する日付形式です。",
-  "calendar_appearance_selected_ring": "選択した日付 — 枠線",
-  "calendar_appearance_selected_ring_description": "ビューで選択した日付に一致するカレンダーセルの枠線の色です。",
   "calendar_apply_globally_desc": "無効にした場合、週設定はジャーナル内の日付にのみ適用され、他のプラグインやObsidian自体によって作成された日付には影響しません。",
   "calendar_apply_globally_restart_hint": "変更を反映させるには、Obsidianを再起動する必要がある場合があります。",
   "calendar_apply_globally_title": "保管庫内のすべての日付に週の設定を適用",
-  "calendar_appearance_active_background": "アクティブ — 背景",
-  "calendar_appearance_active_text": "アクティブ — テキスト",
-  "calendar_appearance_section_title": "カレンダーのハイライト表示",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "カレンダーの外観",
+  "calendar_appearance_open": "開く",
+  "calendar_appearance_weekend_summary": [
     {
-      "declarations": ["input target", "input layer"],
-      "selectors": ["target", "layer"],
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
       "match": {
-        "target=today,layer=text": "今日の日付のカレンダーセルのテキストの色。",
-        "target=today,layer=background": "今日の日付のカレンダーセルの背景色。",
-        "target=active,layer=text": "現在ノートが開いているカレンダーセルのテキストの色。",
-        "target=active,layer=background": "現在ノートが開いているカレンダーセルの背景色。"
+        "mode=some": "週末: {days}",
+        "mode=none": "週末なし"
       }
     }
   ],
-  "calendar_appearance_today_background": "今日 — 背景",
-  "calendar_appearance_today_text": "今日 — テキスト",
+  "calendar_appearance_weekend_open_settings": "カレンダー設定で変更",
+  "calendar_appearance_preview": "プレビュー",
+  "calendar_appearance_width_label": "幅",
+  "calendar_appearance_width": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "広い",
+        "width=narrow": "狭い"
+      }
+    }
+  ],
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "変更はすべての幅に適用されます。",
+        "width=narrow": "変更は狭いカレンダーにのみ適用され、すべての幅に共通の値より優先されます。"
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "すべての幅",
+        "width=narrow": "狭い幅"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "編集中",
+  "calendar_appearance_part_placeholder": "パーツを選択",
+  "calendar_appearance_part_hint": "プレビューのパーツをクリックするか、一覧から選択してください。",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "今日",
+        "part=selected": "選択した日付",
+        "part=active": "開いているノート",
+        "part=outside": "月外の日",
+        "part=currentWeek": "今週",
+        "part=weekend": "週末",
+        "part=heading": "月の見出し",
+        "part=weekday": "曜日の見出し",
+        "part=weekNumber": "週番号",
+        "part=date": "日付の数字",
+        "part=cell": "セル",
+        "part=grid": "月のグリッド"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "この位置のほかのパーツ",
+  "calendar_appearance_modified": "変更済み",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=visibility": "表示",
+        "family=label": "ラベル",
+        "family=text": "テキスト",
+        "family=divider": "区切り線",
+        "family=highlight": "ハイライト",
+        "family=box": "ボックス"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=visibility_show_heading": "見出し",
+        "control=visibility_show_weekdays": "曜日の見出し",
+        "control=visibility_week_placement": "位置",
+        "control=visibility_outside_days": "月外の日",
+        "control=visibility_month_rows": "行数",
+        "control=label_day": "形式",
+        "control=label_week": "形式",
+        "control=label_month": "月の形式",
+        "control=label_quarter": "四半期の形式",
+        "control=label_year": "年の形式",
+        "control=label_weekday": "形式",
+        "control=highlight_style": "スタイル",
+        "control=highlight_color": "ハイライトの色",
+        "control=highlight_ring_width": "枠線の幅",
+        "control=highlight_strength": "強さ",
+        "control=highlight_text_color": "テキストの色",
+        "control=highlight_text_weight": "テキストの太さ",
+        "control=highlight_text_italic": "テキストのイタリック",
+        "control=highlight_week_number_text_color": "週番号の色",
+        "control=highlight_week_number_text_weight": "週番号の太さ",
+        "control=highlight_week_number_text_italic": "週番号のイタリック",
+        "control=highlight_over": "装飾の上に表示",
+        "control=text_size": "サイズ",
+        "control=text_weight": "太さ",
+        "control=text_italic": "イタリック",
+        "control=text_color": "色",
+        "control=text_case": "大文字・小文字",
+        "control=divider_divider": "区切り線",
+        "control=divider_divider_color": "色",
+        "control=divider_divider_width": "幅",
+        "control=box_padding": "内側の余白",
+        "control=box_radius": "角の半径",
+        "control=box_gap": "セルの間隔",
+        "control=box_min_height": "行の高さ"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=show_heading_shown": "表示",
+        "option=show_heading_hidden": "非表示",
+        "option=show_weekdays_shown": "表示",
+        "option=show_weekdays_hidden": "非表示",
+        "option=week_placement_left": "曜日の前",
+        "option=week_placement_right": "曜日の後",
+        "option=week_placement_none": "非表示",
+        "option=outside_days_automatic": "自動",
+        "option=outside_days_interactive": "操作可能",
+        "option=outside_days_inert": "操作不可",
+        "option=outside_days_hidden": "非表示",
+        "option=month_rows_fit": "必要な分だけ",
+        "option=month_rows_six": "常に6行",
+        "option=style_ring": "枠線",
+        "option=style_background": "背景",
+        "option=style_text": "テキストのみ",
+        "option=style_none": "なし",
+        "option=weight_normal": "標準",
+        "option=weight_semibold": "やや太字",
+        "option=weight_bold": "太字",
+        "option=italic_on": "オン",
+        "option=italic_off": "オフ",
+        "option=over_over": "はい",
+        "option=over_under": "いいえ",
+        "option=divider_shown": "表示",
+        "option=divider_hidden": "非表示",
+        "option=case_none": "そのまま",
+        "option=case_upper": "大文字",
+        "option=case_lower": "小文字",
+        "option=case_title": "単語の先頭を大文字"
+      }
+    }
+  ],
+  "calendar_appearance_default": "デフォルト",
+  "calendar_appearance_default_resolved": "デフォルト（{value}）",
+  "calendar_appearance_default_grows": "デフォルト（幅に合わせて伸びる）",
+  "calendar_appearance_unchanged": "変更なし",
+  "calendar_appearance_narrow_only": "狭い幅のみ",
+  "calendar_appearance_narrow_only_clear": "すべての幅に共通の値を使用",
+  "calendar_appearance_narrow_only_clear_stock": "狭い幅のデフォルトを使用",
+  "calendar_appearance_narrow_own": "狭い幅には独自の値があります",
+  "calendar_appearance_narrow_apply": "狭い幅にも使用",
+  "calendar_appearance_all_widths": "すべての幅",
+  "calendar_appearance_format_suggestions": "候補",
+  "calendar_appearance_format_preview": "プレビュー:",
+  "calendar_appearance_format_letter": "1文字",
+  "calendar_appearance_format_same_as_wide": "広いの形式をコピー",
+  "calendar_appearance_format_iso_warning": "W は ISO 週を数えるため、このカレンダーに表示される週の行と異なる場合があります。",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "デフォルトに戻す",
+        "width=narrow": "狭い幅の上書きをリセット"
+      }
+    }
+  ],
   "common_label_back": "リストに戻る",
   "common_label_calendar": "カレンダー",
   "common_pick_a_date": "日付を選択",
@@ -1025,7 +1195,9 @@
       "match": {
         "kind=transparent": "透明",
         "kind=theme": "テーマ変数",
-        "kind=custom": "カスタム"
+        "kind=custom": "カスタム",
+        "kind=unchanged": "変更なし",
+        "kind=default": "デフォルト"
       }
     }
   ],
@@ -1038,7 +1210,8 @@
       "match": {
         "group=text": "テキスト",
         "group=background": "背景",
-        "group=border": "枠線"
+        "group=border": "枠線",
+        "group=palette": "パレット"
       }
     }
   ],
@@ -1072,6 +1245,14 @@
   "ui_theme_color_text_selection": "選択テキストの背景",
   "ui_theme_color_text_highlight_bg": "ハイライトテキストの背景",
   "ui_theme_color_caret_color": "キャレットの色",
+  "ui_theme_color_red": "赤",
+  "ui_theme_color_orange": "オレンジ",
+  "ui_theme_color_yellow": "黄",
+  "ui_theme_color_green": "緑",
+  "ui_theme_color_cyan": "シアン",
+  "ui_theme_color_blue": "青",
+  "ui_theme_color_purple": "紫",
+  "ui_theme_color_pink": "ピンク",
   "journal_add_modal_anchor_description": "この日付は、カスタム間隔のカウント開始日として使用されます。ジャーナル作成後は変更できません。",
   "common_label_today": "今日",
   "relative_date_yesterday": "昨日",
@@ -1270,6 +1451,9 @@
   "view_reposition_modal_confirm": "移動",
   "view_edit_blocks_title": "ブロック",
   "view_edit_blocks_empty": "まだブロックはありません。",
+  "view_edit_css_title": "CSSスニペット",
+  "view_edit_css_selector_label": "セレクター",
+  "view_edit_css_selector_description": "このビューだけに一致します。ルールをクリックしてコピーし、CSSスニペットでその波括弧の中にCSS変数を設定します。",
   "view_block_unknown_label": "不明なブロック: {key}",
   "view_block_edit": "ブロックを編集",
   "view_block_edit_title": "ブロックを編集: {type}",
@@ -1547,8 +1731,49 @@
   "view_block_config_weeks_none": "非表示",
   "view_block_config_weeks_left": "曜日の前",
   "view_block_config_weeks_right": "曜日の後",
+  "view_block_config_show_weekdays_label": "曜日の見出し行を表示",
+  "view_block_config_visibility_default": "グローバルデフォルトを使用",
+  "view_block_config_visibility_shown": "表示",
+  "view_block_config_visibility_hidden": "非表示",
+  "view_block_config_outside_days_label": "月外の日",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "操作可能",
+        "option=inert": "操作不可",
+        "option=hidden": "非表示"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "行数",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "必要な分だけ",
+        "option=six": "常に6行"
+      }
+    }
+  ],
   "calendar_week_placement_label": "デフォルトの週番号",
   "calendar_week_placement_description": "「グローバルデフォルトを使用」に設定されたカレンダーブロックで、週番号の列を表示する位置。",
+  "calendar_weekend_label": "週末の曜日",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "週末なし"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "ロケールの週末",
+  "calendar_weekend_custom": "カスタム",
   "calendar_timeline_navigation_label": "デフォルトのタイムラインナビゲーション",
   "calendar_timeline_navigation_description": "calendar-timeline コードブロックに前後の期間へ移動するボタンを表示します。ブロックの navigation オプションで上書きできます。",
   "view_block_config_show_heading_label": "月／年の見出しを表示",
@@ -1847,7 +2072,7 @@
   "journal_edit_code_block_reference_link": "サポートされているコードブロック。",
   "journal_edit_code_block_reference_modal_title": "サポートされているコードブロック",
   "journal_edit_code_block_copy_hint": "コードブロックをクリックすると、クリップボードにコピーされます。",
-  "journal_edit_code_block_copied": "クリップボードにコピーされました。",
+  "common_copied_to_clipboard": "クリップボードにコピーされました。",
   "journal_edit_code_block_nav_description": "ナビゲーションブロックを使用すると、現在表示されているノートに隣接するノート間を移動できます。",
   "journal_edit_code_block_nav_current": "{name}ジャーナルでの設定は次のとおりです:",
   "journal_edit_code_block_nav_aliases_lead": "これらの古いブロック名は、まったく同じ動作をするエイリアスです:",
@@ -1863,6 +2088,10 @@
   "journal_edit_code_block_timeline_option_before": "現在の期間の上に、指定した数だけ前の期間を追加します。week と month モードでのみ有効です。",
   "journal_edit_code_block_timeline_option_after": "現在の期間の下に、指定した数だけ後の期間を追加します。week と month モードでのみ有効です。",
   "journal_edit_code_block_timeline_option_navigation": "タイムラインの上に前後の期間へ移動するボタンを表示し、ノートを開かずに他の期間を確認できるようにします。対応する値: true、false。指定しない場合はプラグインのカレンダー設定に従います。",
+  "journal_edit_code_block_timeline_option_heading": "月または年の見出しを表示または非表示にします。対応する値: true、false。指定しない場合は「カレンダーの外観」に従います。",
+  "journal_edit_code_block_timeline_option_weekdays": "曜日の見出しを表示または非表示にします。対応する値: true、false。指定しない場合は「カレンダーの外観」に従います。",
+  "journal_edit_code_block_timeline_option_outside": "月外の日の動作を設定します。対応する値: interactive、inert、hidden。month、quarter、calendar モードでのみ有効です。指定しない場合は「カレンダーの外観」に従います。",
+  "journal_edit_code_block_timeline_option_rows": "月に必要な行だけを表示するか、常に6行表示するかを設定します。対応する値: fit、six。month、quarter、calendar モードでのみ有効です。指定しない場合は「カレンダーの外観」に従います。",
   "journal_edit_code_block_timeline_navigation_lead": "ナビゲーションボタンを表示すると、次のようになります:",
   "journal_edit_code_block_home_description": "ホームブロックには、各ジャーナルの現在のノートへのリンクが表示されます。",
   "journal_edit_code_block_home_default": "デフォルトでは次のように表示されます:",

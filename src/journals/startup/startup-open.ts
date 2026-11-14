@@ -66,7 +66,7 @@ export class StartupOpenService {
   // The settings UI stops a day being claimed twice, so overlapping overrides only reach here from
   // a hand-edited data.json or a sync merge: the first entry claiming today wins.
   #journalNameFor(today: CalendarDate): string {
-    const weekday = Number(today.format("d"));
+    const weekday = today.weekday();
     const override = this.#slice.state.overrides.find((entry) => entry.weekdays.includes(weekday));
     return override?.journalName ?? this.#slice.state.journalName;
   }

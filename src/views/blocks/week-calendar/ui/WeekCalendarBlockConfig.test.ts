@@ -16,7 +16,17 @@ async function mountConfig(config: WeekCalendarConfig, onChange: WeekCalendarCon
 describe("WeekCalendarBlockConfig", () => {
   it("merges a field patch into the full config for onChange", async () => {
     const onChange = vi.fn();
-    await mountConfig({ before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true }, onChange);
+    await mountConfig(
+      {
+        before: 0,
+        after: 0,
+        hiddenWeekdays: [],
+        weeks: "left" as const,
+        showHeading: "default",
+        showWeekdays: "default",
+      },
+      onChange,
+    );
     const [beforeInput] = screen.getAllByRole("spinbutton");
     await userEvent.clear(beforeInput);
     await userEvent.type(beforeInput, "2");
@@ -25,21 +35,32 @@ describe("WeekCalendarBlockConfig", () => {
       after: 0,
       hiddenWeekdays: [],
       weeks: "left",
-      showHeading: true,
+      showHeading: "default",
+      showWeekdays: "default",
     });
   });
 
-  it("emits onChange turning the heading off when the toggle is switched off", async () => {
+  it("writes a hidden weekday header as a literal false", async () => {
     const onChange = vi.fn();
-    await mountConfig({ before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true }, onChange);
-    const checkboxes = screen.getAllByRole("checkbox");
-    await userEvent.click(checkboxes.at(-1)!);
+    await mountConfig(
+      {
+        before: 0,
+        after: 0,
+        hiddenWeekdays: [],
+        weeks: "left" as const,
+        showHeading: "default",
+        showWeekdays: "default",
+      },
+      onChange,
+    );
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "Hidden");
     expect(onChange).toHaveBeenCalledWith({
       before: 0,
       after: 0,
       hiddenWeekdays: [],
       weeks: "left",
-      showHeading: false,
+      showHeading: "default",
+      showWeekdays: false,
     });
   });
 });

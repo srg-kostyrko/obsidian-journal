@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useResolvedWeekPlacement } from "@/calendar";
+import { useResolvedStructure } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
 
@@ -30,7 +30,9 @@ const weeks = usePeriodWindow(
   () => props.config.after,
 );
 
-const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
+const weekPlacement = useResolvedStructure("weekPlacement", () => props.config.weeks);
+const showHeading = useResolvedStructure("showHeading", () => props.config.showHeading);
+const showWeekdays = useResolvedStructure("showWeekdays", () => props.config.showWeekdays);
 </script>
 
 <template>
@@ -42,9 +44,11 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
       :shelf="viewContext.shelf.value"
       :weeks="weekPlacement"
       :hidden-weekdays="config.hiddenWeekdays"
-      :show-header="config.showHeading"
+      :show-header="showHeading"
+      :show-weekdays="showWeekdays"
       :selected-date="viewContext.refDate.value"
       :select-date="viewContext.selectRefDate"
+      :current-week-band="false"
     />
   </div>
 </template>

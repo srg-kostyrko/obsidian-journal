@@ -450,7 +450,7 @@ on it.
   itself _can_ be resized, through the Electron bridge the capture already uses
   — `electron.remote.getCurrentWindow().setSize(w, h)`, which `innerWidth` then
   matches exactly — but that moves every pane at once, so it frames a screenshot
-  (`sizeWindow` in `e2e-tests/screenshots/readme.shot.ts`) rather than testing one
+  (`sizeWindow` in `e2e-tests/screenshots/capture.ts`) rather than testing one
   block's reflow.
 - Per [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)'s
   `reloadObsidian` behavior, notes written with `seedNote` do not survive a
@@ -498,8 +498,8 @@ on it.
   leg is the whole Obsidian process dying, and the renderer's own console and the
   plugin log die with it — `frames at failure: renderer did not answer` is all
   the hook can say. The browser process's log survives in
-  `e2e-tests/.reports/chromium.log` (truncated per launch, so it holds the last
-  boot of the leg). The known case is installer 1.5.8 on the windows-2025 image
+  `e2e-tests/.reports/chromium-<cid>.log`, one per spec file (truncated per
+  launch, so it holds that spec file's last boot). The known case is installer 1.5.8 on the windows-2025 image
   from 20261018: its sandboxed GPU process dies with `0xC0000005`, Chromium falls
   back through every GPU mode and then crashes the browser on purpose
   (`IntentionallyCrashBrowserForUnusableGpuProcess`), and `--disable-gpu-sandbox`

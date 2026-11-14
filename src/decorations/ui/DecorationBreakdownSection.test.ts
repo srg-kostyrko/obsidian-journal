@@ -19,9 +19,9 @@ import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } 
 
 import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
 
-import type { BreakdownCell } from "./breakdown-cell";
 import type { CalendarDecoration, JournalDecoration } from "../config";
 import type { Contribution } from "../engine";
+import type { BreakdownCell } from "./breakdown-cell";
 
 const ANY_DATE_TEXT = m.decoration_condition_date_describe({
   day: m.decoration_condition_date_any(),

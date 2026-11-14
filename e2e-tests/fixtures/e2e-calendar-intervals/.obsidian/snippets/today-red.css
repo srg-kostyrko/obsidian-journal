@@ -1,0 +1,3 @@
+body[data-e2e-today-red] {
+  --journal-cell-today-text-color: rgb(255, 0, 0);
+}

@@ -5,8 +5,11 @@ on:
   push:
     branches: [main]
   schedule:
-    # Nightly drift-detection across the OS + version matrix (07:00 UTC).
-    - cron: "0 7 * * *"
+    # Nightly drift-detection across the OS + version matrix. GitHub starts scheduled runs
+    # hours late (5–8.5h measured in Nov 2026), so 20:37 UTC is meant to land in the quiet
+    # hours before the US workday, when macOS runners are free; the off-hour minute avoids
+    # the top-of-hour queue.
+    - cron: "37 20 * * *"
   workflow_dispatch:
     inputs:
       full_matrix:
@@ -32,7 +35,7 @@ jobs:
         # and a Linux-only gate cannot see them. Nightly adds the version axis — the floor
         # and the newest-app/oldest-installer mismatch (see docs/e2e-testing-strategy.md),
         # which a manual dispatch can ask for too — a floor-only failure is otherwise
-        # unverifiable until the next 07:00 UTC.
+        # unverifiable until the next nightly.
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         obsidian: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
         # Only the PR + merge path is sharded, because only there does wall clock buy anything:

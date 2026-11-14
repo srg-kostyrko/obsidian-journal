@@ -17,9 +17,9 @@ import { gatherFixedBindings, gatherIntervalBindings } from "../gather-bindings"
 
 import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
 
+import type { DecorationBinding } from "../engine";
 import type { BreakdownCell } from "./breakdown-cell";
 import type { BreakdownEntry } from "./breakdown-entry";
-import type { DecorationBinding } from "../engine";
 
 const props = defineProps<{ entry: BreakdownEntry; shelf?: string | null }>();
 

@@ -3,6 +3,9 @@ import { useElementSize } from "@vueuse/core";
 import { computed, ref, useId, useTemplateRef, watch } from "vue";
 
 import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
+import { appearanceSlice, ROW_FLOOR_PX } from "@/notes-calendar/appearance/slice";
+import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -46,13 +49,20 @@ const previewDay = new Date().getDate();
 
 // The magnification is measured rather than fixed: a canvas column narrower than the full-size
 // cell shrinks the cell, and a constant scale would then leave the preview overhanging the region
-// overlay it is supposed to sit under. 26px is the cell height floor NotesCalendarCell reserves.
-const CELL_SOURCE_SIZE_PX = 26;
-const canvasStyle = { "--cell-source-size": `${CELL_SOURCE_SIZE_PX}px` };
+// overlay it is supposed to sit under. The source size is the saved wide row min-height, the
+// cell height floor the calendar actually renders.
+const appearance = useService(SettingsService).getSlice(appearanceSlice);
+// The schema allows 0, which would make the magnification a division by zero. Default (null) grows with
+// the calendar's width, so the canvas, which has no calendar width, sizes from the row floor.
+const cellSourceSizePx = computed(() => {
+  const saved = appearance.state.wide.cell.minHeight;
+  return saved !== null && saved >= 1 ? saved : ROW_FLOOR_PX;
+});
+const canvasStyle = computed(() => ({ "--cell-source-size": `${cellSourceSizePx.value}px` }));
 const cell = useTemplateRef<HTMLElement>("cell");
 const { width: cellWidth } = useElementSize(cell);
 const cellStyle = computed(() =>
-  cellWidth.value > 0 ? { "--cell-magnification": cellWidth.value / CELL_SOURCE_SIZE_PX } : {},
+  cellWidth.value > 0 ? { "--cell-magnification": cellWidth.value / cellSourceSizePx.value } : {},
 );
 
 const slotIndexOfActive = computed(() => props.styles.findLastIndex((s) => s.type === activeLayer.value));

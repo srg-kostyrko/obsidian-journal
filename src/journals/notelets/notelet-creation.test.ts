@@ -14,9 +14,9 @@ import { VaultSubscriptionService } from "../vault-subscription";
 
 import { NoteletCreationService } from "./notelet-creation";
 
-import type { NoteletType, TypeId } from "./config";
 import type { JournalConfig } from "../config";
 import type { Prompt, PromptAnswer } from "../prompts/config";
+import type { NoteletType, TypeId } from "./config";
 
 const ANCHOR = "2026-08-30" as AnchorString;
 const TYPE = "nt_7f3a" as TypeId;
@@ -261,6 +261,26 @@ async function answering(harness: TestHarness, answers: Record<string, PromptAns
   });
   harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit(answers);
 }
+
+// The notelet's file is written empty before its claim, and Obsidian can deliver the parse of that
+// empty version after the claim's entry was registered.
+describe("NoteletCreationService — the empty version parsed after the claim", () => {
+  it("reports the notelet once", async () => {
+    const harness = await boot(workWith());
+    const seen: string[] = [];
+    harness.resolve(JournalsIndex).events.on("entryChanged", (event) => {
+      seen.push(`${event.kind}:${event.reason}`);
+    });
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    expectOk(created);
+    const claimed = harness.host.app.metadataCache.getCache(created.value.path);
+    harness.host.emitMetadata(created.value.path, {});
+    harness.host.emitMetadata(created.value.path, { ...claimed });
+
+    expect(seen).toEqual(["added:created"]);
+  });
+});
 
 describe("NoteletCreationService — a question the note name spells", () => {
   const attendee: Prompt = {

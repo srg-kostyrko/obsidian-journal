@@ -35,29 +35,199 @@
   "day_notes_settings_property_description": "Frontmatter property used as the creation date. Notes without a valid value use their file creation time.",
   "day_notes_settings_format_label": "Creation date format",
   "day_notes_settings_format_description": "Date format used to parse the creation date property.",
-  "calendar_appearance_selected_ring": "Selected date — ring",
-  "calendar_appearance_selected_ring_description": "Ring color of the calendar cell matching the view's selected date.",
 
   "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
   "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
   "calendar_apply_globally_title": "Apply week configuration to all dates in vault",
-  "calendar_appearance_active_background": "Active — background",
-  "calendar_appearance_active_text": "Active — text",
-  "calendar_appearance_section_title": "Calendar highlighting",
-  "calendar_appearance_description": [
+  "calendar_appearance_section_title": "Calendar appearance",
+  "calendar_appearance_open": "Open",
+  "calendar_appearance_weekend_summary": [
     {
-      "declarations": ["input target", "input layer"],
-      "selectors": ["target", "layer"],
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
       "match": {
-        "target=today,layer=text": "Text color of the calendar cell for today's date.",
-        "target=today,layer=background": "Background color of the calendar cell for today's date.",
-        "target=active,layer=text": "Text color of the calendar cell whose note is currently open.",
-        "target=active,layer=background": "Background color of the calendar cell whose note is currently open."
+        "mode=some": "Weekend: {days}",
+        "mode=none": "No weekend"
       }
     }
   ],
-  "calendar_appearance_today_background": "Today — background",
-  "calendar_appearance_today_text": "Today — text",
+  "calendar_appearance_weekend_open_settings": "Change in calendar settings",
+  "calendar_appearance_preview": "Preview",
+  "calendar_appearance_width_label": "Width",
+  "calendar_appearance_width": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Wide",
+        "width=narrow": "Narrow"
+      }
+    }
+  ],
+  "calendar_appearance_editing": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Changes apply at every width.",
+        "width=narrow": "Changes apply only to narrow calendars and override the all-widths value."
+      }
+    }
+  ],
+  "calendar_appearance_scope": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "All widths",
+        "width=narrow": "Narrow"
+      }
+    }
+  ],
+  "calendar_appearance_part_label": "Editing",
+  "calendar_appearance_part_placeholder": "Choose a part",
+  "calendar_appearance_part_hint": "Click any part of the preview, or choose one from the list.",
+  "calendar_appearance_part": [
+    {
+      "declarations": ["input part"],
+      "selectors": ["part"],
+      "match": {
+        "part=today": "Today",
+        "part=selected": "Selected date",
+        "part=active": "Open note",
+        "part=outside": "Days outside the month",
+        "part=currentWeek": "Current week",
+        "part=weekend": "Weekends",
+        "part=heading": "Month heading",
+        "part=weekday": "Weekday header",
+        "part=weekNumber": "Week numbers",
+        "part=date": "Date number",
+        "part=cell": "Cells",
+        "part=grid": "Month grid"
+      }
+    }
+  ],
+  "calendar_appearance_also_here": "Also here",
+  "calendar_appearance_modified": "Modified",
+  "calendar_appearance_family": [
+    {
+      "declarations": ["input family"],
+      "selectors": ["family"],
+      "match": {
+        "family=visibility": "Visibility",
+        "family=label": "Label",
+        "family=text": "Text",
+        "family=divider": "Divider",
+        "family=highlight": "Highlight",
+        "family=box": "Box"
+      }
+    }
+  ],
+  "calendar_appearance_control": [
+    {
+      "declarations": ["input control"],
+      "selectors": ["control"],
+      "match": {
+        "control=visibility_show_heading": "Heading",
+        "control=visibility_show_weekdays": "Weekday header",
+        "control=visibility_week_placement": "Placement",
+        "control=visibility_outside_days": "Days outside the month",
+        "control=visibility_month_rows": "Rows",
+        "control=label_day": "Format",
+        "control=label_week": "Format",
+        "control=label_month": "Month format",
+        "control=label_quarter": "Quarter format",
+        "control=label_year": "Year format",
+        "control=label_weekday": "Format",
+        "control=highlight_style": "Style",
+        "control=highlight_color": "Highlight color",
+        "control=highlight_ring_width": "Ring width",
+        "control=highlight_strength": "Strength",
+        "control=highlight_text_color": "Text color",
+        "control=highlight_text_weight": "Text weight",
+        "control=highlight_text_italic": "Text italic",
+        "control=highlight_week_number_text_color": "Week number color",
+        "control=highlight_week_number_text_weight": "Week number weight",
+        "control=highlight_week_number_text_italic": "Week number italic",
+        "control=highlight_over": "Over decorations",
+        "control=text_size": "Size",
+        "control=text_weight": "Weight",
+        "control=text_italic": "Italic",
+        "control=text_color": "Color",
+        "control=text_case": "Case",
+        "control=divider_divider": "Divider",
+        "control=divider_divider_color": "Color",
+        "control=divider_divider_width": "Width",
+        "control=box_padding": "Padding",
+        "control=box_radius": "Corner radius",
+        "control=box_gap": "Gap between cells",
+        "control=box_min_height": "Row height"
+      }
+    }
+  ],
+  "calendar_appearance_option": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=show_heading_shown": "Shown",
+        "option=show_heading_hidden": "Hidden",
+        "option=show_weekdays_shown": "Shown",
+        "option=show_weekdays_hidden": "Hidden",
+        "option=week_placement_left": "Before weekdays",
+        "option=week_placement_right": "After weekdays",
+        "option=week_placement_none": "Hidden",
+        "option=outside_days_automatic": "Automatic",
+        "option=outside_days_interactive": "Interactive",
+        "option=outside_days_inert": "Inert",
+        "option=outside_days_hidden": "Hidden",
+        "option=month_rows_fit": "As needed",
+        "option=month_rows_six": "Always six",
+        "option=style_ring": "Ring",
+        "option=style_background": "Background",
+        "option=style_text": "Text only",
+        "option=style_none": "None",
+        "option=weight_normal": "Normal",
+        "option=weight_semibold": "Semi-bold",
+        "option=weight_bold": "Bold",
+        "option=italic_on": "On",
+        "option=italic_off": "Off",
+        "option=over_over": "Yes",
+        "option=over_under": "No",
+        "option=divider_shown": "Shown",
+        "option=divider_hidden": "Hidden",
+        "option=case_none": "As written",
+        "option=case_upper": "Uppercase",
+        "option=case_lower": "Lowercase",
+        "option=case_title": "Title case"
+      }
+    }
+  ],
+  "calendar_appearance_default": "Default",
+  "calendar_appearance_default_resolved": "Default ({value})",
+  "calendar_appearance_default_grows": "Default (grows with width)",
+  "calendar_appearance_unchanged": "Unchanged",
+  "calendar_appearance_narrow_only": "Narrow only",
+  "calendar_appearance_narrow_only_clear": "Use the all-widths value",
+  "calendar_appearance_narrow_only_clear_stock": "Use the narrow default",
+  "calendar_appearance_narrow_own": "Narrow has its own value",
+  "calendar_appearance_narrow_apply": "Use at narrow too",
+  "calendar_appearance_all_widths": "All widths",
+  "calendar_appearance_format_suggestions": "Suggestions",
+  "calendar_appearance_format_preview": "Preview:",
+  "calendar_appearance_format_letter": "One letter",
+  "calendar_appearance_format_same_as_wide": "Copy wide format",
+  "calendar_appearance_format_iso_warning": "W counts ISO weeks, which can differ from the week rows this calendar shows.",
+  "calendar_appearance_reset": [
+    {
+      "declarations": ["input width"],
+      "selectors": ["width"],
+      "match": {
+        "width=wide": "Reset to default",
+        "width=narrow": "Reset narrow overrides"
+      }
+    }
+  ],
   "common_label_back": "Back to list",
   "common_label_calendar": "Calendar",
   "common_pick_a_date": "Pick a date",
@@ -1170,7 +1340,9 @@
       "match": {
         "kind=transparent": "Transparent",
         "kind=theme": "Theme variable",
-        "kind=custom": "Custom"
+        "kind=custom": "Custom",
+        "kind=unchanged": "Unchanged",
+        "kind=default": "Default"
       }
     }
   ],
@@ -1183,7 +1355,8 @@
       "match": {
         "group=text": "Text",
         "group=background": "Background",
-        "group=border": "Border"
+        "group=border": "Border",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1217,6 +1390,14 @@
   "ui_theme_color_text_selection": "Selected text background",
   "ui_theme_color_text_highlight_bg": "Highlighted text background",
   "ui_theme_color_caret_color": "Caret color",
+  "ui_theme_color_red": "Red",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Yellow",
+  "ui_theme_color_green": "Green",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Blue",
+  "ui_theme_color_purple": "Purple",
+  "ui_theme_color_pink": "Pink",
 
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
 
@@ -1423,6 +1604,9 @@
   "view_reposition_modal_confirm": "Move",
   "view_edit_blocks_title": "Blocks",
   "view_edit_blocks_empty": "No blocks yet.",
+  "view_edit_css_title": "CSS snippet",
+  "view_edit_css_selector_label": "Selector",
+  "view_edit_css_selector_description": "Matches this view and no other. Click the rule to copy it, then set CSS variables inside its braces in a CSS snippet.",
   "view_block_unknown_label": "Unknown block: {key}",
   "view_block_edit": "Edit block",
   "view_block_edit_title": "Edit block: {type}",
@@ -1706,8 +1890,49 @@
   "view_block_config_weeks_none": "Hidden",
   "view_block_config_weeks_left": "Before weekdays",
   "view_block_config_weeks_right": "After weekdays",
+  "view_block_config_show_weekdays_label": "Show weekday header",
+  "view_block_config_visibility_default": "Use global default",
+  "view_block_config_visibility_shown": "Shown",
+  "view_block_config_visibility_hidden": "Hidden",
+  "view_block_config_outside_days_label": "Days outside the month",
+  "view_block_config_outside_days": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=interactive": "Interactive",
+        "option=inert": "Inert",
+        "option=hidden": "Hidden"
+      }
+    }
+  ],
+  "view_block_config_month_rows_label": "Rows",
+  "view_block_config_month_rows": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=fit": "As needed",
+        "option=six": "Always six"
+      }
+    }
+  ],
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
+  "calendar_weekend_label": "Weekend days",
+  "calendar_weekend_description": [
+    {
+      "declarations": ["input mode", "input days"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=locale": "{days}",
+        "mode=custom": "{days}",
+        "mode=none": "No weekend"
+      }
+    }
+  ],
+  "calendar_weekend_locale": "Locale's weekend",
+  "calendar_weekend_custom": "Custom",
   "calendar_timeline_navigation_label": "Default timeline navigation",
   "calendar_timeline_navigation_description": "Show previous and next controls on calendar-timeline code blocks. A block can override this with its navigation option.",
   "view_block_config_show_heading_label": "Show month/year heading",
@@ -2010,7 +2235,7 @@
   "journal_edit_code_block_reference_link": "Supported code blocks.",
   "journal_edit_code_block_reference_modal_title": "Supported code blocks",
   "journal_edit_code_block_copy_hint": "Click a code block to copy it to your clipboard.",
-  "journal_edit_code_block_copied": "Copied to clipboard.",
+  "common_copied_to_clipboard": "Copied to clipboard.",
   "journal_edit_code_block_nav_description": "The navigation block helps you move between notes adjacent to the current one.",
   "journal_edit_code_block_nav_current": "Its configuration for the {name} journal looks like this:",
   "journal_edit_code_block_nav_aliases_lead": "These older block names are aliases that behave identically:",
@@ -2026,6 +2251,10 @@
   "journal_edit_code_block_timeline_option_before": "adds this many earlier periods above the current one. Applies to the week and month modes only.",
   "journal_edit_code_block_timeline_option_after": "adds this many later periods below the current one. Applies to the week and month modes only.",
   "journal_edit_code_block_timeline_option_navigation": "shows previous and next controls above the timeline, so you can look at other periods without opening a note. Supported values: true, false. Without it, the plugin's calendar setting decides.",
+  "journal_edit_code_block_timeline_option_heading": "shows or hides the month or year heading. Supported values: true, false. Without it, Calendar appearance decides.",
+  "journal_edit_code_block_timeline_option_weekdays": "shows or hides the weekday header. Supported values: true, false. Without it, Calendar appearance decides.",
+  "journal_edit_code_block_timeline_option_outside": "sets how days outside the month behave. Supported values: interactive, inert, hidden. Applies to the month, quarter and calendar modes only. Without it, Calendar appearance decides.",
+  "journal_edit_code_block_timeline_option_rows": "sets whether a month shows only the rows it needs or always six. Supported values: fit, six. Applies to the month, quarter and calendar modes only. Without it, Calendar appearance decides.",
   "journal_edit_code_block_timeline_navigation_lead": "With navigation controls it looks like this:",
   "journal_edit_code_block_home_description": "The home block displays links to the current notes in your journals.",
   "journal_edit_code_block_home_default": "By default it looks like this:",

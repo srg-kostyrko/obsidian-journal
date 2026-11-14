@@ -4,6 +4,18 @@ import { UnsettledReadError } from "../support/errors.js";
 
 import { openSeededCalendarView } from "./view.js";
 
+const WIDE = "40em";
+
+// The width goes on the laid-out block root; an empty width restores its own.
+async function forceCalendarWidth(width: string): Promise<void> {
+  await browser.execute((forced: string) => {
+    const block = [...document.querySelectorAll<HTMLElement>(".journal-view-month-calendar")].find(
+      (candidate) => candidate.clientWidth > 0 || candidate.style.width !== "",
+    );
+    if (block !== undefined) block.style.width = forced;
+  }, width);
+}
+
 interface Intrusion {
   slot: string;
   side: string;
@@ -18,10 +30,17 @@ describe("decoration mark clearance", () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-mark-clearance", plugins: ["journals"] });
   });
 
+  after(async () => {
+    await forceCalendarWidth("");
+  });
+
   it("keeps every edge mark off the selected-date ring", async () => {
     await openSeededCalendarView();
+    // A narrow calendar marks the selected date with a tint and no ring, and a sidebar can be narrow, so the
+    // ring is read where it is drawn.
+    await forceCalendarWidth(WIDE);
 
-    // The ring's width is read off the cell rather than hardcoded: Obsidian's zoom scales authored
+    // The ring's width is read off the cell's selected layer rather than hardcoded: Obsidian's zoom scales authored
     // pixels, and both the shadow and the rects are measured in the same zoomed space.
     const found: (Intrusion[] | null)[] = [null];
     await browser.waitUntil(
@@ -31,7 +50,9 @@ describe("decoration mark clearance", () => {
           if (cell == null) return null;
           const places = [...cell.querySelectorAll(".cell-marks > .place")];
           if (places.length < 8) return null;
-          const spread = /([\d.]+)px inset/.exec(getComputedStyle(cell).boxShadow);
+          const ringLayer = cell.querySelector('[data-layer="selected-ring"]');
+          if (ringLayer == null) return null;
+          const spread = /([\d.]+)px inset/.exec(getComputedStyle(ringLayer).boxShadow);
           const ring = Number(spread?.[1] ?? NaN);
           if (!(ring > 0)) return null;
           const box = cell.getBoundingClientRect();

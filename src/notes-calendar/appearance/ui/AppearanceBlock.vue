@@ -1,80 +1,24 @@
 <script setup lang="ts">
-import { ref } from "vue";
-
-import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import { SettingsService } from "@/settings";
+import { SettingsUiService } from "@/settings";
 import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
-import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
-import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
+import UiButton from "@/ui/UiButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { appearanceSlice } from "../slice";
+import { appearanceSubpage } from "./appearance-subpage";
 
-const settings = useService(SettingsService);
-const slice = settings.getSlice(appearanceSlice);
-const expanded = ref(false);
-
-function setTodayColor(color: ColorSettings): void {
-  slice.state = { ...slice.state, today: { ...slice.state.today, color } };
-}
-function setTodayBackground(background: ColorSettings): void {
-  slice.state = { ...slice.state, today: { ...slice.state.today, background } };
-}
-function setActiveColor(color: ColorSettings): void {
-  slice.state = { ...slice.state, active: { ...slice.state.active, color } };
-}
-function setActiveBackground(background: ColorSettings): void {
-  slice.state = { ...slice.state, active: { ...slice.state.active, background } };
-}
-function setSelectedRing(selectedRing: ColorSettings): void {
-  slice.state = { ...slice.state, selectedRing };
-}
+const ui = useService(SettingsUiService);
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.view.calendars">
-    <template #trigger>
+  <!-- A link row like the maintenance block: the editor needs a page of its own for the preview. -->
+  <UiSettingRow heading :help="manual.view.appearance">
+    <template #name>
       <UiIconedRow :icon="icons.section.appearance">{{ m.calendar_appearance_section_title() }}</UiIconedRow>
     </template>
-    <UiSettingRow :name="m.calendar_appearance_today_text()">
-      <template #description>{{ m.calendar_appearance_description({ target: "today", layer: "text" }) }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.today.color" role="text" @update:model-value="setTodayColor" />
-    </UiSettingRow>
-    <UiSettingRow :name="m.calendar_appearance_today_background()">
-      <template #description>
-        {{ m.calendar_appearance_description({ target: "today", layer: "background" }) }}
-      </template>
-      <UiColorSettingsPicker
-        :model-value="slice.state.today.background"
-        role="background"
-        @update:model-value="setTodayBackground"
-      />
-    </UiSettingRow>
-    <UiSettingRow :name="m.calendar_appearance_active_text()">
-      <template #description>{{ m.calendar_appearance_description({ target: "active", layer: "text" }) }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.active.color" role="text" @update:model-value="setActiveColor" />
-    </UiSettingRow>
-    <UiSettingRow :name="m.calendar_appearance_active_background()">
-      <template #description>
-        {{ m.calendar_appearance_description({ target: "active", layer: "background" }) }}
-      </template>
-      <UiColorSettingsPicker
-        :model-value="slice.state.active.background"
-        role="background"
-        @update:model-value="setActiveBackground"
-      />
-    </UiSettingRow>
-    <UiSettingRow :name="m.calendar_appearance_selected_ring()">
-      <template #description>{{ m.calendar_appearance_selected_ring_description() }}</template>
-      <UiColorSettingsPicker
-        :model-value="slice.state.selectedRing"
-        role="border"
-        @update:model-value="setSelectedRing"
-      />
-    </UiSettingRow>
-  </UiCollapsibleBlock>
+    <UiButton @click="ui.push(appearanceSubpage, undefined)">{{ m.calendar_appearance_open() }}</UiButton>
+  </UiSettingRow>
 </template>

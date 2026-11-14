@@ -9,7 +9,6 @@ import { useService } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
 import { CycleService, JournalsRepository, TimelineService, useIndexVersion } from "@/journals";
 import type { JournalConfig } from "@/journals";
-import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import { ShelvesRepository } from "@/shelves";
 
@@ -27,7 +26,6 @@ const props = defineProps<{
 }>();
 
 const context = useViewContext();
-const appearanceStyle = useCalendarAppearanceStyle();
 const journalsRepository = useService(JournalsRepository);
 const shelvesRepository = useService(ShelvesRepository);
 const cycle = useService(CycleService);
@@ -126,7 +124,7 @@ useCellDecorations({
 </script>
 
 <template>
-  <div class="journal-view-custom-intervals" :style="appearanceStyle">
+  <div class="journal-view-custom-intervals">
     <CustomIntervalsSection
       v-for="section of sections"
       :key="section.journalName"
@@ -142,5 +140,12 @@ useCellDecorations({
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
+  container: journal-calendar / inline-size;
+}
+/* Chromium 120 still makes a size container a stacking context, which traps the lifted row of an open
+   mark popover (IntervalRow) inside this block, under whatever follows it. Lift the block with it. */
+.journal-view-custom-intervals:has(.mark-overflow__popover) {
+  position: relative;
+  z-index: var(--layer-popover);
 }
 </style>

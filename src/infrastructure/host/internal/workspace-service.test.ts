@@ -10,8 +10,8 @@ import { createFakeHost } from "./testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 import { WorkspaceService } from "./workspace-service";
 
-import type { FakeHost } from "./testing";
 import type { VaultPath } from "../types";
+import type { FakeHost } from "./testing";
 
 function build(): { service: WorkspaceService; host: FakeHost } {
   const host = createFakeHost();

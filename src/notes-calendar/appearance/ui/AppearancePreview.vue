@@ -1,0 +1,707 @@
+<script setup lang="ts">
+import { match } from "ts-pattern";
+import { computed, provide, shallowReactive, shallowRef, useTemplateRef, watchEffect } from "vue";
+
+import {
+  activeLocale,
+  advance,
+  calendarDisplaySlice,
+  DayPeriod,
+  resolveOutsideDates,
+  resolveWeekend,
+  type PeriodKind,
+  YearPeriod,
+  type CalendarDisplaySliceState,
+  type Period,
+} from "@/calendar";
+import { useToday } from "@/calendar/ui";
+import type { JournalDecorationStyle } from "@/decorations/config";
+import { cellKey } from "@/decorations/engine";
+import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
+
+import { bandPlacement } from "../../band-placement";
+import { labelPattern, weekdayTexts } from "../../cell-format";
+import NotesCalendarBand from "../../ui/NotesCalendarBand.vue";
+import NotesCalendarCell from "../../ui/NotesCalendarCell.vue";
+import NotesCalendarDivider from "../../ui/NotesCalendarDivider.vue";
+
+import { partsAt, sampleDays } from "./preview-sample";
+
+import type { NotesCellApi } from "../../use-notes-cell";
+import type { PartKey, Width } from "../appearance-parts";
+
+/** `spot` is the anchor of the day a part was picked at, if it was picked at one. */
+const props = withDefaults(
+  defineProps<{ width: Width; display?: CalendarDisplaySliceState; picked?: PartKey; spot?: string }>(),
+  { display: () => calendarDisplaySlice.defaults, picked: undefined, spot: undefined },
+);
+const emit = defineEmits<{ pick: [parts: readonly PartKey[], spot: string | undefined] }>();
+
+// Wide fills what it is given, but never below the calendar's 28em breakpoint, where it would draw the narrow look.
+const SIZES: Readonly<Record<Width, Readonly<Record<string, string>>>> = {
+  wide: { width: "100%", minWidth: "30em" },
+  narrow: { width: "260px" },
+};
+
+const SAMPLE_DECORATION: readonly JournalDecorationStyle[] = [
+  { type: "background", color: { type: "theme", name: "text-highlight-bg" } },
+  { type: "color", color: { type: "theme", name: "text-accent" } },
+];
+
+const today = useToday();
+// From the display it is given, not the saved slice, so the preview reaches no service.
+const weekend = computed(() => resolveWeekend(props.display.weekend, activeLocale()));
+const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());
+const sample = computed(() => sampleDays(today.value, weekend.value));
+const month = computed(() => sample.value.month);
+const year = computed(() => YearPeriod.containing(month.value.anchor));
+
+// One month shows, so Automatic resolves the way a lone month block does.
+const outsideDates = computed(() => resolveOutsideDates(props.display.outsideDays, "active"));
+const weeksPos = computed(() => props.display.weekPlacement);
+
+const SIX_ROWS = 6;
+
+const rows = computed(() => {
+  const weeks = [...month.value.weeks()];
+  const last = weeks.at(-1);
+  if (props.display.monthRows === "six" && last) {
+    for (let ahead = 1; weeks.length < SIX_ROWS; ahead += 1) weeks.push(advance(last, ahead));
+  }
+  return weeks.map((week) => ({
+    key: week.anchor.toAnchor(),
+    week,
+    days: [...week.days()].map((day) => ({ period: DayPeriod.containing(day), outside: !month.value.contains(day) })),
+  }));
+});
+const format = (kind: PeriodKind): string => labelPattern(props.display.labels, kind);
+// Unlike the views' column headers, these spans have no role to name, so the visible text is what is read;
+// the hidden width's text is `display: none`, out of the tree.
+const weekdays = computed(() => {
+  const { weekdayLabel, weekdayLabelNarrow } = props.display;
+  return (rows.value[0]?.days ?? []).map(({ period }) => ({
+    ...weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow),
+    weekend: isWeekend(period),
+  }));
+});
+
+// Placed as the month view places them.
+const bands = computed(() =>
+  bandPlacement({
+    columns: (rows.value[0]?.days ?? []).map(({ period }) => period.start.weekday()),
+    weekend: weekend.value,
+    weekNumbers: weeksPos.value,
+    weekdayHeader: props.display.showWeekdays,
+    rows: rows.value.map((row) => ({
+      isCurrentWeek: row.week.contains(today.value),
+      hasDay: row.days.some((day) => !(outsideDates.value === "blank" && day.outside)),
+    })),
+  }),
+);
+
+const root = useTemplateRef<HTMLElement>("root");
+defineExpose({ root });
+
+function noop(): void {
+  // Clicks pick a part instead of opening a note, so the preview reaches no service.
+}
+
+const cell: NotesCellApi = {
+  open: noop,
+  openContextMenu: noop,
+  openPreview: noop,
+  isActive: (period) => period.kind === "day" && period.anchor.toAnchor() === sample.value.active,
+  isActionable: () => true,
+};
+const inertCell: NotesCellApi = { ...cell, isActive: () => false, isActionable: () => false };
+const isSelected = (period: Period): boolean => period.anchor.toAnchor() === sample.value.selected;
+
+// CellDecoration injects the map once, so the map itself stays and only its entries follow the day.
+const decorations = shallowReactive(new Map<string, CellStyleRef>());
+watchEffect(() => {
+  decorations.clear();
+  for (const anchor of sample.value.decorated) decorations.set(cellKey("day", anchor), shallowRef(SAMPLE_DECORATION));
+});
+provide(CellDecorationMapKey, decorations);
+
+// A property check rather than instanceof, which fails for an event from a popout's realm.
+function isElement(target: EventTarget | null): target is Element {
+  return target !== null && "closest" in target;
+}
+
+function onPick(event: Event): void {
+  if (!isElement(event.target)) return;
+  const parts = partsAt(event.target);
+  if (parts.length === 0) return;
+  emit("pick", parts, event.target.closest<HTMLElement>('[data-preview-part="date"]')?.dataset.anchor);
+}
+
+// A state outlines every day in it. Every day is a date number and a cell, so those two outline the day
+// they were picked at, or every day when they were not. One element takes a strong outline; a part
+// spread over many takes a light one on each, or a grid of heavy boxes would bury the calendar.
+function isPickedDay(day: { period: DayPeriod; outside: boolean }, rowIndex: number): boolean {
+  const anchor = day.period.anchor.toAnchor();
+  return match(props.picked)
+    .with("today", () => anchor === today.value.toAnchor())
+    .with("weekend", () => isWeekend(day.period))
+    .with("currentWeek", () => rowIndex === bands.value.currentWeekIndex)
+    .with("selected", () => anchor === sample.value.selected)
+    .with("active", () => anchor === sample.value.active)
+    .with("outside", () => day.outside)
+    .with("date", "cell", () => props.spot === undefined || props.spot === anchor)
+    .otherwise(() => false);
+}
+
+const pickedCount = computed(() =>
+  match(props.picked)
+    .with(undefined, () => 0)
+    .with("heading", () => 2)
+    .with("weekday", () => weekdays.value.length)
+    .with("weekNumber", () => rows.value.length)
+    .with("grid", () => 1)
+    .otherwise(() =>
+      rows.value.reduce((count, row, index) => count + row.days.filter((day) => isPickedDay(day, index)).length, 0),
+    ),
+);
+
+function pickedClass(isPicked: boolean): Record<string, boolean> {
+  return {
+    "appearance-preview__picked": isPicked,
+    "appearance-preview__picked--light": isPicked && pickedCount.value > 1,
+  };
+}
+</script>
+
+<template>
+  <div
+    ref="root"
+    class="appearance-preview"
+    :data-custom-day-label="display.labels.day !== '' || null"
+    :style="SIZES[width]"
+    @click="onPick"
+    @keydown.enter="onPick"
+    @keydown.space.prevent="onPick"
+  >
+    <div v-if="display.showHeading" class="appearance-preview__header" data-preview-part="heading">
+      <NotesCalendarCell
+        :class="pickedClass(picked === 'heading')"
+        :period="month"
+        :cell="cell"
+        :format="format('month')"
+      />
+      <NotesCalendarCell
+        :class="pickedClass(picked === 'heading')"
+        :period="year"
+        :cell="cell"
+        :format="format('year')"
+      />
+    </div>
+    <div
+      class="appearance-preview__grid"
+      :class="pickedClass(picked === 'grid')"
+      :data-weeks="weeksPos === 'none' ? null : weeksPos"
+      data-preview-grid
+    >
+      <NotesCalendarBand
+        v-for="band in bands.weekend"
+        :key="band.key"
+        kind="weekend"
+        :column="band.column"
+        row="auto"
+      />
+      <NotesCalendarBand v-if="bands.currentWeekRow" kind="currentWeek" column="1 / -1" :row="bands.currentWeekRow" />
+      <NotesCalendarDivider
+        v-if="bands.divider"
+        class="appearance-preview__divider"
+        :class="pickedClass(picked === 'weekNumber')"
+        data-preview-part="weekNumber"
+        :column="bands.divider.column"
+        :row="bands.divider.row"
+      />
+      <div
+        class="appearance-preview__row"
+        :class="{ 'appearance-preview__row--visually-hidden': !display.showWeekdays }"
+      >
+        <div v-if="weeksPos === 'left'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
+        <span
+          v-for="(day, i) in weekdays"
+          :key="i"
+          class="appearance-preview__weekday"
+          :class="pickedClass(picked === 'weekday' || (picked === 'weekend' && day.weekend))"
+          data-preview-part="weekday"
+          :data-weekend="day.weekend || null"
+        >
+          <span class="appearance-preview__weekday-wide">{{ day.wide }}</span>
+          <span class="appearance-preview__weekday-narrow">{{ day.narrow }}</span>
+        </span>
+        <div v-if="weeksPos === 'right'" class="appearance-preview__weekday-spacer" aria-hidden="true"></div>
+      </div>
+      <div v-for="(row, index) in rows" :key="row.key" class="appearance-preview__row">
+        <NotesCalendarCell
+          v-if="weeksPos === 'left'"
+          class="appearance-preview__week-number"
+          :class="
+            pickedClass(picked === 'weekNumber' || (picked === 'currentWeek' && index === bands.currentWeekIndex))
+          "
+          data-preview-part="weekNumber"
+          :current-week="index === bands.currentWeekIndex"
+          :period="row.week"
+          :cell="cell"
+          :format="format('week')"
+        />
+        <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
+          <span
+            v-if="outsideDates === 'blank' && day.outside"
+            class="appearance-preview__day appearance-preview__day--blank"
+            :class="pickedClass(picked === 'outside')"
+            data-preview-part="outside"
+            aria-hidden="true"
+          ></span>
+          <NotesCalendarCell
+            v-else
+            class="appearance-preview__day"
+            :class="pickedClass(isPickedDay(day, index))"
+            data-preview-part="date"
+            :period="day.period"
+            :cell="outsideDates === 'inactive' && day.outside ? inertCell : cell"
+            :format="format('day')"
+            :outside="day.outside"
+            :weekend="isWeekend(day.period)"
+            :current-week="index === bands.currentWeekIndex"
+            :selected="isSelected(day.period)"
+          />
+        </template>
+        <NotesCalendarCell
+          v-if="weeksPos === 'right'"
+          class="appearance-preview__week-number"
+          :class="
+            pickedClass(picked === 'weekNumber' || (picked === 'currentWeek' && index === bands.currentWeekIndex))
+          "
+          data-preview-part="weekNumber"
+          :current-week="index === bands.currentWeekIndex"
+          :period="row.week"
+          :cell="cell"
+          :format="format('week')"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* A container cannot query itself, so the grid readers sit on the root's descendants. They are copied
+   from NotesMonthView; ui/appearance-readers.test.ts keeps the two in step. */
+.appearance-preview {
+  container: journal-calendar / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+}
+/* Outside the element's box and stacked over its neighbors, so it moves nothing in the grid and never
+   reaches the state layers inside a cell; dashed, so it reads as the editor's mark, not a state. */
+.appearance-preview__picked {
+  z-index: 1;
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: 1px;
+}
+/* The plain accent first, for a WebView without color-mix. */
+.appearance-preview__picked--light {
+  outline: 1px dotted var(--interactive-accent);
+  outline: 1px dotted color-mix(in srgb, var(--interactive-accent) 55%, transparent);
+  outline-offset: 0;
+}
+.appearance-preview__header {
+  --_v-heading-size: var(--journal-cell-heading-size, var(--journal-saved-cell-heading-size, inherit));
+  --_v-heading-weight: var(--journal-cell-heading-weight, var(--journal-saved-cell-heading-weight, inherit));
+  --_v-heading-italic: var(--journal-cell-heading-italic, var(--journal-saved-cell-heading-italic, inherit));
+  --_v-heading-color: var(--journal-cell-heading-color, var(--journal-saved-cell-heading-color, inherit));
+  --_v-heading-case: var(--journal-cell-heading-case, var(--journal-saved-cell-heading-case, inherit));
+  display: flex;
+  justify-content: space-around;
+  gap: var(--size-2-2);
+  font-size: var(--_v-heading-size);
+  font-weight: var(--_v-heading-weight);
+  font-style: var(--_v-heading-italic);
+  color: var(--_v-heading-color);
+  text-transform: var(--_v-heading-case);
+}
+/* Positioned for its bands, never isolated, as the month view's grid. */
+.appearance-preview__grid {
+  --_v-cell-gap: var(--journal-cell-cell-gap, var(--journal-saved-cell-cell-gap, var(--size-2-1)));
+  --_v-week-number-divider-width: var(
+    --journal-cell-week-number-divider-width,
+    var(--journal-saved-cell-week-number-divider-width, 1px)
+  );
+  /* The divider's own track, so a filled cell beside it keeps clear of its line: 8px while it shows, and
+     none once its width is 0, which is how a hidden divider is written. */
+  --_divider-track: min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--_v-cell-gap);
+}
+.appearance-preview__grid[data-weeks="left"] {
+  grid-template-columns: 1fr var(--_divider-track) repeat(7, 1fr);
+}
+.appearance-preview__grid[data-weeks="right"] {
+  grid-template-columns: repeat(7, 1fr) var(--_divider-track) 1fr;
+}
+/* Cells place themselves in source order, so whatever follows the week numbers steps over the divider's track. */
+.appearance-preview__grid[data-weeks="left"] .appearance-preview__week-number + *,
+.appearance-preview__grid[data-weeks="left"] .appearance-preview__weekday-spacer + * {
+  grid-column-start: 3;
+}
+.appearance-preview__grid[data-weeks="right"] .appearance-preview__week-number,
+.appearance-preview__grid[data-weeks="right"] .appearance-preview__weekday-spacer {
+  grid-column: -2 / -1;
+}
+/* A calendar's divider lets the pointer through to the cells; here a click on it picks the week numbers.
+   The grid in the selector outranks the divider's own rule whichever stylesheet loads last. */
+.appearance-preview__grid > .appearance-preview__divider {
+  pointer-events: auto;
+}
+.appearance-preview__row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: var(--_v-cell-gap);
+}
+@supports not (grid-template-columns: subgrid) {
+  .appearance-preview__row {
+    display: contents;
+  }
+}
+/* Hidden from view, not from the tree, as the month view hides it: screen readers keep the column names.
+   A block, over the no-subgrid `display: contents`, which would leave no box to clip. */
+.appearance-preview__row--visually-hidden {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Positioned, so it paints above an under weekend band, which is positioned and precedes it. */
+.appearance-preview__weekday {
+  position: relative;
+  --_v-weekday-size: var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em));
+  --_v-weekday-weight: var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit));
+  --_v-weekday-italic: var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit));
+  --_v-weekday-color: var(--journal-cell-weekday-color, var(--journal-saved-cell-weekday-color, var(--text-muted)));
+  --_v-weekday-case: var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit));
+  font-size: var(--_v-weekday-size);
+  font-weight: var(--_v-weekday-weight);
+  font-style: var(--_v-weekday-italic);
+  line-height: 1;
+  text-align: center;
+  color: var(--_v-weekday-color);
+  text-transform: var(--_v-weekday-case);
+  display: flex;
+  justify-content: center;
+  align-items: end;
+}
+/* A weekend column's header takes the weekend's text over the weekday part's own, since the band starts
+   there. Its values sit on the row, so the Unchanged queries below are answered by the header's parent. */
+.appearance-preview__row {
+  --_v-weekend-text-color: var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color));
+  --_v-weekend-text-weight: var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight));
+  --_v-weekend-text-italic: var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic));
+}
+.appearance-preview__weekday[data-weekend] {
+  --_weekend-text: var(--_v-weekend-text-color);
+  --_weekend-weight: var(--_v-weekend-text-weight);
+  --_weekend-italic: var(--_v-weekend-text-italic);
+  color: var(--_weekend-text, var(--_v-weekday-color));
+  font-weight: var(--_weekend-weight, var(--_v-weekday-weight));
+  font-style: var(--_weekend-italic, var(--_v-weekday-italic));
+}
+@container style(--_v-weekend-text-color: unchanged) {
+  .appearance-preview__weekday[data-weekend] {
+    --_weekend-text: initial;
+  }
+}
+@container style(--_v-weekend-text-weight: unchanged) {
+  .appearance-preview__weekday[data-weekend] {
+    --_weekend-weight: initial;
+  }
+}
+@container style(--_v-weekend-text-italic: unchanged) {
+  .appearance-preview__weekday[data-weekend] {
+    --_weekend-italic: initial;
+  }
+}
+.appearance-preview__weekday-narrow {
+  display: none;
+}
+/* Cells take their part's color through `--_part-color`, never `color`, as the month view does. */
+.appearance-preview__week-number {
+  --_v-week-number-size: var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em));
+  --_v-week-number-weight: var(
+    --journal-cell-week-number-weight,
+    var(--journal-saved-cell-week-number-weight, var(--font-normal))
+  );
+  --_v-week-number-italic: var(
+    --journal-cell-week-number-italic,
+    var(--journal-saved-cell-week-number-italic, inherit)
+  );
+  --_v-week-number-color: var(
+    --journal-cell-week-number-color,
+    var(--journal-saved-cell-week-number-color, var(--text-muted))
+  );
+  --_v-week-number-case: var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit));
+  --_part-color: var(--_v-week-number-color);
+  font-size: var(--_v-week-number-size);
+  font-weight: var(--_v-week-number-weight);
+  font-style: var(--_v-week-number-italic);
+  text-transform: var(--_v-week-number-case);
+}
+.appearance-preview__day {
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
+  --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
+  --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
+  --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
+  --_v-date-case: var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit));
+  --_part-color: var(--_v-date-color);
+  font-size: var(--_v-date-size);
+  font-weight: var(--_v-date-weight);
+  font-style: var(--_v-date-italic);
+  text-transform: var(--_v-date-case);
+}
+/* A hidden outside day is no cell, so it reads the cell's row height itself: the floor, or a date line
+   plus label padding when that is taller. A padded week of blanks would otherwise collapse, or fall
+   short of its neighbours, when no week number holds the row open. */
+.appearance-preview__day--blank {
+  --_v-cell-min-height: var(
+    --journal-cell-cell-min-height,
+    var(--journal-saved-cell-cell-min-height, clamp(26px, 7cqi, 64px))
+  );
+  --_v-cell-padding: var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px));
+  min-height: max(var(--_v-cell-min-height), calc(1em + 2 * var(--_v-cell-padding)));
+}
+/* As the month view: only a custom day label gives up the day's content-sized floor. */
+[data-custom-day-label] .appearance-preview__day {
+  min-width: 0;
+}
+/* A heading cell holds one line of text, so it keeps the flat floor where a wide day row grows with the
+   calendar's width. */
+.appearance-preview__header :deep(.notes-calendar-cell) {
+  --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+}
+/* The growing stock is sized in cqi. A WebView without the unit finds the min-height it reaches invalid
+   and leaves the row no floor at all, so there the stock is the flat floor. */
+@supports not (width: 1cqi) {
+  .appearance-preview__day--blank {
+    --_v-cell-min-height: var(--journal-cell-cell-min-height, var(--journal-saved-cell-cell-min-height, 26px));
+  }
+}
+@container journal-calendar (max-width: 28em) {
+  .appearance-preview__header :deep(.notes-calendar-cell) {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
+    );
+  }
+  .appearance-preview__row {
+    --_v-weekend-text-color: var(
+      --journal-cell-weekend-text-color-narrow,
+      var(
+        --journal-saved-cell-weekend-text-color-narrow,
+        var(--journal-cell-weekend-text-color, var(--journal-saved-cell-weekend-text-color))
+      )
+    );
+    --_v-weekend-text-weight: var(
+      --journal-cell-weekend-text-weight-narrow,
+      var(
+        --journal-saved-cell-weekend-text-weight-narrow,
+        var(--journal-cell-weekend-text-weight, var(--journal-saved-cell-weekend-text-weight))
+      )
+    );
+    --_v-weekend-text-italic: var(
+      --journal-cell-weekend-text-italic-narrow,
+      var(
+        --journal-saved-cell-weekend-text-italic-narrow,
+        var(--journal-cell-weekend-text-italic, var(--journal-saved-cell-weekend-text-italic))
+      )
+    );
+  }
+  .appearance-preview__weekday-wide {
+    display: none;
+  }
+  .appearance-preview__weekday-narrow {
+    display: inline;
+  }
+  .appearance-preview__day--blank {
+    --_v-cell-min-height: var(
+      --journal-cell-cell-min-height-narrow,
+      var(--journal-saved-cell-cell-min-height-narrow, 26px)
+    );
+    --_v-cell-padding: var(
+      --journal-cell-cell-padding-narrow,
+      var(
+        --journal-saved-cell-cell-padding-narrow,
+        var(--journal-cell-cell-padding, var(--journal-saved-cell-cell-padding, 0px))
+      )
+    );
+  }
+  .appearance-preview__header {
+    --_v-heading-size: var(
+      --journal-cell-heading-size-narrow,
+      var(
+        --journal-saved-cell-heading-size-narrow,
+        var(--journal-cell-heading-size, var(--journal-saved-cell-heading-size, inherit))
+      )
+    );
+    --_v-heading-weight: var(
+      --journal-cell-heading-weight-narrow,
+      var(
+        --journal-saved-cell-heading-weight-narrow,
+        var(--journal-cell-heading-weight, var(--journal-saved-cell-heading-weight, inherit))
+      )
+    );
+    --_v-heading-italic: var(
+      --journal-cell-heading-italic-narrow,
+      var(
+        --journal-saved-cell-heading-italic-narrow,
+        var(--journal-cell-heading-italic, var(--journal-saved-cell-heading-italic, inherit))
+      )
+    );
+    --_v-heading-color: var(
+      --journal-cell-heading-color-narrow,
+      var(
+        --journal-saved-cell-heading-color-narrow,
+        var(--journal-cell-heading-color, var(--journal-saved-cell-heading-color, inherit))
+      )
+    );
+    --_v-heading-case: var(
+      --journal-cell-heading-case-narrow,
+      var(
+        --journal-saved-cell-heading-case-narrow,
+        var(--journal-cell-heading-case, var(--journal-saved-cell-heading-case, inherit))
+      )
+    );
+  }
+  .appearance-preview__grid {
+    --_v-cell-gap: var(--journal-cell-cell-gap-narrow, var(--journal-saved-cell-cell-gap-narrow, 1px));
+    --_v-week-number-divider-width: var(
+      --journal-cell-week-number-divider-width-narrow,
+      var(
+        --journal-saved-cell-week-number-divider-width-narrow,
+        var(--journal-cell-week-number-divider-width, var(--journal-saved-cell-week-number-divider-width, 1px))
+      )
+    );
+  }
+  .appearance-preview__weekday {
+    --_v-weekday-size: var(
+      --journal-cell-weekday-size-narrow,
+      var(
+        --journal-saved-cell-weekday-size-narrow,
+        var(--journal-cell-weekday-size, var(--journal-saved-cell-weekday-size, 0.6em))
+      )
+    );
+    --_v-weekday-weight: var(
+      --journal-cell-weekday-weight-narrow,
+      var(
+        --journal-saved-cell-weekday-weight-narrow,
+        var(--journal-cell-weekday-weight, var(--journal-saved-cell-weekday-weight, inherit))
+      )
+    );
+    --_v-weekday-italic: var(
+      --journal-cell-weekday-italic-narrow,
+      var(
+        --journal-saved-cell-weekday-italic-narrow,
+        var(--journal-cell-weekday-italic, var(--journal-saved-cell-weekday-italic, inherit))
+      )
+    );
+    --_v-weekday-color: var(
+      --journal-cell-weekday-color-narrow,
+      var(
+        --journal-saved-cell-weekday-color-narrow,
+        var(--journal-cell-weekday-color, var(--journal-saved-cell-weekday-color, var(--text-muted)))
+      )
+    );
+    --_v-weekday-case: var(
+      --journal-cell-weekday-case-narrow,
+      var(
+        --journal-saved-cell-weekday-case-narrow,
+        var(--journal-cell-weekday-case, var(--journal-saved-cell-weekday-case, inherit))
+      )
+    );
+  }
+  .appearance-preview__week-number {
+    --_v-week-number-size: var(
+      --journal-cell-week-number-size-narrow,
+      var(
+        --journal-saved-cell-week-number-size-narrow,
+        var(--journal-cell-week-number-size, var(--journal-saved-cell-week-number-size, 0.85em))
+      )
+    );
+    --_v-week-number-weight: var(
+      --journal-cell-week-number-weight-narrow,
+      var(
+        --journal-saved-cell-week-number-weight-narrow,
+        var(--journal-cell-week-number-weight, var(--journal-saved-cell-week-number-weight, var(--font-normal)))
+      )
+    );
+    --_v-week-number-italic: var(
+      --journal-cell-week-number-italic-narrow,
+      var(
+        --journal-saved-cell-week-number-italic-narrow,
+        var(--journal-cell-week-number-italic, var(--journal-saved-cell-week-number-italic, inherit))
+      )
+    );
+    --_v-week-number-color: var(
+      --journal-cell-week-number-color-narrow,
+      var(
+        --journal-saved-cell-week-number-color-narrow,
+        var(--journal-cell-week-number-color, var(--journal-saved-cell-week-number-color, var(--text-muted)))
+      )
+    );
+    --_v-week-number-case: var(
+      --journal-cell-week-number-case-narrow,
+      var(
+        --journal-saved-cell-week-number-case-narrow,
+        var(--journal-cell-week-number-case, var(--journal-saved-cell-week-number-case, inherit))
+      )
+    );
+  }
+  .appearance-preview__day {
+    --_v-date-size: var(
+      --journal-cell-date-size-narrow,
+      var(
+        --journal-saved-cell-date-size-narrow,
+        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
+      )
+    );
+    --_v-date-weight: var(
+      --journal-cell-date-weight-narrow,
+      var(
+        --journal-saved-cell-date-weight-narrow,
+        var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit))
+      )
+    );
+    --_v-date-italic: var(
+      --journal-cell-date-italic-narrow,
+      var(
+        --journal-saved-cell-date-italic-narrow,
+        var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit))
+      )
+    );
+    --_v-date-color: var(
+      --journal-cell-date-color-narrow,
+      var(
+        --journal-saved-cell-date-color-narrow,
+        var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit))
+      )
+    );
+    --_v-date-case: var(
+      --journal-cell-date-case-narrow,
+      var(
+        --journal-saved-cell-date-case-narrow,
+        var(--journal-cell-date-case, var(--journal-saved-cell-date-case, inherit))
+      )
+    );
+  }
+}
+</style>

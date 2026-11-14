@@ -3,12 +3,14 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, MonthPeriod } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { CalendarDate, MonthPeriod, type CalendarDisplaySliceState } from "@/calendar";
+import { calendarDisplayCoreModule } from "@/calendar/settings/module";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
+import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -17,11 +19,14 @@ import { shelvesCoreModule } from "@/shelves/module";
 import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { appearanceCatalog } from "../appearance/appearance-catalog";
 import { notesCalendarModule } from "../module";
+import { calendarStyleRules, NARROW_QUERY, narrowReader, privateName, wideReader } from "../testing";
 
 import NotesMonthView from "./NotesMonthView.vue";
 
 const MODULES = [
+  calendarDisplayCoreModule,
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
@@ -30,8 +35,11 @@ const MODULES = [
   tasksCoreModule,
 ];
 
-function bootHarness(journals: Record<string, JournalConfig>): Promise<TestHarness> {
-  return testContainer({ modules: MODULES, data: { journals } });
+function bootHarness(
+  journals: Record<string, JournalConfig>,
+  calendarDisplay: Partial<CalendarDisplaySliceState> = {},
+): Promise<TestHarness> {
+  return testContainer({ modules: MODULES, data: { journals, calendarDisplay } });
 }
 
 // The real WorkspaceService drives Obsidian's own Menu, so these assertions read the menu the
@@ -40,6 +48,10 @@ function bootHarness(journals: Record<string, JournalConfig>): Promise<TestHarne
 // extra item, whereas a shown menu carrying no items would be a bug a `?? []` fallback would hide.
 function menuItemTitles(): readonly string[] | undefined {
   return __testing.openMenus.at(-1)?.items.map((item) => item.title);
+}
+
+function dayRows(container: Element): HTMLElement[] {
+  return [...container.querySelectorAll<HTMLElement>('[role="grid"] > [role="row"]')].slice(1);
 }
 
 const month = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-08-15")));
@@ -56,7 +68,29 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+// The declaration of the first unconditional rule listing `selector` among its comma-separated selectors.
+const placed = (selector: string, property: string): string | undefined =>
+  calendarStyleRules()
+    .monthView.filter((rule) => rule.container === null && rule.supports === null)
+    .find((rule) => rule.selector.split(",").some((part) => part.trim() === selector))
+    ?.declarations.get(property);
+const dayCell = (container: Element, at: string): HTMLElement | null =>
+  container.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(at)}"]`);
+const headerFor = (container: Element, name: string): Element | undefined =>
+  [...container.querySelectorAll('[role="columnheader"]')].find((header) => header.getAttribute("aria-label") === name);
+const texts = (header: Element | undefined) => ({
+  wide: header?.querySelector(".notes-month-view__weekday-wide")?.textContent?.trim(),
+  narrow: header?.querySelector(".notes-month-view__weekday-narrow")?.textContent?.trim(),
+});
+
 describe("NotesMonthView", () => {
+  it("does not bind appearance variables inline", async () => {
+    const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+    const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+    expect(container.querySelector(".notes-month-view")?.getAttribute("style") ?? "").not.toContain("--journal-cell-");
+  });
+
   describe("accessible grid", () => {
     it("provides the grid, row, column-header, row-header, and grid-cell structure", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
@@ -214,17 +248,17 @@ describe("NotesMonthView", () => {
       expect((selected[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-08-01");
     });
 
-    it("selects an inactive outside date on Shift+primary click without opening it", async () => {
+    it("does not select an inert outside date on Shift+primary click", async () => {
       const selectDate = vi.fn();
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, {
         props: { shelf: null, month, outsideDates: "inactive", selectDate },
       });
-      const outside = container.querySelector<HTMLElement>(".notes-month-view__day[data-outside]")!;
+      const outside = container.querySelector<HTMLElement>('.notes-month-view__day[data-anchor="2026-07-31"]')!;
 
       await fireEvent.click(outside, { shiftKey: true, button: 0 });
 
-      expect(selectDate).toHaveBeenCalledWith(outside.dataset.anchor);
+      expect(selectDate).not.toHaveBeenCalled();
     });
 
     it("leaves a header cell with no journal of its kind out of the tab order", async () => {
@@ -280,6 +314,61 @@ describe("NotesMonthView", () => {
       }
     });
 
+    it("draws no mark on an inert outside day", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      for (const day of ["2026-07-31", "2026-08-03"]) {
+        const path = `daily/${day}.md` as VaultPath;
+        harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor(day), path });
+        harness.host.putFile(path);
+      }
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, outsideDates: "inactive" } });
+      await nextTick();
+
+      const cell = (day: string) =>
+        container.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(day)}"]`);
+      expect(cell("2026-08-03")?.querySelector(".decoration-corner")).not.toBeNull();
+      expect(cell("2026-07-31")?.querySelector(".decoration-corner")).toBeNull();
+    });
+
+    it("takes inert outside days out of the tab order and marks them disabled", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, outsideDates: "inactive" } });
+      const outside = container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-outside]");
+
+      expect(outside.length).toBeGreaterThan(0);
+      for (const element of outside) {
+        expect({
+          role: element.getAttribute("role"),
+          tabindex: element.getAttribute("tabindex"),
+          disabled: element.getAttribute("aria-disabled"),
+          gridKey: element.dataset.gridKey,
+        }).toEqual({ role: "gridcell", tabindex: null, disabled: "true", gridKey: undefined });
+      }
+    });
+
+    it("skips inert outside days in keyboard navigation", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, weeks: "none", outsideDates: "inactive" },
+      });
+      const first = container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-01"]')!;
+      const last = container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-31"]')!;
+
+      first.focus();
+      await fireEvent.keyDown(first, { key: "ArrowLeft" });
+      expect(document.activeElement).toBe(first);
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowRight" });
+      expect(document.activeElement).toBe(last);
+    });
+
     it("keeps outside cells actionable by default", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
@@ -320,14 +409,267 @@ describe("NotesMonthView", () => {
       expect(container.querySelectorAll(".notes-month-view__weekday").length).toBe(7);
     });
 
+    it("the weekday header reads the catalog variable", () => {
+      const rules = calendarStyleRules().monthView;
+      const declared = (container: string | null, property: string): string | undefined =>
+        rules
+          .filter((rule) => rule.selector === ".notes-month-view__weekday" && rule.container === container)
+          .map((rule) => rule.declarations.get(property))
+          .find((value) => value !== undefined);
+      const weekday = appearanceCatalog.filter((entry) => entry.name.startsWith("journal-cell-weekday-"));
+      const reads = {
+        size: "font-size",
+        weight: "font-weight",
+        italic: "font-style",
+        color: "color",
+        case: "text-transform",
+      };
+
+      expect(weekday.map((entry) => entry.name.replace("journal-cell-weekday-", "")).toSorted()).toEqual(
+        Object.keys(reads).toSorted(),
+      );
+      for (const entry of weekday) {
+        const property = reads[entry.name.replace("journal-cell-weekday-", "") as keyof typeof reads];
+        expect(declared(null, property)).toBe(`var(${privateName(entry)})`);
+        expect(declared(null, privateName(entry))).toBe(wideReader(entry));
+        expect(declared(NARROW_QUERY, privateName(entry))).toBe(narrowReader(entry));
+      }
+    });
+
     it("orders weekday labels to match the weekdays of the rendered day cells", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
-      const labels = [...container.querySelectorAll(".notes-month-view__weekday")].map((element) =>
+      const labels = [...container.querySelectorAll(".notes-month-view__weekday-wide")].map((element) =>
         element.textContent?.trim(),
       );
       const expected = [...[...month.weeks()][0].days()].map((d) => d.format("ddd"));
       expect(labels).toEqual(expected);
+    });
+  });
+
+  describe("label formats", () => {
+    const daily = { daily: fixedJournal("daily", { type: "day" }) };
+    // The attribute gates the rules that let a day shrink below its label, so stock grids keep their size floor.
+    it("marks the grid for clipping only when the day label is custom", async () => {
+      const stock = await bootHarness(daily);
+      const custom = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
+      const stockView = stock.render(NotesMonthView, { props: { shelf: null, month } }).container;
+      const customView = custom.render(NotesMonthView, { props: { shelf: null, month } }).container;
+
+      expect(stockView.querySelector("[data-custom-day-label]")).toBeNull();
+      expect(customView.querySelector(".notes-month-view")?.hasAttribute("data-custom-day-label")).toBe(true);
+    });
+
+    it("renders the day label in the user's format and keeps the full date as its name", async () => {
+      const harness = await bootHarness(daily, { labels: { day: "DD", week: "", month: "", quarter: "", year: "" } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      expect(dayCell(container, "2026-08-01")?.textContent?.trim()).toBe("01");
+      expect(dayCell(container, "2026-08-01")?.getAttribute("aria-label")).toBe("August 1, 2026");
+    });
+
+    it("renders week numbers in the user's format", async () => {
+      const harness = await bootHarness(daily, { labels: { day: "", week: "w", month: "", quarter: "", year: "" } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+      const first = [...month.weeks()][0];
+
+      expect(container.querySelector('[data-testid="week-number-cell"]')?.textContent?.trim()).toBe(first.format("w"));
+    });
+
+    it("renders the heading's month, quarter and year in the user's formats", async () => {
+      const harness = await bootHarness(
+        {
+          ...daily,
+          monthly: fixedJournal("monthly", { type: "month" }),
+          quarterly: fixedJournal("quarterly", { type: "quarter" }),
+        },
+        { labels: { day: "", week: "", month: "MMM", quarter: "Qo", year: "YY" } },
+      );
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      expect(container.querySelector('[data-testid="header-month"]')?.textContent?.trim()).toBe("Aug");
+      expect(container.querySelector('[data-testid="header-month"]')?.getAttribute("aria-label")).toBe("August 2026");
+      expect(container.querySelector('[data-testid="header-quarter"]')?.textContent?.trim()).toBe("3rd");
+      // No yearly journal, so the year is no control: its visible text is hidden and its name read instead.
+      const year = container.querySelector('[data-testid="header-year"]');
+      expect(year?.querySelector('.cell-decoration__content [aria-hidden="true"]')?.textContent?.trim()).toBe("26");
+      expect(year?.querySelector(".notes-calendar-cell__accessible-name")?.textContent?.trim()).toBe("2026");
+    });
+
+    // With no monthly journal the heading's month is no control, so no aria-label names it: its text would be read.
+    it("keeps a non-control heading cell's accessible text fixed whatever the format", async () => {
+      const harness = await bootHarness(daily, { labels: { day: "", week: "", month: "MM", quarter: "", year: "" } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const heading = container.querySelector<HTMLElement>('[data-testid="header-month"]');
+      const shown = heading?.querySelector('[aria-hidden="true"]:not(.notes-calendar-cell__layer)');
+      const named = [...(heading?.querySelectorAll(".notes-calendar-cell__accessible-name") ?? [])];
+
+      expect(heading?.hasAttribute("aria-label")).toBe(false);
+      expect(shown?.textContent?.trim()).toBe("08");
+      expect(named.map((element) => element.textContent?.trim())).toEqual(["August 2026"]);
+    });
+
+    it.each([
+      ["stock", { day: "", week: "", month: "", quarter: "", year: "" }],
+      ["typed as the default", { day: "", week: "", month: "MMMM", quarter: "", year: "" }],
+    ])("renders a non-control heading cell with a %s format as plain text", async (_name, labels) => {
+      const harness = await bootHarness(daily, { labels });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const heading = container.querySelector<HTMLElement>('[data-testid="header-month"]');
+      const text = heading?.querySelector(".cell-decoration__content");
+
+      expect(heading?.querySelector(".notes-calendar-cell__accessible-name")).toBeNull();
+      expect(text?.children.length).toBe(0);
+      expect(text?.textContent?.trim()).toBe("August");
+    });
+
+    it("renders each width's weekday text and names the column by the full weekday", async () => {
+      const harness = await bootHarness(daily, {
+        weekdayLabel: { type: "pattern", pattern: "ddd" },
+        weekdayLabelNarrow: { type: "letter" },
+      });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const monday = headerFor(container, "Monday");
+
+      expect(texts(monday)).toEqual({ wide: "Mon", narrow: "M" });
+      expect(monday?.querySelector(".notes-month-view__weekday-wide")?.getAttribute("aria-hidden")).toBe("true");
+      expect(monday?.querySelector(".notes-month-view__weekday-narrow")?.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("keeps each width's own text when the wide one is one letter", async () => {
+      const harness = await bootHarness(daily, {
+        weekdayLabel: { type: "letter" },
+        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+      });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "M", narrow: "Mo" });
+    });
+
+    it("renders one letter at narrow when the narrow one is unset", async () => {
+      const harness = await bootHarness(daily, {
+        weekdayLabel: { type: "pattern", pattern: "dd" },
+        weekdayLabelNarrow: null,
+      });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      expect(texts(headerFor(container, "Monday"))).toEqual({ wide: "Mo", narrow: "M" });
+    });
+
+    it("keeps the full weekday names on a visually hidden weekday row", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, showWeekdays: false } });
+
+      expect(headerFor(container, "Monday")).toBeDefined();
+    });
+  });
+
+  describe("weekday header visibility", () => {
+    it("keeps the column headers but hides them visually when showWeekdays is false", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, showWeekdays: false } });
+      const row = container.querySelector('[role="grid"] > [role="row"]');
+      expect(row?.classList.contains("notes-month-view__row--visually-hidden")).toBe(true);
+      expect(row?.querySelectorAll('[role="columnheader"]').length).toBe(7);
+    });
+
+    it("shows the weekday row by default", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const row = container.querySelector('[role="grid"] > [role="row"]');
+      expect(row?.classList.contains("notes-month-view__row--visually-hidden")).toBe(false);
+    });
+  });
+
+  describe("sixRows", () => {
+    const february = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2027-02-10")));
+
+    it("pads a four-row month to six rows of outside days", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none" },
+      });
+      expect(dayRows(container)).toHaveLength(4);
+
+      const six = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true },
+      });
+      const rows = dayRows(six.container);
+      expect(rows).toHaveLength(6);
+      for (const row of rows.slice(4)) {
+        const days = row.querySelectorAll<HTMLElement>(".notes-month-view__day");
+        expect(days).toHaveLength(7);
+        for (const day of days) expect(day.dataset.outside).toBeDefined();
+      }
+    });
+
+    it("renders blank cells in the added rows and skips them in keyboard navigation", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true, outsideDates: "blank" },
+      });
+      const rows = dayRows(container);
+      expect(rows).toHaveLength(6);
+      for (const row of rows.slice(4)) {
+        expect(row.querySelectorAll(".notes-month-view__day--blank")).toHaveLength(7);
+      }
+      const last = container.querySelector<HTMLElement>('[data-grid-key="day:2027-02-22"]')!;
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowDown" });
+      expect(document.activeElement).toBe(last);
+    });
+
+    it("decorates and opens the added days when outside days are active", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const path = "daily/2027-03-08.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2027-03-08"), path });
+      harness.host.putFile(path);
+      const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true, outsideDates: "active" },
+      });
+      await nextTick();
+
+      const added = container.querySelector<HTMLElement>('[data-grid-key="day:2027-03-08"]')!;
+      expect(added.querySelector(".decoration-corner")).not.toBeNull();
+      await fireEvent.click(added, { button: 0 });
+      expect(invoke).toHaveBeenCalled();
+    });
+    it("keeps the added days inert, unmarked and out of navigation when outside days are inert", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const path = "daily/2027-03-08.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2027-03-08"), path });
+      harness.host.putFile(path);
+      const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: february, weeks: "none", sixRows: true, outsideDates: "inactive" },
+      });
+      await nextTick();
+
+      const added = container.querySelector<HTMLElement>('.notes-month-view__day[data-anchor="2027-03-08"]')!;
+      expect(added.dataset.inactive).toBe("true");
+      expect(added.hasAttribute("tabindex")).toBe(false);
+      expect(added.querySelector(".decoration-corner")).toBeNull();
+      await fireEvent.click(added, { button: 0 });
+      expect(invoke).not.toHaveBeenCalled();
+      const last = container.querySelector<HTMLElement>('[data-grid-key="day:2027-02-22"]')!;
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowDown" });
+      expect(document.activeElement).toBe(last);
     });
   });
 
@@ -346,7 +688,7 @@ describe("NotesMonthView", () => {
       const { container } = harness.render(NotesMonthView, {
         props: { shelf: null, month, hiddenWeekdays: [0, 6] },
       });
-      const labels = [...container.querySelectorAll(".notes-month-view__weekday")].map((element) =>
+      const labels = [...container.querySelectorAll(".notes-month-view__weekday-wide")].map((element) =>
         element.textContent?.trim(),
       );
       const expected = [...[...month.weeks()][0].days()]
@@ -393,6 +735,66 @@ describe("NotesMonthView", () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
       expect(container.querySelector<HTMLElement>(".notes-month-view__grid")?.dataset.weeks).toBe("left");
+    });
+
+    // The divider's track is 8px while it shows and 0 once its width is 0, which is how a hidden divider is written.
+    it("sizes the divider's track from the divider's width", () => {
+      const rule = calendarStyleRules().monthView.find(
+        (candidate) =>
+          candidate.selector === ".notes-month-view__grid" && candidate.declarations.has("--_divider-track"),
+      );
+      expect(rule?.declarations.get("--_divider-track")).toBe(
+        "min(var(--size-4-2), var(--_v-week-number-divider-width) * 1000)",
+      );
+    });
+
+    it.each([
+      ["left", "1fr var(--_divider-track) repeat(var(--day-columns, 7), 1fr)"],
+      ["right", "repeat(var(--day-columns, 7), 1fr) var(--_divider-track) 1fr"],
+    ] as const)(
+      "lays the week-number column out as wide as a day, its divider's track beside it, on the %s",
+      (side, columns) => {
+        const rule = calendarStyleRules().monthView.find(
+          (candidate) =>
+            candidate.container === null && candidate.selector === `.notes-month-view__grid[data-weeks="${side}"]`,
+        );
+        expect(rule?.declarations.get("grid-template-columns")).toBe(columns);
+      },
+    );
+
+    // Cells place themselves in source order, so whatever follows the week-number column has to step over the divider's track.
+    it("keeps every cell out of the divider's track", () => {
+      expect({
+        leftDay: placed(
+          '.notes-month-view__grid[data-weeks="left"] .notes-month-view__week-number + *',
+          "grid-column-start",
+        ),
+        leftWeekday: placed(
+          '.notes-month-view__grid[data-weeks="left"] .notes-month-view__weekday-spacer + *',
+          "grid-column-start",
+        ),
+        rightWeek: placed('.notes-month-view__grid[data-weeks="right"] .notes-month-view__week-number', "grid-column"),
+        rightSpacer: placed(
+          '.notes-month-view__grid[data-weeks="right"] .notes-month-view__weekday-spacer',
+          "grid-column",
+        ),
+      }).toEqual({ leftDay: "3", leftWeekday: "3", rightWeek: "-2 / -1", rightSpacer: "-2 / -1" });
+    });
+
+    it.each([
+      ["left", "2 / 3"],
+      ["right", "-3 / -2"],
+    ] as const)("draws the divider in its own track beside week numbers on the %s", async (weeks, column) => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks } });
+      const dividers = [...container.querySelectorAll<HTMLElement>(".notes-calendar-divider")];
+      expect(dividers.map((divider) => divider.style.gridColumn)).toEqual([column]);
+    });
+
+    it("draws no divider without week numbers", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "none" } });
+      expect(container.querySelector(".notes-calendar-divider")).toBeNull();
     });
   });
 
@@ -527,6 +929,263 @@ describe("NotesMonthView", () => {
       });
       expect(container.querySelector('[data-testid="custom-header"]')).toBeTruthy();
       expect(container.querySelector('[data-testid="header-month"]')).toBeNull();
+    });
+  });
+});
+
+const bands = (container: Element, kind: "weekend" | "current-week"): HTMLElement[] => [
+  ...container.querySelectorAll<HTMLElement>(`.notes-calendar-band[data-band="${CSS.escape(kind)}"]`),
+];
+const placement = (band: HTMLElement) => ({ column: band.style.gridColumn, row: band.style.gridRow });
+const currentWeekAnchors = (container: Element): (string | undefined)[] =>
+  [...container.querySelectorAll<HTMLElement>("[data-current-week]")].map((cell) => cell.dataset.anchor);
+const daily = { daily: fixedJournal("daily", { type: "day" }) };
+
+describe("NotesMonthView bands", () => {
+  describe("weekend", () => {
+    it("draws one band down Saturday and Sunday in a Monday-start grid, after the week numbers", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "8 / span 2", row: "auto" }]);
+    });
+
+    it("splits the weekend into the first and last columns of a Sunday-start grid", async () => {
+      installTestCalendar({ dow: 0, doy: 6 });
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([
+        { column: "3 / span 1", row: "auto" },
+        { column: "9 / span 1", row: "auto" },
+      ]);
+    });
+
+    it("starts at the first column with week numbers on the right", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "right" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "6 / span 2", row: "auto" }]);
+    });
+
+    it("moves the band to a custom Friday and Saturday", async () => {
+      const harness = await bootHarness(daily, { weekend: { type: "custom", days: [5, 6] } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(bands(container, "weekend").map(placement)).toEqual([{ column: "7 / span 2", row: "auto" }]);
+      const weekendDays = [...container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-weekend]")];
+      expect(new Set(weekendDays.map((cell) => new Date(`${cell.dataset.anchor}T12:00`).getDay()))).toEqual(
+        new Set([5, 6]),
+      );
+    });
+
+    it("draws no band and marks no day for an empty custom weekend", async () => {
+      const harness = await bootHarness(daily, { weekend: { type: "custom", days: [] } });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      expect(bands(container, "weekend")).toEqual([]);
+      expect(container.querySelector("[data-weekend]")).toBeNull();
+    });
+
+    it("marks every weekend day, outside days included, inert or interactive", async () => {
+      for (const outsideDates of ["active", "inactive"] as const) {
+        const harness = await bootHarness(daily);
+        const { container, unmount } = harness.render(NotesMonthView, { props: { shelf: null, month, outsideDates } });
+
+        // 2026-08-01 is a Saturday inside the month; 2026-09-06 a Sunday padding its last row.
+        expect(
+          [dayCell(container, "2026-08-01"), dayCell(container, "2026-09-06")].map((cell) => cell?.dataset.weekend),
+        ).toEqual(["true", "true"]);
+        expect(dayCell(container, "2026-08-03")?.hasAttribute("data-weekend")).toBe(false);
+        unmount();
+      }
+    });
+
+    it("marks the weekend's column headers alone", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      const marked = [...container.querySelectorAll<HTMLElement>('[role="columnheader"]')].map(
+        (header) => header.dataset.weekend !== undefined,
+      );
+      expect(marked).toEqual([false, false, false, false, false, true, true]);
+    });
+  });
+
+  describe("current week", () => {
+    it("draws one band across today's row, counting the weekday header", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      // Today, 2026-08-15, sits in the third week row; the header row is grid row 1.
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "4 / span 1" }]);
+    });
+
+    // A visually hidden header row is absolutely positioned, so it takes no grid row.
+    it("counts no header row when the weekday row is hidden", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, weeks: "left", showWeekdays: false },
+      });
+
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "3 / span 1" }]);
+    });
+
+    it("marks today's week number and its seven days, and nothing else", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      const row = dayRows(container)[2];
+      const marked = [...(row?.querySelectorAll<HTMLElement>("[data-current-week]") ?? [])];
+      expect(marked.length).toBe(8);
+      expect(marked[0]?.dataset.testid).toBe("week-number-cell");
+      expect(container.querySelectorAll("[data-current-week]").length).toBe(8);
+    });
+
+    it("today's week number and the current month heading carry no today", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+
+      expect(container.querySelector('[data-testid="week-number-cell"][data-today]')).toBeNull();
+      expect(container.querySelector('[data-testid="header-month"][data-today]')).toBeNull();
+      expect(container.querySelector('[data-anchor="2026-08-15"][data-today]')).not.toBeNull();
+    });
+
+    it("draws no current-week band in a month without today", async () => {
+      const harness = await bootHarness(daily);
+      const other = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-03-15")));
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month: other } });
+
+      expect(bands(container, "current-week")).toEqual([]);
+      expect(container.querySelector("[data-current-week]")).toBeNull();
+    });
+
+    // 2026-11-01 is a Sunday, so its Monday-start week runs from 26 October.
+    it("draws the band in both months of a week that straddles them, over each one's real days", async () => {
+      vi.setSystemTime(new Date(2026, 10, 1, 12, 0, 0));
+      const october = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-10-15")));
+      const november = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-11-15")));
+      const harness = await bootHarness(daily);
+
+      const before = harness.render(NotesMonthView, {
+        props: { shelf: null, month: october, outsideDates: "blank", weeks: "left" },
+      });
+      expect(bands(before.container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "6 / span 1" }]);
+      expect(currentWeekAnchors(before.container).slice(1)).toEqual([
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-10-31",
+      ]);
+      before.unmount();
+
+      const after = harness.render(NotesMonthView, {
+        props: { shelf: null, month: november, outsideDates: "blank", weeks: "left" },
+      });
+      expect(bands(after.container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "2 / span 1" }]);
+      expect(currentWeekAnchors(after.container).slice(1)).toEqual(["2026-11-01"]);
+    });
+
+    it("draws no current-week band across a row of blanks alone", async () => {
+      // The sixth row of a six-row July is 3–9 August, all outside the month.
+      vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0));
+      const july = MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-07-15")));
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month: july, outsideDates: "blank", sixRows: true },
+      });
+
+      expect(bands(container, "current-week")).toEqual([]);
+      expect(container.querySelector("[data-current-week]")).toBeNull();
+    });
+
+    it("draws no current-week band when the caller opts out", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, currentWeekBand: false } });
+
+      expect(bands(container, "current-week")).toEqual([]);
+      expect(container.querySelector("[data-current-week]")).toBeNull();
+    });
+
+    it("moves to the next row when midnight starts a new week", async () => {
+      vi.setSystemTime(new Date(2026, 7, 16, 23, 59, 0));
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "4 / span 1" }]);
+
+      await vi.advanceTimersByTimeAsync(61_000);
+
+      expect(bands(container, "current-week").map(placement)).toEqual([{ column: "1 / -1", row: "5 / span 1" }]);
+      expect(currentWeekAnchors(container).at(1)).toBe("2026-08-17");
+    });
+  });
+
+  describe("in the grid", () => {
+    it("places every band ahead of the header row, weekend bands first, then the divider", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const grid = container.querySelector('[role="grid"]');
+      const children = [...(grid?.children ?? [])];
+      const firstRow = children.findIndex((child) => child.getAttribute("role") === "row");
+
+      expect(
+        children.slice(0, firstRow).map((child) => (child as HTMLElement).dataset.band ?? child.className),
+      ).toEqual(["weekend", "current-week", "notes-calendar-divider"]);
+    });
+
+    it("hides every band from assistive tech", async () => {
+      const harness = await bootHarness(daily);
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+
+      const hidden = [...container.querySelectorAll(".notes-calendar-band, .notes-calendar-band *")].map((element) =>
+        element.getAttribute("aria-hidden"),
+      );
+      expect(hidden.length).toBe(6);
+      expect(new Set(hidden)).toEqual(new Set(["true"]));
+    });
+
+    // A non-positioned header paints before every positioned z-0 element, so an under band would cover its text.
+    it.each([
+      ["monthView", ".notes-month-view__weekday"],
+      ["weekView", ".notes-week-view__weekday"],
+      ["preview", ".appearance-preview__weekday"],
+    ] as const)("%s positions its weekday header above an under band, without a z-index", (component, selector) => {
+      const header = calendarStyleRules()[component].find(
+        (rule) => rule.container === null && rule.selector === selector,
+      );
+      expect(header?.declarations.get("position")).toBe("relative");
+      expect(header?.declarations.has("z-index")).toBe(false);
+    });
+
+    it("positions the grid for its bands without isolating it", () => {
+      const grid = calendarStyleRules().monthView.find(
+        (rule) =>
+          rule.container === null && rule.selector === ".notes-month-view__grid" && rule.declarations.has("display"),
+      );
+      expect(grid?.declarations.get("position")).toBe("relative");
+      expect(grid?.declarations.has("isolation")).toBe(false);
+      expect(grid?.declarations.has("z-index")).toBe(false);
+    });
+
+    // jsdom does no hit testing, so this reads the rules that decide it: the pointer passes through every band
+    // layer, and an over band is z 1 at most while a cell with an open popover lifts to the popover layer.
+    it("lets the pointer through an over band and lifts a cell's open popover above it", () => {
+      const { band, cell } = calendarStyleRules();
+
+      expect(band.find((rule) => rule.selector === ".notes-calendar-band")?.declarations.get("pointer-events")).toBe(
+        "none",
+      );
+      const layers = band
+        .filter((rule) => rule.declarations.has("z-index"))
+        .map((rule) => rule.declarations.get("z-index"));
+      expect(layers).toEqual(["clamp(0, var(--_v-weekend-layer), 1)", "clamp(0, var(--_v-current-week-layer), 1)"]);
+      expect(
+        cell
+          .find((rule) => rule.selector === ".notes-calendar-cell:has(.mark-overflow__popover)")
+          ?.declarations.get("z-index"),
+      ).toBe("var(--layer-popover)");
     });
   });
 });

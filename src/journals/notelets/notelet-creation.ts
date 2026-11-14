@@ -28,10 +28,10 @@ import { TimelineService } from "../timeline";
 
 import { NoteletPathService } from "./notelet-path";
 
-import type { TypeId } from "./config";
 import type { EmptyNoteNameError } from "../notes/errors";
 import type { PromptAnswer } from "../prompts/config";
 import type { NoteletMetadata } from "../types";
+import type { TypeId } from "./config";
 
 export type NoteletCreationError =
   | JournalNotFoundError

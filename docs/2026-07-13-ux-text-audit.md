@@ -82,9 +82,9 @@ new strings:
 
 - **E1** **[fixed]** Colliding-journals warning now renders a "Configure {name}" link
   per colliding journal, pushing that journal's edit subpage.
-- **E2** **[partially fixed]** All four appearance color pickers have descriptions
-  (`calendar_appearance_description`). Still open: a live preview cell (the decoration
-  editor's preview component could be reused).
+- **E2** **[fixed]** The appearance editor replaced the four color pickers (and the
+  `calendar_appearance_description` key); every control names its variable, and a live
+  preview cell shows the edit.
 - **E3** **[fixed]** Icon / Default shelf / Show in ribbon / Open on startup / "Open in"
   all have descriptions; the view-level "Open on startup" description cross-references
   the startup-note setting.

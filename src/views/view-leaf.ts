@@ -18,6 +18,7 @@ import { ViewsService } from "./service";
 import ViewErrorPanel from "./ui/ViewErrorPanel.vue";
 import { useFollowActiveNote } from "./use-follow-active-note";
 import { provideViewContext, type ViewContext } from "./view-context";
+import { VIEW_ID_ATTRIBUTE } from "./view-selector";
 
 interface JournalViewLeafState {
   refDate?: AnchorString;
@@ -101,6 +102,7 @@ export class JournalViewLeaf extends ItemView {
   protected onOpen(): Promise<void> {
     const app = createApp(buildRootComponent(this.viewId, this.#state, this.injector));
     provideInjectorOnApp(app, this.injector);
+    this.contentEl.setAttribute(VIEW_ID_ATTRIBUTE, this.viewId);
     app.mount(this.contentEl);
     this.#vueApp = app;
     return Promise.resolve();

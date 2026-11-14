@@ -29,12 +29,14 @@ import {
 } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { buildNavSegment, customJournal, fixedJournal } from "@/journals/testing";
+import { scopedStyleRules } from "@/notes-calendar/testing";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
+import segmentSource from "./NavBlockSegment.vue?raw";
 import NavigationCodeBlock from "./NavigationCodeBlock.vue";
 
 import type { FenceAdjacent } from "../adjacent-devices";
@@ -185,7 +187,9 @@ describe("NavigationCodeBlock", () => {
 describe("NavigationCodeBlock columns", () => {
   it("leaves the rendered block's segments free of the editor's drag and edit affordance", async () => {
     await renderYearlyNav([[buildNavSegment({ template: "static text", color: transparent })]]);
-    expect(screen.getAllByText("static text").at(0)?.classList.contains("nav-row--editable")).toBe(false);
+    expect(screen.getAllByText("static text").at(0)?.closest(".nav-row")?.classList.contains("nav-row--editable")).toBe(
+      false,
+    );
   });
 
   it("renders the current journal date in 'create' mode with prev/next periods from CycleService", async () => {
@@ -363,6 +367,37 @@ describe("NavigationCodeBlock segment templates", () => {
     expect(screen.getByText("Renamed day")).toBeTruthy();
     expect(screen.getByText("2026-05-26")).toBeTruthy();
     expect(screen.getByText("2026-05-28")).toBeTruthy();
+  });
+});
+
+const segmentRule = (selector: string) =>
+  scopedStyleRules(segmentSource).find((rule) => rule.container === null && rule.selector === selector);
+
+// The node build of Vue applies no `v-bind()` variables inline, so the color is read off the compiled rule.
+const ownValue = (name: string, binding: string) =>
+  new RegExp(String.raw`^var\(--_row-${name}, var\(--[\w-]+-${binding}\)\)$`);
+
+describe("NavigationCodeBlock segment color", () => {
+  it("keeps a segment's own color outside a custom-interval row", async () => {
+    await renderNavWithSegment({ color: { type: "custom", color: "#123456" } });
+
+    const row = screen.getAllByText("today").at(0)?.closest<HTMLElement>(".nav-row");
+    expect(row?.dataset.defaultColor).toBeUndefined();
+    expect(segmentRule(".nav-row")?.declarations.get("color")).toMatch(ownValue("text-chosen", "color"));
+  });
+
+  it("marks a segment still on the color a new segment starts with", async () => {
+    await renderNavWithSegment({ color: { type: "theme", name: "text-normal" } });
+
+    expect(screen.getAllByText("today").at(0)?.closest<HTMLElement>(".nav-row")?.dataset.defaultColor).toBe("true");
+  });
+
+  // A row's highlight text is inherited from it; everywhere else these are unset and the segment's own value shows.
+  it("falls back to the segment's own color, weight and style under a row's highlight text", () => {
+    const declarations = segmentRule(".nav-row")?.declarations;
+    expect(declarations?.get("font-weight")).toMatch(ownValue("weight", "fontWeight"));
+    expect(declarations?.get("font-style")).toMatch(ownValue("italic", "fontStyle"));
+    expect(segmentRule(".nav-row[data-default-color]")?.declarations.get("color")).toMatch(ownValue("text", "color"));
   });
 });
 
@@ -622,7 +657,8 @@ describe("NavigationCodeBlock segment click routing", () => {
     });
     registerQuarterlyNote(index);
 
-    const target = screen.getAllByText("Q2")[1];
+    // pointerenter does not bubble, and a real pointer enters the segment itself before its text.
+    const target = screen.getAllByText("Q2")[1]?.closest(".nav-row");
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
     expect(hoverPreviewPaths(harness)).toEqual(["Quarterly/2025-Q2.md"]);
@@ -771,7 +807,7 @@ describe("NavigationCodeBlock hover preview", () => {
       entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
 
-    const target = screen.getAllByText("today")[1];
+    const target = screen.getAllByText("today")[1]?.closest(".nav-row");
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
     expect(hoverPreviewPaths(harness)).toEqual(["Daily/2026-05-27.md"]);
