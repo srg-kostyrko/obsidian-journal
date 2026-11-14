@@ -658,6 +658,22 @@ describe("WorkspaceService", () => {
         expect(service.activeEditorState().isSome()).toBe(true);
         expect(service.isEditingActiveNote()).toBe(true);
       });
+
+      it.each([true, false])("leaves the hidden buffer alone when active is %s", (active) => {
+        const { service, host } = build();
+        const reading = host.openEditor(path, "- [ ] stale\n", 0, { active });
+        reading.mode = "preview";
+        if (!active) host.openEditor(other, "elsewhere\n");
+        const transform = vi.fn((text: string) => text.replace("stale", "changed"));
+        const replace = vi.fn(() => ({ from: 0, to: 0, lines: ["changed"] }));
+
+        expect(service.openNoteText(path).isNone()).toBe(true);
+        expect(service.processOpenNote(path, transform)).toBe("not-open");
+        expect(service.replaceLinesInOpenNote(path, replace)).toBe("not-open");
+        expect(transform).not.toHaveBeenCalled();
+        expect(replace).not.toHaveBeenCalled();
+        expect(reading.changes).toEqual([]);
+      });
     });
 
     describe("processOpenNote", () => {
@@ -736,6 +752,16 @@ describe("WorkspaceService", () => {
     });
 
     describe("saveOpenNote", () => {
+      it("does not save a reading view's hidden editor", async () => {
+        const { service, host } = build();
+        const reading = host.openEditor(path, "- [ ] stale\n");
+        reading.mode = "preview";
+
+        expectOk(await service.saveOpenNote(path));
+
+        expect(reading.saves).toEqual([]);
+      });
+
       it("resolves once the view holding the note, in any window, has saved its buffer", async () => {
         const { service, host } = build();
         const editor = host.openEditor(path, "a\n", 0, { active: false });

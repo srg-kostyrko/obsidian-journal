@@ -6,6 +6,8 @@ import { waitForNotice } from "../support/notices.js";
 import { contentOf, openNote, waitForActiveNote, waitForContent } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
+import { openInReadingMode } from "./code-blocks.js";
+
 // The single move's real-vault seams: the source rewritten through the active editor, the target
 // through the other pane that holds it with unsaved typing. Both notes ship in the
 // fixture so their metadata has resolved before the command runs. No clock pin: the containing
@@ -171,6 +173,48 @@ describe("moving one task to its containing period", () => {
       expect(lines.indexOf("- [ ] launch project")).toBe(lines.indexOf(TYPED_AT_END) + 1);
       expect(lines.indexOf("\t- [ ] draft outline")).toBe(lines.indexOf("- [ ] launch project") + 1);
     }
+    await waitForContent(
+      SOURCE,
+      (content) => content.includes("\t- [ ] draft outline #rolled"),
+      "waited for the source stamp",
+    );
+  });
+});
+
+// A Reading view keeps a hidden editor that is never saved, so a write through it never reaches disk.
+describe("moving one task into a month note open in Reading view", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+  });
+
+  it("writes the copied task to the month note on disk", async () => {
+    await openInReadingMode(TARGET);
+    await waitForActiveNote(TARGET);
+    const staged = await browser.executeObsidian(async ({ app, obsidian }, sourcePath) => {
+      const file = app.vault.getAbstractFileByPath(sourcePath);
+      if (!(file instanceof obsidian.TFile)) return "source missing";
+      const leaf = app.workspace.getLeaf("split");
+      await leaf.openFile(file, { active: true });
+      const editor = app.workspace.activeEditor?.editor;
+      if (editor === undefined) return "no active editor";
+      const line = editor
+        .getValue()
+        .split("\n")
+        .findIndex((text) => text.includes("draft outline"));
+      editor.setCursor({ line, ch: 3 });
+      return "ok";
+    }, SOURCE);
+    if (staged !== "ok") throw new StagingError(staged);
+    await waitForActiveNote(SOURCE);
+
+    await runCommand("journals:move-task-to-containing-period");
+
+    await waitForNotice(DONE_NOTICE());
+    await waitForContent(
+      TARGET,
+      (content) => content.split("\n").includes("\t- [ ] draft outline"),
+      "waited for the copied task on disk",
+    );
     await waitForContent(
       SOURCE,
       (content) => content.includes("\t- [ ] draft outline #rolled"),
