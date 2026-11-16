@@ -26,9 +26,8 @@ export function displayMonthToStored(displayMonth: number): number {
 }
 
 export function matchesDate(condition: JournalDecorationDateCondition, anchor: CalendarDate): boolean {
-  const dayOk = condition.day === DATE_CONDITION_ANY || Number(anchor.format("D")) === condition.day;
-  const monthOk =
-    condition.month === DATE_CONDITION_ANY || displayMonthToStored(Number(anchor.format("M"))) === condition.month;
-  const yearOk = condition.year === null || Number(anchor.format("YYYY")) === condition.year;
+  const dayOk = condition.day === DATE_CONDITION_ANY || anchor.day === condition.day;
+  const monthOk = condition.month === DATE_CONDITION_ANY || displayMonthToStored(anchor.month) === condition.month;
+  const yearOk = condition.year === null || anchor.year === condition.year;
   return dayOk && monthOk && yearOk;
 }
