@@ -669,6 +669,21 @@
   "bulk_add_date_place_path": "笔记路径",
   "bulk_add_date_place_path_unavailable": "无法使用笔记路径：无法从此日记的笔记路径中读取日期。",
   "common_label_property_name": "属性名称",
+  "common_weekday_name": [
+    {
+      "declarations": ["input index"],
+      "selectors": ["index"],
+      "match": {
+        "index=0": "星期日",
+        "index=1": "星期一",
+        "index=2": "星期二",
+        "index=3": "星期三",
+        "index=4": "星期四",
+        "index=5": "星期五",
+        "index=6": "星期六"
+      }
+    }
+  ],
   "bulk_add_date_format_label": "日期格式",
   "bulk_add_date_format_omit_time": "如果您的日期包含时间部分，请将其从格式中省略。",
   "bulk_add_date_format_property_note": "日期可能与存储的形式不同——请在源码模式下检查格式。",

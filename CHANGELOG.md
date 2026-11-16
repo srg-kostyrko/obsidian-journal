@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - A **Check date** decoration condition with a specific **Day**, **Month** or **Year** now matches in languages that write numbers in their own digits, such as Arabic. Before, it never matched there, so the decoration was not drawn on the date it named.
+- A decoration's summary in settings now names weekdays in the same language as the rest of the sentence. With Obsidian set to a language Journals does not translate, such as Polish, a **Check weekday** condition's summary was in English but named its days in Polish; it now names them in English too.
 
 ## [3.7.0] - 2026-11-14
 

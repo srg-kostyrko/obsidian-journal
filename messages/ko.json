@@ -680,6 +680,21 @@
   "bulk_add_date_place_path": "노트 경로",
   "bulk_add_date_place_path_unavailable": "노트 경로를 사용할 수 없습니다. 이 저널의 노트 경로에서 날짜를 읽을 수 없습니다.",
   "common_label_property_name": "속성 이름",
+  "common_weekday_name": [
+    {
+      "declarations": ["input index"],
+      "selectors": ["index"],
+      "match": {
+        "index=0": "일요일",
+        "index=1": "월요일",
+        "index=2": "화요일",
+        "index=3": "수요일",
+        "index=4": "목요일",
+        "index=5": "금요일",
+        "index=6": "토요일"
+      }
+    }
+  ],
   "bulk_add_date_format_label": "날짜 형식",
   "bulk_add_date_format_omit_time": "날짜에 시간이 포함되어 있다면 형식에서는 시간을 빼세요.",
   "bulk_add_date_format_property_note": "표시되는 날짜는 실제 저장된 값과 다를 수 있습니다. 소스 모드에서 형식을 확인하세요.",
