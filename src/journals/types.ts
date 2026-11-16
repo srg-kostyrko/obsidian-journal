@@ -57,7 +57,14 @@ export type EntryAddedReason = "indexed" | "created" | "appeared" | "changed" | 
 export type EntryRemovedReason = "deleted" | "moved" | "changed" | "unindexed" | "preview";
 
 export type EntryChangedEvent =
-  | { entry: IndexedNote; kind: "added"; reason: EntryAddedReason; canonical: boolean }
+  | {
+      entry: IndexedNote;
+      kind: "added";
+      reason: EntryAddedReason;
+      canonical: boolean;
+      // In-place payload changes emit no removal; consumers may still need the old interval end.
+      previous?: IndexedNote;
+    }
   | { entry: IndexedNote; kind: "removed"; reason: EntryRemovedReason };
 
 export interface JournalsIndexEvents {

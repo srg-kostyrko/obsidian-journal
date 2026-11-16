@@ -107,7 +107,13 @@ Example: [Word-count bands](#word-count-bands).
 listing that shows nothing for it cannot disagree. An explicit **Status** replaces the journal's own
 **Status** condition, and **Narrow further** replaces its conditions of the same type, so either can
 make the dot and the listing answer differently: **Any** · **Done** lights a day whose only task is done
-while the default listing shows nothing. It is one row that reads as a sentence:
+while the default listing shows nothing.
+
+For a custom interval, the question covers the whole interval, including when an **Interval offset**
+condition places the decoration on one of its days. Tasks dated before that day but inside the interval
+still count; tasks in the following interval do not.
+
+The **Check tasks** condition is one row that reads as a sentence:
 
 - **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
   period has at least one task and every one of them has the status; a period with no tasks never
@@ -195,8 +201,17 @@ set of **Weekdays**.
 
 For custom intervals: **Count from** **From start** or **From end**, and a **Day** — for example, day 1
 from the start matches the interval's first day, and day 3 from the end matches the third-from-last
-day. A decoration with an offset condition marks that day in calendars; the interval's other
+day. A decoration with an offset condition appears on day cells in calendars; the interval's other
 decorations mark the interval in interval lists.
+
+With **Decorate when all conditions are fulfilled**, the offset chooses the day to decorate. Title, tag, property, note-presence
+and note-size conditions read the containing interval's note; notelet and task conditions read that
+interval's notelets and tasks. They work on any offset day, including when the interval's end has
+been changed.
+
+With **Decorate when any condition is fulfilled**, each condition can match independently. For example, **Interval offset** day 2
+or **Has note** decorates every day of an interval that has a note, and only day 2 of an interval
+without a note.
 
 ### Repeating a condition
 

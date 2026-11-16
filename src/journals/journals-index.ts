@@ -172,8 +172,14 @@ export class JournalsIndex {
     return slot !== undefined && slot.isSome() && slot.value === entry.path;
   }
 
-  #emitAdded(entry: IndexedNote, reason: EntryAddedReason): void {
-    this.#emitter.emit("entryChanged", { entry, kind: "added", reason, canonical: this.#isCanonical(entry) });
+  #emitAdded(entry: IndexedNote, reason: EntryAddedReason, previous?: IndexedNote): void {
+    this.#emitter.emit("entryChanged", {
+      entry,
+      kind: "added",
+      reason,
+      canonical: this.#isCanonical(entry),
+      ...(previous !== undefined && { previous }),
+    });
   }
 
   #emitRemoved(entry: IndexedNote, reason: EntryRemovedReason): void {
@@ -235,7 +241,7 @@ export class JournalsIndex {
       // the payload can still have changed and must not be skipped along with them.
       if (samePayload(existing, entry)) return "registered";
       this.#byPath.set(entry.path, entry);
-      this.#emitAdded(entry, origin === "preview" ? "preview" : "changed");
+      this.#emitAdded(entry, origin === "preview" ? "preview" : "changed", existing);
       this.#markDirty(entry.journalName);
       return "registered";
     }

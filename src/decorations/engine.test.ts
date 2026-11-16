@@ -402,6 +402,137 @@ describe("DecorationEngine", () => {
       });
     });
 
+    describe("custom interval data at an offset", () => {
+      const anchor = "2026-01-05" as AnchorString;
+      const path = "sprint/Planning.md" as VaultPath;
+
+      it.each(["or", "and"] as const)("combines offset and interval note presence with %s", async (mode) => {
+        const decoration = buildDecoration({
+          mode,
+          conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        harness.host.putFile(path);
+        harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor, path });
+        const days = Array.from({ length: 15 }, (_, i) =>
+          DayPeriod.containing(date(`2026-01-${String(i + 5).padStart(2, "0")}`)),
+        );
+
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange(days, [{ kind: "journal", journalName: "sprint", index: 0, decoration }]);
+
+        expect([...result.keys()]).toEqual(
+          mode === "or" ? days.slice(0, 14).map((day) => cellKey(day.kind, day.anchor.toAnchor())) : ["day:2026-01-06"],
+        );
+      });
+
+      it.each([
+        buildCondition("title", { value: "Planning" }),
+        buildCondition("tag", { value: "work" }),
+        buildCondition("property", { name: "ready", valueType: "checkbox", condition: "is-true" }),
+        buildCondition("has-note"),
+        buildCondition("note-size", { condition: "gt", value: 100 }),
+        buildCondition("has-notelet", { typeIds: ["nt_a"] }),
+        buildCondition("tasks", { status: "open", source: "note" }),
+        buildCondition("tasks", { status: "open", source: "notelets" }),
+      ])("reads $type from the interval on its second day", async (condition) => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("offset", { offset: 2 }), condition],
+          styles: [buildStyle("background")],
+        });
+        const { harness, size } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        harness.host.putFile(path, "", { tags: ["work"], ready: true });
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "sprint", anchor, path });
+        index.register({
+          kind: "notelet",
+          journalName: "sprint",
+          anchor,
+          path: NOTELET_TASK_PATH,
+          typeName: "Standup",
+          typeId: "nt_a" as TypeId,
+        });
+        size.setSize(path, { words: 150, characters: 900 });
+        for (const source of [path, NOTELET_TASK_PATH]) {
+          harness.resolve(TaskIndex).publish("test", { path: source }, [taskItemAt(source, "todo")]);
+        }
+
+        const periods = ["2026-01-05", "2026-01-06", "2026-01-20"].map((day) => DayPeriod.containing(date(day)));
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange(periods, [{ kind: "journal", journalName: "sprint", index: 0, decoration }]);
+
+        expect([...result.keys()]).toEqual(["day:2026-01-06"]);
+      });
+
+      it("keeps date conditions on the displayed last day of an extended interval", async () => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [
+            buildCondition("offset", { offset: -1 }),
+            buildCondition("date", { day: 22, month: 0, year: 2026 }),
+            buildCondition("weekday", { weekdays: [4] }),
+            buildCondition("has-note"),
+          ],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        harness.host.putFile(path);
+        harness.resolve(JournalsIndex).register({
+          journalName: "sprint",
+          anchor,
+          path,
+          endDate: "2026-01-22" as AnchorString,
+        });
+        const result = harness.resolve(DecorationEngine).evaluateRange(
+          ["2026-01-18", "2026-01-22", "2026-01-23"].map((day) => DayPeriod.containing(date(day))),
+          [{ kind: "journal", journalName: "sprint", index: 0, decoration }],
+        );
+
+        expect([...result.keys()]).toEqual(["day:2026-01-22"]);
+      });
+
+      it.each([
+        ["2026-01-04", false],
+        ["2026-01-05", true],
+        ["2026-01-06", true],
+        ["2026-01-18", true],
+        ["2026-01-19", false],
+        ["2026-01-20", false],
+      ])("checks a dated task on %s against the whole interval", async (scheduled, matches) => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("offset", { offset: 3 }), buildCondition("tasks", { status: "open" })],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+        });
+        const taskPath = "Tasks/Ship.md" as VaultPath;
+        harness
+          .resolve(TaskIndex)
+          .publish("note-property", { path: taskPath }, [taskNote(taskPath, "todo", scheduled)]);
+
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange(
+            [DayPeriod.containing(date("2026-01-07"))],
+            [{ kind: "journal", journalName: "sprint", index: 0, decoration }],
+          );
+
+        expect(result.has("day:2026-01-07")).toBe(matches);
+      });
+    });
+
     describe("note-size conditions", () => {
       const lessThan100 = buildDecoration({
         mode: "and",
