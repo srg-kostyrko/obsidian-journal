@@ -52,7 +52,13 @@ const GLOSSARY = {
     { term: "logging", banned: /fl?orestal/i, use: "registro" },
     { term: "run", banned: /\bcorrer\b/i, use: "ejecutar" },
     { term: "weekday", banned: /días laborables/i, use: "días de la semana" },
-    { term: "quarter", banned: /\bcuartos?\b/i, use: "trimestre" },
+    // allowIn: there "cuarto" is the ordinal "fourth" (the fourth Thursday), not a quarter.
+    {
+      term: "quarter",
+      banned: /\bcuartos?\b/i,
+      use: "trimestre",
+      allowIn: /^decoration_condition_date_describe_weekday_of_month$/,
+    },
     { term: "view", banned: /\bvisitas?\b/i, use: "vista" },
     { term: "block", banned: /\bmanzanas?\b|\bbloqueos?\b/i, use: "bloque" },
     { term: "save", banned: /\bahorrar\b/i, use: "guardar" },
@@ -158,7 +164,13 @@ const GLOSSARY = {
     { term: "condition", banned: /doença/i, use: "condição" },
     { term: "run", banned: /\bcorrer\b/i, use: "executar" },
     { term: "weekday", banned: /dias úteis/i, use: "dias da semana" },
-    { term: "quarter", banned: /\bquartos?\b/i, use: "trimestre" },
+    // allowIn: there "quarto" is the ordinal "fourth" (the fourth Saturday), not a quarter.
+    {
+      term: "quarter",
+      banned: /\bquartos?\b/i,
+      use: "trimestre",
+      allowIn: /^decoration_condition_date_describe_weekday_of_month$/,
+    },
     // shipped both senses: background as a *process* and as *backstory*. The command
     // keys legitimately mean "context", so they are exempt.
     { term: "background", banned: /segundo plano|(?<!\p{L})contexto(?!\p{L})/iu, use: "fundo", allowIn: /context/ },

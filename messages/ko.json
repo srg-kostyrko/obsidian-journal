@@ -1025,6 +1025,38 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "말일",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "첫째 {weekday}",
+        "nth=2,weekdayIndex=*": "둘째 {weekday}",
+        "nth=3,weekdayIndex=*": "셋째 {weekday}",
+        "nth=4,weekdayIndex=*": "넷째 {weekday}",
+        "nth=5,weekdayIndex=*": "다섯째 {weekday}",
+        "nth=last,weekdayIndex=*": "마지막 {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "말일",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "첫째",
+        "nth=2": "둘째",
+        "nth=3": "셋째",
+        "nth=4": "넷째",
+        "nth=5": "다섯째",
+        "nth=last": "마지막"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "요일",
+  "decoration_condition_date_weekday_of_month_group": "월의 몇째 요일",
   "decoration_condition_has_note_describe": "노트가 있음",
   "decoration_condition_has_notelet_describe_any": "서브노트가 있음",
   "decoration_condition_has_notelet_describe_types": "{types} 유형의 서브노트가 있음",

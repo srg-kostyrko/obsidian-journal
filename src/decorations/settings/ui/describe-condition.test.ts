@@ -82,6 +82,50 @@ describe("describeCondition", () => {
       );
     });
 
+    it("renders the last day of the month", () => {
+      const out = describeCondition({ type: "date", day: "last", month: -1, year: null }, calendar);
+      expect(out).toBe(
+        m.decoration_condition_date_describe({
+          day: m.decoration_condition_date_describe_last_day(),
+          month: m.decoration_condition_date_any(),
+          year: m.decoration_condition_date_any(),
+        }),
+      );
+    });
+
+    it("renders the last weekday of the month with the weekday's full name", () => {
+      const out = describeCondition(
+        { type: "date", day: { nth: "last", weekday: 5 }, month: -1, year: null },
+        calendar,
+      );
+      expect(out).toBe(
+        m.decoration_condition_date_describe({
+          day: m.decoration_condition_date_describe_weekday_of_month({
+            nth: "last",
+            weekday: calendar.weekdays()[5],
+            weekdayIndex: "5",
+          }),
+          month: m.decoration_condition_date_any(),
+          year: m.decoration_condition_date_any(),
+        }),
+      );
+    });
+
+    it("renders a numbered weekday of a pinned month and year", () => {
+      const out = describeCondition({ type: "date", day: { nth: 4, weekday: 4 }, month: 10, year: 2026 }, calendar);
+      expect(out).toBe(
+        m.decoration_condition_date_describe({
+          day: m.decoration_condition_date_describe_weekday_of_month({
+            nth: "4",
+            weekday: calendar.weekdays()[4],
+            weekdayIndex: "4",
+          }),
+          month: "11",
+          year: "2026",
+        }),
+      );
+    });
+
     it("renders a null year as any, not the literal string null", () => {
       const out = describeCondition({ type: "date", day: 14, month: 2, year: null }, calendar);
       expect(out).toBe(

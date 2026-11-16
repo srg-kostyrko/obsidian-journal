@@ -6,7 +6,13 @@ import { formatConjunction, formatDisjunction, m } from "@/i18n";
 import { blockedByUnreadable } from "@/tasks/conditions";
 import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
-import { DATE_CONDITION_ANY, storedMonthToDisplay } from "../../date-condition";
+import {
+  DATE_CONDITION_ANY,
+  DATE_CONDITION_LAST_DAY,
+  isWeekdayOfMonth,
+  storedMonthToDisplay,
+  type DateConditionDay,
+} from "../../date-condition";
 
 export function describeCondition(
   condition: JournalDecorationCondition,
@@ -38,7 +44,7 @@ export function describeCondition(
     )
     .with({ type: "date" }, (c) =>
       m.decoration_condition_date_describe({
-        day: c.day === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(c.day),
+        day: describeDay(c.day, calendar),
         month:
           c.month === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(storedMonthToDisplay(c.month)),
         year: c.year === null ? m.decoration_condition_date_any() : String(c.year),
@@ -90,4 +96,16 @@ export function describeCondition(
       return m.decoration_condition_has_notelet_describe_types({ types: names.join(", ") });
     })
     .exhaustive();
+}
+
+function describeDay(day: DateConditionDay, calendar: Calendar): string {
+  if (day === DATE_CONDITION_ANY) return m.decoration_condition_date_any();
+  if (day === DATE_CONDITION_LAST_DAY) return m.decoration_condition_date_describe_last_day();
+  if (!isWeekdayOfMonth(day)) return String(day);
+  // The weekday's index rides along so locales whose ordinal agrees in gender can pick the form.
+  return m.decoration_condition_date_describe_weekday_of_month({
+    nth: day.nth,
+    weekday: calendar.weekdays()[day.weekday] ?? "",
+    weekdayIndex: String(day.weekday),
+  });
 }

@@ -1025,6 +1025,38 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "letzter Tag",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "1. {weekday}",
+        "nth=2,weekdayIndex=*": "2. {weekday}",
+        "nth=3,weekdayIndex=*": "3. {weekday}",
+        "nth=4,weekdayIndex=*": "4. {weekday}",
+        "nth=5,weekdayIndex=*": "5. {weekday}",
+        "nth=last,weekdayIndex=*": "letzter {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Letzter Tag",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1.",
+        "nth=2": "2.",
+        "nth=3": "3.",
+        "nth=4": "4.",
+        "nth=5": "5.",
+        "nth=last": "Letzter"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Wochentag",
+  "decoration_condition_date_weekday_of_month_group": "Wochentag im Monat",
   "decoration_condition_has_note_describe": "eine Notiz existiert",
   "decoration_condition_has_notelet_describe_any": "eine Kurznotiz existiert",
   "decoration_condition_has_notelet_describe_types": "eine Kurznotiz vom Typ {types} existiert",

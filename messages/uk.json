@@ -884,6 +884,62 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "останній день",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=0": "перша {weekday}",
+        "nth=1,weekdayIndex=3": "перша {weekday}",
+        "nth=1,weekdayIndex=5": "перша {weekday}",
+        "nth=1,weekdayIndex=6": "перша {weekday}",
+        "nth=1,weekdayIndex=*": "перший {weekday}",
+        "nth=2,weekdayIndex=0": "друга {weekday}",
+        "nth=2,weekdayIndex=3": "друга {weekday}",
+        "nth=2,weekdayIndex=5": "друга {weekday}",
+        "nth=2,weekdayIndex=6": "друга {weekday}",
+        "nth=2,weekdayIndex=*": "другий {weekday}",
+        "nth=3,weekdayIndex=0": "третя {weekday}",
+        "nth=3,weekdayIndex=3": "третя {weekday}",
+        "nth=3,weekdayIndex=5": "третя {weekday}",
+        "nth=3,weekdayIndex=6": "третя {weekday}",
+        "nth=3,weekdayIndex=*": "третій {weekday}",
+        "nth=4,weekdayIndex=0": "четверта {weekday}",
+        "nth=4,weekdayIndex=3": "четверта {weekday}",
+        "nth=4,weekdayIndex=5": "четверта {weekday}",
+        "nth=4,weekdayIndex=6": "четверта {weekday}",
+        "nth=4,weekdayIndex=*": "четвертий {weekday}",
+        "nth=5,weekdayIndex=0": "пʼята {weekday}",
+        "nth=5,weekdayIndex=3": "пʼята {weekday}",
+        "nth=5,weekdayIndex=5": "пʼята {weekday}",
+        "nth=5,weekdayIndex=6": "пʼята {weekday}",
+        "nth=5,weekdayIndex=*": "пʼятий {weekday}",
+        "nth=last,weekdayIndex=0": "остання {weekday}",
+        "nth=last,weekdayIndex=3": "остання {weekday}",
+        "nth=last,weekdayIndex=5": "остання {weekday}",
+        "nth=last,weekdayIndex=6": "остання {weekday}",
+        "nth=last,weekdayIndex=*": "останній {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Останній день",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1-й",
+        "nth=2": "2-й",
+        "nth=3": "3-й",
+        "nth=4": "4-й",
+        "nth=5": "5-й",
+        "nth=last": "Останній"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "День тижня",
+  "decoration_condition_date_weekday_of_month_group": "День тижня в місяці",
   "decoration_condition_has_note_describe": "нотатка існує",
   "decoration_condition_has_notelet_describe_any": "піднотатка існує",
   "decoration_condition_has_notelet_describe_types": "існує піднотатка типу {types}",

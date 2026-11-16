@@ -136,6 +136,10 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   it `fissare` both mean "to fix", and both are already correct elsewhere for "fixed interval"
   — so the checker bans them under pin keys only. ja uses the verb form ピン留め where the menu
   says ピン.
+- **es/pt `quarter`.** `cuarto` / `quarto` is banned because it reads as a quarter of a
+  year where the plugin means `trimestre`. The same word is also the ordinal "fourth",
+  which the date condition's "4th Thursday" needs, so the checker allows it under
+  `decoration_condition_date_describe_weekday_of_month` only.
 
 ## Literal tokens
 

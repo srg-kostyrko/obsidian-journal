@@ -1025,6 +1025,38 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "último día",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "primer {weekday}",
+        "nth=2,weekdayIndex=*": "segundo {weekday}",
+        "nth=3,weekdayIndex=*": "tercer {weekday}",
+        "nth=4,weekdayIndex=*": "cuarto {weekday}",
+        "nth=5,weekdayIndex=*": "quinto {weekday}",
+        "nth=last,weekdayIndex=*": "último {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Último día",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1.º",
+        "nth=2": "2.º",
+        "nth=3": "3.º",
+        "nth=4": "4.º",
+        "nth=5": "5.º",
+        "nth=last": "Último"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Día de la semana",
+  "decoration_condition_date_weekday_of_month_group": "Día de la semana del mes",
   "decoration_condition_has_note_describe": "existe una nota",
   "decoration_condition_has_notelet_describe_any": "existe una nota breve",
   "decoration_condition_has_notelet_describe_types": "existe una nota breve del tipo {types}",
