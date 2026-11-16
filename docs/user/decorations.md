@@ -191,6 +191,13 @@ pick none to count a notelet of any type.
 month** or **Any year** — 25 December of any year, or every day of March 2026. **Check weekday** takes a
 set of **Weekdays**.
 
+**Day** can also name a day whose date moves. **Last day** is the month's final day, whichever of the
+28th to the 31st that is. Under **Weekday of month**, pick **1st**, **2nd**, **3rd**, **4th**, **5th** or
+**Last**, then a **Weekday** in the list that appears beside it. With **Month** left at **Any month**
+that is a monthly rhythm — the last Friday of every month; with a month chosen it is a holiday-style
+date — the 4th Thursday of November. A 5th weekday that a month does not have marks nothing in that
+month; **Last** always finds the final one. Holidays computed from Easter cannot be expressed this way.
+
 ### Interval offset
 
 For custom intervals: **Count from** **From start** or **From end**, and a **Day** — for example, day 1

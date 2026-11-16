@@ -36,6 +36,10 @@ export function isLocaleDefined(name: string): boolean {
   return (moment.localeData(name) as unknown as { _abbr?: string })._abbr === name;
 }
 
+// The plugin's translations are Brazilian Portuguese and Simplified Chinese; moment files those
+// under region tags. Every other plugin language shares its tag with moment.
+const MOMENT_LOCALE_FOR_LANGUAGE: Readonly<Record<string, string>> = { pt: "pt-br", zh: "zh-cn" };
+
 export class Calendar {
   readonly #initial: WeekConfig;
   readonly #globalLocale: string;
@@ -87,6 +91,12 @@ export class Calendar {
 
   weekdays(): readonly string[] {
     return moment.localeData(CUSTOM_LOCALE).weekdays();
+  }
+
+  /** Weekday names (0 = Sunday) in one of the plugin's own languages rather than Obsidian's. */
+  weekdaysIn(language: string): readonly string[] {
+    const name = MOMENT_LOCALE_FOR_LANGUAGE[language] ?? language;
+    return moment.localeData(isLocaleDefined(name) ? name : "en").weekdays();
   }
 
   weekdaysShort(): readonly { index: number; label: string }[] {

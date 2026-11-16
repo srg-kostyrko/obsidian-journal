@@ -1025,6 +1025,44 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "ultimo giorno",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=0": "prima {weekday}",
+        "nth=1,weekdayIndex=*": "primo {weekday}",
+        "nth=2,weekdayIndex=0": "seconda {weekday}",
+        "nth=2,weekdayIndex=*": "secondo {weekday}",
+        "nth=3,weekdayIndex=0": "terza {weekday}",
+        "nth=3,weekdayIndex=*": "terzo {weekday}",
+        "nth=4,weekdayIndex=0": "quarta {weekday}",
+        "nth=4,weekdayIndex=*": "quarto {weekday}",
+        "nth=5,weekdayIndex=0": "quinta {weekday}",
+        "nth=5,weekdayIndex=*": "quinto {weekday}",
+        "nth=last,weekdayIndex=0": "ultima {weekday}",
+        "nth=last,weekdayIndex=*": "ultimo {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Ultimo giorno",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1°",
+        "nth=2": "2°",
+        "nth=3": "3°",
+        "nth=4": "4°",
+        "nth=5": "5°",
+        "nth=last": "Ultimo"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Giorno della settimana",
+  "decoration_condition_date_weekday_of_month_group": "Giorno della settimana del mese",
   "decoration_condition_has_note_describe": "esiste una nota",
   "decoration_condition_has_notelet_describe_any": "esiste una nota breve",
   "decoration_condition_has_notelet_describe_types": "esiste una nota breve di tipo {types}",

@@ -1031,6 +1031,62 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "последний день",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=0": "первое {weekday}",
+        "nth=1,weekdayIndex=3": "первая {weekday}",
+        "nth=1,weekdayIndex=5": "первая {weekday}",
+        "nth=1,weekdayIndex=6": "первая {weekday}",
+        "nth=1,weekdayIndex=*": "первый {weekday}",
+        "nth=2,weekdayIndex=0": "второе {weekday}",
+        "nth=2,weekdayIndex=3": "вторая {weekday}",
+        "nth=2,weekdayIndex=5": "вторая {weekday}",
+        "nth=2,weekdayIndex=6": "вторая {weekday}",
+        "nth=2,weekdayIndex=*": "второй {weekday}",
+        "nth=3,weekdayIndex=0": "третье {weekday}",
+        "nth=3,weekdayIndex=3": "третья {weekday}",
+        "nth=3,weekdayIndex=5": "третья {weekday}",
+        "nth=3,weekdayIndex=6": "третья {weekday}",
+        "nth=3,weekdayIndex=*": "третий {weekday}",
+        "nth=4,weekdayIndex=0": "четвёртое {weekday}",
+        "nth=4,weekdayIndex=3": "четвёртая {weekday}",
+        "nth=4,weekdayIndex=5": "четвёртая {weekday}",
+        "nth=4,weekdayIndex=6": "четвёртая {weekday}",
+        "nth=4,weekdayIndex=*": "четвёртый {weekday}",
+        "nth=5,weekdayIndex=0": "пятое {weekday}",
+        "nth=5,weekdayIndex=3": "пятая {weekday}",
+        "nth=5,weekdayIndex=5": "пятая {weekday}",
+        "nth=5,weekdayIndex=6": "пятая {weekday}",
+        "nth=5,weekdayIndex=*": "пятый {weekday}",
+        "nth=last,weekdayIndex=0": "последнее {weekday}",
+        "nth=last,weekdayIndex=3": "последняя {weekday}",
+        "nth=last,weekdayIndex=5": "последняя {weekday}",
+        "nth=last,weekdayIndex=6": "последняя {weekday}",
+        "nth=last,weekdayIndex=*": "последний {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Последний день",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1-й",
+        "nth=2": "2-й",
+        "nth=3": "3-й",
+        "nth=4": "4-й",
+        "nth=5": "5-й",
+        "nth=last": "Последний"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "День недели",
+  "decoration_condition_date_weekday_of_month_group": "День недели в месяце",
   "decoration_condition_has_note_describe": "заметка существует",
   "decoration_condition_has_notelet_describe_any": "подзаметка существует",
   "decoration_condition_has_notelet_describe_types": "существует подзаметка типа {types}",

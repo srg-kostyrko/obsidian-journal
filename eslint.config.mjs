@@ -593,9 +593,13 @@ export default [
   },
   {
     // moment is available transitively through the "obsidian" devDependency (which pins its own
-    // "moment"), not declared directly; the ordinal round-trip and native-digit tests need the real
-    // locale data from these subpath imports for their assertions to mean anything.
-    files: ["src/templates/kinds.isolated.test.ts", "src/**/*.native-digits.isolated.test.ts"],
+    // "moment"), not declared directly; the ordinal round-trip, native-digit and moment-locale tests
+    // need the real locale data from these subpath imports for their assertions to mean anything.
+    files: [
+      "src/templates/kinds.isolated.test.ts",
+      "src/**/*.native-digits.isolated.test.ts",
+      "src/**/*.moment-locale.isolated.test.ts",
+    ],
     rules: {
       "import/no-extraneous-dependencies": "off",
     },

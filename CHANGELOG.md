@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Features
+
+- A **Check date** decoration condition can now mark a day whose date moves from month to month. Its **Day** list offers **Last day**, which is the 28th, 29th, 30th or 31st depending on the month, and a **Weekday of month** group: **1st**, **2nd**, **3rd**, **4th**, **5th** or **Last**, which adds a **Weekday** list beside it. **Month** and **Year** work as before, so the same condition marks the last Friday of every month, the fourth Thursday of November, or that Thursday in 2026 alone. A 5th weekday that a month does not have marks nothing in that month; choose **Last** for the final one. This covers holidays that fall on a set weekday, but not Easter and the holidays tied to it, or a holiday moved when it falls on a weekend. If your plugin settings sync between devices, update Journals on each of them: once this version saves your settings, a device still on an earlier version does not start Journals until it is updated, so it can never save the settings back without a decoration it cannot read.
+
+### Bug Fixes
+
+- A **Check date** decoration condition with a specific **Day**, **Month** or **Year** now matches in languages that write numbers in their own digits, such as Arabic. Before, it never matched there, so the decoration was not drawn on the date it named.
+- A decoration's summary in settings now names weekdays in the same language as the rest of the sentence. With Obsidian set to a language Journals does not translate, such as Polish, a **Check weekday** condition's summary was in English but named its days in Polish; it now names them in English too.
+
 ## [3.7.0] - 2026-11-14
 
 ### Features

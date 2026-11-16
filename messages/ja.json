@@ -880,6 +880,38 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "末",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "第1{weekday}の",
+        "nth=2,weekdayIndex=*": "第2{weekday}の",
+        "nth=3,weekdayIndex=*": "第3{weekday}の",
+        "nth=4,weekdayIndex=*": "第4{weekday}の",
+        "nth=5,weekdayIndex=*": "第5{weekday}の",
+        "nth=last,weekdayIndex=*": "最終{weekday}の"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "末日",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "第1",
+        "nth=2": "第2",
+        "nth=3": "第3",
+        "nth=4": "第4",
+        "nth=5": "第5",
+        "nth=last": "最終"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "曜日",
+  "decoration_condition_date_weekday_of_month_group": "月内の第n曜日",
   "decoration_condition_has_note_describe": "ノートが存在する",
   "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
   "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",

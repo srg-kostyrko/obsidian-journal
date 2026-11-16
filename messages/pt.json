@@ -1025,6 +1025,50 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "último dia",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=0": "primeiro {weekday}",
+        "nth=1,weekdayIndex=6": "primeiro {weekday}",
+        "nth=1,weekdayIndex=*": "primeira {weekday}",
+        "nth=2,weekdayIndex=0": "segundo {weekday}",
+        "nth=2,weekdayIndex=6": "segundo {weekday}",
+        "nth=2,weekdayIndex=*": "segunda {weekday}",
+        "nth=3,weekdayIndex=0": "terceiro {weekday}",
+        "nth=3,weekdayIndex=6": "terceiro {weekday}",
+        "nth=3,weekdayIndex=*": "terceira {weekday}",
+        "nth=4,weekdayIndex=0": "quarto {weekday}",
+        "nth=4,weekdayIndex=6": "quarto {weekday}",
+        "nth=4,weekdayIndex=*": "quarta {weekday}",
+        "nth=5,weekdayIndex=0": "quinto {weekday}",
+        "nth=5,weekdayIndex=6": "quinto {weekday}",
+        "nth=5,weekdayIndex=*": "quinta {weekday}",
+        "nth=last,weekdayIndex=0": "último {weekday}",
+        "nth=last,weekdayIndex=6": "último {weekday}",
+        "nth=last,weekdayIndex=*": "última {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Último dia",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1.º",
+        "nth=2": "2.º",
+        "nth=3": "3.º",
+        "nth=4": "4.º",
+        "nth=5": "5.º",
+        "nth=last": "Último"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Dia da semana",
+  "decoration_condition_date_weekday_of_month_group": "Dia da semana do mês",
   "decoration_condition_has_note_describe": "existe uma nota",
   "decoration_condition_has_notelet_describe_any": "existe uma nota breve",
   "decoration_condition_has_notelet_describe_types": "existe uma nota breve do tipo {types}",
