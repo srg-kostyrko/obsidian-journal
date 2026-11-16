@@ -23,6 +23,7 @@ import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import { v5ToV6Migration } from "./legacy/v5-to-v6";
 import { v6ToV7Migration } from "./legacy/v6-to-v7";
 import { v7ToV8Migration } from "./legacy/v7-to-v8";
+import { v8ToV9Migration } from "./legacy/v8-to-v9";
 import { unreadable } from "./repair";
 import {
   defineCollection,
@@ -1301,7 +1302,7 @@ describe("SettingsService", () => {
         modules: [
           testSettingsModule({
             collections: [],
-            migrations: [v4ToV5Migration, v5ToV6Migration, v6ToV7Migration, v7ToV8Migration],
+            migrations: [v4ToV5Migration, v5ToV6Migration, v6ToV7Migration, v7ToV8Migration, v8ToV9Migration],
           }),
         ],
         data: { calendar: { dow: 1, global: true } },
