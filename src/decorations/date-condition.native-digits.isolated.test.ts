@@ -28,4 +28,14 @@ describe("matchesDate under a native-digit locale", () => {
   it("rejects a different day under a native-digit locale", () => {
     expect(matchesDate({ type: "date", day: 14, month: 10, year: 2026 }, date("2026-11-15"))).toBe(false);
   });
+
+  it("matches the last day under a native-digit locale", () => {
+    expect(matchesDate({ type: "date", day: "last", month: -1, year: null }, date("2026-04-30"))).toBe(true);
+  });
+
+  it("matches the last weekday of the month under a native-digit locale", () => {
+    expect(
+      matchesDate({ type: "date", day: { nth: "last", weekday: 5 }, month: -1, year: null }, date("2026-05-29")),
+    ).toBe(true);
+  });
 });
