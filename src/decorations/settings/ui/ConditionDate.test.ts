@@ -6,6 +6,7 @@ import { useForm } from "vee-validate";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
+import { Calendar, CalendarDate } from "@/calendar";
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { testContainer } from "@/testing";
@@ -17,8 +18,11 @@ const renderConditionDateHost = () => h(ConditionDate, { name: "c" });
 type DateCond = Extract<JournalDecorationCondition, { type: "date" }>;
 
 async function mount(initial: DateCond) {
-  const exposed: { values: { c: DateCond } } = { values: { c: initial } };
   const harness = await testContainer();
+  const exposed: { values: { c: DateCond }; calendar: Calendar } = {
+    values: { c: initial },
+    calendar: harness.resolve(Calendar),
+  };
   const Host = defineComponent({
     setup() {
       const form = useForm({
@@ -32,6 +36,11 @@ async function mount(initial: DateCond) {
   harness.render(Host);
   return exposed;
 }
+
+const dayDropdown = () =>
+  screen.getByRole<HTMLSelectElement>("combobox", { name: m.decoration_condition_date_unit_label({ unit: "day" }) });
+const weekdayDropdown = () =>
+  screen.queryByRole<HTMLSelectElement>("combobox", { name: m.decoration_condition_date_weekday_label() });
 
 describe("ConditionDate", () => {
   it("names its day field for assistive tech", async () => {
@@ -114,5 +123,59 @@ describe("ConditionDate", () => {
   it("renders an empty year input for a wildcard condition", async () => {
     await mount({ type: "date", day: -1, month: -1, year: null });
     expect(screen.getByRole<HTMLInputElement>("spinbutton").value).toBe("");
+  });
+
+  describe("moving days", () => {
+    it("stores the last day and shows no weekday dropdown", async () => {
+      const host = await mount({ type: "date", day: 14, month: -1, year: null });
+      await userEvent.selectOptions(dayDropdown(), "last-day");
+      expect(host.values.c.day).toBe("last");
+      expect(weekdayDropdown()).toBeNull();
+    });
+
+    it("starts an ordinal from a day number on today's weekday and shows the weekday dropdown", async () => {
+      const host = await mount({ type: "date", day: 14, month: -1, year: null });
+      await userEvent.selectOptions(dayDropdown(), "nth:last");
+      expect(host.values.c.day).toEqual({ nth: "last", weekday: CalendarDate.today().weekday() });
+      expect(weekdayDropdown()).not.toBeNull();
+    });
+
+    it("stores the picked weekday", async () => {
+      const host = await mount({ type: "date", day: { nth: 2, weekday: 1 }, month: -1, year: null });
+      const weekday = weekdayDropdown();
+      if (!weekday) throw new Error("weekday dropdown missing");
+      await userEvent.selectOptions(weekday, "5");
+      expect(host.values.c.day).toEqual({ nth: 2, weekday: 5 });
+    });
+
+    it("keeps the weekday when the ordinal changes", async () => {
+      const host = await mount({ type: "date", day: { nth: 2, weekday: 1 }, month: -1, year: null });
+      await userEvent.selectOptions(dayDropdown(), "nth:4");
+      expect(host.values.c.day).toEqual({ nth: 4, weekday: 1 });
+    });
+
+    it("stores a plain number when switching from an ordinal back to a day, and hides the weekday", async () => {
+      const host = await mount({ type: "date", day: { nth: "last", weekday: 5 }, month: -1, year: null });
+      await userEvent.selectOptions(dayDropdown(), "14");
+      expect(host.values.c.day).toBe(14);
+      expect(weekdayDropdown()).toBeNull();
+    });
+
+    it("shows a stored ordinal and weekday", async () => {
+      await mount({ type: "date", day: { nth: "last", weekday: 5 }, month: -1, year: null });
+      expect(dayDropdown().value).toBe("nth:last");
+      expect(weekdayDropdown()?.value).toBe("5");
+    });
+
+    it("shows a stored last day", async () => {
+      await mount({ type: "date", day: "last", month: -1, year: null });
+      expect(dayDropdown().value).toBe("last-day");
+    });
+
+    it("orders the weekdays from the configured week start", async () => {
+      const host = await mount({ type: "date", day: { nth: 1, weekday: 1 }, month: -1, year: null });
+      const options = [...(weekdayDropdown()?.options ?? [])].map((option) => option.value);
+      expect(options).toEqual(host.calendar.weekdaysShort().map((weekday) => String(weekday.index)));
+    });
   });
 });
