@@ -330,6 +330,11 @@ export default [
       // module-level declarations they sit beside.
       "unicorn/prefer-smaller-scope": "off",
 
+      // Rule newly added to unicorn's recommended set in v80, likewise not adopted.
+      // Its options-object detection matches any record-like trailing type, so it flags the
+      // `inject()`-defaulted DI constructors and data parameters such as `frontmatter`.
+      "unicorn/prefer-options-parameter": "off",
+
       "no-restricted-imports": [
         "error",
         {
