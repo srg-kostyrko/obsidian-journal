@@ -669,21 +669,6 @@
   "bulk_add_date_place_path": "Шлях до нотатки",
   "bulk_add_date_place_path_unavailable": "Шлях до нотатки недоступний: зі шляхів нотаток цього журналу не можна прочитати дату.",
   "common_label_property_name": "Назва властивості",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "неділя",
-        "index=1": "понеділок",
-        "index=2": "вівторок",
-        "index=3": "середа",
-        "index=4": "четвер",
-        "index=5": "пʼятниця",
-        "index=6": "субота"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "Формат дати",
   "bulk_add_date_format_omit_time": "Якщо ваші дати містять компонент часу, пропустіть його з формату.",
   "bulk_add_date_format_property_note": "Дати можуть відрізнятися від способу їх збереження — перевірте формат у режимі відображення джерела.",

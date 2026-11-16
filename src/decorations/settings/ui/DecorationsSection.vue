@@ -2,6 +2,7 @@
 import { match } from "ts-pattern";
 import { computed, ref } from "vue";
 
+import { Calendar } from "@/calendar";
 import {
   DecorationMatchService,
   DecorationPreview,
@@ -32,6 +33,7 @@ const { owner } = defineProps<{ owner: DecorationOwner }>();
 
 const flows = useService(Flows);
 const store = useService(DecorationsStore);
+const calendar = useService(Calendar);
 const matches = useService(DecorationMatchService);
 const modals = useModalService();
 const journals = useService(JournalsRepository);
@@ -139,7 +141,7 @@ function remove(index: number): void {
           <span>{{ m.decoration_describe_when() }}</span>
           <template v-for="(condition, i) of decoration.conditions" :key="i">
             <span v-if="i > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: decoration.mode }) }}</span>
-            <span>{{ describeCondition(condition, typeName) }}</span>
+            <span>{{ describeCondition(condition, calendar, typeName) }}</span>
           </template>
         </div>
         <div v-if="badgeTexts[index]" class="row-badge">{{ badgeTexts[index] }}</div>

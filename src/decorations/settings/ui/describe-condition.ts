@@ -1,7 +1,8 @@
 import { match } from "ts-pattern";
 
+import type { Calendar } from "@/calendar";
 import type { JournalDecorationCondition } from "@/decorations";
-import { formatConjunction, formatDisjunction, m } from "@/i18n";
+import { formatConjunction, formatDisjunction, getLocale, m } from "@/i18n";
 import { blockedByUnreadable } from "@/tasks/conditions";
 import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
@@ -15,6 +16,7 @@ import {
 
 export function describeCondition(
   condition: JournalDecorationCondition,
+  calendar: Calendar,
   typeName?: (id: string) => string | undefined,
 ): string {
   return match(condition)
@@ -42,14 +44,18 @@ export function describeCondition(
     )
     .with({ type: "date" }, (c) =>
       m.decoration_condition_date_describe({
-        day: describeDay(c.day),
+        day: describeDay(c.day, calendar),
         month:
           c.month === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(storedMonthToDisplay(c.month)),
         year: c.year === null ? m.decoration_condition_date_any() : String(c.year),
       }),
     )
     .with({ type: "weekday" }, (c) => {
-      const list = c.weekdays.map((index) => weekdayName(index)).join(", ");
+      const names = summaryWeekdays(calendar);
+      const list = c.weekdays
+        .map((i) => names[i])
+        .filter(Boolean)
+        .join(", ");
       return m.decoration_condition_weekday_describe({ weekdays: list });
     })
     .with({ type: "offset" }, (c) =>
@@ -92,23 +98,20 @@ export function describeCondition(
     .exhaustive();
 }
 
-function describeDay(day: DateConditionDay): string {
+function describeDay(day: DateConditionDay, calendar: Calendar): string {
   if (day === DATE_CONDITION_ANY) return m.decoration_condition_date_any();
   if (day === DATE_CONDITION_LAST_DAY) return m.decoration_condition_date_describe_last_day();
   if (!isWeekdayOfMonth(day)) return String(day);
   // The weekday's index rides along so locales whose ordinal agrees in gender can pick the form.
   return m.decoration_condition_date_describe_weekday_of_month({
     nth: day.nth,
-    weekday: weekdayName(day.weekday),
+    weekday: summaryWeekdays(calendar)[day.weekday] ?? "",
     weekdayIndex: String(day.weekday),
   });
 }
 
-// From the plugin's messages, not moment: moment follows Obsidian's language, which the summary
-// sentence may not be translated into, and a weekday name from it would mix two languages.
-const WEEKDAY_KEYS = ["0", "1", "2", "3", "4", "5", "6"] as const;
-
-function weekdayName(index: number): string {
-  const key = WEEKDAY_KEYS[index];
-  return key === undefined ? "" : m.common_weekday_name({ index: key });
+// In the summary's own language, not Obsidian's: a language the plugin does not translate falls
+// back to English sentences, and a weekday named in Obsidian's language would sit inside one.
+function summaryWeekdays(calendar: Calendar): readonly string[] {
+  return calendar.weekdaysIn(getLocale());
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { match } from "ts-pattern";
 
-import type { Period, PeriodKind } from "@/calendar";
+import { Calendar, type Period, type PeriodKind } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsRepository } from "@/journals";
@@ -22,6 +22,7 @@ import type { BreakdownCell } from "./breakdown-cell";
 const props = defineProps<{ cell: BreakdownCell; index: number }>();
 
 const store = useService(DecorationsStore);
+const calendar = useService(Calendar);
 const journals = useService(JournalsRepository);
 const markLimit = useMarkLimit();
 
@@ -106,7 +107,7 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
       : undefined;
   return decoration.conditions.map((condition) => ({
     mode: decoration.mode,
-    text: describeCondition(condition, typeName),
+    text: describeCondition(condition, calendar, typeName),
   }));
 }
 </script>

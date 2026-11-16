@@ -680,21 +680,6 @@
   "bulk_add_date_place_path": "Caminho da nota",
   "bulk_add_date_place_path_unavailable": "O caminho da nota não está disponível: não é possível ler uma data a partir dos caminhos das notas deste diário.",
   "common_label_property_name": "Nome da propriedade",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "domingo",
-        "index=1": "segunda-feira",
-        "index=2": "terça-feira",
-        "index=3": "quarta-feira",
-        "index=4": "quinta-feira",
-        "index=5": "sexta-feira",
-        "index=6": "sábado"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "Formato de data",
   "bulk_add_date_format_omit_time": "Se as suas datas incluírem um componente de hora, omita-o do formato.",
   "bulk_add_date_format_property_note": "As datas podem ser diferentes da forma como estão armazenadas — verifique o formato no modo de código-fonte.",

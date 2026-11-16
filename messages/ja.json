@@ -669,21 +669,6 @@
   "bulk_add_date_place_path": "ノートのパス",
   "bulk_add_date_place_path_unavailable": "ノートのパスは使用できません。このジャーナルのノートのパスから日付を読み取れません。",
   "common_label_property_name": "プロパティ名",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "日曜日",
-        "index=1": "月曜日",
-        "index=2": "火曜日",
-        "index=3": "水曜日",
-        "index=4": "木曜日",
-        "index=5": "金曜日",
-        "index=6": "土曜日"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "日付形式",
   "bulk_add_date_format_omit_time": "日付に時刻が含まれる場合は、フォーマットから時刻を省略してください。",
   "bulk_add_date_format_property_note": "日付の表示形式は保存形式と異なる場合があります。ソース表示モードで形式を確認してください。",

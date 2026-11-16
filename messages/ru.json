@@ -682,21 +682,6 @@
   "bulk_add_date_place_path": "Путь к заметке",
   "bulk_add_date_place_path_unavailable": "Путь к заметке недоступен: из путей заметок этого журнала нельзя прочитать дату.",
   "common_label_property_name": "Название свойства",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "воскресенье",
-        "index=1": "понедельник",
-        "index=2": "вторник",
-        "index=3": "среда",
-        "index=4": "четверг",
-        "index=5": "пятница",
-        "index=6": "суббота"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "Формат даты",
   "bulk_add_date_format_omit_time": "Если ваши даты содержат временную составляющую, опустите её из формата.",
   "bulk_add_date_format_property_note": "Даты могут отличаться от того, как они хранятся — проверьте формат в режиме отображения источника.",

@@ -680,21 +680,6 @@
   "bulk_add_date_place_path": "Chemin de la note",
   "bulk_add_date_place_path_unavailable": "Le chemin de la note n'est pas disponible : aucune date ne peut être relue à partir des chemins des notes de ce journal.",
   "common_label_property_name": "Nom de la propriété",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "dimanche",
-        "index=1": "lundi",
-        "index=2": "mardi",
-        "index=3": "mercredi",
-        "index=4": "jeudi",
-        "index=5": "vendredi",
-        "index=6": "samedi"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "Format de date",
   "bulk_add_date_format_omit_time": "Si vos dates incluent une heure, omettez-la du format.",
   "bulk_add_date_format_property_note": "Les dates peuvent différer de la façon dont elles sont stockées — vérifiez le format en mode d’affichage Source.",

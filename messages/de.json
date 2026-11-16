@@ -680,21 +680,6 @@
   "bulk_add_date_place_path": "Pfad der Notiz",
   "bulk_add_date_place_path_unavailable": "Der Pfad der Notiz ist nicht verfügbar: Aus den Notizpfaden dieses Journals lässt sich kein Datum zurücklesen.",
   "common_label_property_name": "Eigenschaftsname",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "Sonntag",
-        "index=1": "Montag",
-        "index=2": "Dienstag",
-        "index=3": "Mittwoch",
-        "index=4": "Donnerstag",
-        "index=5": "Freitag",
-        "index=6": "Samstag"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "Datumsformat",
   "bulk_add_date_format_omit_time": "Falls deine Datumsangaben eine Uhrzeit enthalten, lasse sie im Format weg.",
   "bulk_add_date_format_property_note": "Datumsangaben können von der gespeicherten Form abweichen – prüfe das Format in der Quellcode-Ansicht.",

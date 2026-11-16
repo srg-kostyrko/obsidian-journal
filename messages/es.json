@@ -680,21 +680,6 @@
   "bulk_add_date_place_path": "Ruta de la nota",
   "bulk_add_date_place_path_unavailable": "La ruta de la nota no está disponible: no se puede leer una fecha a partir de las rutas de las notas de este diario.",
   "common_label_property_name": "Nombre de la propiedad",
-  "common_weekday_name": [
-    {
-      "declarations": ["input index"],
-      "selectors": ["index"],
-      "match": {
-        "index=0": "domingo",
-        "index=1": "lunes",
-        "index=2": "martes",
-        "index=3": "miércoles",
-        "index=4": "jueves",
-        "index=5": "viernes",
-        "index=6": "sábado"
-      }
-    }
-  ],
   "bulk_add_date_format_label": "Formato de fecha",
   "bulk_add_date_format_omit_time": "Si tus fechas incluyen una hora, omítela del formato.",
   "bulk_add_date_format_property_note": "Las fechas pueden diferir de cómo están almacenadas: comprueba el formato en el modo Código fuente.",
