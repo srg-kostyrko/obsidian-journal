@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Features
+
+- A **Check date** decoration condition can now mark a day whose date moves from month to month. Its **Day** list offers **Last day**, which is the 28th, 29th, 30th or 31st depending on the month, and a **Weekday of month** group: **1st**, **2nd**, **3rd**, **4th**, **5th** or **Last**, which adds a **Weekday** list beside it. **Month** and **Year** work as before, so the same condition marks the last Friday of every month, the fourth Thursday of November, or that Thursday in 2026 alone. A 5th weekday that a month does not have marks nothing in that month; choose **Last** for the final one. This covers holidays that fall on a set weekday, but not Easter and the holidays tied to it, or a holiday moved when it falls on a weekend. An older version of the plugin that reads a decoration using one of these days drops that decoration rather than marking every day.
+
+### Bug Fixes
+
+- A **Check date** decoration condition with a specific **Day**, **Month** or **Year** now matches in languages that write numbers in their own digits, such as Arabic. Before, it never matched there, so the decoration was not drawn on the date it named.
+
 ## [3.7.0] - 2026-11-14
 
 ### Features
