@@ -12,8 +12,7 @@ type Outcome = { kind: "keep"; condition: JournalDecorationCondition } | { kind:
 type TypeIdCondition = Extract<JournalDecorationCondition, { typeIds: string[] }>;
 
 function carriesTypeIds(condition: JournalDecorationCondition): condition is TypeIdCondition {
-  if (condition.type === "has-notelet") return true;
-  return (condition.type === "tag" || condition.type === "property") && condition.source !== "note";
+  return condition.type === "has-notelet" || condition.type === "tag" || condition.type === "property";
 }
 
 function remapCondition(condition: JournalDecorationCondition, map: (id: string) => string | undefined): Outcome {
@@ -21,6 +20,13 @@ function remapCondition(condition: JournalDecorationCondition, map: (id: string)
     return { kind: "keep", condition };
   }
   const typeIds = condition.typeIds.flatMap((id) => map(id) ?? []);
+  // Note scope ignores typeIds, but the editor keeps them for a switch back to Notelets, so dead
+  // ids are cleaned without ever dropping the condition.
+  if (condition.type !== "has-notelet" && condition.source === "note") {
+    const unchanged =
+      typeIds.length === condition.typeIds.length && typeIds.every((id, i) => id === condition.typeIds[i]);
+    return { kind: "keep", condition: unchanged ? condition : { ...condition, typeIds } };
+  }
   if (typeIds.length > 0) {
     const unchanged =
       typeIds.length === condition.typeIds.length && typeIds.every((id, i) => id === condition.typeIds[i]);

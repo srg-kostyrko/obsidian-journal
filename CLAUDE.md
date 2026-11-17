@@ -717,9 +717,10 @@ on it.
   matches exactly what the rule with the dangling id left in place would. Emptied from
   non-empty: a `both` source falls back to `note`; anything else is dead — an `and`
   decoration is removed whole, an `or` decoration loses the condition and is removed if
-  none remain. An authored `typeIds: []`, a decoration with no conditions, and a
-  `tag`/`property` condition with `source: "note"` (whatever its `typeIds`) are left
-  alone. Don't hand-roll a second cascade.
+  none remain. An authored `typeIds: []` and a decoration with no conditions are left
+  alone. A `tag`/`property` condition with `source: "note"` ignores its `typeIds`, but the
+  editor keeps them for a switch back to Notelets, so the cascade maps them and drops dead
+  ones while always keeping the condition. Don't hand-roll a second cascade.
 - **Every surface that filters notelets by type matches the stored type _name_, not a
   resolved `typeId`** — `noteletsFor` in the API, `buildNoteletListing`'s callers, the
   `journal-notelets` fence. That is what keeps an **orphaned notelet** (its type deleted
