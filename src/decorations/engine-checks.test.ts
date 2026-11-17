@@ -17,6 +17,7 @@ import {
   checkTag,
   checkTitle,
   checkWeekday,
+  quantify,
 } from "./engine-checks";
 import { buildCondition } from "./testing";
 
@@ -537,5 +538,22 @@ describe("engine-checks", () => {
         true,
       );
     });
+  });
+});
+
+describe("quantify", () => {
+  it.each([
+    ["any", [false, true], true],
+    ["any", [false], false],
+    ["all", [true, true], true],
+    ["all", [true, false], false],
+    ["none", [false, false], true],
+    ["none", [true], false],
+  ] as const)("%s over %j is %s", (quantifier, results, expected) => {
+    expect(quantify(quantifier, results)).toBe(expected);
+  });
+
+  it.each(["any", "all", "none"] as const)("%s over an empty scope is false", (quantifier) => {
+    expect(quantify(quantifier, [])).toBe(false);
   });
 });

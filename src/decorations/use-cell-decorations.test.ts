@@ -761,6 +761,37 @@ describe("useCellDecorations", () => {
       });
     });
 
+    it("re-evaluates a notelet-scoped tag condition when a notelet's metadata changes", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("tag", { value: "decision", condition: "contains", source: "notelets" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const noteletPath = "Daily/2026-05-25.meeting.md" as VaultPath;
+      harness.host.putFile(noteletPath, "", { tags: ["other"] });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path: noteletPath,
+        typeName: "Meeting",
+        typeId: "nt_a" as TypeId,
+      });
+      const { captured } = mount(harness, () =>
+        useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      harness.host.putFile(noteletPath, "", { tags: ["decision"] });
+      harness.host.emitMetadata(noteletPath);
+      await nextTick();
+      expect(slot.value).toHaveLength(1);
+    });
+
     it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {
       const decoration = buildDecoration({
         mode: "or",

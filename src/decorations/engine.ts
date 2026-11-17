@@ -17,6 +17,7 @@ import {
   checkOffset,
   checkProperty,
   checkTag,
+  quantify,
   checkTitle,
   checkWeekday,
 } from "./engine-checks";
@@ -27,6 +28,7 @@ import type {
   JournalDecoration,
   JournalDecorationCondition,
   JournalDecorationStyle,
+  NoteletScope,
 } from "./config";
 import type { CalendarDecorationOwner, DecorationOwner } from "./owner";
 
@@ -131,6 +133,7 @@ export class DecorationEngine {
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
+    scopeFor: (scope: NoteletScope) => readonly NoteMetadata[],
   ): boolean {
     const { mode, conditions } = decoration;
     // An empty condition list matches nothing here — the inverse of the checkbox provider's
@@ -139,7 +142,7 @@ export class DecorationEngine {
     // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
     const test = (c: JournalDecorationCondition): boolean =>
-      this.#check(c, period, journal, metadata, size, path, taskDependencies);
+      this.#check(c, period, journal, metadata, size, path, taskDependencies, scopeFor);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -162,6 +165,7 @@ export class DecorationEngine {
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
+    scopeFor: (scope: NoteletScope) => readonly NoteMetadata[],
   ): boolean {
     const meta = (): NoteMetadata | null => {
       const opt = metadata();
@@ -169,8 +173,18 @@ export class DecorationEngine {
     };
     return match(condition)
       .with({ type: "title" }, (c) => checkTitle(c, meta()))
-      .with({ type: "tag" }, (c) => checkTag(c, meta()))
-      .with({ type: "property" }, (c) => checkProperty(c, meta()))
+      .with({ type: "tag" }, (c) =>
+        quantify(
+          c.quantifier,
+          scopeFor(c).map((m) => checkTag(c, m)),
+        ),
+      )
+      .with({ type: "property" }, (c) =>
+        quantify(
+          c.quantifier,
+          scopeFor(c).map((m) => checkProperty(c, m)),
+        ),
+      )
       .with({ type: "date" }, (c) => checkDate(c, period))
       .with({ type: "weekday" }, (c) => checkWeekday(c, period))
       .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
@@ -212,16 +226,34 @@ export class DecorationEngine {
       if (opt.isSome()) configs.set(binding.journalName, opt.value);
     }
 
-    const metaCache = new Map<string, Option<NoteMetadata>>();
-    const metadataFor = (journalName: string, anchorString: AnchorString): Option<NoteMetadata> => {
-      const key = `${journalName}::${anchorString}`;
-      const hit = metaCache.get(key);
+    const pathMetaCache = new Map<VaultPath, Option<NoteMetadata>>();
+    const metadataAt = (path: VaultPath): Option<NoteMetadata> => {
+      const hit = pathMetaCache.get(path);
       if (hit !== undefined) return hit;
-      const value = this.#index
-        .entryByAnchor(journalName, anchorString)
-        .flatMap((entry) => this.#metadata.get(entry.path));
-      metaCache.set(key, value);
+      const value = this.#metadata.get(path);
+      pathMetaCache.set(path, value);
       return value;
+    };
+    const metadataFor = (journalName: string, anchorString: AnchorString): Option<NoteMetadata> =>
+      this.#index.entryByAnchor(journalName, anchorString).flatMap((entry) => metadataAt(entry.path));
+
+    // A note with no cached metadata is not in scope: on a cold boot "none" would otherwise mark
+    // every note-bearing cell before its metadata has resolved.
+    const scopeFor = (journalName: string, anchorString: AnchorString, scope: NoteletScope): NoteMetadata[] => {
+      const found: NoteMetadata[] = [];
+      if (scope.source !== "notelets") {
+        const own = metadataFor(journalName, anchorString);
+        if (own.isSome()) found.push(own.value);
+      }
+      if (scope.source !== "note") {
+        for (const notelet of this.#index.noteletsAt(journalName, anchorString)) {
+          if (scope.typeIds.length > 0 && (notelet.typeId === null || !scope.typeIds.includes(notelet.typeId)))
+            continue;
+          const own = metadataAt(notelet.path);
+          if (own.isSome()) found.push(own.value);
+        }
+      }
+      return found;
     };
 
     const sizeCache = new Map<string, Option<NoteSize>>();
@@ -302,6 +334,7 @@ export class DecorationEngine {
           () => sizeFor(binding.journalName, anchorString),
           () => pathFor(binding.journalName, anchorString),
           taskDependencies,
+          (scope) => scopeFor(binding.journalName, anchorString, scope),
         );
         if (!matched) continue;
         push(period, binding);

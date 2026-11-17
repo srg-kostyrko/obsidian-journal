@@ -15,6 +15,7 @@ import type {
   JournalDecorationOffsetCondition,
   JournalDecorationTitleCondition,
   JournalDecorationWeekdayCondition,
+  NoteletScope,
   NotePropertyCondition,
   NoteTagCondition,
 } from "./config";
@@ -178,4 +179,14 @@ export function checkHasNotelet(
 ): boolean {
   if (condition.typeIds.length === 0) return notelets.length > 0;
   return notelets.some((n) => n.typeId !== null && condition.typeIds.includes(n.typeId));
+}
+
+// An empty scope is false for every quantifier: "none" must not mark a cell that has nothing to inspect.
+export function quantify(quantifier: NoteletScope["quantifier"], results: readonly boolean[]): boolean {
+  if (results.length === 0) return false;
+  return match(quantifier)
+    .with("any", () => results.some(Boolean))
+    .with("all", () => results.every(Boolean))
+    .with("none", () => !results.some(Boolean))
+    .exhaustive();
 }
