@@ -1130,8 +1130,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — alle in der Notiz",
-        "quantifier=none,source=note,typed=*": "{base} — keine in der Notiz",
+        "quantifier=none,source=note,typed=*": "{base} — nicht in der Notiz",
         "quantifier=any,source=notelets,typed=yes": "{base} — irgendeine Kurznotiz ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — irgendeine Kurznotiz",
         "quantifier=all,source=notelets,typed=yes": "{base} — alle Kurznotizen ({types})",

@@ -985,8 +985,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — ノート内のすべて",
-        "quantifier=none,source=note,typed=*": "{base} — ノート内に1つもない",
+        "quantifier=none,source=note,typed=*": "{base} — ノートにない",
         "quantifier=any,source=notelets,typed=yes": "{base} — いずれかのサブノート ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — いずれかのサブノート",
         "quantifier=all,source=notelets,typed=yes": "{base} — すべてのサブノート ({types})",

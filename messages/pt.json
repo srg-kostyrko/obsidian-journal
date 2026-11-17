@@ -1142,8 +1142,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — tudo na nota",
-        "quantifier=none,source=note,typed=*": "{base} — nada na nota",
+        "quantifier=none,source=note,typed=*": "{base} — não na nota",
         "quantifier=any,source=notelets,typed=yes": "{base} — qualquer nota breve ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — qualquer nota breve",
         "quantifier=all,source=notelets,typed=yes": "{base} — todas as notas breves ({types})",

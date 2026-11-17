@@ -1130,8 +1130,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — 노트 안의 모든 항목",
-        "quantifier=none,source=note,typed=*": "{base} — 노트 안에 하나도 없음",
+        "quantifier=none,source=note,typed=*": "{base} — 노트에 없음",
         "quantifier=any,source=notelets,typed=yes": "{base} — 서브노트 중 하나라도 ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — 서브노트 중 하나라도",
         "quantifier=all,source=notelets,typed=yes": "{base} — 모든 서브노트 ({types})",

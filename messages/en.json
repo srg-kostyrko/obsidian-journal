@@ -1066,8 +1066,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — all in the note",
-        "quantifier=none,source=note,typed=*": "{base} — none in the note",
+        "quantifier=none,source=note,typed=*": "{base} — not in the note",
         "quantifier=any,source=notelets,typed=yes": "{base} — any notelet ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — any notelet",
         "quantifier=all,source=notelets,typed=yes": "{base} — all notelets ({types})",

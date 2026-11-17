@@ -1013,8 +1013,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — усе в нотатці",
-        "quantifier=none,source=note,typed=*": "{base} — нічого в нотатці",
+        "quantifier=none,source=note,typed=*": "{base} — немає в нотатці",
         "quantifier=any,source=notelets,typed=yes": "{base} — будь-яка піднотатка ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — будь-яка піднотатка",
         "quantifier=all,source=notelets,typed=yes": "{base} — усі піднотатки ({types})",

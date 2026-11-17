@@ -319,7 +319,7 @@ describe("describeCondition", () => {
         resolveTypeName,
       );
       expect(out).toBe(
-        `${m.decoration_condition_property_describe({ name: "mood", op: m.decoration_string_op_label({ op: "eq" }), value: "calm" })} — all notelets (Meeting and 1o1)`,
+        `${m.decoration_condition_property_describe({ name: "mood", op: m.decoration_string_op_label({ op: "eq" }), value: "calm" })} — all notelets (Meeting or 1o1)`,
       );
     });
 
@@ -335,14 +335,24 @@ describe("describeCondition", () => {
       );
     });
 
-    it("ignores stored types while source is note", () => {
+    it("reads all over the note alone as the plain condition", () => {
       expect(
         describeCondition(
           tagCondition({ source: "note", quantifier: "all", typeIds: ["nt_a"] }),
           calendar,
           resolveTypeName,
         ),
-      ).toBe(`${base} — all in the note`);
+      ).toBe(base);
+    });
+
+    it("ignores stored types while source is note", () => {
+      expect(
+        describeCondition(
+          tagCondition({ source: "note", quantifier: "none", typeIds: ["nt_a"] }),
+          calendar,
+          resolveTypeName,
+        ),
+      ).toBe(`${base} — not in the note`);
     });
 
     it("falls back for an unknown type id", () => {

@@ -1160,8 +1160,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — всё в заметке",
-        "quantifier=none,source=note,typed=*": "{base} — ничего в заметке",
+        "quantifier=none,source=note,typed=*": "{base} — нет в заметке",
         "quantifier=any,source=notelets,typed=yes": "{base} — любая подзаметка ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — любая подзаметка",
         "quantifier=all,source=notelets,typed=yes": "{base} — все подзаметки ({types})",

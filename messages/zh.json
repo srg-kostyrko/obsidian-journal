@@ -985,8 +985,7 @@
       "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
       "selectors": ["quantifier", "source", "typed"],
       "match": {
-        "quantifier=all,source=note,typed=*": "{base} — 笔记中的全部",
-        "quantifier=none,source=note,typed=*": "{base} — 笔记中没有任何一个",
+        "quantifier=none,source=note,typed=*": "{base} — 不在笔记中",
         "quantifier=any,source=notelets,typed=yes": "{base} — 任一子笔记 ({types})",
         "quantifier=any,source=notelets,typed=*": "{base} — 任一子笔记",
         "quantifier=all,source=notelets,typed=yes": "{base} — 所有子笔记 ({types})",

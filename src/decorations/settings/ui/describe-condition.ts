@@ -108,7 +108,7 @@ export function describeCondition(
 }
 
 function withScope(base: string, scope: NoteletScope, typeName?: (id: string) => string | undefined): string {
-  if (scope.source === "note" && scope.quantifier === "any") return base;
+  if (scope.source === "note" && scope.quantifier !== "none") return base;
   const names =
     scope.source === "note"
       ? []
@@ -117,7 +117,7 @@ function withScope(base: string, scope: NoteletScope, typeName?: (id: string) =>
     base,
     quantifier: scope.quantifier,
     source: scope.source,
-    types: formatConjunction(names),
+    types: formatDisjunction(names),
     typed: names.length > 0 ? "yes" : "no",
   });
 }
