@@ -2,7 +2,7 @@
 import { match } from "ts-pattern";
 import { computed, type Component } from "vue";
 
-import type { JournalDecorationCondition } from "@/decorations";
+import type { FilterCondition, JournalDecorationCondition } from "@/decorations";
 
 import ConditionDate from "./ConditionDate.vue";
 import ConditionHasNotelet from "./ConditionHasNotelet.vue";
@@ -15,7 +15,11 @@ import ConditionTitle from "./ConditionTitle.vue";
 import ConditionTypeOnly from "./ConditionTypeOnly.vue";
 import ConditionWeekday from "./ConditionWeekday.vue";
 
-const props = defineProps<{ name: string; condition: JournalDecorationCondition; journalName?: string }>();
+const props = defineProps<{
+  name: string;
+  condition: JournalDecorationCondition | FilterCondition;
+  journalName?: string;
+}>();
 
 const leaf = computed<Component>(() =>
   match(props.condition.type)

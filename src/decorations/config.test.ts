@@ -1,7 +1,9 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { decorationConditionSchema } from "./config";
+import { repairValue, defaultsFrom } from "@/settings/repair/repair-value";
+
+import { decorationConditionSchema, filterConditionSchema } from "./config";
 
 // Interval offsets are 1-based in both directions (1 = first day, -1 = last day), so a
 // stored 0 could never match anything. It is coerced rather than rejected, since existing
@@ -109,5 +111,49 @@ describe("tasks condition schema", () => {
   it("no longer parses the retired task conditions", () => {
     expect(v.safeParse(decorationConditionSchema, { type: "has-open-task" }).success).toBe(false);
     expect(v.safeParse(decorationConditionSchema, { type: "all-tasks-completed" }).success).toBe(false);
+  });
+});
+
+describe("notelet scope on tag and property conditions", () => {
+  it("defaults a stored tag condition to the period note, any, any type", () => {
+    const parsed = v.parse(decorationConditionSchema, { type: "tag", condition: "contains", value: "x" });
+    expect(parsed).toMatchObject({ source: "note", quantifier: "any", typeIds: [] });
+  });
+
+  it("keeps notelet scope on a property condition", () => {
+    const input = {
+      type: "property",
+      name: "status",
+      valueType: "text",
+      condition: "eq",
+      value: "blocked",
+      source: "notelets",
+      quantifier: "all",
+      typeIds: ["nt_a"],
+    };
+    expect(v.parse(decorationConditionSchema, input)).toMatchObject({
+      source: "notelets",
+      quantifier: "all",
+      typeIds: ["nt_a"],
+    });
+  });
+
+  it("does not carry notelet scope into a bulk-add filter", () => {
+    const parsed = v.parse(filterConditionSchema, {
+      type: "tag",
+      condition: "contains",
+      value: "x",
+      source: "notelets",
+    });
+    expect(parsed).not.toHaveProperty("source");
+  });
+
+  it.each(["source", "quantifier"])("drops the condition holding an invalid %s instead of resetting it", (field) => {
+    const bad = { type: "tag", condition: "contains", value: "x", [field]: "latest" };
+    const keep = { type: "title", condition: "contains", value: "y" };
+
+    const result = repairValue(v.array(decorationConditionSchema), [bad, keep], defaultsFrom({}));
+
+    expect(result?.value).toEqual([keep]);
   });
 });

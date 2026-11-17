@@ -56,6 +56,11 @@ describe("defaultStyle", () => {
 });
 
 describe("defaultCondition", () => {
+  it("seeds tag and property with period-note scope", () => {
+    expect(defaultCondition("tag")).toMatchObject({ source: "note", quantifier: "any", typeIds: [] });
+    expect(defaultCondition("property")).toMatchObject({ source: "note", quantifier: "any", typeIds: [] });
+  });
+
   it("points a new offset condition at the interval's first day", () => {
     expect(defaultCondition("offset")).toEqual({ type: "offset", offset: 1 });
   });

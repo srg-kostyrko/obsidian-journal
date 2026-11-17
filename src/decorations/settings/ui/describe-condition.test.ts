@@ -26,7 +26,10 @@ describe("describeCondition", () => {
 
   describe("tag", () => {
     it("renders the localized tag clause", () => {
-      const out = describeCondition({ type: "tag", condition: "starts-with", value: "#work" }, calendar);
+      const out = describeCondition(
+        { type: "tag", condition: "starts-with", value: "#work", source: "note", quantifier: "any", typeIds: [] },
+        calendar,
+      );
       expect(out).toBe(
         m.decoration_condition_tag_describe({
           op: m.decoration_string_op_label({ op: "starts-with" }),
@@ -45,6 +48,9 @@ describe("describeCondition", () => {
           valueType: "text",
           condition: "contains",
           value: "good",
+          source: "note",
+          quantifier: "any",
+          typeIds: [],
         },
         calendar,
       );

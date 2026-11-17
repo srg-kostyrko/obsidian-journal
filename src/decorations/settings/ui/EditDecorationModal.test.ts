@@ -122,7 +122,18 @@ describe("EditDecorationModal", () => {
         conditionTypes: conditionTypeOptions.day,
         decoration: {
           mode: "and",
-          conditions: [{ type: "property", name: "", valueType: "text", condition: "exists", value: "" }],
+          conditions: [
+            {
+              type: "property",
+              name: "",
+              valueType: "text",
+              condition: "exists",
+              value: "",
+              source: "note",
+              quantifier: "any",
+              typeIds: [],
+            },
+          ],
           styles: [{ type: "background", color: transparent }],
         },
       });

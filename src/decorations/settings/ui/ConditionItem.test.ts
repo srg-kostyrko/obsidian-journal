@@ -37,12 +37,21 @@ describe("ConditionItem", () => {
   });
 
   it("renders ConditionTag for a tag condition", async () => {
-    await mount({ type: "tag", condition: "contains", value: "" });
+    await mount({ type: "tag", condition: "contains", value: "", source: "note", quantifier: "any", typeIds: [] });
     expect(screen.getByText(m.decoration_string_op_label({ op: "contains" }))).toBeTruthy();
   });
 
   it("renders ConditionProperty for a property condition", async () => {
-    await mount({ type: "property", name: "x", valueType: "text", condition: "exists", value: "" });
+    await mount({
+      type: "property",
+      name: "x",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getByText(m.decoration_string_op_label({ op: "exists" }))).toBeTruthy();
   });
 
@@ -85,7 +94,19 @@ describe("ConditionItem", () => {
   it("derives a property condition's number value type from the vault's registered type", async () => {
     const harness = await testContainer();
     harness.host.setPropertyType("rating", "number");
-    await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" }, harness);
+    await mount(
+      {
+        type: "property",
+        name: "",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
+      harness,
+    );
 
     await userEvent.type(screen.getAllByRole("textbox")[0], "rating");
     await userEvent.selectOptions(screen.getByRole("combobox"), m.decoration_string_op_label({ op: "eq" }));
