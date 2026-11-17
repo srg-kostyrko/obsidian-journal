@@ -19,6 +19,7 @@ const props = defineProps<{
   name: string;
   condition: JournalDecorationCondition | FilterCondition;
   journalName?: string;
+  withNoteletScope?: boolean;
 }>();
 
 const leaf = computed<Component>(() =>
@@ -39,6 +40,8 @@ const leaf = computed<Component>(() =>
 const leafProps = computed<Record<string, unknown>>(() => {
   if (props.condition.type === "has-note") return { type: props.condition.type };
   if (props.condition.type === "has-notelet") return { name: props.name, journalName: props.journalName };
+  if (props.condition.type === "tag" || props.condition.type === "property")
+    return { name: props.name, journalName: props.journalName, withNoteletScope: props.withNoteletScope };
   return { name: props.name };
 });
 </script>

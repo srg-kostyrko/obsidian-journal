@@ -12,6 +12,12 @@ const calendar = new Calendar();
 
 const resolveTypeName = (id: string): string | undefined => ({ nt_a: "Meeting", nt_b: "1o1" })[id];
 
+const tagCondition = (scope: {
+  source: "note" | "notelets" | "both";
+  quantifier: "any" | "all" | "none";
+  typeIds: string[];
+}) => ({ type: "tag", condition: "contains", value: "#work", ...scope }) as const;
+
 const source = (s: "note" | "notelets" | "both") => m.decoration_condition_tasks_source_phrase({ source: s });
 
 describe("describeCondition", () => {
@@ -282,6 +288,71 @@ describe("describeCondition", () => {
       expect(out).toContain(
         formatDisjunction([describeTagOrHeadingCondition(headings), describeTagOrHeadingCondition(tag)]),
       );
+    });
+  });
+
+  describe("notelet scope on tag and property", () => {
+    const base = m.decoration_condition_tag_describe({
+      op: m.decoration_string_op_label({ op: "contains" }),
+      value: "#work",
+    });
+
+    it("describes a default-scope tag condition exactly as before", () => {
+      expect(describeCondition(tagCondition({ source: "note", quantifier: "any", typeIds: [] }), calendar)).toBe(
+        "tag contains #work",
+      );
+    });
+
+    it("describes an all-notelets property condition with its types", () => {
+      const out = describeCondition(
+        {
+          type: "property",
+          name: "mood",
+          valueType: "text",
+          condition: "eq",
+          value: "calm",
+          source: "notelets",
+          quantifier: "all",
+          typeIds: ["nt_a", "nt_b"],
+        },
+        calendar,
+        resolveTypeName,
+      );
+      expect(out).toBe(
+        `${m.decoration_condition_property_describe({ name: "mood", op: m.decoration_string_op_label({ op: "eq" }), value: "calm" })} — all notelets (Meeting and 1o1)`,
+      );
+    });
+
+    it("describes none across the note and its notelets", () => {
+      expect(describeCondition(tagCondition({ source: "both", quantifier: "none", typeIds: [] }), calendar)).toBe(
+        `${base} — none of the note or its notelets`,
+      );
+    });
+
+    it("omits the parenthesis for an empty type list", () => {
+      expect(describeCondition(tagCondition({ source: "notelets", quantifier: "any", typeIds: [] }), calendar)).toBe(
+        `${base} — any notelet`,
+      );
+    });
+
+    it("ignores stored types while source is note", () => {
+      expect(
+        describeCondition(
+          tagCondition({ source: "note", quantifier: "all", typeIds: ["nt_a"] }),
+          calendar,
+          resolveTypeName,
+        ),
+      ).toBe(`${base} — all in the note`);
+    });
+
+    it("falls back for an unknown type id", () => {
+      expect(
+        describeCondition(
+          tagCondition({ source: "both", quantifier: "any", typeIds: ["nt_gone"] }),
+          calendar,
+          () => undefined,
+        ),
+      ).toBe(`${base} — the note or any notelet (unknown type)`);
     });
   });
 

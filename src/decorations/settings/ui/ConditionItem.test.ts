@@ -15,9 +15,13 @@ import { buildCondition } from "../../testing";
 
 import ConditionItem from "./ConditionItem.vue";
 
-async function mount(initial: JournalDecorationCondition, harness?: TestHarness) {
+async function mount(
+  initial: JournalDecorationCondition,
+  harness?: TestHarness,
+  extra: { journalName?: string; withNoteletScope?: boolean } = {},
+) {
   const resolvedHarness = harness ?? (await testContainer());
-  const renderHost = () => h(ConditionItem, { name: "c", condition: initial });
+  const renderHost = () => h(ConditionItem, { name: "c", condition: initial, ...extra });
   const Host = defineComponent({
     setup() {
       useForm({
@@ -112,5 +116,41 @@ describe("ConditionItem", () => {
     await userEvent.selectOptions(screen.getByRole("combobox"), m.decoration_string_op_label({ op: "eq" }));
 
     expect(screen.getByRole("spinbutton")).toBeTruthy();
+  });
+
+  it("shows quantifier and source for a decoration tag condition", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    await mount(
+      { type: "tag", condition: "contains", value: "", source: "note", quantifier: "any", typeIds: [] },
+      harness,
+      { withNoteletScope: true },
+    );
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeTruthy();
+  });
+
+  it("shows no scope controls on a tag condition without the scope flag", async () => {
+    await mount({ type: "tag", condition: "contains", value: "", source: "note", quantifier: "any", typeIds: [] });
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeNull();
+  });
+
+  it("shows scope controls on a property condition", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    await mount(
+      {
+        type: "property",
+        name: "x",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
+      harness,
+      { withNoteletScope: true },
+    );
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeTruthy();
   });
 });

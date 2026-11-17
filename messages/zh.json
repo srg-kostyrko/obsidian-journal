@@ -980,6 +980,31 @@
   "decoration_condition_property_condition_label": "条件",
   "decoration_condition_property_describe": "属性 {name} {op} {value}",
   "decoration_condition_property_value_label": "值",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=all,source=note,typed=*": "{base} — 笔记中的全部",
+        "quantifier=none,source=note,typed=*": "{base} — 笔记中没有任何一个",
+        "quantifier=any,source=notelets,typed=yes": "{base} — 任一子笔记 ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — 任一子笔记",
+        "quantifier=all,source=notelets,typed=yes": "{base} — 所有子笔记 ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — 所有子笔记",
+        "quantifier=none,source=notelets,typed=yes": "{base} — 没有任何子笔记 ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — 没有任何子笔记",
+        "quantifier=any,source=both,typed=yes": "{base} — 笔记或任一子笔记 ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — 笔记或任一子笔记",
+        "quantifier=all,source=both,typed=yes": "{base} — 笔记和所有子笔记 ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — 笔记和所有子笔记",
+        "quantifier=none,source=both,typed=yes": "{base} — 笔记及其子笔记均不满足 ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — 笔记及其子笔记均不满足",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "哪些笔记",
+  "decoration_condition_scope_source_label": "查找范围",
   "decoration_condition_tag_describe": "标签 {op} {value}",
   "decoration_condition_tag_value_label": "标签值",
   "decoration_condition_tasks_quantifier_label": "哪些任务",

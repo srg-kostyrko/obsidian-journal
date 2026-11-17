@@ -1061,6 +1061,31 @@
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "property {name} {op} {value}",
   "decoration_condition_property_value_label": "Value",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=all,source=note,typed=*": "{base} — all in the note",
+        "quantifier=none,source=note,typed=*": "{base} — none in the note",
+        "quantifier=any,source=notelets,typed=yes": "{base} — any notelet ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — any notelet",
+        "quantifier=all,source=notelets,typed=yes": "{base} — all notelets ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — all notelets",
+        "quantifier=none,source=notelets,typed=yes": "{base} — no notelet ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — no notelet",
+        "quantifier=any,source=both,typed=yes": "{base} — the note or any notelet ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — the note or any notelet",
+        "quantifier=all,source=both,typed=yes": "{base} — the note and all notelets ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — the note and all notelets",
+        "quantifier=none,source=both,typed=yes": "{base} — none of the note or its notelets ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — none of the note or its notelets",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Which notes",
+  "decoration_condition_scope_source_label": "Look in",
   "decoration_condition_tag_describe": "tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag value",
   "decoration_condition_tasks_quantifier_label": "Which tasks",

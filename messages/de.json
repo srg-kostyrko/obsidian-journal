@@ -1125,6 +1125,31 @@
   "decoration_condition_property_condition_label": "Bedingung",
   "decoration_condition_property_describe": "Eigenschaft {name} {op} {value}",
   "decoration_condition_property_value_label": "Wert",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=all,source=note,typed=*": "{base} — alle in der Notiz",
+        "quantifier=none,source=note,typed=*": "{base} — keine in der Notiz",
+        "quantifier=any,source=notelets,typed=yes": "{base} — irgendeine Kurznotiz ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — irgendeine Kurznotiz",
+        "quantifier=all,source=notelets,typed=yes": "{base} — alle Kurznotizen ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — alle Kurznotizen",
+        "quantifier=none,source=notelets,typed=yes": "{base} — keine Kurznotiz ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — keine Kurznotiz",
+        "quantifier=any,source=both,typed=yes": "{base} — die Notiz oder irgendeine Kurznotiz ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — die Notiz oder irgendeine Kurznotiz",
+        "quantifier=all,source=both,typed=yes": "{base} — die Notiz und alle Kurznotizen ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — die Notiz und alle Kurznotizen",
+        "quantifier=none,source=both,typed=yes": "{base} — weder die Notiz noch ihre Kurznotizen ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — weder die Notiz noch ihre Kurznotizen",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Welche Notizen",
+  "decoration_condition_scope_source_label": "Suchen in",
   "decoration_condition_tag_describe": "Tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag-Wert",
   "decoration_condition_tasks_quantifier_label": "Welche Aufgaben",

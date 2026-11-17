@@ -12,17 +12,19 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiPropertySuggest from "@/ui/UiPropertySuggest.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
+import ConditionNoteletScope from "./ConditionNoteletScope.vue";
+
 type ValueType = JournalDecorationPropertyCondition["valueType"];
 type Op = JournalDecorationPropertyCondition["condition"];
 
-const { name } = defineProps<{ name: string }>();
+const props = defineProps<{ name: string; journalName?: string; withNoteletScope?: boolean }>();
 
 const metadataTypes = useService(MetadataTypeService);
 
-const { value: propertyName, errorMessage: nameError } = useField<string>(`${name}.name`);
-const { value: valueType, setValue: setValueType } = useField<ValueType>(`${name}.valueType`);
-const { value: op, setValue: setOp } = useField<Op>(`${name}.condition`);
-const { value: rawValue } = useField<string | number>(`${name}.value`);
+const { value: propertyName, errorMessage: nameError } = useField<string>(`${props.name}.name`);
+const { value: valueType, setValue: setValueType } = useField<ValueType>(`${props.name}.valueType`);
+const { value: op, setValue: setOp } = useField<Op>(`${props.name}.condition`);
+const { value: rawValue } = useField<string | number>(`${props.name}.value`);
 
 const textModel = computed<string>({
   get: () => (typeof rawValue.value === "string" ? rawValue.value : ""),
@@ -116,6 +118,7 @@ watch(propertyName, (next) => {
         />
       </template>
     </div>
+    <ConditionNoteletScope v-if="props.withNoteletScope" :name="props.name" :journal-name="props.journalName" />
     <span v-if="nameError" class="condition-property-error">{{ nameError }}</span>
   </div>
 </template>

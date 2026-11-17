@@ -1008,6 +1008,31 @@
   "decoration_condition_property_condition_label": "Умова",
   "decoration_condition_property_describe": "властивість {name} {op} {value}",
   "decoration_condition_property_value_label": "Значення",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=all,source=note,typed=*": "{base} — усе в нотатці",
+        "quantifier=none,source=note,typed=*": "{base} — нічого в нотатці",
+        "quantifier=any,source=notelets,typed=yes": "{base} — будь-яка піднотатка ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — будь-яка піднотатка",
+        "quantifier=all,source=notelets,typed=yes": "{base} — усі піднотатки ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — усі піднотатки",
+        "quantifier=none,source=notelets,typed=yes": "{base} — жодної піднотатки ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — жодної піднотатки",
+        "quantifier=any,source=both,typed=yes": "{base} — нотатка або будь-яка піднотатка ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — нотатка або будь-яка піднотатка",
+        "quantifier=all,source=both,typed=yes": "{base} — нотатка і всі піднотатки ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — нотатка і всі піднотатки",
+        "quantifier=none,source=both,typed=yes": "{base} — ні нотатка, ні її піднотатки ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ні нотатка, ні її піднотатки",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Які нотатки",
+  "decoration_condition_scope_source_label": "Де шукати",
   "decoration_condition_tag_describe": "тег {op} {value}",
   "decoration_condition_tag_value_label": "Значення тегу",
   "decoration_condition_tasks_quantifier_label": "Які завдання",
