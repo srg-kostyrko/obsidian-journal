@@ -49,6 +49,20 @@
           "mode": "and",
           "conditions": [{ "type": "has-notelet", "typeIds": ["retro"] }],
           "styles": [{ "type": "background", "color": { "type": "custom", "color": "#203040" } }]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "decision",
+              "source": "notelets",
+              "quantifier": "all",
+              "typeIds": ["meeting"]
+            }
+          ],
+          "styles": [{ "type": "color", "color": { "type": "custom", "color": "#112233" } }]
         }
       ]
     }
