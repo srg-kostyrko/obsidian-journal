@@ -47,10 +47,7 @@ function describeDecoration(decoration: JournalDecoration): string {
 }
 
 const removalSummary = computed(() =>
-  m.journal_notelet_delete_removes_decorations({
-    count: removedDecorations.value.length,
-    decorations: formatConjunction(removedDecorations.value.map(describeDecoration)),
-  }),
+  m.journal_notelet_delete_removes_decorations({ count: removedDecorations.value.length }),
 );
 
 const index = useService(JournalsIndex);
@@ -66,7 +63,15 @@ function submit(): void {
 </script>
 
 <template>
-  <UiSettingRow v-if="removedDecorations.length > 0" no-controls :name="removalSummary" />
+  <UiSettingRow v-if="removedDecorations.length > 0" no-controls :name="removalSummary">
+    <template #description>
+      <ul>
+        <li v-for="(decoration, i) of removedDecorations" :key="i">
+          {{ describeDecoration(decoration) }}
+        </li>
+      </ul>
+    </template>
+  </UiSettingRow>
   <UiSettingRow no-controls :name="m.journal_notelet_delete_affected_count({ count: affectedCount })" />
   <UiSettingRow :name="m.journal_notelet_delete_mode_label()">
     <template #description>{{ m.journal_notelet_delete_mode_description({ mode }) }}</template>

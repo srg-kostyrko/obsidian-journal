@@ -93,8 +93,10 @@ describe("DeleteNoteletTypeModal", () => {
       ],
     });
 
-    const row = await screen.findByText(/will be removed/);
-    expect(row.textContent).toContain(m.decoration_condition_weekday_describe({ weekdays: "Mon" }));
+    await screen.findByText(/will be removed/);
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(items[0]?.textContent).toContain(m.decoration_condition_weekday_describe({ weekdays: "Mon" }));
   });
 
   it("shows no removal row when nothing would be removed", () => {

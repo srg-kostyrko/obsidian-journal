@@ -2419,8 +2419,8 @@
       "declarations": ["input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "장식 1개가 제거됩니다: {decorations}",
-        "count=*": "장식 {count}개가 제거됩니다: {decorations}"
+        "count=1": "장식 1개가 제거됩니다:",
+        "count=*": "장식 {count}개가 제거됩니다:"
       }
     }
   ],

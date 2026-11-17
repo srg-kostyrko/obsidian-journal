@@ -2352,10 +2352,10 @@
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["count", "countPlural"],
       "match": {
-        "count=*,countPlural=one": "Буде видалено {count} оформлення: {decorations}",
-        "count=*,countPlural=few": "Буде видалено {count} оформлення: {decorations}",
-        "count=*,countPlural=many": "Буде видалено {count} оформлень: {decorations}",
-        "count=*,countPlural=*": "Буде видалено {count} оформлення: {decorations}"
+        "count=*,countPlural=one": "Буде видалено {count} оформлення:",
+        "count=*,countPlural=few": "Буде видалено {count} оформлення:",
+        "count=*,countPlural=many": "Буде видалено {count} оформлень:",
+        "count=*,countPlural=*": "Буде видалено {count} оформлення:"
       }
     }
   ],

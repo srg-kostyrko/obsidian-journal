@@ -373,7 +373,7 @@ describe("describeCondition", () => {
 
     it("names the configured types", () => {
       expect(describeCondition({ type: "has-notelet", typeIds: ["nt_a", "nt_b"] }, calendar, resolveTypeName)).toBe(
-        "a notelet of type Meeting, 1o1 exists",
+        "a notelet of type Meeting or 1o1 exists",
       );
     });
 

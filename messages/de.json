@@ -2435,8 +2435,8 @@
       "declarations": ["input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "1 Dekoration wird entfernt: {decorations}",
-        "count=*": "{count} Dekorationen werden entfernt: {decorations}"
+        "count=1": "1 Dekoration wird entfernt:",
+        "count=*": "{count} Dekorationen werden entfernt:"
       }
     }
   ],

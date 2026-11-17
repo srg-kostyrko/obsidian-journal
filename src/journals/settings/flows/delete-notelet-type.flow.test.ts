@@ -276,11 +276,8 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(typePresentDuringPurge).toBe(true);
   });
 
-  // A deleted type's id left behind in a has-notelet condition can only match nothing, but the
-  // condition still reads as naming a type. Stripping it is only safe while the list keeps at
-  // least one other id: an emptied list means "any type" to the engine, which would widen the
-  // rule instead of narrowing it. So an emptied condition goes, and a decoration the deletion
-  // left with no conditions goes with it.
+  // Deletion goes through remapNoteletTypeIds: an and-decoration with a dead condition is removed
+  // whole, an or-decoration only loses that condition, and an emptied list never reads as "any".
   function decorate(decorations: ReturnType<typeof buildDecoration>[]): void {
     harness.resolve(JournalsRepository).update("daily", { decorations });
   }

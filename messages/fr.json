@@ -2433,8 +2433,8 @@
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["count", "countPlural"],
       "match": {
-        "count=*,countPlural=one": "{count} décoration sera supprimée : {decorations}",
-        "count=*,countPlural=*": "{count} décorations seront supprimées : {decorations}"
+        "count=*,countPlural=one": "{count} décoration sera supprimée :",
+        "count=*,countPlural=*": "{count} décorations seront supprimées :"
       }
     }
   ],

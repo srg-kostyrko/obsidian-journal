@@ -2440,8 +2440,8 @@
       "declarations": ["input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "1 decoration will be removed: {decorations}",
-        "count=*": "{count} decorations will be removed: {decorations}"
+        "count=1": "1 decoration will be removed:",
+        "count=*": "{count} decorations will be removed:"
       }
     }
   ],

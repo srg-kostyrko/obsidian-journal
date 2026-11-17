@@ -2271,8 +2271,8 @@
       "declarations": ["input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "将移除 1 条装饰：{decorations}",
-        "count=*": "将移除 {count} 条装饰：{decorations}"
+        "count=1": "将移除 1 条装饰：",
+        "count=*": "将移除 {count} 条装饰："
       }
     }
   ],

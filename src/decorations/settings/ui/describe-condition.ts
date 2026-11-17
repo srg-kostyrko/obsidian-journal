@@ -102,7 +102,7 @@ export function describeCondition(
     .with({ type: "has-notelet" }, (c) => {
       if (c.typeIds.length === 0) return m.decoration_condition_has_notelet_describe_any();
       const names = c.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());
-      return m.decoration_condition_has_notelet_describe_types({ types: names.join(", ") });
+      return m.decoration_condition_has_notelet_describe_types({ types: formatDisjunction(names) });
     })
     .exhaustive();
 }

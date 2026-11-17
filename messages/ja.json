@@ -2277,8 +2277,8 @@
       "declarations": ["input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "1件の装飾が削除されます: {decorations}",
-        "count=*": "{count}件の装飾が削除されます: {decorations}"
+        "count=1": "1件の装飾が削除されます:",
+        "count=*": "{count}件の装飾が削除されます:"
       }
     }
   ],

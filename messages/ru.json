@@ -2507,10 +2507,10 @@
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["count", "countPlural"],
       "match": {
-        "count=*,countPlural=one": "Будет удалено {count} оформление: {decorations}",
-        "count=*,countPlural=few": "Будет удалено {count} оформления: {decorations}",
-        "count=*,countPlural=many": "Будет удалено {count} оформлений: {decorations}",
-        "count=*,countPlural=*": "Будет удалено {count} оформления: {decorations}"
+        "count=*,countPlural=one": "Будет удалено {count} оформление:",
+        "count=*,countPlural=few": "Будет удалено {count} оформления:",
+        "count=*,countPlural=many": "Будет удалено {count} оформлений:",
+        "count=*,countPlural=*": "Будет удалено {count} оформления:"
       }
     }
   ],
