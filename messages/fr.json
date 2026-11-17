@@ -2404,6 +2404,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "{count} décoration sera supprimée : {decorations}",
+        "count=*,countPlural=*": "{count} décorations seront supprimées : {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Dossier",
   "journal_notelet_name_template_label": "Nom de la note",
   "journal_notelet_no_within_period_variable_warning": "Ce modèle de nom ne contient rien qui varie au sein d’une période, si bien que chaque note brève après la première reçoit un numéro ajouté à son nom de note.",

@@ -3,10 +3,12 @@ import { screen } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
+import { JournalsRepository } from "@/journals/repository";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -74,6 +76,38 @@ describe("DeleteNoteletTypeModal", () => {
     });
 
     expect(await screen.findByText(m.journal_notelet_delete_affected_count({ count: 1 }))).toBeTruthy();
+  });
+
+  it("lists the decorations the deletion will remove", async () => {
+    renderIt();
+    harness.resolve(JournalsRepository).update("daily", {
+      decorations: [
+        buildDecoration({
+          mode: "and",
+          conditions: [
+            buildCondition("weekday", { weekdays: [1] }),
+            buildCondition("has-notelet", { typeIds: ["nt_1"] }),
+          ],
+          styles: [buildStyle("background")],
+        }),
+      ],
+    });
+
+    const row = await screen.findByText(/will be removed/);
+    expect(row.textContent).toContain(m.decoration_condition_weekday_describe({ weekdays: "Mon" }));
+  });
+
+  it("shows no removal row when nothing would be removed", () => {
+    harness.resolve(JournalsRepository).update("daily", {
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("has-notelet", { typeIds: ["nt_1", "nt_2"] })],
+          styles: [buildStyle("background")],
+        }),
+      ],
+    });
+    renderIt();
+    expect(screen.queryByText(/will be removed/)).toBeNull();
   });
 
   it("submits with mode keep by default on Delete", async () => {

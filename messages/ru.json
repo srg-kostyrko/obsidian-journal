@@ -2478,6 +2478,18 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "Будет удалено {count} оформление: {decorations}",
+        "count=*,countPlural=few": "Будет удалено {count} оформления: {decorations}",
+        "count=*,countPlural=many": "Будет удалено {count} оформлений: {decorations}",
+        "count=*,countPlural=*": "Будет удалено {count} оформления: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Название заметки",
   "journal_notelet_no_within_period_variable_warning": "В этом шаблоне названия нет ничего, что менялось бы в пределах периода, поэтому каждая подзаметка после первой получает добавленный к названию номер.",

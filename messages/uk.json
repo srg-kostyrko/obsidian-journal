@@ -2323,6 +2323,18 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "Буде видалено {count} оформлення: {decorations}",
+        "count=*,countPlural=few": "Буде видалено {count} оформлення: {decorations}",
+        "count=*,countPlural=many": "Буде видалено {count} оформлень: {decorations}",
+        "count=*,countPlural=*": "Буде видалено {count} оформлення: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Назва нотатки",
   "journal_notelet_no_within_period_variable_warning": "У цьому шаблоні назви немає нічого, що змінювалося б у межах періоду, тому кожна піднотатка після першої отримує доданий до назви номер.",

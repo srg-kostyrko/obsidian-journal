@@ -2413,6 +2413,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 decoração será removida: {decorations}",
+        "count=*": "{count} decorações serão removidas: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Pasta",
   "journal_notelet_name_template_label": "Nome da nota",
   "journal_notelet_no_within_period_variable_warning": "Este modelo de nome não tem nada que varie dentro de um período, então toda nota breve após a primeira recebe um número adicionado ao nome.",

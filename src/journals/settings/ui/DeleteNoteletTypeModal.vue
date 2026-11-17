@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-import { m } from "@/i18n";
+import { Calendar } from "@/calendar";
+import type { JournalDecoration } from "@/decorations/config";
+import { remapNoteletTypeIds } from "@/decorations/notelet-type-cascade";
+import { describeCondition } from "@/decorations/settings/ui/describe-condition";
+import { formatConjunction, formatDisjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { useIndexVersion } from "@/journals/use-index-version";
@@ -26,6 +30,29 @@ const typeName = computed(
   () => journalsVM.getJournal(props.journalName).getOrUndefined()?.notelets[props.typeId]?.name ?? props.typeName,
 );
 
+const calendar = useService(Calendar);
+const removedDecorations = computed(() => {
+  const journal = journalsVM.getJournal(props.journalName).getOrUndefined();
+  if (journal === undefined) return [];
+  return remapNoteletTypeIds(journal.decorations, (id) => (id === props.typeId ? undefined : id)).removed;
+});
+
+function typeNameOf(id: string): string | undefined {
+  return journalsVM.getJournal(props.journalName).getOrUndefined()?.notelets[id]?.name;
+}
+
+function describeDecoration(decoration: JournalDecoration): string {
+  const parts = decoration.conditions.map((condition) => describeCondition(condition, calendar, typeNameOf));
+  return decoration.mode === "or" ? formatDisjunction(parts) : formatConjunction(parts);
+}
+
+const removalSummary = computed(() =>
+  m.journal_notelet_delete_removes_decorations({
+    count: removedDecorations.value.length,
+    decorations: formatConjunction(removedDecorations.value.map(describeDecoration)),
+  }),
+);
+
 const index = useService(JournalsIndex);
 const indexVersion = useIndexVersion();
 const affectedCount = computed(() => {
@@ -39,6 +66,7 @@ function submit(): void {
 </script>
 
 <template>
+  <UiSettingRow v-if="removedDecorations.length > 0" no-controls :name="removalSummary" />
   <UiSettingRow no-controls :name="m.journal_notelet_delete_affected_count({ count: affectedCount })" />
   <UiSettingRow :name="m.journal_notelet_delete_mode_label()">
     <template #description>{{ m.journal_notelet_delete_mode_description({ mode }) }}</template>

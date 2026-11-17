@@ -2406,6 +2406,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Dekoration wird entfernt: {decorations}",
+        "count=*": "{count} Dekorationen werden entfernt: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Ordner",
   "journal_notelet_name_template_label": "Notizname",
   "journal_notelet_no_within_period_variable_warning": "Diese Namensvorlage enthält nichts, das sich innerhalb eines Zeitraums ändert, daher erhält jede Kurznotiz nach der ersten eine an den Namen angehängte Zahl.",

@@ -2411,6 +2411,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 decoration will be removed: {decorations}",
+        "count=*": "{count} decorations will be removed: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Folder",
   "journal_notelet_name_template_label": "Note name",
   "journal_notelet_no_within_period_variable_warning": "This name template has nothing that varies within a period, so every notelet after the first gets a number added to its file name.",

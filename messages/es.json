@@ -2393,6 +2393,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Se quitará 1 decoración: {decorations}",
+        "count=*": "Se quitarán {count} decoraciones: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Carpeta",
   "journal_notelet_name_template_label": "Nombre de la nota",
   "journal_notelet_no_within_period_variable_warning": "Esta plantilla de nombre no tiene nada que varíe dentro de un período, así que cada nota breve después de la primera recibe un número añadido a su nombre de nota.",

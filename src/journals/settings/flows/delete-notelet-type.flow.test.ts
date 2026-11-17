@@ -289,6 +289,36 @@ describe("DeleteNoteletTypeFlow", () => {
     return harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.decorations;
   }
 
+  it("applies the cascade to the config as it is when the dialog closes", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("has-notelet", { typeIds: ["nt_1"] })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    const modal = openModal();
+    decorate([
+      buildDecoration({
+        mode: "and",
+        conditions: [
+          buildCondition("has-notelet", { typeIds: ["nt_1"] }),
+          buildCondition("title", { condition: "contains", value: "later" }),
+        ],
+        styles: [buildStyle("background")],
+      }),
+      buildDecoration({
+        conditions: [buildCondition("title", { condition: "contains", value: "added while open" })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+    modal.submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "title", value: "added while open" }] }]);
+  });
+
   it("drops the deleted id from a has-notelet condition that names other types too", async () => {
     decorate([
       buildDecoration({

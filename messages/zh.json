@@ -2242,6 +2242,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "将移除 1 条装饰：{decorations}",
+        "count=*": "将移除 {count} 条装饰：{decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "文件夹",
   "journal_notelet_name_template_label": "笔记名称",
   "journal_notelet_no_within_period_variable_warning": "此名称模板中没有会在一个周期内变化的内容，因此除第一条之外，每条子笔记的名称都会被添加编号。",

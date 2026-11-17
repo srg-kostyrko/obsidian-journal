@@ -2390,6 +2390,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "장식 1개가 제거됩니다: {decorations}",
+        "count=*": "장식 {count}개가 제거됩니다: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "폴더",
   "journal_notelet_name_template_label": "노트 이름",
   "journal_notelet_no_within_period_variable_warning": "이 이름 템플릿에는 기간 안에서 달라지는 요소가 없어서, 첫 번째 이후의 모든 서브노트는 이름에 번호가 추가됩니다.",

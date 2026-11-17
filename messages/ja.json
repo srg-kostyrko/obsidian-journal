@@ -2248,6 +2248,16 @@
       }
     }
   ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1件の装飾が削除されます: {decorations}",
+        "count=*": "{count}件の装飾が削除されます: {decorations}"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "フォルダ",
   "journal_notelet_name_template_label": "ノート名",
   "journal_notelet_no_within_period_variable_warning": "この名前テンプレートには期間内で変化する要素がないため、最初のサブノート以降はすべて名前に番号が追加されます。",
