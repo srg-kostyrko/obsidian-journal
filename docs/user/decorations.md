@@ -211,7 +211,7 @@ pick none to count a notelet of any type.
 
 Deleting a notelet type changes the decorations that name it. A condition whose only listed types are
 deleted can no longer match. In a decoration set to **Decorate when all conditions are fulfilled** the whole decoration is removed,
-and in one set to **Decorate when any condition is fulfilled** just that condition; a Tag or Frontmatter property condition set to **Note and notelets** falls back
+and in one set to **Decorate when any condition is fulfilled** just that condition, or the whole decoration if it was the last one; a Tag or Frontmatter property condition set to **Note and notelets** falls back
 to **Note only**. The delete dialog lists the decorations it will remove before you confirm, and cloning a
 journal applies the same rule to the copy.
 

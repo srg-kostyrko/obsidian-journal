@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 
 - A **Check date** decoration condition with a specific **Day**, **Month** or **Year** now matches in languages that write numbers in their own digits, such as Arabic. Before, it never matched there, so the decoration was not drawn on the date it named.
 - A decoration's summary in settings now names weekdays in the same language as the rest of the sentence. With Obsidian set to a language Journals does not translate, such as Polish, a **Check weekday** condition's summary was in English but named its days in Polish; it now names them in English too.
-- Deleting a notelet type no longer makes a decoration mark more days. A decoration set to **Decorate when all conditions are fulfilled** that had a **Has notelet** condition on only that type lost the condition and so matched every day its other conditions did. Now the whole decoration is removed, and in one set to **Decorate when any condition is fulfilled** only that condition is. The delete dialog names the decorations it will remove before you confirm. Cloning a journal follows the same rule.
+- Deleting a notelet type no longer makes a decoration mark more days. A decoration set to **Decorate when all conditions are fulfilled** that had a **Has notelet** condition on only that type lost the condition and so matched every day its other conditions did. Now the whole decoration is removed, and in one set to **Decorate when any condition is fulfilled** only that condition is, or the whole decoration if it was the last one. The delete dialog names the decorations it will remove before you confirm. Cloning a journal follows the same rule.
 
 ## [3.7.0] - 2026-11-14
 
