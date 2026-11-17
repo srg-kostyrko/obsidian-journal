@@ -276,11 +276,8 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(typePresentDuringPurge).toBe(true);
   });
 
-  // A deleted type's id left behind in a has-notelet condition can only match nothing, but the
-  // condition still reads as naming a type. Stripping it is only safe while the list keeps at
-  // least one other id: an emptied list means "any type" to the engine, which would widen the
-  // rule instead of narrowing it. So an emptied condition goes, and a decoration the deletion
-  // left with no conditions goes with it.
+  // Deletion goes through remapNoteletTypeIds: an and-decoration with a dead condition is removed
+  // whole, an or-decoration only loses that condition, and an emptied list never reads as "any".
   function decorate(decorations: ReturnType<typeof buildDecoration>[]): void {
     harness.resolve(JournalsRepository).update("daily", { decorations });
   }
@@ -288,6 +285,36 @@ describe("DeleteNoteletTypeFlow", () => {
   function decorationsAfterDelete() {
     return harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.decorations;
   }
+
+  it("applies the cascade to the config as it is when the dialog closes", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("has-notelet", { typeIds: ["nt_1"] })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    const modal = openModal();
+    decorate([
+      buildDecoration({
+        mode: "and",
+        conditions: [
+          buildCondition("has-notelet", { typeIds: ["nt_1"] }),
+          buildCondition("title", { condition: "contains", value: "later" }),
+        ],
+        styles: [buildStyle("background")],
+      }),
+      buildDecoration({
+        conditions: [buildCondition("title", { condition: "contains", value: "added while open" })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+    modal.submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "title", value: "added while open" }] }]);
+  });
 
   it("drops the deleted id from a has-notelet condition that names other types too", async () => {
     decorate([
@@ -304,9 +331,29 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "has-notelet", typeIds: ["nt_2"] }] }]);
   });
 
-  it("drops a has-notelet condition the deleted id was the only member of, keeping its siblings", async () => {
+  it("removes an and-decoration whose has-notelet condition the deleted id was the only member of", async () => {
     decorate([
       buildDecoration({
+        mode: "and",
+        conditions: [
+          buildCondition("has-notelet", { typeIds: ["nt_1"] }),
+          buildCondition("title", { condition: "contains", value: "keep me" }),
+        ],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toEqual([]);
+  });
+
+  it("drops only the emptied has-notelet condition from an or-decoration", async () => {
+    decorate([
+      buildDecoration({
+        mode: "or",
         conditions: [
           buildCondition("has-notelet", { typeIds: ["nt_1"] }),
           buildCondition("title", { condition: "contains", value: "keep me" }),
@@ -320,6 +367,21 @@ describe("DeleteNoteletTypeFlow", () => {
     await promise;
 
     expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "title", value: "keep me" }] }]);
+  });
+
+  it("rewrites a both-scoped tag condition to note scope", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("tag", { source: "both", typeIds: ["nt_1"] })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "tag", source: "note", typeIds: [] }] }]);
   });
 
   it("drops a decoration whose only condition the deletion emptied", async () => {

@@ -5,10 +5,12 @@ import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
-const { name } = defineProps<{ name: string }>();
+import ConditionNoteletScope from "./ConditionNoteletScope.vue";
 
-const { value: op } = useField<"contains" | "starts-with" | "ends-with">(`${name}.condition`);
-const { value: text } = useField<string>(`${name}.value`);
+const props = defineProps<{ name: string; journalName?: string; withNoteletScope?: boolean }>();
+
+const { value: op } = useField<"contains" | "starts-with" | "ends-with">(`${props.name}.condition`);
+const { value: text } = useField<string>(`${props.name}.value`);
 </script>
 
 <template>
@@ -18,4 +20,5 @@ const { value: text } = useField<string>(`${name}.value`);
     <option value="ends-with">{{ m.decoration_string_op_label({ op: "ends-with" }) }}</option>
   </UiDropdown>
   <UiTextInput v-model="text" :aria-label="m.decoration_condition_tag_value_label()" />
+  <ConditionNoteletScope v-if="props.withNoteletScope" :name="props.name" :journal-name="props.journalName" />
 </template>

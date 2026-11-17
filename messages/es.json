@@ -1125,6 +1125,30 @@
   "decoration_condition_property_condition_label": "Condición",
   "decoration_condition_property_describe": "propiedad {name} {op} {value}",
   "decoration_condition_property_value_label": "Valor",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — no en la nota",
+        "quantifier=any,source=notelets,typed=yes": "{base} — cualquier nota breve ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — cualquier nota breve",
+        "quantifier=all,source=notelets,typed=yes": "{base} — todas las notas breves ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — todas las notas breves",
+        "quantifier=none,source=notelets,typed=yes": "{base} — ninguna nota breve ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — ninguna nota breve",
+        "quantifier=any,source=both,typed=yes": "{base} — la nota o cualquier nota breve ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — la nota o cualquier nota breve",
+        "quantifier=all,source=both,typed=yes": "{base} — la nota y todas las notas breves ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — la nota y todas las notas breves",
+        "quantifier=none,source=both,typed=yes": "{base} — ni la nota ni sus notas breves ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ni la nota ni sus notas breves",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Qué notas",
+  "decoration_condition_scope_source_label": "Buscar en",
   "decoration_condition_tag_describe": "etiqueta {op} {value}",
   "decoration_condition_tag_value_label": "Valor de la etiqueta",
   "decoration_condition_tasks_quantifier_label": "Qué tareas",
@@ -2390,6 +2414,16 @@
         "mode=keep": "Las notas breves permanecen en tu bóveda sin cambios.",
         "mode=clear": "Las notas breves permanecen en tu bóveda, pero todas las propiedades del diario y del tipo de nota breve se eliminan de su frontmatter.",
         "mode=delete": "Todas las notas breves de este tipo se eliminan de tu bóveda."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Se quitará 1 decoración:",
+        "count=*": "Se quitarán {count} decoraciones:"
       }
     }
   ],

@@ -1125,6 +1125,30 @@
   "decoration_condition_property_condition_label": "조건",
   "decoration_condition_property_describe": "속성 {name} {op} {value}",
   "decoration_condition_property_value_label": "값",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — 노트에 없음",
+        "quantifier=any,source=notelets,typed=yes": "{base} — 서브노트 중 하나라도 ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — 서브노트 중 하나라도",
+        "quantifier=all,source=notelets,typed=yes": "{base} — 모든 서브노트 ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — 모든 서브노트",
+        "quantifier=none,source=notelets,typed=yes": "{base} — 어느 서브노트에도 없음 ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — 어느 서브노트에도 없음",
+        "quantifier=any,source=both,typed=yes": "{base} — 노트 또는 서브노트 중 하나라도 ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — 노트 또는 서브노트 중 하나라도",
+        "quantifier=all,source=both,typed=yes": "{base} — 노트와 모든 서브노트 ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — 노트와 모든 서브노트",
+        "quantifier=none,source=both,typed=yes": "{base} — 노트와 서브노트 모두 해당 없음 ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — 노트와 서브노트 모두 해당 없음",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "대상 노트",
+  "decoration_condition_scope_source_label": "검색 위치",
   "decoration_condition_tag_describe": "태그 {op} {value}",
   "decoration_condition_tag_value_label": "태그 값",
   "decoration_condition_tasks_quantifier_label": "대상 작업",
@@ -2387,6 +2411,16 @@
         "mode=keep": "서브노트는 보관함에 그대로 남습니다.",
         "mode=clear": "서브노트는 보관함에 남지만, 프런트매터에서 저널과 서브노트 유형 속성이 모두 제거됩니다.",
         "mode=delete": "이 유형에 연결된 모든 서브노트를 보관함에서 삭제합니다."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "장식 1개가 제거됩니다:",
+        "count=*": "장식 {count}개가 제거됩니다:"
       }
     }
   ],

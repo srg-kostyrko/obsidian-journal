@@ -4,8 +4,8 @@ import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date } from "@/calendar/testing";
 import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
-import type { NoteSize, NoteStructure, VaultPath } from "@/infrastructure/host";
-import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
+import type { NoteMetadata, NoteSize, NoteStructure, VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
 import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
@@ -24,6 +24,18 @@ import { decorationsSettingsCoreModule } from "./settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 
 import type { JournalDecoration } from "./config";
+
+const noteMeta = (tags: string[], properties: Record<string, unknown> = {}): NoteMetadata => ({
+  title: "t",
+  tags,
+  properties,
+});
+
+const tagCondition = (extra: Record<string, unknown>) => ({
+  value: "decision",
+  condition: "contains" as const,
+  ...extra,
+});
 
 async function buildHarness(
   journals: Record<string, JournalConfig> = {},
@@ -491,6 +503,154 @@ describe("DecorationEngine", () => {
         const other = await evaluateNotelet(["nt_zzz"], { registerNotelet: "nt_a" });
         expect(matching.size).toBe(1);
         expect(other.size).toBe(0);
+      });
+    });
+
+    describe("notelet scope on tag and property", () => {
+      const NOTE = "journals/2026-05-25.md" as VaultPath;
+      const MEETING = "journals/2026-05-25.meeting.md" as VaultPath;
+      const RETRO = "journals/2026-05-25.retro.md" as VaultPath;
+      const ORPHAN = "journals/2026-05-25.orphan.md" as VaultPath;
+
+      interface Seed {
+        note?: string[] | null;
+        meeting?: string[];
+        retro?: string[];
+        orphan?: string[];
+      }
+
+      async function evaluateScoped(
+        condition: Parameters<typeof buildCondition<"tag">>[1] | Parameters<typeof buildCondition<"property">>[1],
+        kind: "tag" | "property",
+        seed: Seed,
+      ): Promise<Map<string, unknown>> {
+        const metadata = new FakeNoteMetadataService();
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [kind === "tag" ? buildCondition("tag", condition) : buildCondition("property", condition)],
+          styles: [buildStyle("background")],
+        });
+        const harness = await testContainer({
+          modules: [
+            journalsCoreModule,
+            shelvesCoreModule,
+            decorationsModule,
+            decorationsSettingsCoreModule,
+            tasksCoreModule,
+          ],
+          data: {
+            journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) },
+            shelves: {},
+            decorations: { decorations: [] },
+          },
+          overrides: [overrideWith(NoteMetadataService, metadata as unknown as NoteMetadataService)],
+        });
+        const period = DayPeriod.containing(date("2026-05-25"));
+        const anchor = period.anchor.toAnchor();
+        const index = harness.resolve(JournalsIndex);
+        if (seed.note !== undefined) {
+          index.register({ journalName: "daily", anchor, path: NOTE });
+          if (seed.note !== null) metadata.setMetadata(NOTE, noteMeta(seed.note));
+        }
+        const notelets: [VaultPath, string, TypeId | null, string[] | undefined][] = [
+          [MEETING, "Meeting", "nt_a" as TypeId, seed.meeting],
+          [RETRO, "Retro", "nt_b" as TypeId, seed.retro],
+          [ORPHAN, "Gone", null, seed.orphan],
+        ];
+        for (const [path, typeName, typeId, tags] of notelets) {
+          if (tags === undefined) continue;
+          index.register({ kind: "notelet", journalName: "daily", anchor, path, typeName, typeId });
+          metadata.setMetadata(path, noteMeta(tags));
+        }
+        return harness
+          .resolve(DecorationEngine)
+          .evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+      }
+
+      const base: Seed = { note: [], meeting: ["#decision"], retro: [] };
+
+      it("source note ignores notelets", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "note" }), "tag", base);
+        expect(result.size).toBe(0);
+      });
+
+      it("source notelets, any, matches when one notelet is tagged", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "notelets" }), "tag", base);
+        expect(result.size).toBe(1);
+      });
+
+      it("source notelets, all, fails when another type's notelet is not", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "notelets", quantifier: "all" }), "tag", base);
+        expect(result.size).toBe(0);
+      });
+
+      it("source notelets, all, typeIds [nt_a] matches the Meeting alone", async () => {
+        const result = await evaluateScoped(
+          tagCondition({ source: "notelets", quantifier: "all", typeIds: ["nt_a"] }),
+          "tag",
+          base,
+        );
+        expect(result.size).toBe(1);
+      });
+
+      it("source notelets, none, typeIds [nt_b] matches", async () => {
+        const result = await evaluateScoped(
+          tagCondition({ source: "notelets", quantifier: "none", typeIds: ["nt_b"] }),
+          "tag",
+          base,
+        );
+        expect(result.size).toBe(1);
+      });
+
+      it("source both, any, matches on the period note alone", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "both" }), "tag", {
+          note: ["#decision"],
+          meeting: [],
+          retro: [],
+        });
+        expect(result.size).toBe(1);
+      });
+
+      it("source both, any, matches when only a notelet carries the tag", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "both" }), "tag", {
+          note: [],
+          meeting: ["#decision"],
+          retro: [],
+        });
+        expect(result.size).toBe(1);
+      });
+
+      it("source both, all, fails when the period note matches but a notelet does not", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "both", quantifier: "all" }), "tag", {
+          note: ["#decision"],
+          meeting: ["#decision"],
+          retro: [],
+        });
+        expect(result.size).toBe(0);
+      });
+
+      it("an orphaned notelet is excluded by a typed scope and included by any type", async () => {
+        const seed: Seed = { note: [], retro: [], orphan: ["#decision"] };
+        const typed = await evaluateScoped(tagCondition({ source: "notelets", typeIds: ["nt_a"] }), "tag", seed);
+        const any = await evaluateScoped(tagCondition({ source: "notelets" }), "tag", seed);
+        expect(typed.size).toBe(0);
+        expect(any.size).toBe(1);
+      });
+
+      it("a period note without cached metadata is not in scope for none", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "note", quantifier: "none" }), "tag", {
+          note: null,
+        });
+        expect(result.size).toBe(0);
+      });
+
+      it("existing note-only property neq still matches a note lacking the property", async () => {
+        const result = await evaluateScoped(
+          { name: "mood", valueType: "text", condition: "neq", value: "x" },
+          "property",
+          { note: [] },
+        );
+        expect(result.size).toBe(1);
       });
     });
 

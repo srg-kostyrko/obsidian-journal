@@ -27,17 +27,12 @@ export function fixedWindow(kind: PeriodKind, reference: CalendarDate, direction
   return direction === "past" ? window(anchorPeriod, horizon - 1, 0) : window(anchorPeriod, 0, horizon - 1);
 }
 
-const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set([
-  "title",
-  "tag",
-  "property",
-  "has-note",
-  "note-size",
-]);
+const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set(["title", "has-note", "note-size"]);
 
 function isNoteBased(c: JournalDecorationCondition): boolean {
   // Notelets carry their own items, so only a question confined to the period note needs one.
-  return c.type === "tasks" ? c.source === "note" : NOTE_BASED.has(c.type);
+  if (c.type === "tasks" || c.type === "tag" || c.type === "property") return c.source === "note";
+  return NOTE_BASED.has(c.type);
 }
 
 // Under "and" every condition must hold, so one note-based condition makes the whole rule

@@ -37,29 +37,74 @@ async function mount(initial: Property, seed: (host: FakeHost) => void = () => u
 
 describe("ConditionProperty", () => {
   it("names its property-name field for assistive tech", async () => {
-    await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    await mount({
+      type: "property",
+      name: "",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getByRole("textbox", { name: m.common_label_property_name() })).toBeTruthy();
   });
 
   it("names its condition dropdown for assistive tech", async () => {
-    await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    await mount({
+      type: "property",
+      name: "",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getByRole("combobox", { name: m.decoration_condition_property_condition_label() })).toBeTruthy();
   });
 
   it("names its value field for assistive tech", async () => {
-    await mount({ type: "property", name: "mood", valueType: "text", condition: "contains", value: "" });
+    await mount({
+      type: "property",
+      name: "mood",
+      valueType: "text",
+      condition: "contains",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getByRole("textbox", { name: m.decoration_condition_property_value_label() })).toBeTruthy();
   });
 
   it("updates the property name as the user types", async () => {
-    const { exposed } = await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    const { exposed } = await mount({
+      type: "property",
+      name: "",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     await userEvent.type(screen.getAllByRole("textbox")[0], "mood");
     expect(exposed.values.c.name).toBe("mood");
   });
 
   it("fills the property name from a picked suggestion", async () => {
     const { exposed, inputSuggest } = await mount(
-      { type: "property", name: "", valueType: "text", condition: "exists", value: "" },
+      {
+        type: "property",
+        name: "",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
       (host) => host.setPropertyType("mood", "text"),
     );
     const handle = inputSuggest.handleFor<VaultProperty>(screen.getAllByRole("textbox")[0] as HTMLInputElement);
@@ -70,7 +115,16 @@ describe("ConditionProperty", () => {
 
   it("derives the number value type from the vault property", async () => {
     const { exposed } = await mount(
-      { type: "property", name: "", valueType: "text", condition: "exists", value: "" },
+      {
+        type: "property",
+        name: "",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
       (host) => host.setPropertyType("rating", "number"),
     );
     await userEvent.type(screen.getAllByRole("textbox")[0], "rating");
@@ -80,12 +134,24 @@ describe("ConditionProperty", () => {
       valueType: "number",
       condition: "exists",
       value: 0,
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
     });
   });
 
   it("derives the date value type from the vault property", async () => {
     const { exposed, container } = await mount(
-      { type: "property", name: "", valueType: "text", condition: "exists", value: "" },
+      {
+        type: "property",
+        name: "",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
       (host) => host.setPropertyType("due", "date"),
     );
     await userEvent.type(screen.getAllByRole("textbox")[0], "due");
@@ -96,29 +162,73 @@ describe("ConditionProperty", () => {
   });
 
   it("falls back to the text value type for an unknown property", async () => {
-    const { exposed } = await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    const { exposed } = await mount({
+      type: "property",
+      name: "",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     await userEvent.type(screen.getAllByRole("textbox")[0], "whatever");
     expect(exposed.values.c.valueType).toBe("text");
   });
 
   it("renders a number input when the value type is number", async () => {
-    await mount({ type: "property", name: "x", valueType: "number", condition: "eq", value: 0 });
+    await mount({
+      type: "property",
+      name: "x",
+      valueType: "number",
+      condition: "eq",
+      value: 0,
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getByRole("spinbutton")).toBeTruthy();
   });
 
   it("renders only the name input and operator for checkbox type", async () => {
-    await mount({ type: "property", name: "x", valueType: "checkbox", condition: "is-true" });
+    await mount({
+      type: "property",
+      name: "x",
+      valueType: "checkbox",
+      condition: "is-true",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
     expect(screen.queryByRole("spinbutton")).toBeNull();
   });
 
   it("hides the text value input for the exists operator", async () => {
-    await mount({ type: "property", name: "x", valueType: "text", condition: "exists", value: "" });
+    await mount({
+      type: "property",
+      name: "x",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
   });
 
   it("hides the number value input for the does-not-exist operator", async () => {
-    await mount({ type: "property", name: "x", valueType: "number", condition: "does-not-exist", value: 0 });
+    await mount({
+      type: "property",
+      name: "x",
+      valueType: "number",
+      condition: "does-not-exist",
+      value: 0,
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.queryByRole("spinbutton")).toBeNull();
   });
 });

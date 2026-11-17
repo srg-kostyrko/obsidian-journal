@@ -980,6 +980,30 @@
   "decoration_condition_property_condition_label": "条件",
   "decoration_condition_property_describe": "プロパティ {name} {value} {op}",
   "decoration_condition_property_value_label": "値",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — ノートにない",
+        "quantifier=any,source=notelets,typed=yes": "{base} — いずれかのサブノート ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — いずれかのサブノート",
+        "quantifier=all,source=notelets,typed=yes": "{base} — すべてのサブノート ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — すべてのサブノート",
+        "quantifier=none,source=notelets,typed=yes": "{base} — どのサブノートにもない ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — どのサブノートにもない",
+        "quantifier=any,source=both,typed=yes": "{base} — ノートまたはいずれかのサブノート ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — ノートまたはいずれかのサブノート",
+        "quantifier=all,source=both,typed=yes": "{base} — ノートとすべてのサブノート ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — ノートとすべてのサブノート",
+        "quantifier=none,source=both,typed=yes": "{base} — ノートにもサブノートにもない ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ノートにもサブノートにもない",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "対象のノート",
+  "decoration_condition_scope_source_label": "対象の場所",
   "decoration_condition_tag_describe": "タグ {value} {op}",
   "decoration_condition_tag_value_label": "タグの値",
   "decoration_condition_tasks_quantifier_label": "対象のタスク",
@@ -2245,6 +2269,16 @@
         "mode=keep": "サブノートは保管庫にそのまま残ります。",
         "mode=clear": "サブノートは保管庫に残りますが、フロントマターからジャーナルとサブノートの種類のプロパティがすべて削除されます。",
         "mode=delete": "このサブノートの種類に接続されたすべてのサブノートが保管庫から削除されます。"
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1件の装飾が削除されます:",
+        "count=*": "{count}件の装飾が削除されます:"
       }
     }
   ],

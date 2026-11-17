@@ -95,7 +95,12 @@ const onSubmit = handleSubmit((decoration) => {
                 <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
               </div>
             </template>
-            <ConditionItem :name="`conditions.${i}`" :condition="condition" :journal-name="journalName" />
+            <ConditionItem
+              :name="`conditions.${i}`"
+              :condition="condition"
+              :journal-name="journalName"
+              with-notelet-scope
+            />
           </UiSettingRow>
         </div>
       </div>

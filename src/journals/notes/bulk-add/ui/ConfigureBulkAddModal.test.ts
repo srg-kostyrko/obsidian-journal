@@ -199,4 +199,15 @@ describe("ConfigureBulkAddModal", () => {
       ),
     ).toBeTruthy();
   });
+
+  it("renders no notelet scope controls on a tag or property filter", async () => {
+    harness.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_filter_combinator_label() }), "and");
+    await userEvent.click(screen.getByText(m.bulk_add_add_filter_tag()));
+    await userEvent.click(screen.getByText(m.bulk_add_add_filter_property()));
+    expect(screen.getByRole("textbox", { name: m.decoration_condition_tag_value_label() })).toBeTruthy();
+
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeNull();
+  });
 });

@@ -706,18 +706,21 @@ on it.
 
 ### Notelets
 
-- A `has-notelet` condition with an **empty `typeIds` list means "any type"**
-  (`decorations/config.ts`), so any cascade that drops ids from one must not empty a
-  list that started non-empty — that silently widens "has a Meeting" into "has any
-  notelet", which is worse than the dangling id it was cleaning up.
-  `CloneJournalFlow#remapNoteletTypeIds` guards this with `typeIds.length > 0` only
-  because a clone with no types has no notelets either, so "any" still matches nothing
-  there; the same trick is **not** available to a journal that keeps its other types.
-  `DeleteNoteletTypeFlow#withoutNoteletTypeId` is the shape that is safe everywhere:
-  strip the id, drop the whole **condition** when that would empty a list that started
-  non-empty, and drop the **decoration** when that leaves it with no conditions — while
-  leaving alone both an authored "any type" condition (`typeIds: []`, which never
-  contains the id) and a decoration that already had no conditions of its own.
+- A `has-notelet` condition, or a `tag`/`property` condition with `source` other than
+  `note`, with an **empty `typeIds` list means "any type"** (`decorations/config.ts`),
+  while a _dangling_ id selects no notelet at all. So a cascade that drops ids must not
+  empty a list that started non-empty — that silently widens "has a Meeting" into "has
+  any notelet" — and it must not drop an emptied condition from an `and` decoration
+  either, which widens that rule to every cell its siblings match. The one cascade is
+  `remapNoteletTypeIds` in `src/decorations/notelet-type-cascade.ts`, used by both
+  `DeleteNoteletTypeFlow` and `CloneJournalFlow`; its invariant is that the rewrite
+  matches exactly what the rule with the dangling id left in place would. Emptied from
+  non-empty: a `both` source falls back to `note`; anything else is dead — an `and`
+  decoration is removed whole, an `or` decoration loses the condition and is removed if
+  none remain. An authored `typeIds: []` and a decoration with no conditions are left
+  alone. A `tag`/`property` condition with `source: "note"` ignores its `typeIds`, but the
+  editor keeps them for a switch back to Notelets, so the cascade maps them and drops dead
+  ones while always keeping the condition. Don't hand-roll a second cascade.
 - **Every surface that filters notelets by type matches the stored type _name_, not a
   resolved `typeId`** — `noteletsFor` in the API, `buildNoteletListing`'s callers, the
   `journal-notelets` fence. That is what keeps an **orphaned notelet** (its type deleted

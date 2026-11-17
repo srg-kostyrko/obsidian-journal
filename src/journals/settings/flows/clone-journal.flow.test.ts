@@ -289,7 +289,7 @@ describe("CloneJournalFlow has-notelet decorations", () => {
     expect(conditionsOf(harness, "daily").at(0)).toEqual([{ type: "has-notelet", typeIds: [RETRO_KEY] }]);
   });
 
-  it("drops a type id the copy has no counterpart for", async () => {
+  it("removes an and-decoration whose only type the copy has no counterpart for", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: { journals: { daily: withTwoTypesAndDecorations() } },
@@ -300,6 +300,9 @@ describe("CloneJournalFlow has-notelet decorations", () => {
       .submit({ newName: "copy", cloneNoteletTypes: false });
     await promise;
 
-    expect(conditionsOf(harness, "copy").at(0)).toEqual([{ type: "has-notelet", typeIds: [] }]);
+    expect(conditionsOf(harness, "copy")).toEqual([
+      [{ type: "has-notelet", typeIds: [] }],
+      conditionsOf(harness, "daily").at(2),
+    ]);
   });
 });

@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 
 import type { Calendar } from "@/calendar";
 import type { JournalDecorationCondition } from "@/decorations";
+import type { NoteletScope } from "@/decorations/config";
 import { formatConjunction, formatDisjunction, getLocale, m } from "@/i18n";
 import { blockedByUnreadable } from "@/tasks/conditions";
 import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
@@ -27,20 +28,28 @@ export function describeCondition(
       }),
     )
     .with({ type: "tag" }, (c) =>
-      m.decoration_condition_tag_describe({
-        op: m.decoration_string_op_label({ op: c.condition }),
-        value: c.value,
-      }),
+      withScope(
+        m.decoration_condition_tag_describe({
+          op: m.decoration_string_op_label({ op: c.condition }),
+          value: c.value,
+        }),
+        c,
+        typeName,
+      ),
     )
     .with({ type: "property" }, (c) =>
-      m.decoration_condition_property_describe({
-        name: c.name,
-        op:
-          c.valueType === "date"
-            ? m.decoration_date_op_label({ op: c.condition })
-            : m.decoration_string_op_label({ op: c.condition }),
-        value: "value" in c ? String(c.value) : "",
-      }),
+      withScope(
+        m.decoration_condition_property_describe({
+          name: c.name,
+          op:
+            c.valueType === "date"
+              ? m.decoration_date_op_label({ op: c.condition })
+              : m.decoration_string_op_label({ op: c.condition }),
+          value: "value" in c ? String(c.value) : "",
+        }),
+        c,
+        typeName,
+      ),
     )
     .with({ type: "date" }, (c) =>
       m.decoration_condition_date_describe({
@@ -93,9 +102,24 @@ export function describeCondition(
     .with({ type: "has-notelet" }, (c) => {
       if (c.typeIds.length === 0) return m.decoration_condition_has_notelet_describe_any();
       const names = c.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());
-      return m.decoration_condition_has_notelet_describe_types({ types: names.join(", ") });
+      return m.decoration_condition_has_notelet_describe_types({ types: formatDisjunction(names) });
     })
     .exhaustive();
+}
+
+function withScope(base: string, scope: NoteletScope, typeName?: (id: string) => string | undefined): string {
+  if (scope.source === "note" && scope.quantifier !== "none") return base;
+  const names =
+    scope.source === "note"
+      ? []
+      : scope.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());
+  return m.decoration_condition_scope_describe({
+    base,
+    quantifier: scope.quantifier,
+    source: scope.source,
+    types: formatDisjunction(names),
+    typed: names.length > 0 ? "yes" : "no",
+  });
 }
 
 function describeDay(day: DateConditionDay, calendar: Calendar): string {

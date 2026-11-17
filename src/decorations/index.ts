@@ -33,6 +33,9 @@ export {
   type JournalDecorationTasksCondition,
   type JournalDecorationTitleCondition,
   type JournalDecorationWeekdayCondition,
+  type NotePropertyCondition,
+  type NoteTagCondition,
+  type NoteletScope,
 } from "./config";
 export { DecorationsStore } from "./decorations-store";
 export { defaultCondition, defaultDecoration, defaultStyle } from "./defaults";

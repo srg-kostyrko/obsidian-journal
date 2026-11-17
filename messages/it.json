@@ -1131,6 +1131,30 @@
   "decoration_condition_property_condition_label": "Condizione",
   "decoration_condition_property_describe": "proprietà {name} {op} {value}",
   "decoration_condition_property_value_label": "Valore",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — non nella nota",
+        "quantifier=any,source=notelets,typed=yes": "{base} — qualsiasi nota breve ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — qualsiasi nota breve",
+        "quantifier=all,source=notelets,typed=yes": "{base} — tutte le note brevi ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — tutte le note brevi",
+        "quantifier=none,source=notelets,typed=yes": "{base} — nessuna nota breve ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — nessuna nota breve",
+        "quantifier=any,source=both,typed=yes": "{base} — la nota o qualsiasi nota breve ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — la nota o qualsiasi nota breve",
+        "quantifier=all,source=both,typed=yes": "{base} — la nota e tutte le note brevi ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — la nota e tutte le note brevi",
+        "quantifier=none,source=both,typed=yes": "{base} — né la nota né le sue note brevi ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — né la nota né le sue note brevi",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Quali note",
+  "decoration_condition_scope_source_label": "Cerca in",
   "decoration_condition_tag_describe": "tag {op} {value}",
   "decoration_condition_tag_value_label": "Valore del tag",
   "decoration_condition_tasks_quantifier_label": "Quali attività",
@@ -2407,6 +2431,16 @@
         "mode=keep": "Le note brevi restano invariate nel tuo vault.",
         "mode=clear": "Le note brevi restano nel tuo vault, ma tutte le proprietà del diario e del tipo di nota breve vengono rimosse dal loro frontmatter.",
         "mode=delete": "Tutte le note brevi di questo tipo vengono eliminate dal tuo vault."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Verrà rimossa 1 decorazione:",
+        "count=*": "Verranno rimosse {count} decorazioni:"
       }
     }
   ],

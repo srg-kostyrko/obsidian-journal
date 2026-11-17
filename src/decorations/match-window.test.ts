@@ -93,6 +93,22 @@ describe("needsNotes", () => {
     expect(needsNotes({ mode: "and", conditions: [{ type: "has-notelet", typeIds: [] }], styles: [] })).toBe(false);
   });
 
+  it("does not require period notes for a notelet-scoped tag condition", () => {
+    const decoration = buildDecoration({
+      mode: "and",
+      conditions: [buildCondition("tag", { source: "notelets" })],
+    });
+    expect(needsNotes(decoration)).toBe(false);
+  });
+
+  it("requires period notes for a note-scoped property condition", () => {
+    const decoration = buildDecoration({
+      mode: "and",
+      conditions: [buildCondition("property", { source: "note" })],
+    });
+    expect(needsNotes(decoration)).toBe(true);
+  });
+
   it("does not require period notes when has-notelet is or-ed with a note-based condition", () => {
     expect(
       needsNotes({

@@ -1155,6 +1155,30 @@
   "decoration_condition_property_condition_label": "Условие",
   "decoration_condition_property_describe": "свойство {name} {op} {value}",
   "decoration_condition_property_value_label": "Значение",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — нет в заметке",
+        "quantifier=any,source=notelets,typed=yes": "{base} — любая подзаметка ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — любая подзаметка",
+        "quantifier=all,source=notelets,typed=yes": "{base} — все подзаметки ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — все подзаметки",
+        "quantifier=none,source=notelets,typed=yes": "{base} — ни одной подзаметки ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — ни одной подзаметки",
+        "quantifier=any,source=both,typed=yes": "{base} — заметка или любая подзаметка ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — заметка или любая подзаметка",
+        "quantifier=all,source=both,typed=yes": "{base} — заметка и все подзаметки ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — заметка и все подзаметки",
+        "quantifier=none,source=both,typed=yes": "{base} — ни заметка, ни её подзаметки ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ни заметка, ни её подзаметки",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Какие заметки",
+  "decoration_condition_scope_source_label": "Где искать",
   "decoration_condition_tag_describe": "тег {op} {value}",
   "decoration_condition_tag_value_label": "Значение тега",
   "decoration_condition_tasks_quantifier_label": "Какие задачи",
@@ -2475,6 +2499,18 @@
         "mode=keep": "Подзаметки остаются в вашем хранилище без изменений.",
         "mode=clear": "Подзаметки остаются в вашем хранилище, но свойства журнала и типа подзаметки удаляются из их frontmatter.",
         "mode=delete": "Все подзаметки этого типа удаляются из вашего хранилища."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "Будет удалено {count} оформление:",
+        "count=*,countPlural=few": "Будет удалено {count} оформления:",
+        "count=*,countPlural=many": "Будет удалено {count} оформлений:",
+        "count=*,countPlural=*": "Будет удалено {count} оформления:"
       }
     }
   ],

@@ -2,7 +2,7 @@
 import { match } from "ts-pattern";
 import { computed, type Component } from "vue";
 
-import type { JournalDecorationCondition } from "@/decorations";
+import type { FilterCondition, JournalDecorationCondition } from "@/decorations";
 
 import ConditionDate from "./ConditionDate.vue";
 import ConditionHasNotelet from "./ConditionHasNotelet.vue";
@@ -15,7 +15,12 @@ import ConditionTitle from "./ConditionTitle.vue";
 import ConditionTypeOnly from "./ConditionTypeOnly.vue";
 import ConditionWeekday from "./ConditionWeekday.vue";
 
-const props = defineProps<{ name: string; condition: JournalDecorationCondition; journalName?: string }>();
+const props = defineProps<{
+  name: string;
+  condition: JournalDecorationCondition | FilterCondition;
+  journalName?: string;
+  withNoteletScope?: boolean;
+}>();
 
 const leaf = computed<Component>(() =>
   match(props.condition.type)
@@ -35,6 +40,8 @@ const leaf = computed<Component>(() =>
 const leafProps = computed<Record<string, unknown>>(() => {
   if (props.condition.type === "has-note") return { type: props.condition.type };
   if (props.condition.type === "has-notelet") return { name: props.name, journalName: props.journalName };
+  if (props.condition.type === "tag" || props.condition.type === "property")
+    return { name: props.name, journalName: props.journalName, withNoteletScope: props.withNoteletScope };
   return { name: props.name };
 });
 </script>
