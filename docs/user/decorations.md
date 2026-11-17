@@ -65,6 +65,27 @@ counted task has the chosen status.
 Match by **contains**, **starts with** or **ends with**, ignoring case. For tags, the `#` is optional on
 both sides: `work` matches `#work` and `#workout` with **starts with**.
 
+#### Looking in notelets {#looking-in-notelets}
+
+A **Tag** or **Frontmatter property** condition can look at a period's [notelets](/notelets) instead of, or as
+well as, its own note. Three settings sit beside the condition:
+
+- **Which notes** is **Any**, **All** or **None**. **Any** matches when at least one note looked in matches,
+  **All** when there is at least one and every one matches, and **None** when there is at least one and none
+  matches.
+- **Look in** is **Note only**, **Notelets only** or **Note and notelets**. **Note only**, the default, is how
+  these conditions always worked.
+- With notelets included, **Notelet types** limits the search to the types you pick; pick none to look at
+  notelets of any type.
+
+When there is nothing to look in, the condition never matches, whichever of the three you chose: a day with no
+note does not match **None**, and a day with no Meeting notelet does not match **All** · **Notelets only** ·
+Meeting. Conditions made before this setting existed stay on **Any** · **Note only**.
+
+For example, a **Tag** condition for `decision`, set to **All** · **Notelets only** with **Notelet types**
+Meeting, marks a day only when it has at least one Meeting and every Meeting carries the tag. Set to **Any**, it
+marks a day when one Meeting does, and set to **None**, a day with Meetings where none does.
+
 ### Frontmatter property
 
 Name the property, and the condition offers the comparisons that fit its type. The type comes from
@@ -90,6 +111,9 @@ the property at all is **does not exist**. A property added to a note but never 
 yet, so it matches **exists** but neither **is true** nor **is false**.
 
 Example: [A workout checkbox](#a-workout-checkbox).
+
+A property condition can look in notelets too, with the same settings as a tag condition: see
+[Looking in notelets](#looking-in-notelets).
 
 ### Note size
 
@@ -184,6 +208,12 @@ otherwise touched, but several things change on days you already decorate:
 
 Matches a period with at least one [notelet](/notelets). Pick **Notelet types** to count only those;
 pick none to count a notelet of any type.
+
+Deleting a notelet type changes the decorations that name it. A condition whose only listed types are
+deleted can no longer match. In a decoration set to **Decorate when all conditions are fulfilled** the whole decoration is removed,
+and in one set to **Decorate when any condition is fulfilled** just that condition; a Tag or Frontmatter property condition set to **Note and notelets** falls back
+to **Note only**. The delete dialog lists the decorations it will remove before you confirm, and cloning a
+journal applies the same rule to the copy.
 
 ### Date and weekday
 
