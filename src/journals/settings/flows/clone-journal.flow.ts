@@ -1,12 +1,12 @@
 import { cloneFnJSON } from "@vueuse/core";
 import { nanoid } from "nanoid";
 
+import { remapNoteletTypeIds } from "@/decorations/notelet-type-cascade";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
-import type { JournalConfig } from "@/journals/config";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import { freeName } from "@/journals/free-name";
 import type { TypeId } from "@/journals/notelets/config";
@@ -29,23 +29,6 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
       (index) => m.journal_clone_copy_name_indexed({ name: sourceName, index }),
       (candidate) => this.#repository.exists(candidate),
     );
-  }
-
-  // The cloned decorations arrive from clone() still naming the source's notelet types, which the
-  // copy no longer has. An id with no counterpart is dropped rather than carried: a dangling id
-  // matches nothing and reads as an unknown type, where a shorter list is at least editable.
-  #remapNoteletTypeIds(
-    decorations: JournalConfig["decorations"],
-    remapped: ReadonlyMap<string, TypeId>,
-  ): JournalConfig["decorations"] {
-    return cloneFnJSON(decorations).map((decoration) => ({
-      ...decoration,
-      conditions: decoration.conditions.map((condition) =>
-        condition.type === "has-notelet" && condition.typeIds.length > 0
-          ? { ...condition, typeIds: condition.typeIds.flatMap((id) => remapped.get(id) ?? []) }
-          : condition,
-      ),
-    }));
   }
 
   execute(parameters: { journalName: string }): AsyncResult<{ name: string }, FlowError> {
@@ -78,7 +61,7 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
       }
       if (source !== undefined) {
         this.#repository.update(submitted.newName, {
-          decorations: this.#remapNoteletTypeIds(source.decorations, remapped),
+          decorations: remapNoteletTypeIds(cloneFnJSON(source.decorations), (id) => remapped.get(id)).decorations,
         });
       }
 

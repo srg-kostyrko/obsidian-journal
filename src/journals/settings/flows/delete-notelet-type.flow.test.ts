@@ -304,9 +304,29 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "has-notelet", typeIds: ["nt_2"] }] }]);
   });
 
-  it("drops a has-notelet condition the deleted id was the only member of, keeping its siblings", async () => {
+  it("removes an and-decoration whose has-notelet condition the deleted id was the only member of", async () => {
     decorate([
       buildDecoration({
+        mode: "and",
+        conditions: [
+          buildCondition("has-notelet", { typeIds: ["nt_1"] }),
+          buildCondition("title", { condition: "contains", value: "keep me" }),
+        ],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toEqual([]);
+  });
+
+  it("drops only the emptied has-notelet condition from an or-decoration", async () => {
+    decorate([
+      buildDecoration({
+        mode: "or",
         conditions: [
           buildCondition("has-notelet", { typeIds: ["nt_1"] }),
           buildCondition("title", { condition: "contains", value: "keep me" }),
@@ -320,6 +340,21 @@ describe("DeleteNoteletTypeFlow", () => {
     await promise;
 
     expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "title", value: "keep me" }] }]);
+  });
+
+  it("rewrites a both-scoped tag condition to note scope", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("tag", { source: "both", typeIds: ["nt_1"] })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "tag", source: "note", typeIds: [] }] }]);
   });
 
   it("drops a decoration whose only condition the deletion emptied", async () => {

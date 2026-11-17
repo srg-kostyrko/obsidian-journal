@@ -1,0 +1,59 @@
+import type { JournalDecoration, JournalDecorationCondition } from "./config";
+
+export interface CascadeResult {
+  decorations: JournalDecoration[];
+  /** Whole decorations dropped, in original order. */
+  removed: JournalDecoration[];
+  changed: boolean;
+}
+
+type Outcome = { kind: "keep"; condition: JournalDecorationCondition } | { kind: "dead" };
+
+function carriesTypeIds(condition: JournalDecorationCondition): boolean {
+  if (condition.type === "has-notelet") return true;
+  return (condition.type === "tag" || condition.type === "property") && condition.source !== "note";
+}
+
+function remapCondition(condition: JournalDecorationCondition, map: (id: string) => string | undefined): Outcome {
+  if (!carriesTypeIds(condition) || !("typeIds" in condition) || condition.typeIds.length === 0) {
+    return { kind: "keep", condition };
+  }
+  const typeIds = condition.typeIds.flatMap((id) => map(id) ?? []);
+  if (typeIds.length > 0) {
+    const unchanged =
+      typeIds.length === condition.typeIds.length && typeIds.every((id, i) => id === condition.typeIds[i]);
+    return { kind: "keep", condition: unchanged ? condition : { ...condition, typeIds } };
+  }
+  // A dangling id selects no notelet, so the rewrite must match exactly what the left-in-place id
+  // would: an emptied list would instead read as "any type".
+  if ((condition.type === "tag" || condition.type === "property") && condition.source === "both") {
+    return { kind: "keep", condition: { ...condition, source: "note", typeIds: [] } };
+  }
+  return { kind: "dead" };
+}
+
+/** Rewrites notelet type ids across decorations without ever widening what a rule matches. */
+export function remapNoteletTypeIds(
+  decorations: readonly JournalDecoration[],
+  map: (id: string) => string | undefined,
+): CascadeResult {
+  const kept: JournalDecoration[] = [];
+  const removed: JournalDecoration[] = [];
+  let changed = false;
+  for (const decoration of decorations) {
+    const outcomes = decoration.conditions.map((condition) => remapCondition(condition, map));
+    const dead = outcomes.some((outcome) => outcome.kind === "dead");
+    const conditions = outcomes.flatMap((outcome) => (outcome.kind === "keep" ? [outcome.condition] : []));
+    const touched = dead || conditions.some((condition, i) => condition !== decoration.conditions[i]);
+    if (!touched) {
+      kept.push(decoration);
+    } else if (dead && (decoration.mode === "and" || conditions.length === 0)) {
+      removed.push(decoration);
+      changed = true;
+    } else {
+      kept.push({ ...decoration, conditions });
+      changed = true;
+    }
+  }
+  return { decorations: changed ? kept : (decorations as JournalDecoration[]), removed, changed };
+}
