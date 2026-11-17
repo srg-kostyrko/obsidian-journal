@@ -1,3 +1,4 @@
+import { cloneFnJSON } from "@vueuse/core";
 import { describe, expect, it } from "vitest";
 
 import { remapNoteletTypeIds } from "./notelet-type-cascade";
@@ -145,5 +146,21 @@ describe("remapNoteletTypeIds", () => {
 
     expect(result.removed).toEqual([first, last]);
     expect(result.decorations).toEqual([kept]);
+  });
+
+  it("does not mutate its input on a changed run", () => {
+    const input = [
+      buildDecoration({ mode: "and", conditions: [buildCondition("has-notelet", { typeIds: ["nt_1"] })], styles }),
+      buildDecoration({
+        conditions: [buildCondition("tag", { source: "both", typeIds: ["nt_1"], quantifier: "none" })],
+        styles,
+      }),
+    ];
+    const snapshot = cloneFnJSON(input);
+
+    const result = remapNoteletTypeIds(input, drop("nt_1"));
+
+    expect(result.changed).toBe(true);
+    expect(input).toEqual(snapshot);
   });
 });

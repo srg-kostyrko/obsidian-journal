@@ -9,13 +9,15 @@ export interface CascadeResult {
 
 type Outcome = { kind: "keep"; condition: JournalDecorationCondition } | { kind: "dead" };
 
-function carriesTypeIds(condition: JournalDecorationCondition): boolean {
+type TypeIdCondition = Extract<JournalDecorationCondition, { typeIds: string[] }>;
+
+function carriesTypeIds(condition: JournalDecorationCondition): condition is TypeIdCondition {
   if (condition.type === "has-notelet") return true;
   return (condition.type === "tag" || condition.type === "property") && condition.source !== "note";
 }
 
 function remapCondition(condition: JournalDecorationCondition, map: (id: string) => string | undefined): Outcome {
-  if (!carriesTypeIds(condition) || !("typeIds" in condition) || condition.typeIds.length === 0) {
+  if (!carriesTypeIds(condition) || condition.typeIds.length === 0) {
     return { kind: "keep", condition };
   }
   const typeIds = condition.typeIds.flatMap((id) => map(id) ?? []);
