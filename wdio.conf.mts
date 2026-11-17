@@ -1,6 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { env, platform } from "node:process";
+import { cwd, env, platform } from "node:process";
 
 import { browser } from "@wdio/globals";
 import { parseObsidianVersions } from "wdio-obsidian-service";
@@ -150,7 +150,73 @@ async function within<T>(pending: Promise<T>): Promise<T> {
   }
 }
 
+// Every WebDriver command the current hook or test sent, kept in the worker rather than the page.
+// A hook that hangs past mocha's timeout loses the race with teardown: wdio rejects it 3 ms before
+// mocha's own timer, the runner then deletes the session and the worker exits while the capture
+// below is still waiting on a renderer that will not answer — so it prints nothing. This trail
+// needs no browser, prints before the first await, and the command still pending names the step
+// that hung.
+interface CommandRecord {
+  name: string;
+  args: string;
+  startedAt: number;
+  endedAt?: number;
+  failed?: boolean;
+}
+
+const TRAIL_LIMIT = 40;
+const ARGS_LIMIT = 160;
+let commandTrail: CommandRecord[] = [];
+
+// A function argument is the script `execute` runs, and its source is the only thing that tells
+// one pending `execute` from another.
+function describeArgs(args: unknown[]): string {
+  let text: string;
+  try {
+    text =
+      JSON.stringify(args, (_key, value: unknown) =>
+        typeof value === "function" ? (value as () => unknown).toString() : value,
+      ) ?? "";
+  } catch {
+    text = "<unserializable>";
+  }
+  text = text.replaceAll(/(?:\\n|\s)+/g, " ");
+  return text.length > ARGS_LIMIT ? `${text.slice(0, ARGS_LIMIT)}…` : text;
+}
+
+// `execute` reaches the wire as an `executeScript` carrying the same function behind a polyfill;
+// the child repeats its parent and buries it.
+const WIRE_ECHOES: Record<string, string> = { executeScript: "execute", executeAsyncScript: "executeAsync" };
+
+function commandStarted(name: string, args: unknown[]): void {
+  const parent = commandTrail.at(-1);
+  const echoOf = WIRE_ECHOES[name];
+  if (echoOf !== undefined && parent?.name === echoOf && parent.endedAt === undefined) return;
+  commandTrail.push({ name, args: describeArgs(args), startedAt: Date.now() });
+  if (commandTrail.length > TRAIL_LIMIT) commandTrail = commandTrail.slice(-TRAIL_LIMIT);
+}
+
+function commandEnded(name: string, error: unknown): void {
+  const record = commandTrail.findLast((entry) => entry.name === name && entry.endedAt === undefined);
+  if (record === undefined) return;
+  record.endedAt = Date.now();
+  record.failed = error !== undefined && error !== null;
+}
+
+function printCommandTrail(title: string): void {
+  const now = Date.now();
+  const lines = commandTrail.map((entry) => {
+    const outcome =
+      entry.endedAt === undefined
+        ? `PENDING for ${now - entry.startedAt} ms`
+        : `${entry.failed === true ? "failed" : "ok"} in ${entry.endedAt - entry.startedAt} ms`;
+    return `${at(entry.startedAt)} ${entry.name} ${entry.args} — ${outcome}`;
+  });
+  console.log([`--- commands: ${title} ---`, ...(lines.length === 0 ? ["(none)"] : lines)].join("\n"));
+}
+
 async function captureFailure(fullTitle: string, title: string): Promise<void> {
+  printCommandTrail(title);
   // Before the screenshot, which forces the very frame this probe is looking for.
   let frameState: FrameState | null = null;
   try {
@@ -244,6 +310,30 @@ if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
 // worker's cid as the junit report is, because two workers sharing one path overwrote each other.
 // Chromium will not create the directory, hence onPrepare.
 const CHROMIUM_LOG_ARGS = ["--enable-logging=file"];
+
+const junitName = (cid: string): string => `e2e-junit-${cid}.xml`;
+const junitPath = (cid: string): string => path.resolve(REPORTS_DIR, junitName(cid));
+
+function xmlEscape(text: string): string {
+  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+
+function orphanJunit(cid: string, exitCode: number, specs: string[]): string {
+  const spec = specs.map((uri) => path.relative(cwd(), uri.replace(/^file:\/\//, ""))).join(", ");
+  const message = `worker ${cid} exited with code ${exitCode} without writing a report`;
+  const name = xmlEscape(spec === "" ? `worker ${cid}` : spec);
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<testsuites>`,
+    `  <testsuite name="${name}" tests="1" failures="1" errors="0" skipped="0">`,
+    `    <testcase classname="${name}" name="${name}" file="${xmlEscape(spec)}">`,
+    `      <failure message="${xmlEscape(message)}">${xmlEscape(`${message}; read the job log for [${cid}].`)}</failure>`,
+    `    </testcase>`,
+    `  </testsuite>`,
+    `</testsuites>`,
+    ``,
+  ].join("\n");
+}
 const chromiumLogArg = (cid: string): string => `--log-file=${path.resolve(REPORTS_DIR, `chromium-${cid}.log`)}`;
 
 // Installer 1.5.8 (Electron 28, Chrome 120) is Obsidian's own minimum installer, so the floor legs run
@@ -356,6 +446,17 @@ export const config: WebdriverIO.Config = {
     await mkdir(REPORTS_DIR, { recursive: true });
   },
 
+  // A worker whose session teardown fails leaves its junit file empty, and the results check then
+  // counts every test it did see as passed: a hook timeout read "672 passed, 0 failed" beside a red
+  // job. Write the failure the reporter could not, so the check names the spec.
+  onWorkerEnd: async function (cid: string, exitCode: number, specs: string[]) {
+    if (exitCode === 0) return;
+    const file = junitPath(cid);
+    const existing = await stat(file).catch(() => null);
+    if (existing !== null && existing.size > 0) return;
+    await writeFile(file, orphanJunit(cid, exitCode, specs));
+  },
+
   // The service's reloadObsidian relaunches from the session's requested capabilities, so the
   // argument set here reaches every boot of the spec file.
   beforeSession: function (_config, capabilities, _specs, cid) {
@@ -371,10 +472,7 @@ export const config: WebdriverIO.Config = {
     // One report per spec file: getLogFile resolves this once per runner and `cid` is unique per
     // spec, so a fixed name would leave the whole suite's report holding only the last spec to
     // finish — which is why CI's junit check reported "1 tests run" beside a failed job.
-    [
-      "junit",
-      { outputDir: "./e2e-tests/.reports", outputFileFormat: ({ cid }: { cid: string }) => `e2e-junit-${cid}.xml` },
-    ],
+    ["junit", { outputDir: REPORTS_DIR, outputFileFormat: ({ cid }: { cid: string }) => junitName(cid) }],
   ],
 
   cacheDir: CACHE_DIR,
@@ -398,6 +496,7 @@ export const config: WebdriverIO.Config = {
   // wants the native path opts into it explicitly with e2e-tests/support/native-menu.ts, which
   // reproduces it on all three. Re-applied per test because reloadObsidian resets the static.
   beforeTest: async function () {
+    commandTrail = [];
     await browser.executeObsidian(({ obsidian }) => {
       (obsidian as unknown as { Menu: { useNativeMenu: unknown } }).Menu.useNativeMenu = false;
     });
@@ -409,6 +508,18 @@ export const config: WebdriverIO.Config = {
   afterTest: async function (test, _context, result: { passed: boolean }) {
     if (result.passed) return;
     await captureFailure(`${test.parent} ${test.title}`, test.title);
+  },
+
+  beforeHook: function () {
+    commandTrail = [];
+  },
+
+  beforeCommand: function (commandName: string, args: unknown[]) {
+    commandStarted(commandName, args);
+  },
+
+  afterCommand: function (commandName: string, _args: unknown[], _result: unknown, error?: unknown) {
+    commandEnded(commandName, error);
   },
 
   // A failing before/after hook never reaches afterTest, so a boot that wedges in a spec's
