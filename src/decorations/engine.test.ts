@@ -611,8 +611,26 @@ describe("DecorationEngine", () => {
         expect(result.size).toBe(1);
       });
 
+      it("source both, any, matches when only a notelet carries the tag", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "both" }), "tag", {
+          note: [],
+          meeting: ["#decision"],
+          retro: [],
+        });
+        expect(result.size).toBe(1);
+      });
+
+      it("source both, all, fails when the period note matches but a notelet does not", async () => {
+        const result = await evaluateScoped(tagCondition({ source: "both", quantifier: "all" }), "tag", {
+          note: ["#decision"],
+          meeting: ["#decision"],
+          retro: [],
+        });
+        expect(result.size).toBe(0);
+      });
+
       it("an orphaned notelet is excluded by a typed scope and included by any type", async () => {
-        const seed: Seed = { note: [], orphan: ["#decision"] };
+        const seed: Seed = { note: [], retro: [], orphan: ["#decision"] };
         const typed = await evaluateScoped(tagCondition({ source: "notelets", typeIds: ["nt_a"] }), "tag", seed);
         const any = await evaluateScoped(tagCondition({ source: "notelets" }), "tag", seed);
         expect(typed.size).toBe(0);
