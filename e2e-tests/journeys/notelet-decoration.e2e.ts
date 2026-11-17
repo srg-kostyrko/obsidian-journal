@@ -112,8 +112,9 @@ describe("notelet-scoped tag condition", () => {
     await openSeededCalendarView();
 
     await expectTextHex(calendar.cell(allTagged), STYLE_HEX.color);
-    // Ordered after the positive assertion, so the mixed day's notelets were resolved by the
-    // time it is read; the Retro on the first day proves the type scope ignores other types.
+    // The mixed day's any-type red corner proves its notelets are indexed before the negative is
+    // read; the Retro on the first day proves the type scope ignores other types.
+    await expectDecorated(calendar.cell(mixed));
     await expectNotTextHex(calendar.cell(mixed), STYLE_HEX.color);
   });
 });
