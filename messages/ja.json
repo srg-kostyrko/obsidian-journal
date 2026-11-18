@@ -913,6 +913,29 @@
   "decoration_condition_date_weekday_label": "曜日",
   "decoration_condition_date_weekday_of_month_group": "月内の第n曜日",
   "decoration_condition_has_note_describe": "ノートが存在する",
+  "decoration_condition_has_note_describe_missing": "ノートが存在しない",
+  "decoration_condition_has_note_presence_label": "ノート",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "存在する",
+        "presence=missing": "存在しない"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "少なくとも{count}件のノートからリンクされている",
+        "count=*": "少なくとも{count}件のノートからリンクされている"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "リンク元ノートの最小数",
   "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
   "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",
   "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
@@ -1085,6 +1108,7 @@
         "type=weekday": "曜日",
         "type=offset": "オフセット",
         "type=has-note": "ノートあり",
+        "type=linked": "リンクあり",
         "type=tasks": "タスク",
         "type=note-size": "ノートのサイズ",
         "type=has-notelet": "サブノートあり"
@@ -1103,6 +1127,7 @@
         "type=weekday": "曜日を確認",
         "type=offset": "間隔内のオフセットを確認",
         "type=has-note": "ノートの有無を確認",
+        "type=linked": "この日付へのリンクを確認",
         "type=tasks": "タスクを確認",
         "type=note-size": "ノートのサイズを確認",
         "type=has-notelet": "サブノートの有無を確認"

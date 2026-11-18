@@ -1064,6 +1064,29 @@
   "decoration_condition_date_weekday_label": "Giorno della settimana",
   "decoration_condition_date_weekday_of_month_group": "Giorno della settimana del mese",
   "decoration_condition_has_note_describe": "esiste una nota",
+  "decoration_condition_has_note_describe_missing": "non esiste alcuna nota",
+  "decoration_condition_has_note_presence_label": "Nota",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Esiste",
+        "presence=missing": "Mancante"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "collegata da almeno {count} nota",
+        "count=*": "collegata da almeno {count} note"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Numero minimo di note che collegano",
   "decoration_condition_has_notelet_describe_any": "esiste una nota breve",
   "decoration_condition_has_notelet_describe_types": "esiste una nota breve di tipo {types}",
   "decoration_condition_has_notelet_empty": "Questo diario non ha ancora tipi di nota breve.",
@@ -1236,6 +1259,7 @@
         "type=weekday": "Giorno della settimana",
         "type=offset": "Offset",
         "type=has-note": "Ha una nota",
+        "type=linked": "Collegato",
         "type=tasks": "Attività",
         "type=note-size": "Dimensione nota",
         "type=has-notelet": "Ha una nota breve"
@@ -1254,6 +1278,7 @@
         "type=weekday": "Controlla il giorno della settimana",
         "type=offset": "Controlla l'offset nell'intervallo",
         "type=has-note": "Controlla se la nota esiste",
+        "type=linked": "Controlla i collegamenti a questa data",
         "type=tasks": "Controlla le attività",
         "type=note-size": "Controlla la dimensione della nota",
         "type=has-notelet": "Controlla se esiste una nota breve"

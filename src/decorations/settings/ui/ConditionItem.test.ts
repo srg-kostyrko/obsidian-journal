@@ -79,9 +79,14 @@ describe("ConditionItem", () => {
     expect(screen.getByLabelText(m.decoration_condition_note_size_value_label())).toBeTruthy();
   });
 
-  it("renders ConditionTypeOnly for has-note", async () => {
+  it("renders ConditionHasNote for has-note", async () => {
     await mount({ type: "has-note", presence: "exists" });
-    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+    expect(screen.getByRole("radiogroup", { name: m.decoration_condition_has_note_presence_label() })).toBeTruthy();
+  });
+
+  it("renders the linked editor for a linked condition", async () => {
+    await mount({ type: "linked", atLeast: 1 });
+    expect(screen.getByLabelText(m.decoration_condition_linked_value_label())).toBeTruthy();
   });
 
   it("renders ConditionTasks for a tasks condition", async () => {

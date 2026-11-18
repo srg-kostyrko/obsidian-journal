@@ -1088,6 +1088,31 @@
   "decoration_condition_date_weekday_label": "День недели",
   "decoration_condition_date_weekday_of_month_group": "День недели в месяце",
   "decoration_condition_has_note_describe": "заметка существует",
+  "decoration_condition_has_note_describe_missing": "заметка не существует",
+  "decoration_condition_has_note_presence_label": "Заметка",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Существует",
+        "presence=missing": "Отсутствует"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "есть ссылки как минимум из {count} заметки",
+        "countPlural=few": "есть ссылки как минимум из {count} заметок",
+        "countPlural=many": "есть ссылки как минимум из {count} заметок",
+        "countPlural=*": "есть ссылки как минимум из {count} заметок"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Минимальное число ссылающихся заметок",
   "decoration_condition_has_notelet_describe_any": "подзаметка существует",
   "decoration_condition_has_notelet_describe_types": "существует подзаметка типа {types}",
   "decoration_condition_has_notelet_empty": "В этом журнале ещё нет типов подзаметок.",
@@ -1260,6 +1285,7 @@
         "type=weekday": "День недели",
         "type=offset": "Смещение",
         "type=has-note": "Есть заметка",
+        "type=linked": "Со ссылками",
         "type=tasks": "Задачи",
         "type=note-size": "Размер заметки",
         "type=has-notelet": "Есть подзаметка"
@@ -1278,6 +1304,7 @@
         "type=weekday": "Проверить день недели",
         "type=offset": "Проверить смещение в интервале",
         "type=has-note": "Проверить, существует ли заметка",
+        "type=linked": "Проверить ссылки на эту дату",
         "type=tasks": "Проверить задачи",
         "type=note-size": "Проверить размер заметки",
         "type=has-notelet": "Проверить, существует ли подзаметка"

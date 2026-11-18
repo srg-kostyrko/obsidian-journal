@@ -184,6 +184,25 @@ describe("describeCondition", () => {
     });
   });
 
+  describe("has-note missing", () => {
+    it("describes missing", () => {
+      expect(describeCondition({ type: "has-note", presence: "missing" }, calendar)).toBe(
+        m.decoration_condition_has_note_describe_missing(),
+      );
+    });
+  });
+
+  describe("linked", () => {
+    it("describes linked with plural", () => {
+      expect(describeCondition({ type: "linked", atLeast: 1 }, calendar)).toBe(
+        m.decoration_condition_linked_describe({ count: 1 }),
+      );
+      expect(describeCondition({ type: "linked", atLeast: 2 }, calendar)).toBe(
+        m.decoration_condition_linked_describe({ count: 2 }),
+      );
+    });
+  });
+
   describe("note-size", () => {
     it("renders the localized note-size clause in words", () => {
       expect(describeCondition({ type: "note-size", unit: "words", condition: "gt", value: 250 }, calendar)).toBe(
