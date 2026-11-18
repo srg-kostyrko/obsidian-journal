@@ -89,6 +89,9 @@ export class LinkReferenceIndex {
   // Kept so an end moving back to the default — which leaves nothing on the new entry to tell it
   // apart from an untouched note — is still seen as a move.
   #movedEnds = new Map<string, AnchorString>();
+  // Text that names no period comes to name one only when a custom interval's end moves, so its
+  // sources need finding only while some journal is custom; skipping it keeps the build cheap.
+  #hasCustomJournal = false;
   #stopNamingWatch: WatchStopHandle | undefined;
   #rebuildTimer: number | undefined;
   #changeScheduled = false;
@@ -131,6 +134,7 @@ export class LinkReferenceIndex {
     this.#matches = new Map();
     this.#textsByKey = new Map();
     this.#movedEnds = new Map();
+    this.#hasCustomJournal = journalNames.some((journalName) => this.#isCustom(journalName));
     for (const journalName of journalNames) {
       if (!this.#isCustom(journalName)) continue;
       const anchors = this.#index.getRange(journalName, EARLIEST, LATEST).keys();
@@ -160,8 +164,8 @@ export class LinkReferenceIndex {
     const texts = new Set<string>();
     for (const text of unresolved) {
       const linkText = text.endsWith(".md") ? text.slice(0, -".md".length) : text;
-      texts.add(linkText);
       const match = this.#matchOf(matcher, linkText);
+      if (match.isSome() || this.#hasCustomJournal) texts.add(linkText);
       if (match.isSome() && this.#leadsToPeriod(linkText, match.value.journalName, match.value.anchor)) {
         keys.add(keyOf(match.value.journalName, match.value.anchor));
       }
@@ -181,13 +185,13 @@ export class LinkReferenceIndex {
   }
 
   // Once a period has a note, only links that lead to it count, and a broken link merely naming
-  // the date leads nowhere. The exception is text naming that very note: Obsidian is about to
-  // resolve it, and re-resolves its link maps only after the index has registered the new note,
-  // so counting it bridges that gap instead of the count dipping to zero on every note created.
+  // the date leads nowhere. The exception is text naming that very note: Obsidian resolves it to
+  // that note, but its link maps can catch up after the index has registered a new note, and
+  // counting it bridges that gap instead of the count dipping to zero on every note created.
   #leadsToPeriod(linkText: string, journalName: string, anchor: AnchorString): boolean {
-    const entry = this.#index.entryByAnchor(journalName, anchor);
-    if (entry.isNone()) return true;
-    const { path } = entry.value;
+    const owner = this.#index.get(journalName, anchor);
+    if (owner.isNone()) return true;
+    const path = owner.value;
     return linkText.includes("/") ? path === `${linkText}.md` : basenameOf(path) === linkText;
   }
 
@@ -254,8 +258,10 @@ export class LinkReferenceIndex {
   }
 
   #setTexts(source: VaultPath, next: ReadonlySet<string>): void {
-    const previous = this.#textsBySource.get(source) ?? new Set<string>();
-    for (const text of previous) if (!next.has(text)) removeFrom(this.#sourcesByText, text, source);
+    const previous = this.#textsBySource.get(source);
+    if (previous === undefined && next.size === 0) return;
+    if (previous !== undefined)
+      for (const text of previous) if (!next.has(text)) removeFrom(this.#sourcesByText, text, source);
     for (const text of next) addTo(this.#sourcesByText, text, source);
     if (next.size === 0) this.#textsBySource.delete(source);
     else this.#textsBySource.set(source, next);
