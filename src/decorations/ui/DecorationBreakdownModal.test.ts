@@ -7,15 +7,16 @@ import { date } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import { JournalsIndex, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { tasksCoreModule } from "@/tasks/module";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { decorationsModule } from "../module";
 import { decorationsSettingsCoreModule } from "../settings/module";
@@ -43,7 +44,8 @@ interface MountOptions {
   notes?: readonly Note[];
 }
 
-async function mount(options: MountOptions = {}): Promise<{ harness: TestHarness }> {
+async function mount(options: MountOptions = {}): Promise<{ harness: TestHarness; links: FakeLinkReferenceIndex }> {
+  const links = new FakeLinkReferenceIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: {
@@ -51,6 +53,7 @@ async function mount(options: MountOptions = {}): Promise<{ harness: TestHarness
       shelves: options.shelves ?? {},
       decorations: { decorations: [...(options.globalDecorations ?? [])] },
     },
+    overrides: [overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex)],
   });
 
   const index = harness.resolve(JournalsIndex);
@@ -63,7 +66,7 @@ async function mount(options: MountOptions = {}): Promise<{ harness: TestHarness
 
   harness.render(DecorationBreakdownModal, { props: { shelf: options.shelf } });
 
-  return { harness };
+  return { harness, links };
 }
 
 const anyDayDecoration: JournalDecoration = buildDecoration({
@@ -81,6 +84,12 @@ const anyDayCalendarDecoration: CalendarDecoration = buildCalendarDecoration({
 const hasNoteDecoration: JournalDecoration = buildDecoration({
   mode: "or",
   conditions: [buildCondition("has-note")],
+  styles: [buildStyle("background")],
+});
+
+const linkedDecoration: JournalDecoration = buildDecoration({
+  mode: "or",
+  conditions: [buildCondition("linked", { atLeast: 1 })],
   styles: [buildStyle("background")],
 });
 
@@ -274,5 +283,16 @@ describe("DecorationBreakdownModal", () => {
     // fill for any note-size condition in scope, so waiting the fill out is enough — no
     // FakeNoteSizeService or manual vault event is needed.
     await vi.waitFor(() => expect(screen.getByTestId("decoration-preview")).toBeTruthy());
+  });
+
+  it("updates the explanation when a link to the date lands after it opened", async () => {
+    const { links } = await mount({
+      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [linkedDecoration] }) },
+    });
+    expect(screen.queryAllByTestId("decoration-preview")).toHaveLength(0);
+
+    links.setCount("daily", "2026-05-25", 1);
+
+    expect(await screen.findByTestId("decoration-preview")).toBeTruthy();
   });
 });
