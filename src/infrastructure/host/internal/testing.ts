@@ -162,6 +162,8 @@ export interface FakeHost {
   readonly promptedDeletions: readonly TFile[];
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
+  /** Stages `path`'s link maps and emits "resolve" for it; the file must already exist. */
+  setLinks(path: string, links: { resolved?: Record<string, number>; unresolved?: Record<string, number> }): void;
   /** Opens `path` in a markdown view whose editor holds `text`; the active editor unless `active` is false. */
   /** With `embed`, the note is edited in a canvas card or hover popover: active, and in no leaf. */
   openEditor(
@@ -468,6 +470,7 @@ export function createFakeHost(): FakeHost {
       detachChild(file);
       files.delete(file.path);
       fileObjects.delete(file.path);
+      dropLinks(file.path);
       vault.emit("delete", file);
     },
     async createFolder(path: string): Promise<void> {
@@ -475,7 +478,16 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  const resolvedLinks: Record<string, Record<string, number>> = {};
+  const unresolvedLinks: Record<string, Record<string, number>> = {};
+  const dropLinks = (path: string): void => {
+    delete resolvedLinks[path];
+    delete unresolvedLinks[path];
+  };
+
   const metadataCacheApi = {
+    resolvedLinks,
+    unresolvedLinks,
     on: (event: string, callback: AnyHandler): EventRef => metadata.on(event, callback),
     offref: (ref: EventRef): void => metadata.detach(ref),
     getCache(path: string): CachedMetadata | null {
@@ -555,6 +567,7 @@ export function createFakeHost(): FakeHost {
           removed.push(child);
           files.delete(path);
           fileObjects.delete(path);
+          dropLinks(path);
         }
         const depth = (entry: TFile | TFolder): number => entry.path.split("/").length;
         const deepestFirst = removed.toSorted((a, b) => depth(b) - depth(a));
@@ -562,6 +575,7 @@ export function createFakeHost(): FakeHost {
       } else {
         files.delete(file.path);
         fileObjects.delete(file.path);
+        dropLinks(file.path);
       }
       vault.emit("delete", file);
     },
@@ -833,6 +847,13 @@ export function createFakeHost(): FakeHost {
       fileObjects.set(path, file);
       attachChild(file);
       return file;
+    },
+    setLinks(path, { resolved = {}, unresolved = {} }): void {
+      const file = fileObjects.get(path);
+      if (!file) throw new Error(`setLinks: no file at ${path}; putFile it first`);
+      resolvedLinks[path] = { ...resolved };
+      unresolvedLinks[path] = { ...unresolved };
+      metadata.emit("resolve", file);
     },
     openEditor(path, text, cursorLine = 0, { active = true, embed = false } = {}): FakeEditorState {
       const state: FakeEditorState = {

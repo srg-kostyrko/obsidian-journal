@@ -33,4 +33,22 @@ export class NoteMetadataService {
     const ref = this.#app.metadataCache.on("resolved", callback);
     return () => this.#app.metadataCache.offref(ref);
   }
+
+  linksFrom(path: VaultPath): { resolved: readonly VaultPath[]; unresolved: readonly string[] } {
+    const { resolvedLinks, unresolvedLinks } = this.#app.metadataCache;
+    return {
+      resolved: Object.keys(resolvedLinks[path] ?? {}) as VaultPath[],
+      unresolved: Object.keys(unresolvedLinks[path] ?? {}),
+    };
+  }
+
+  linkSources(): readonly VaultPath[] {
+    const { resolvedLinks, unresolvedLinks } = this.#app.metadataCache;
+    return [...new Set([...Object.keys(resolvedLinks), ...Object.keys(unresolvedLinks)])] as VaultPath[];
+  }
+
+  onLinksResolved(callback: (path: VaultPath) => void): () => void {
+    const ref = this.#app.metadataCache.on("resolve", (file) => callback(file.path as VaultPath));
+    return () => this.#app.metadataCache.offref(ref);
+  }
 }

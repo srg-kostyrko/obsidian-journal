@@ -77,4 +77,49 @@ describe("NoteMetadataService", () => {
       expect(result.isSome() && result.value.properties).toEqual({ mood: 5, label: "ok" });
     });
   });
+
+  describe("links", () => {
+    it("linksFrom returns resolved and unresolved targets", () => {
+      const { service, host } = build();
+      host.putFile("a.md");
+      host.setLinks("a.md", { resolved: { "Journal/2026-10-05.md": 2 }, unresolved: { "2026-10-06": 1 } });
+
+      expect(service.linksFrom("a.md" as VaultPath)).toEqual({
+        resolved: ["Journal/2026-10-05.md"],
+        unresolved: ["2026-10-06"],
+      });
+    });
+
+    it("linksFrom is empty for a note with no links", () => {
+      const { service, host } = build();
+      host.putFile("a.md");
+
+      expect(service.linksFrom("a.md" as VaultPath)).toEqual({ resolved: [], unresolved: [] });
+    });
+
+    it("linkSources lists every source in either map", () => {
+      const { service, host } = build();
+      host.putFile("a.md");
+      host.putFile("b.md");
+      host.setLinks("a.md", { resolved: { "x.md": 1 } });
+      host.setLinks("b.md", { unresolved: { y: 1 } });
+
+      const sources = service.linkSources();
+      expect(sources).toEqual(expect.arrayContaining(["a.md", "b.md"]));
+      expect(sources).toHaveLength(2);
+    });
+
+    it("onLinksResolved fires with the path and stops after dispose", () => {
+      const { service, host } = build();
+      host.putFile("a.md");
+      const seen: string[] = [];
+      const dispose = service.onLinksResolved((path) => seen.push(path));
+
+      host.setLinks("a.md", {});
+      dispose();
+      host.setLinks("a.md", {});
+
+      expect(seen).toEqual(["a.md"]);
+    });
+  });
 });
