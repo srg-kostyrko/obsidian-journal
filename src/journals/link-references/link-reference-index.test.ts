@@ -1,21 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { calendarSlice } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
-import { NotesService, type VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { SettingsEventsToken } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { journalConfigCollection, type JournalConfig } from "../config";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { JournalsRepository } from "../repository";
 import { fixedJournal } from "../testing";
 
-import { LinkReferenceIndex } from "./link-reference-index";
+import { LinkReferenceIndex, NAMING_REBUILD_DEBOUNCE_MS } from "./link-reference-index";
 
 const DAY_NOTE = "Journal/Daily/2026-10-05.md";
 
 const settle = (): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, 0));
 
+const afterDebounce = (): Promise<void> =>
+  new Promise((resolve) => window.setTimeout(resolve, NAMING_REBUILD_DEBOUNCE_MS + 50));
+
 const daily = fixedJournal("Daily", { type: "day" }, { folder: "Journal/Daily", nameTemplate: "{{date:YYYY-MM-DD}}" });
+
+// What the journal edit form's v-model writes to: the stored record, not the repository.
+const storedDaily = (harness: TestHarness): JournalConfig => harness.settings.recordOf(journalConfigCollection).Daily;
 
 describe("LinkReferenceIndex", () => {
   let harness: TestHarness;
@@ -167,21 +177,6 @@ describe("LinkReferenceIndex", () => {
       expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
     });
 
-    it("a naming change re-evaluates unresolved links", async () => {
-      harness.host.putFile("a.md");
-      harness.host.setLinks("a.md", { unresolved: { "2026-10-05": 1 } });
-      await settle();
-
-      harness.resolve(JournalsRepository).update("Daily", { nameTemplate: "{{date:YYYY-MM-DD}} {{date:dddd}}" });
-      await settle();
-      expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
-
-      harness.host.putFile("b.md");
-      harness.host.setLinks("b.md", { unresolved: { "2026-10-05 Monday": 1 } });
-      await settle();
-      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
-    });
-
     it("emits changed once per batch", async () => {
       const changed = vi.fn();
       links.events.on("changed", changed);
@@ -206,6 +201,91 @@ describe("LinkReferenceIndex", () => {
       await settle();
 
       expect(changed).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when the journal naming changes", () => {
+    beforeEach(async () => {
+      harness.resolve(JournalsIndex).markReady();
+      await links.initialize();
+      harness.host.putFile("a.md");
+      harness.host.putFile("b.md");
+      harness.host.putFile("c.md");
+      harness.host.setLinks("a.md", { unresolved: { "2026-10-05": 1 } });
+      harness.host.setLinks("b.md", { unresolved: { "2026-10-05 Monday": 1 } });
+      harness.host.setLinks("c.md", { unresolved: { "2026-10-05 Monday": 1 } });
+      await settle();
+    });
+
+    it("an edit written straight into the stored config re-evaluates unresolved links", async () => {
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+
+      storedDaily(harness).nameTemplate = "{{date:YYYY-MM-DD}} {{date:dddd}}";
+      await afterDebounce();
+
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(2);
+    });
+
+    it("a keystroke burst rebuilds once, after the typing pauses", async () => {
+      const linkSources = vi.spyOn(harness.resolve(NoteMetadataService), "linkSources");
+      const stored = storedDaily(harness);
+
+      for (const template of ["{{date:YYYY-MM-DD}} ", "{{date:YYYY-MM-DD}} {{", "{{date:YYYY-MM-DD}} {{date:dddd}}"]) {
+        stored.nameTemplate = template;
+        await settle();
+      }
+      expect(linkSources).not.toHaveBeenCalled();
+      await afterDebounce();
+
+      expect(linkSources).toHaveBeenCalledTimes(1);
+    });
+
+    it("renaming a journal moves its links to the new name", async () => {
+      harness.resolve(JournalsRepository).rename("Daily", "Days");
+      await afterDebounce();
+
+      expect(links.count("Days", anchor("2026-10-05"))).toBe(1);
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
+    });
+
+    it("a settings reload rebuilds", async () => {
+      const linkSources = vi.spyOn(harness.resolve(NoteMetadataService), "linkSources");
+
+      harness.resolve(SettingsEventsToken).emit("reloaded");
+      await afterDebounce();
+
+      expect(linkSources).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("when the week grid changes", () => {
+    const ISO = { mode: "custom", dow: 1, doy: 4, global: false } as const;
+    const WESTERN = { mode: "custom", dow: 0, doy: 6, global: false } as const;
+
+    it("an unresolved link to a locale week re-anchors under the new grid", async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule, calendarSettingsCoreModule],
+        data: {
+          journals: {
+            Weekly: fixedJournal("Weekly", { type: "week" }, { folder: "Weekly", nameTemplate: "{{date:gggg-[W]ww}}" }),
+          },
+          calendar: ISO,
+          calendarDisplay: {},
+        },
+      });
+      links = harness.resolve(LinkReferenceIndex);
+      harness.resolve(JournalsIndex).markReady();
+      await links.initialize();
+      harness.host.putFile("a.md");
+      harness.host.setLinks("a.md", { unresolved: { "2026-W41": 1 } });
+      await settle();
+      expect(links.count("Weekly", anchor("2026-10-05"))).toBe(1);
+
+      harness.settings.getSlice(calendarSlice).state = WESTERN;
+      await afterDebounce();
+
+      expect(links.count("Weekly", anchor("2026-10-04"))).toBe(1);
+      expect(links.count("Weekly", anchor("2026-10-05"))).toBe(0);
     });
   });
 

@@ -1,16 +1,17 @@
 import { createNanoEvents } from "nanoevents";
+import { watch, type WatchStopHandle } from "vue";
 
-import type { AnchorString } from "@/calendar";
+import { Calendar, type AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { SettingsEventsToken } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
 import { JournalsIndex } from "../journals-index";
 import { NotePathService } from "../notes/note-path";
 import { JournalsRepository } from "../repository";
-import { JournalsEventsToken } from "../tokens";
 import { periodEntryOf } from "../types";
 
 import { UnresolvedLinkMatcher } from "./unresolved-link-matcher";
@@ -18,6 +19,10 @@ import { UnresolvedLinkMatcher } from "./unresolved-link-matcher";
 interface LinkReferenceEvents {
   changed: () => void;
 }
+
+// The journal edit form writes naming fields straight into the stored config on every keystroke,
+// and each rebuild walks every link in the vault — so wait for the typing to pause.
+export const NAMING_REBUILD_DEBOUNCE_MS = 250;
 
 const keyOf = (journalName: string, anchor: AnchorString): string => `${journalName}\0${anchor}`;
 
@@ -33,7 +38,8 @@ export class LinkReferenceIndex {
   readonly #notes = inject(NotesService);
   readonly #index = inject(JournalsIndex);
   readonly #journals = inject(JournalsRepository);
-  readonly #journalEvents = inject(JournalsEventsToken);
+  readonly #settingsEvents = inject(SettingsEventsToken);
+  readonly #calendar = inject(Calendar);
   readonly #paths = inject(NotePathService);
   readonly #cycle = inject(CycleService);
   readonly #engine = inject(TemplateEngine);
@@ -45,19 +51,37 @@ export class LinkReferenceIndex {
   readonly #sourcesByTargetPath = new Map<VaultPath, Set<VaultPath>>();
   readonly #targetsBySource = new Map<VaultPath, ReadonlySet<VaultPath>>();
   #matcher: UnresolvedLinkMatcher | undefined;
+  #stopNamingWatch: WatchStopHandle | undefined;
+  #rebuildTimer: number | undefined;
   #changeScheduled = false;
-  #rebuildScheduled = false;
   #disposed = false;
 
   readonly events: Subscribable<LinkReferenceEvents> = this.#emitter;
 
-  #scheduleRebuild(): void {
-    if (this.#rebuildScheduled) return;
-    this.#rebuildScheduled = true;
-    queueMicrotask(() => {
-      this.#rebuildScheduled = false;
+  // Everything the matcher reads to turn link text into a period: each journal's naming and the
+  // installed week grid. Reading the grid through Calendar ties this to the grid actually installed,
+  // which CalendarSettingsBridge does a tick after the slice write — re-anchoring before then would
+  // answer for the old grid.
+  #namingSignature(): string {
+    const journals = [...this.#journals.find().list()].map((config) => [
+      config.name,
+      config.write,
+      config.nameTemplate,
+      config.folder,
+      config.dateFormat,
+      config.numbering,
+      config.prompts,
+      config.timeline.start,
+    ]);
+    return JSON.stringify([this.#calendar.installedWeek(), journals]);
+  }
+
+  #debounceRebuild(): void {
+    if (this.#rebuildTimer !== undefined) window.clearTimeout(this.#rebuildTimer);
+    this.#rebuildTimer = window.setTimeout(() => {
+      this.#rebuildTimer = undefined;
       if (!this.#disposed) this.#rebuild();
-    });
+    }, NAMING_REBUILD_DEBOUNCE_MS);
   }
 
   #rebuild(): void {
@@ -164,9 +188,15 @@ export class LinkReferenceIndex {
         if (sources === undefined) return;
         for (const source of sources) this.#recompute(source);
       }),
-      ...(["created", "updated", "deleted", "renamed", "cloned"] as const).map((event) =>
-        this.#journalEvents.on(event, () => this.#scheduleRebuild()),
-      ),
+      // A sync or import rewrites the stored settings wholesale.
+      this.#settingsEvents.on("reloaded", () => this.#debounceRebuild()),
+    );
+    // Watched rather than taken from repository events: the journal edit form binds naming fields
+    // to the stored config directly, which no repository event reports. Creating, deleting,
+    // renaming and cloning a journal all change the signature too.
+    this.#stopNamingWatch = watch(
+      () => this.#namingSignature(),
+      () => this.#debounceRebuild(),
     );
   }
 
@@ -178,5 +208,7 @@ export class LinkReferenceIndex {
     this.#disposed = true;
     for (const off of this.#unsubscribes) off();
     this.#unsubscribes.length = 0;
+    this.#stopNamingWatch?.();
+    if (this.#rebuildTimer !== undefined) window.clearTimeout(this.#rebuildTimer);
   }
 }
