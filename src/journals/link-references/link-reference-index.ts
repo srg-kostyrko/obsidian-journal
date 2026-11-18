@@ -4,7 +4,7 @@ import { watch, type WatchStopHandle } from "vue";
 import { Calendar, type AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
-import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { basenameOf, NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { SettingsEventsToken } from "@/settings";
 import { TemplateEngine } from "@/templates";
@@ -13,7 +13,7 @@ import { CycleService } from "../cycle";
 import { JournalsIndex } from "../journals-index";
 import { NotePathService } from "../notes/note-path";
 import { JournalsRepository } from "../repository";
-import { periodEntryOf } from "../types";
+import { isNotelet, periodEntryOf, type IndexedNote } from "../types";
 
 import { UnresolvedLinkMatcher } from "./unresolved-link-matcher";
 
@@ -28,6 +28,21 @@ export const NAMING_REBUILD_DEBOUNCE_MS = 250;
 type Match = Option<{ journalName: string; anchor: AnchorString }>;
 
 const keyOf = (journalName: string, anchor: AnchorString): string => `${journalName}\0${anchor}`;
+
+function addTo<K, V>(map: Map<K, Set<V>>, key: K, value: V): void {
+  let values = map.get(key);
+  if (values === undefined) {
+    values = new Set();
+    map.set(key, values);
+  }
+  values.add(value);
+}
+
+function removeFrom<K, V>(map: Map<K, Set<V>>, key: K, value: V): void {
+  const values = map.get(key);
+  values?.delete(value);
+  if (values?.size === 0) map.delete(key);
+}
 
 function sameKeys(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
   if (a.size !== b.size) return false;
@@ -53,10 +68,15 @@ export class LinkReferenceIndex {
   readonly #byKey = new Map<string, Set<VaultPath>>();
   readonly #sourcesByTargetPath = new Map<VaultPath, Set<VaultPath>>();
   readonly #targetsBySource = new Map<VaultPath, ReadonlySet<VaultPath>>();
+  readonly #sourcesByText = new Map<string, Set<VaultPath>>();
+  readonly #textsBySource = new Map<VaultPath, ReadonlySet<string>>();
   #matcher: UnresolvedLinkMatcher | undefined;
   // Matching renders and inverts every journal's naming, and the same date is linked from many
   // notes; the answers hold exactly as long as the matcher they came from.
   #matches = new Map<string, Match>();
+  // The memo read backwards, so a note connected to or leaving a period re-checks exactly the
+  // sources whose link text names it.
+  #textsByKey = new Map<string, Set<string>>();
   #stopNamingWatch: WatchStopHandle | undefined;
   #rebuildTimer: number | undefined;
   #changeScheduled = false;
@@ -97,6 +117,7 @@ export class LinkReferenceIndex {
       journalNames,
     );
     this.#matches = new Map();
+    this.#textsByKey = new Map();
     const sources = new Set(this.#metadata.linkSources());
     for (const known of this.#bySource.keys()) if (!sources.has(known)) this.#drop(known);
     for (const source of sources) this.#recompute(source);
@@ -115,61 +136,81 @@ export class LinkReferenceIndex {
       const entry = this.#index.entryByPath(target).flatMap(periodEntryOf);
       if (entry.isSome()) keys.add(keyOf(entry.value.journalName, entry.value.anchor));
     }
+    const texts = new Set<string>();
     for (const text of unresolved) {
       const linkText = text.endsWith(".md") ? text.slice(0, -".md".length) : text;
-      let match = this.#matches.get(linkText);
-      if (match === undefined) {
-        match = matcher.match(linkText);
-        this.#matches.set(linkText, match);
+      texts.add(linkText);
+      const match = this.#matchOf(matcher, linkText);
+      if (match.isSome() && this.#leadsToPeriod(linkText, match.value.journalName, match.value.anchor)) {
+        keys.add(keyOf(match.value.journalName, match.value.anchor));
       }
-      if (match.isSome()) keys.add(keyOf(match.value.journalName, match.value.anchor));
     }
     this.#setTargets(source, targets);
+    this.#setTexts(source, texts);
     this.#setKeys(source, keys);
+  }
+
+  #matchOf(matcher: UnresolvedLinkMatcher, linkText: string): Match {
+    const known = this.#matches.get(linkText);
+    if (known !== undefined) return known;
+    const match = matcher.match(linkText);
+    this.#matches.set(linkText, match);
+    if (match.isSome()) addTo(this.#textsByKey, keyOf(match.value.journalName, match.value.anchor), linkText);
+    return match;
+  }
+
+  // Once a period has a note, only links that lead to it count, and a broken link merely naming
+  // the date leads nowhere. The exception is text naming that very note: Obsidian is about to
+  // resolve it, and re-resolves its link maps only after the index has registered the new note,
+  // so counting it bridges that gap instead of the count dipping to zero on every note created.
+  #leadsToPeriod(linkText: string, journalName: string, anchor: AnchorString): boolean {
+    const entry = this.#index.entryByAnchor(journalName, anchor);
+    if (entry.isNone()) return true;
+    const { path } = entry.value;
+    return linkText.includes("/") ? path === `${linkText}.md` : basenameOf(path) === linkText;
+  }
+
+  #followEntry(entry: IndexedNote): void {
+    const affected = new Set(this.#sourcesByTargetPath.get(entry.path));
+    if (!isNotelet(entry)) {
+      const texts = this.#textsByKey.get(keyOf(entry.journalName, entry.anchor)) ?? new Set<string>();
+      for (const text of texts) this.#addSourcesOf(text, affected);
+    }
+    for (const source of affected) this.#recompute(source);
+  }
+
+  #addSourcesOf(text: string, into: Set<VaultPath>): void {
+    const sources = this.#sourcesByText.get(text) ?? new Set<VaultPath>();
+    for (const source of sources) into.add(source);
   }
 
   #drop(source: VaultPath): void {
     this.#setTargets(source, new Set());
+    this.#setTexts(source, new Set());
     this.#setKeys(source, new Set());
   }
 
   #setTargets(source: VaultPath, next: ReadonlySet<VaultPath>): void {
     const previous = this.#targetsBySource.get(source) ?? new Set<VaultPath>();
-    for (const target of previous) {
-      if (next.has(target)) continue;
-      const sources = this.#sourcesByTargetPath.get(target);
-      sources?.delete(source);
-      if (sources?.size === 0) this.#sourcesByTargetPath.delete(target);
-    }
-    for (const target of next) {
-      let sources = this.#sourcesByTargetPath.get(target);
-      if (sources === undefined) {
-        sources = new Set();
-        this.#sourcesByTargetPath.set(target, sources);
-      }
-      sources.add(source);
-    }
+    for (const target of previous) if (!next.has(target)) removeFrom(this.#sourcesByTargetPath, target, source);
+    for (const target of next) addTo(this.#sourcesByTargetPath, target, source);
     if (next.size === 0) this.#targetsBySource.delete(source);
     else this.#targetsBySource.set(source, next);
+  }
+
+  #setTexts(source: VaultPath, next: ReadonlySet<string>): void {
+    const previous = this.#textsBySource.get(source) ?? new Set<string>();
+    for (const text of previous) if (!next.has(text)) removeFrom(this.#sourcesByText, text, source);
+    for (const text of next) addTo(this.#sourcesByText, text, source);
+    if (next.size === 0) this.#textsBySource.delete(source);
+    else this.#textsBySource.set(source, next);
   }
 
   #setKeys(source: VaultPath, next: ReadonlySet<string>): void {
     const previous = this.#bySource.get(source) ?? new Set<string>();
     if (sameKeys(previous, next)) return;
-    for (const key of previous) {
-      if (next.has(key)) continue;
-      const sources = this.#byKey.get(key);
-      sources?.delete(source);
-      if (sources?.size === 0) this.#byKey.delete(key);
-    }
-    for (const key of next) {
-      let sources = this.#byKey.get(key);
-      if (sources === undefined) {
-        sources = new Set();
-        this.#byKey.set(key, sources);
-      }
-      sources.add(source);
-    }
+    for (const key of previous) if (!next.has(key)) removeFrom(this.#byKey, key, source);
+    for (const key of next) addTo(this.#byKey, key, source);
     if (next.size === 0) this.#bySource.delete(source);
     else this.#bySource.set(source, next);
     this.#scheduleChanged();
@@ -196,11 +237,7 @@ export class LinkReferenceIndex {
         this.#drop(from);
         this.#recompute(to);
       }),
-      this.#index.events.on("entryChanged", ({ entry }) => {
-        const sources = this.#sourcesByTargetPath.get(entry.path);
-        if (sources === undefined) return;
-        for (const source of sources) this.#recompute(source);
-      }),
+      this.#index.events.on("entryChanged", ({ entry }) => this.#followEntry(entry)),
       // A sync or import rewrites the stored settings wholesale.
       this.#settingsEvents.on("reloaded", () => this.#debounceRebuild()),
     );

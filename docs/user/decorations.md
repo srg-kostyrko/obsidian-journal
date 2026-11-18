@@ -151,6 +151,10 @@ A link counts when:
 - the note does not exist yet, and the link's text is exactly the name the journal would give it —
   `[[2026-10-05]]` — or its full path without `.md` — `[[Journal/Daily/2026-10-05]]`.
 
+Once the note exists, a link that does not lead to it no longer counts. If you
+[connected](/notes#connect-note-to-a-journal) `Trip.md` to 5 October, `[[2026-10-05]]` in another
+note leads nowhere and counts for no period; disconnect `Trip.md` and it counts again.
+
 Links in the body, embeds — `![[2026-10-05]]` — and links in properties — `due: "[[2026-10-05]]"`
 — all count. A heading or display text after the name changes nothing: `[[2026-10-05#Tasks]]` and
 `[[2026-10-05|Monday]]` count, and so does a link text ending in `.md`. A weekly journal counts links

@@ -140,6 +140,67 @@ describe("LinkReferenceIndex", () => {
       expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
     });
 
+    it("creating the note keeps the count while the link is still unresolved", async () => {
+      harness.host.putFile("a.md");
+      harness.host.setLinks("a.md", { unresolved: { "2026-10-05": 1 } });
+      await settle();
+
+      registerDayNote();
+      await settle();
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+
+      harness.host.setLinks("a.md", { resolved: { [DAY_NOTE]: 1 } });
+      await settle();
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+    });
+
+    describe("when the period's note goes by another name", () => {
+      const TRIP = "Trips/Trip.md" as VaultPath;
+
+      function connectTrip(): void {
+        harness.host.putFile(TRIP);
+        harness.resolve(JournalsIndex).register({ journalName: "Daily", anchor: anchor("2026-10-05"), path: TRIP });
+      }
+
+      it("a link naming the date counts for no period", async () => {
+        connectTrip();
+        harness.host.putFile("a.md");
+        harness.host.setLinks("a.md", { unresolved: { "2026-10-05": 1 } });
+        await settle();
+
+        expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
+      });
+
+      it("follows the note being connected, disconnected and connected again, without a rebuild", async () => {
+        harness.host.putFile("a.md");
+        harness.host.setLinks("a.md", { unresolved: { "2026-10-05": 1 } });
+        await settle();
+        const linkSources = vi.spyOn(harness.resolve(NoteMetadataService), "linkSources");
+
+        connectTrip();
+        await settle();
+        expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
+
+        harness.resolve(JournalsIndex).unregister(TRIP);
+        await settle();
+        expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+
+        connectTrip();
+        await settle();
+        expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
+        expect(linkSources).not.toHaveBeenCalled();
+      });
+
+      it("a resolved link to that note still counts", async () => {
+        connectTrip();
+        harness.host.putFile("a.md");
+        harness.host.setLinks("a.md", { resolved: { [TRIP]: 1 } });
+        await settle();
+
+        expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+      });
+    });
+
     it("a resolved link follows the target note leaving the journal", async () => {
       registerDayNote();
       harness.host.putFile("a.md");
