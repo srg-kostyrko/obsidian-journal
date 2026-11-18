@@ -5,12 +5,12 @@ export const conditionTypeOptions: Record<
   JournalConfig["write"]["type"],
   readonly JournalDecorationCondition["type"][]
 > = {
-  day: ["title", "tag", "property", "has-note", "note-size", "tasks", "date", "weekday", "has-notelet"],
-  week: ["title", "tag", "property", "has-note", "note-size", "tasks", "has-notelet"],
-  month: ["title", "tag", "property", "has-note", "note-size", "tasks", "has-notelet"],
-  quarter: ["title", "tag", "property", "has-note", "note-size", "tasks", "has-notelet"],
-  year: ["title", "tag", "property", "has-note", "note-size", "tasks", "has-notelet"],
-  custom: ["title", "tag", "property", "has-note", "note-size", "tasks", "offset", "has-notelet"],
+  day: ["title", "tag", "property", "has-note", "linked", "note-size", "tasks", "date", "weekday", "has-notelet"],
+  week: ["title", "tag", "property", "has-note", "linked", "note-size", "tasks", "has-notelet"],
+  month: ["title", "tag", "property", "has-note", "linked", "note-size", "tasks", "has-notelet"],
+  quarter: ["title", "tag", "property", "has-note", "linked", "note-size", "tasks", "has-notelet"],
+  year: ["title", "tag", "property", "has-note", "linked", "note-size", "tasks", "has-notelet"],
+  custom: ["title", "tag", "property", "has-note", "linked", "note-size", "tasks", "offset", "has-notelet"],
 };
 
 export const CALENDAR_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = ["date", "weekday"];

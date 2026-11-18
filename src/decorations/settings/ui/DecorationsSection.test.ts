@@ -32,7 +32,7 @@ afterEach(() => {
 const transparent = { type: "transparent" as const };
 const sampleDecoration: JournalDecoration = {
   mode: "and",
-  conditions: [{ type: "has-note" }],
+  conditions: [{ type: "has-note", presence: "exists" }],
   styles: [{ type: "background", color: transparent }],
 };
 const sampleCalendarDecoration: CalendarDecoration = {

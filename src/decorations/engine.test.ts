@@ -6,8 +6,9 @@ import { date } from "@/calendar/testing";
 import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
 import type { NoteMetadata, NoteSize, NoteStructure, VaultPath } from "@/infrastructure/host";
 import { FakeNoteMetadataService, FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
-import { JournalsIndex } from "@/journals";
+import { JournalsIndex, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { customJournal, fixedJournal, noMove } from "@/journals/testing";
@@ -37,20 +38,25 @@ const tagCondition = (extra: Record<string, unknown>) => ({
   ...extra,
 });
 
-async function buildHarness(
-  journals: Record<string, JournalConfig> = {},
-): Promise<{ harness: TestHarness; size: FakeNoteSizeService; structures: FakeNoteStructureService }> {
+async function buildHarness(journals: Record<string, JournalConfig> = {}): Promise<{
+  harness: TestHarness;
+  size: FakeNoteSizeService;
+  structures: FakeNoteStructureService;
+  links: FakeLinkReferenceIndex;
+}> {
   const size = new FakeNoteSizeService();
   const structures = new FakeNoteStructureService();
+  const links = new FakeLinkReferenceIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: {}, decorations: { decorations: [] } },
     overrides: [
       overrideWith(NoteSizeService, size as unknown as NoteSizeService),
       overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
+      overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex),
     ],
   });
-  return { harness, size, structures };
+  return { harness, size, structures, links };
 }
 
 // A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
@@ -78,6 +84,28 @@ async function sprintDayCells(day: string): Promise<Map<string, unknown>> {
 }
 
 const NOTE_PATH = "journals/2026-05-25.md" as VaultPath;
+
+function linkedAtLeast(atLeast: number): JournalDecoration {
+  return buildDecoration({
+    mode: "and",
+    conditions: [buildCondition("linked", { atLeast })],
+    styles: [buildStyle("background")],
+  });
+}
+
+async function evaluateLinked(atLeast: number, count: number): Promise<Map<string, unknown>> {
+  const decoration = linkedAtLeast(atLeast);
+  const { harness, links } = await buildHarness({
+    daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+  });
+  links.setCount("daily", "2026-05-25", count);
+  return harness
+    .resolve(DecorationEngine)
+    .evaluateRange(
+      [DayPeriod.containing(date("2026-05-25"))],
+      [{ kind: "journal", journalName: "daily", index: 0, decoration }],
+    );
+}
 
 function taskItem(status: TaskStatus): TaskItem {
   return {
@@ -411,6 +439,105 @@ describe("DecorationEngine", () => {
       it("leaves an interval's first day before the timeline start undecorated", async () => {
         const result = await sprintDayCells("2025-12-22");
         expect(result.size).toBe(0);
+      });
+    });
+
+    describe("has-note missing", () => {
+      const missing = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+
+      async function evaluateMissing(options: {
+        registerNote: boolean;
+        ready: boolean;
+      }): Promise<Map<string, unknown>> {
+        const { harness } = await buildHarness({
+          daily: fixedJournal("daily", { type: "day" }, { decorations: [missing] }),
+        });
+        const index = harness.resolve(JournalsIndex);
+        if (options.registerNote) {
+          index.register({ journalName: "daily", anchor: "2026-05-25" as AnchorString, path: NOTE_PATH });
+          harness.host.putFile(NOTE_PATH);
+        }
+        if (options.ready) index.markReady();
+        return harness
+          .resolve(DecorationEngine)
+          .evaluateRange(
+            [DayPeriod.containing(date("2026-05-25"))],
+            [{ kind: "journal", journalName: "daily", index: 0, decoration: missing }],
+          );
+      }
+
+      it("missing marks a period with no note", async () => {
+        const result = await evaluateMissing({ registerNote: false, ready: true });
+        expect(result.size).toBe(1);
+      });
+
+      it("missing does not mark a period with a note", async () => {
+        const result = await evaluateMissing({ registerNote: true, ready: true });
+        expect(result.size).toBe(0);
+      });
+
+      it("missing marks nothing before the journals index is ready", async () => {
+        const result = await evaluateMissing({ registerNote: false, ready: false });
+        expect(result.size).toBe(0);
+      });
+    });
+
+    describe("linked conditions", () => {
+      it("linked marks a period linked from enough notes", async () => {
+        const result = await evaluateLinked(2, 2);
+        expect(result.size).toBe(1);
+      });
+
+      it("linked does not mark a period linked from fewer notes", async () => {
+        const result = await evaluateLinked(3, 2);
+        expect(result.size).toBe(0);
+      });
+
+      it("linked and missing together mark only the empty linked date", async () => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("linked"), buildCondition("has-note", { presence: "missing" })],
+          styles: [buildStyle("background")],
+        });
+        const { harness, links } = await buildHarness({
+          daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+        });
+        links.setCount("daily", "2026-05-25", 1);
+        links.setCount("daily", "2026-05-26", 1);
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "daily", anchor: "2026-05-25" as AnchorString, path: NOTE_PATH });
+        harness.host.putFile(NOTE_PATH);
+        index.markReady();
+        const withNote = DayPeriod.containing(date("2026-05-25"));
+        const empty = DayPeriod.containing(date("2026-05-26"));
+
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange([withNote, empty], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+
+        expect([...result.keys()]).toEqual([cellKey("day", "2026-05-26" as AnchorString)]);
+      });
+
+      it("linked on a custom journal uses the interval anchor", async () => {
+        const decoration = linkedAtLeast(1);
+        const { harness, links } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, "2026-01-05", { decorations: [decoration] }),
+        });
+        links.setCount("sprint", "2026-01-05", 1);
+        const days = ["2026-01-05", "2026-01-12", "2026-01-18", "2026-01-19"];
+
+        const result = harness.resolve(DecorationEngine).evaluateRange(
+          days.map((day) => DayPeriod.containing(date(day))),
+          [{ kind: "journal", journalName: "sprint", index: 0, decoration }],
+        );
+
+        expect([...result.keys()]).toEqual(
+          ["2026-01-05", "2026-01-12", "2026-01-18"].map((day) => cellKey("day", day as AnchorString)),
+        );
       });
     });
 

@@ -40,7 +40,7 @@ async function build(
 }
 
 const sampleDecoration = buildDecoration({
-  conditions: [{ type: "has-note" }],
+  conditions: [{ type: "has-note", presence: "exists" }],
   styles: [{ type: "background", color: { type: "transparent" } }],
 });
 

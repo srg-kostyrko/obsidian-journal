@@ -178,7 +178,9 @@ describe("describeCondition", () => {
 
   describe("has-note", () => {
     it("renders the localized has-note clause", () => {
-      expect(describeCondition({ type: "has-note" }, calendar)).toBe(m.decoration_condition_has_note_describe());
+      expect(describeCondition({ type: "has-note", presence: "exists" }, calendar)).toBe(
+        m.decoration_condition_has_note_describe(),
+      );
     });
   });
 

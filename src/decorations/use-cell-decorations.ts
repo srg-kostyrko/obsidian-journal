@@ -4,6 +4,7 @@ import type { Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
+import { useLinkReferencesVersion } from "@/journals/link-references";
 import { useTasksVersion } from "@/tasks/use-tasks-version";
 
 import { DecorationsStore } from "./decorations-store";
@@ -52,6 +53,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
   const tasksVersion = useTasksVersion();
+  const linksVersion = useLinkReferencesVersion();
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
@@ -97,6 +99,8 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
     // Reading the version here registers it as a dependency.
     void tasksVersion.value;
+    // Same for LinkReferenceIndex, which builds after boot and changes on any linking edit.
+    void linksVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
     periodsByKey = new Map<string, Period[]>();

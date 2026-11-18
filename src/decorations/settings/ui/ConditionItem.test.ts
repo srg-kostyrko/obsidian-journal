@@ -80,7 +80,7 @@ describe("ConditionItem", () => {
   });
 
   it("renders ConditionTypeOnly for has-note", async () => {
-    await mount({ type: "has-note" });
+    await mount({ type: "has-note", presence: "exists" });
     expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
   });
 

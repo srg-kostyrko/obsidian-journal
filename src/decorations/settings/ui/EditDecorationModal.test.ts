@@ -18,7 +18,7 @@ import EditDecorationModal from "./EditDecorationModal.vue";
 const transparent = { type: "transparent" as const };
 const minimalDecoration: JournalDecoration = {
   mode: "and",
-  conditions: [{ type: "has-note" }],
+  conditions: [{ type: "has-note", presence: "exists" }],
   styles: [{ type: "background", color: transparent }],
 };
 
@@ -70,7 +70,7 @@ describe("EditDecorationModal", () => {
     it("disables Save when no styles are defined", async () => {
       await mountModal({
         conditionTypes: conditionTypeOptions.day,
-        decoration: { mode: "and", conditions: [{ type: "has-note" }], styles: [] },
+        decoration: { mode: "and", conditions: [{ type: "has-note", presence: "exists" }], styles: [] },
       });
       expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
     });
