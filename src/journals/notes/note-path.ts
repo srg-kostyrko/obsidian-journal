@@ -4,7 +4,7 @@ import { CalendarDate, Clock, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import type { VaultPath } from "@/infrastructure/host";
+import { basenameOf, type VaultPath } from "@/infrastructure/host";
 import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
@@ -159,14 +159,19 @@ export class NotePathService {
     return candidates;
   }
 
-  inverterFor(name: string): Option<PathInverter> {
+  /**
+   * Prepares inversion of a full vault path, or with `"name"` of a bare `<note name>.md` whose
+   * folder is unknown — the shape of a link written by name alone.
+   */
+  inverterFor(name: string, part: "path" | "name" = "path"): Option<PathInverter> {
     const config = this.configFor(name);
     if (!config) return Option.none();
     const context = this.#parseContext(config);
     // Invert the whole folder+name template in one pass so a date split across folder
     // segments and the filename (e.g. Journals/{{date:YYYY}}/{{date:MM}}/{{date:DD}})
     // reassembles into a single anchor rather than losing the folder's components.
-    const template = config.folder ? `${config.folder}/${config.nameTemplate}.md` : `${config.nameTemplate}.md`;
+    const template =
+      config.folder && part === "path" ? `${config.folder}/${config.nameTemplate}.md` : `${config.nameTemplate}.md`;
     const tokens = tokenize(template);
     const engine = this.#engine;
     const cycle = this.#cycle;
@@ -186,7 +191,8 @@ export class NotePathService {
         ...(numbers && { numbers }),
         ...(answers && { answers }),
       });
-      return rendered.isOk() && rendered.value === path;
+      if (rendered.isErr()) return false;
+      return part === "path" ? rendered.value === path : `${basenameOf(rendered.value)}.md` === path;
     };
     // Which period a name belongs to is not always a formula: a date variable can be too coarse
     // to tell the journal's periods apart ("{{date:YYYY}}" on a two-week cycle) while the

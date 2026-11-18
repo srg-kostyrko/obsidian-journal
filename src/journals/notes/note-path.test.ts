@@ -935,6 +935,24 @@ describe("NotePathService.inverterFor", () => {
 
     expect(harness.resolve(NotePathService).inverterFor("missing").isSome()).toBe(false);
   });
+
+  it('inverterFor with "name" ignores the folder', async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          Daily: fixedJournal(
+            "Daily",
+            { type: "day" },
+            { folder: "Journal/{{date:YYYY}}", nameTemplate: "{{date:YYYY-MM-DD}}" },
+          ),
+        },
+      },
+    });
+    const inverter = unwrap(harness.resolve(NotePathService).inverterFor("Daily", "name"));
+
+    expect(unwrap(inverter.invert("2026-10-05.md" as VaultPath)).anchor).toBe(anchor("2026-10-05"));
+  });
 });
 
 function dateAnchorOf(context: TemplateContext, variable: string): string {
