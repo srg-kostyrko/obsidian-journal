@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "vue";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { date } from "@/calendar/testing";
 import {
   NoteMetadataService,
@@ -17,7 +17,7 @@ import type { JournalConfig } from "@/journals/config";
 import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { TaskIndex } from "@/tasks";
@@ -481,6 +481,37 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(slot.value).toHaveLength(1);
+    });
+
+    it("un-marks a missing-note day across its interval when the interval note is registered after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: -1 }), buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, "2026-01-05", { decorations: [decoration] }),
+      });
+      const index = harness.resolve(JournalsIndex);
+      index.markReady();
+      const lastDay = DayPeriod.containing(date("2026-01-18"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [lastDay],
+          journalNames: () => ["sprint"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(lastDay))!;
+      expect(slot.value).toHaveLength(1);
+
+      const path = "sprint/2026-01-05.md" as VaultPath;
+      harness.host.putFile(path);
+      index.register({ journalName: "sprint", anchor: "2026-01-05" as AnchorString, path });
+      await nextTick();
+
+      expect(slot.value).toHaveLength(0);
     });
 
     it("a cell lights when a link arrives after mount", async () => {
