@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Option } from "@/infrastructure/result";
+import { TemplateEngine } from "@/templates";
 import { testContainer } from "@/testing";
 
 import { CycleService } from "../cycle";
@@ -17,11 +18,12 @@ const daily = fixedJournal("Daily", { type: "day" }, { folder: "Journal/Daily", 
 
 async function matcherFor(journals: Record<string, JournalConfig>): Promise<UnresolvedLinkMatcher> {
   const harness = await testContainer({ modules: [journalsCoreModule], data: { journals } });
-  return new UnresolvedLinkMatcher(
-    harness.resolve(NotePathService),
-    harness.resolve(CycleService),
-    Object.keys(journals),
-  );
+  const services = {
+    paths: harness.resolve(NotePathService),
+    cycle: harness.resolve(CycleService),
+    engine: harness.resolve(TemplateEngine),
+  };
+  return new UnresolvedLinkMatcher(services, Object.keys(journals));
 }
 
 describe("UnresolvedLinkMatcher", () => {
@@ -123,5 +125,31 @@ describe("UnresolvedLinkMatcher", () => {
 
     expect(matcher.match("2026-10-01")).toEqual(Option.some({ journalName: "Sprint", anchor: anchor("2026-10-01") }));
     expect(matcher.match("2026-10-02").isNone()).toBe(true);
+  });
+
+  it("placeholder name on a text-question journal matches none", async () => {
+    const matcher = await matcherFor({
+      Topics: fixedJournal(
+        "Topics",
+        { type: "day" },
+        {
+          folder: "Topics",
+          nameTemplate: "{{date:YYYY-MM-DD}} {{topic}}",
+          prompts: [{ variable: "topic", question: "?", type: "text", frontmatterKey: "topic", required: false }],
+        },
+      ),
+    });
+
+    expect(matcher.match("2026-10-05 (unanswered)").isNone()).toBe(true);
+    expect(matcher.match("Topics/2026-10-05 (unanswered)").isNone()).toBe(true);
+  });
+
+  it("date split into the folder matches only by full path", async () => {
+    const matcher = await matcherFor({
+      Daily: fixedJournal("Daily", { type: "day" }, { folder: "{{date:YYYY}}", nameTemplate: "{{date:MM-DD}}" }),
+    });
+
+    expect(matcher.match("01-15").isNone()).toBe(true);
+    expect(matcher.match("2026/01-15")).toEqual(Option.some({ journalName: "Daily", anchor: anchor("2026-01-15") }));
   });
 });

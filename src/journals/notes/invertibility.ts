@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import { CalendarDate, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { formatConjunction, m } from "@/i18n";
-import type { VaultPath } from "@/infrastructure/host";
+import { basenameOf, type VaultPath } from "@/infrastructure/host";
 import { TemplateContext, tokenize, variableNames, type TemplateEngine } from "@/templates";
 
 import { isLongText } from "../prompts/config";
@@ -37,14 +37,21 @@ export interface InvertibilityServices {
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
-/** Why a saved journal's note paths cannot be read back into their periods, if they cannot. */
+/**
+ * Why a saved journal's note paths cannot be read back into their periods, if they cannot.
+ *
+ * With `"name"` the question is asked of the bare note name, folder unknown, as `inverterFor` reads it.
+ */
 export function invertibilityOf(
-  config: JournalConfig,
+  journal: JournalConfig,
   { engine, cycle, paths }: InvertibilityServices,
+  part: "path" | "name" = "path",
 ): InvertibilityWarning | null {
+  const config = part === "path" ? journal : { ...journal, folder: "" };
   const pathAt = (anchor: AnchorString): VaultPath | undefined => {
     const path = paths.pathForDate(config.name, CalendarDate.fromAnchor(anchor));
-    return path.isOk() ? path.value : undefined;
+    if (path.isErr()) return undefined;
+    return part === "path" ? path.value : (`${basenameOf(path.value)}.md` as VaultPath);
   };
   // Whether a note this journal writes for `anchor` names the period it was written for.
   // Nothing shorter answers that: a date variable identifies the period only when its format
@@ -54,7 +61,7 @@ export function invertibilityOf(
     return (
       path !== undefined &&
       paths
-        .candidateFor(name, path)
+        .candidateFor(name, path, part)
         .filter((meta) => meta.anchor === anchor)
         .isSome()
     );
@@ -147,7 +154,7 @@ export function invertibilityOf(
   const dateVerdict = (): InvertibilityWarning => {
     const path = start.isSome() ? pathAt(start.value) : undefined;
     if (path === undefined) return { kind: "coarse-date" };
-    return paths.candidateFor(config.name, path).isSome() ? { kind: "coarse-date" } : { kind: "unreadable-date" };
+    return paths.candidateFor(config.name, path, part).isSome() ? { kind: "coarse-date" } : { kind: "unreadable-date" };
   };
   // A disabled sequence renders its digits as empty strings, which is a separate defect;
   // none of the numbering verdicts below describes it.

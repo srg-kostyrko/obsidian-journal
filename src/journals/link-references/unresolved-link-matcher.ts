@@ -2,42 +2,55 @@ import type { AnchorString } from "@/calendar";
 import { basenameOf, type VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 
-import type { CycleService } from "../cycle";
-import type { NotePathService, PathInverter } from "../notes/note-path";
+import { invertibilityOf, type InvertibilityServices } from "../notes/invertibility";
+
+import type { PathInverter } from "../notes/note-path";
+
+type Part = "path" | "name";
 
 interface JournalInverters {
   readonly journalName: string;
-  readonly path: PathInverter;
-  readonly name: PathInverter;
+  readonly path: PathInverter | undefined;
+  readonly name: PathInverter | undefined;
 }
 
 /** Decides which journal period, if any, the text of a link to a not-yet-existing note names. */
 export class UnresolvedLinkMatcher {
-  readonly #paths: NotePathService;
-  readonly #cycle: CycleService;
+  readonly #services: InvertibilityServices;
   readonly #inverters: readonly JournalInverters[];
 
-  constructor(paths: NotePathService, cycle: CycleService, journalNames: readonly string[]) {
-    this.#paths = paths;
-    this.#cycle = cycle;
+  constructor(services: InvertibilityServices, journalNames: readonly string[]) {
+    this.#services = services;
+    const { paths } = services;
     this.#inverters = journalNames.flatMap((journalName) => {
-      const path = paths.inverterFor(journalName, "path");
-      const name = paths.inverterFor(journalName, "name");
-      return path.isSome() && name.isSome() ? [{ journalName, path: path.value, name: name.value }] : [];
+      const config = paths.configFor(journalName);
+      if (!config) return [];
+      // A link names a period only through a naming that reads back on its own; anything else
+      // would be a guess at which period the text means.
+      const invertible = (part: Part, warning: unknown) =>
+        warning === null ? paths.inverterFor(journalName, part).getOrUndefined() : undefined;
+      return [
+        {
+          journalName,
+          path: invertible("path", invertibilityOf(config, services)),
+          name: invertible("name", invertibilityOf(config, services, "name")),
+        },
+      ];
     });
   }
 
-  #candidate(inverters: JournalInverters, part: "path" | "name", target: VaultPath): AnchorString | undefined {
+  #candidate(inverters: JournalInverters, part: Part, target: VaultPath): AnchorString | undefined {
     const { journalName } = inverters;
-    const inverted = inverters[part].invert(target);
+    const inverter = inverters[part];
+    if (inverter === undefined) return undefined;
+    const inverted = inverter.invert(target);
     if (inverted.isNone()) return undefined;
     const metadata = inverted.value;
     // A name that carries a question answer is chosen by whoever answered, not by the period.
     if (metadata.answers !== undefined) return undefined;
-    if (!this.#cycle.isCanonicalAnchor(journalName, metadata.anchor).getOr(false)) return undefined;
     // Inversion falls back to the period a parsed date falls in without re-rendering it, so a
     // mid-interval day would otherwise name its interval. Only text the journal would write counts.
-    const rendered = this.#paths.pathFor(journalName, metadata);
+    const rendered = this.#services.paths.pathFor(journalName, metadata);
     if (rendered.isErr()) return undefined;
     const written = part === "path" ? rendered.value : `${basenameOf(rendered.value)}.md`;
     return written === target ? metadata.anchor : undefined;

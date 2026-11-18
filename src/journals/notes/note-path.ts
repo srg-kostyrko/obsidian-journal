@@ -135,8 +135,8 @@ export class NotePathService {
     });
   }
 
-  candidateFor(name: string, path: VaultPath): Option<JournalMetadata> {
-    return this.inverterFor(name).flatMap((inverter) => inverter.invert(path));
+  candidateFor(name: string, path: VaultPath, part: "path" | "name" = "path"): Option<JournalMetadata> {
+    return this.inverterFor(name, part).flatMap((inverter) => inverter.invert(path));
   }
 
   /** Every journal that would adopt an unclaimed note at `path`, with the metadata it would write. */
