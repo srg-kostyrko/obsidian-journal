@@ -27,6 +27,9 @@ export const NAMING_REBUILD_DEBOUNCE_MS = 250;
 
 type Match = Option<{ journalName: string; anchor: AnchorString }>;
 
+const EARLIEST = "0000-01-01" as AnchorString;
+const LATEST = "9999-12-31" as AnchorString;
+
 const keyOf = (journalName: string, anchor: AnchorString): string => `${journalName}\0${anchor}`;
 
 function addTo<K, V>(map: Map<K, Set<V>>, key: K, value: V): void {
@@ -42,6 +45,11 @@ function removeFrom<K, V>(map: Map<K, Set<V>>, key: K, value: V): void {
   const values = map.get(key);
   values?.delete(value);
   if (values?.size === 0) map.delete(key);
+}
+
+function sameMatch(a: Match, b: Match): boolean {
+  if (a.isNone() || b.isNone()) return a.isNone() && b.isNone();
+  return a.value.journalName === b.value.journalName && a.value.anchor === b.value.anchor;
 }
 
 function sameKeys(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
@@ -77,6 +85,10 @@ export class LinkReferenceIndex {
   // The memo read backwards, so a note connected to or leaving a period re-checks exactly the
   // sources whose link text names it.
   #textsByKey = new Map<string, Set<string>>();
+  // Each custom interval's stored end where it differs from the duration's, keyed like a period.
+  // Kept so an end moving back to the default — which leaves nothing on the new entry to tell it
+  // apart from an untouched note — is still seen as a move.
+  #movedEnds = new Map<string, AnchorString>();
   #stopNamingWatch: WatchStopHandle | undefined;
   #rebuildTimer: number | undefined;
   #changeScheduled = false;
@@ -118,6 +130,15 @@ export class LinkReferenceIndex {
     );
     this.#matches = new Map();
     this.#textsByKey = new Map();
+    this.#movedEnds = new Map();
+    for (const journalName of journalNames) {
+      if (!this.#isCustom(journalName)) continue;
+      const anchors = this.#index.getRange(journalName, EARLIEST, LATEST).keys();
+      for (const anchor of anchors) {
+        const end = this.#movedEndAt(journalName, anchor);
+        if (end !== undefined) this.#movedEnds.set(keyOf(journalName, anchor), end);
+      }
+    }
     const sources = new Set(this.#metadata.linkSources());
     for (const known of this.#bySource.keys()) if (!sources.has(known)) this.#drop(known);
     for (const source of sources) this.#recompute(source);
@@ -175,8 +196,42 @@ export class LinkReferenceIndex {
     if (!isNotelet(entry)) {
       const texts = this.#textsByKey.get(keyOf(entry.journalName, entry.anchor)) ?? new Set<string>();
       for (const text of texts) this.#addSourcesOf(text, affected);
+      this.#followIntervalEnd(entry.journalName, entry.anchor, affected);
     }
     for (const source of affected) this.#recompute(source);
+  }
+
+  #isCustom(journalName: string): boolean {
+    const config = this.#journals.get(journalName);
+    return config.isSome() && config.value.write.type === "custom";
+  }
+
+  #movedEndAt(journalName: string, anchor: AnchorString): AnchorString | undefined {
+    const stored = this.#index.entryByAnchor(journalName, anchor).getOrUndefined()?.endDate;
+    if (stored === undefined) return undefined;
+    const fallback = this.#cycle.defaultEndOf(journalName, anchor).getOrUndefined();
+    return fallback?.toAnchor() === stored ? undefined : stored;
+  }
+
+  // A custom interval's stored end decides where every later interval of its journal starts, so it
+  // decides which dates name a period. Each remembered answer is asked again of that journal alone.
+  #followIntervalEnd(journalName: string, anchor: AnchorString, affected: Set<VaultPath>): void {
+    const matcher = this.#matcher;
+    if (matcher === undefined || !this.#isCustom(journalName)) return;
+    const key = keyOf(journalName, anchor);
+    const end = this.#movedEndAt(journalName, anchor);
+    if (end === this.#movedEnds.get(key)) return;
+    if (end === undefined) this.#movedEnds.delete(key);
+    else this.#movedEnds.set(key, end);
+    for (const [text, previous] of this.#matches) {
+      const next = matcher.rematch(text, journalName, previous);
+      if (sameMatch(previous, next)) continue;
+      this.#matches.set(text, next);
+      if (previous.isSome())
+        removeFrom(this.#textsByKey, keyOf(previous.value.journalName, previous.value.anchor), text);
+      if (next.isSome()) addTo(this.#textsByKey, keyOf(next.value.journalName, next.value.anchor), text);
+      this.#addSourcesOf(text, affected);
+    }
   }
 
   #addSourcesOf(text: string, into: Set<VaultPath>): void {

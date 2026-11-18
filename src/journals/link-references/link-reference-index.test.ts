@@ -11,9 +11,10 @@ import { journalConfigCollection, type JournalConfig } from "../config";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { JournalsRepository } from "../repository";
-import { fixedJournal } from "../testing";
+import { customJournal, fixedJournal } from "../testing";
 
 import { LinkReferenceIndex, NAMING_REBUILD_DEBOUNCE_MS } from "./link-reference-index";
+import { UnresolvedLinkMatcher } from "./unresolved-link-matcher";
 
 const DAY_NOTE = "Journal/Daily/2026-10-05.md";
 
@@ -38,6 +39,20 @@ describe("LinkReferenceIndex", () => {
       anchor: anchor("2026-10-05"),
       path: DAY_NOTE as VaultPath,
     });
+  }
+
+  async function startWithLinkToOctober5(
+    journals: Record<string, JournalConfig>,
+    before: () => void = () => undefined,
+  ): Promise<void> {
+    harness = await testContainer({ modules: [journalsCoreModule], data: { journals } });
+    links = harness.resolve(LinkReferenceIndex);
+    before();
+    harness.resolve(JournalsIndex).markReady();
+    await links.initialize();
+    harness.host.putFile("a.md");
+    harness.host.setLinks("a.md", { unresolved: { "2026-10-05": 1 } });
+    await settle();
   }
 
   beforeEach(async () => {
@@ -366,6 +381,99 @@ describe("LinkReferenceIndex", () => {
 
       expect(links.count("Weekly", anchor("2026-10-04"))).toBe(1);
       expect(links.count("Weekly", anchor("2026-10-05"))).toBe(0);
+    });
+  });
+
+  describe("when a custom interval's stored end moves", () => {
+    const FIRST = "Sprints/2026-10-01.md" as VaultPath;
+    const sprint = customJournal("Sprint", "day", 3, "2026-10-01", {
+      folder: "Sprints",
+      nameTemplate: "{{date:YYYY-MM-DD}}",
+    });
+
+    function registerFirst(endDate?: string): void {
+      harness.host.putFile(FIRST);
+      harness.resolve(JournalsIndex).register({
+        journalName: "Sprint",
+        anchor: anchor("2026-10-01"),
+        path: FIRST,
+        ...(endDate !== undefined && { endDate: anchor(endDate) }),
+      });
+    }
+
+    // Three-day intervals from 1 October start on the 1st, 4th and 7th: the 5th starts none until
+    // the first interval runs through the 4th.
+    it("a date that becomes an interval's start counts at once, without a rebuild", async () => {
+      await startWithLinkToOctober5({ Sprint: sprint });
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(0);
+      const linkSources = vi.spyOn(harness.resolve(NoteMetadataService), "linkSources");
+
+      registerFirst("2026-10-04");
+      await settle();
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(1);
+
+      harness.resolve(JournalsIndex).unregister(FIRST);
+      await settle();
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(0);
+      expect(linkSources).not.toHaveBeenCalled();
+    });
+
+    it("a note under another name connected to the newly started interval stops the link counting", async () => {
+      await startWithLinkToOctober5({ Sprint: sprint });
+      registerFirst("2026-10-04");
+      await settle();
+
+      harness.host.putFile("Sprints/Kickoff.md");
+      harness.resolve(JournalsIndex).register({
+        journalName: "Sprint",
+        anchor: anchor("2026-10-05"),
+        path: "Sprints/Kickoff.md" as VaultPath,
+      });
+      await settle();
+
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(0);
+    });
+
+    it("an interval note with the default end date re-matches nothing", async () => {
+      await startWithLinkToOctober5({ Sprint: sprint });
+      const match = vi.spyOn(UnresolvedLinkMatcher.prototype, "match");
+      const rematch = vi.spyOn(UnresolvedLinkMatcher.prototype, "rematch");
+
+      registerFirst("2026-10-03");
+      await settle();
+      harness.resolve(JournalsIndex).unregister(FIRST);
+      registerFirst();
+      await settle();
+
+      expect(match).not.toHaveBeenCalled();
+      expect(rematch).not.toHaveBeenCalled();
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(0);
+    });
+
+    it("an end moved back to the default before the index built is noticed", async () => {
+      await startWithLinkToOctober5({ Sprint: sprint }, () => {
+        registerFirst("2026-10-04");
+      });
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(1);
+
+      registerFirst("2026-10-03");
+      await settle();
+
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(0);
+    });
+
+    it("a name the interval comes to share with another journal counts for neither", async () => {
+      await startWithLinkToOctober5({ Daily: daily, Sprint: sprint });
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+
+      registerFirst("2026-10-04");
+      await settle();
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
+      expect(links.count("Sprint", anchor("2026-10-05"))).toBe(0);
+
+      harness.resolve(JournalsIndex).unregister(FIRST);
+      await settle();
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
     });
   });
 

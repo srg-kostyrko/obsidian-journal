@@ -9,6 +9,11 @@ import type { PathInverter } from "../notes/note-path";
 
 type Part = "path" | "name";
 
+type Match = Option<{ journalName: string; anchor: AnchorString }>;
+
+const partOf = (linkText: string): Part => (linkText.includes("/") ? "path" : "name");
+const targetOf = (linkText: string): VaultPath => `${linkText}.md` as VaultPath;
+
 interface JournalInverters {
   readonly journalName: string;
   readonly path: PathInverter | undefined;
@@ -53,9 +58,9 @@ export class UnresolvedLinkMatcher {
     return written === target ? metadata.anchor : undefined;
   }
 
-  match(linkText: string): Option<{ journalName: string; anchor: AnchorString }> {
-    const part = linkText.includes("/") ? "path" : "name";
-    const target = `${linkText}.md` as VaultPath;
+  match(linkText: string): Match {
+    const part = partOf(linkText);
+    const target = targetOf(linkText);
     const matches: { journalName: string; anchor: AnchorString }[] = [];
     for (const inverters of this.#inverters) {
       const anchor = this.#candidate(inverters, part, target);
@@ -63,5 +68,15 @@ export class UnresolvedLinkMatcher {
     }
     const [only, ...rest] = matches;
     return only !== undefined && rest.length === 0 ? Option.some(only) : Option.none();
+  }
+
+  /** Answers `linkText` again after `journalName`'s interval boundaries moved, given its previous answer. */
+  rematch(linkText: string, journalName: string, previous: Match): Match {
+    if (previous.isNone() || previous.value.journalName === journalName) return this.match(linkText);
+    // Another journal named this text alone, so this one could not render it before. If it now
+    // does, two journals share the name and it names neither; nothing else about it has moved.
+    const inverters = this.#inverters.find((candidate) => candidate.journalName === journalName);
+    if (inverters === undefined) return previous;
+    return this.#candidate(inverters, partOf(linkText), targetOf(linkText)) === undefined ? previous : Option.none();
   }
 }
