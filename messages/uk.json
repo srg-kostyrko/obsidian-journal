@@ -941,6 +941,31 @@
   "decoration_condition_date_weekday_label": "День тижня",
   "decoration_condition_date_weekday_of_month_group": "День тижня в місяці",
   "decoration_condition_has_note_describe": "нотатка існує",
+  "decoration_condition_has_note_describe_missing": "нотатка не існує",
+  "decoration_condition_has_note_presence_label": "Нотатка",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Існує",
+        "presence=missing": "Відсутня"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "є посилання як мінімум з {count} нотатки",
+        "countPlural=few": "є посилання як мінімум з {count} нотаток",
+        "countPlural=many": "є посилання як мінімум з {count} нотаток",
+        "countPlural=*": "є посилання як мінімум з {count} нотаток"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Мінімальна кількість нотаток із посиланнями",
   "decoration_condition_has_notelet_describe_any": "піднотатка існує",
   "decoration_condition_has_notelet_describe_types": "існує піднотатка типу {types}",
   "decoration_condition_has_notelet_empty": "У цьому журналі ще немає типів піднотаток.",
@@ -1113,6 +1138,7 @@
         "type=weekday": "День тижня",
         "type=offset": "Зсув",
         "type=has-note": "Має нотатку",
+        "type=linked": "З посиланнями",
         "type=tasks": "Завдання",
         "type=note-size": "Розмір нотатки",
         "type=has-notelet": "Має піднотатку"
@@ -1131,6 +1157,7 @@
         "type=weekday": "Перевірити день тижня",
         "type=offset": "Перевірити зсув інтервалу",
         "type=has-note": "Перевірити, чи існує нотатка",
+        "type=linked": "Перевірити посилання на цю дату",
         "type=tasks": "Перевірити завдання",
         "type=note-size": "Перевірити розмір нотатки",
         "type=has-notelet": "Перевірити, чи існує піднотатка"

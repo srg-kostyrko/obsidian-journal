@@ -7,6 +7,7 @@ import type { NoteMetadata, NoteSize, VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
+import { LinkReferenceIndex } from "@/journals/link-references";
 import { answerTaskQuestion, TaskIndex, TaskVisibility } from "@/tasks";
 import type { TaskQuestionDependencies } from "@/tasks";
 
@@ -102,6 +103,7 @@ export class DecorationEngine {
   readonly #tasks = inject(TaskIndex);
   readonly #visibility = inject(TaskVisibility);
   readonly #structure = inject(NoteStructureService);
+  readonly #links = inject(LinkReferenceIndex);
 
   // One structure read per path per evaluation: a note's structure answers every cell and every
   // tasks condition that touches it, and the metadataCache walk behind it is not free.
@@ -128,8 +130,10 @@ export class DecorationEngine {
   #matches(
     decoration: JournalDecoration,
     period: Period,
+    canonical: AnchorString,
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
+    hasNote: () => boolean,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
@@ -142,7 +146,7 @@ export class DecorationEngine {
     // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
     const test = (c: JournalDecorationCondition): boolean =>
-      this.#check(c, period, journal, metadata, size, path, taskDependencies, scopeFor);
+      this.#check(c, period, canonical, journal, metadata, hasNote, size, path, taskDependencies, scopeFor);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -160,8 +164,10 @@ export class DecorationEngine {
   #check(
     condition: JournalDecorationCondition,
     period: Period,
+    canonical: AnchorString,
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
+    hasNote: () => boolean,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
@@ -188,7 +194,13 @@ export class DecorationEngine {
       .with({ type: "date" }, (c) => checkDate(c, period))
       .with({ type: "weekday" }, (c) => checkWeekday(c, period))
       .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
-      .with({ type: "has-note" }, () => metadata().isSome())
+      .with({ type: "has-note" }, (c) => {
+        if (c.presence === "exists") return hasNote();
+        // Before the boot walk has indexed the vault no period has a note yet, so "missing"
+        // would paint the whole calendar until it finishes.
+        return this.#index.isReady() && !hasNote();
+      })
+      .with({ type: "linked" }, (c) => this.#links.count(journal.name, canonical) >= c.atLeast)
       .with({ type: "tasks" }, (c) =>
         answerTaskQuestion(
           taskDependencies,
@@ -282,15 +294,17 @@ export class DecorationEngine {
     // periods those are — outside it the calendar already refuses to open or create anything.
     // A custom journal decorates day cells, so the bound is judged against the interval owning
     // the day, not the day itself; for a fixed journal anchorOf is the period's own anchor.
-    const timelineCache = new Map<string, boolean>();
-    const inTimeline = (journalName: string, period: Period): boolean => {
+    // The owning anchor is resolved once per cell — anchorOf walks a custom cycle — and both the
+    // timeline bound and any condition keyed by the journal's period read the cached value.
+    const canonicalCache = new Map<string, AnchorString | null>();
+    const canonicalAnchor = (journalName: string, period: Period): AnchorString | null => {
       const key = `${journalName}::${period.anchor.toAnchor()}`;
-      const hit = timelineCache.get(key);
+      const hit = canonicalCache.get(key);
       if (hit !== undefined) return hit;
       const value = this.#cycle
         .anchorOf(journalName, period.anchor)
-        .match({ none: () => false, some: (anchor) => this.#timeline.contains(journalName, anchor) });
-      timelineCache.set(key, value);
+        .match({ none: () => null, some: (anchor) => (this.#timeline.contains(journalName, anchor) ? anchor : null) });
+      canonicalCache.set(key, value);
       return value;
     };
 
@@ -324,13 +338,18 @@ export class DecorationEngine {
       if (!config) continue;
       for (const period of uniquePeriods) {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
-        if (!inTimeline(binding.journalName, period)) continue;
+        const canonical = canonicalAnchor(binding.journalName, period);
+        if (canonical === null) continue;
         const anchorString = period.anchor.toAnchor();
         const matched = this.#matches(
           binding.decoration,
           period,
+          canonical,
           config,
           () => metadataFor(binding.journalName, anchorString),
+          // Keyed by the owning period, not the cell: a custom journal's note sits at its interval's
+          // start, and the day grid asks about every day of the interval.
+          () => metadataFor(binding.journalName, canonical).isSome(),
           () => sizeFor(binding.journalName, anchorString),
           () => pathFor(binding.journalName, anchorString),
           taskDependencies,

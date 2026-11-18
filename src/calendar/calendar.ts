@@ -113,6 +113,14 @@ export class Calendar {
     });
   }
 
+  /** The week grid dates are built under right now. */
+  installedWeek(): WeekConfig {
+    // Through the ref for the reason weekdaysShort reads it: a caller deriving from this re-runs
+    // once applyWeekConfig has installed a new grid, never before.
+    const data = moment.localeData(weekLocale.value);
+    return { dow: data.firstDayOfWeek(), doy: data.firstDayOfYear() };
+  }
+
   isIsoWeekGrid(): boolean {
     const data = moment.localeData(weekLocale.value);
     return data.firstDayOfWeek() === 1 && data.firstDayOfYear() === 4;

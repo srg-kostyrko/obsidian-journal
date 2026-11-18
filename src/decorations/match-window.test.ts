@@ -113,7 +113,10 @@ describe("needsNotes", () => {
     expect(
       needsNotes({
         mode: "or",
-        conditions: [{ type: "has-notelet", typeIds: [] }, { type: "has-note" }],
+        conditions: [
+          { type: "has-notelet", typeIds: [] },
+          { type: "has-note", presence: "exists" },
+        ],
         styles: [],
       }),
     ).toBe(false);
@@ -129,5 +132,22 @@ describe("needsNotes for tasks conditions", () => {
   it.each(["both", "notelets"] as const)("does not need notes when the source is %s", (source) => {
     const decoration = buildDecoration({ mode: "and", conditions: [buildCondition("tasks", { source })] });
     expect(needsNotes(decoration)).toBe(false);
+  });
+});
+
+describe("needsNotes for linked and missing", () => {
+  it("needsNotes is false for missing and for linked", () => {
+    expect(
+      needsNotes(buildDecoration({ mode: "and", conditions: [buildCondition("has-note", { presence: "missing" })] })),
+    ).toBe(false);
+    expect(needsNotes(buildDecoration({ mode: "and", conditions: [buildCondition("linked")] }))).toBe(false);
+    expect(
+      needsNotes(
+        buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("linked"), buildCondition("has-note", { presence: "missing" })],
+        }),
+      ),
+    ).toBe(false);
   });
 });

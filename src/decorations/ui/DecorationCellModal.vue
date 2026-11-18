@@ -4,6 +4,7 @@ import { computed, ref, toRaw } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useNoteSizeVersion } from "@/infrastructure/host";
+import { useLinkReferencesVersion } from "@/journals/link-references";
 import { JournalsRepository } from "@/journals/repository";
 import { useIndexVersion } from "@/journals/use-index-version";
 import { ShelvesRepository } from "@/shelves/repository";
@@ -29,6 +30,7 @@ const store = useService(DecorationsStore);
 const engine = useService(DecorationEngine);
 const indexVersion = useIndexVersion();
 const sizeVersion = useNoteSizeVersion();
+const linksVersion = useLinkReferencesVersion();
 
 // A no-op in production (vue-modal-host.ts passes props to createApp un-proxied) but
 // load-bearing under @testing-library/vue, whose reactive props proxy would otherwise wrap
@@ -64,6 +66,7 @@ function bindingsFor(): readonly DecorationBinding[] {
 const cell = computed<BreakdownCell | null>(() => {
   void indexVersion.value;
   void sizeVersion.value;
+  void linksVersion.value;
   const contributions = engine
     .explainRange([period], bindingsFor())
     .get(cellKey(period.kind, period.anchor.toAnchor()));

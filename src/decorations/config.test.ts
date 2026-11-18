@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { repairValue, defaultsFrom } from "@/settings/repair/repair-value";
 
-import { decorationConditionSchema, filterConditionSchema } from "./config";
+import { calendarConditionSchema, decorationConditionSchema, filterConditionSchema } from "./config";
 
 // Interval offsets are 1-based in both directions (1 = first day, -1 = last day), so a
 // stored 0 could never match anything. It is coerced rather than rejected, since existing
@@ -155,5 +155,45 @@ describe("notelet scope on tag and property conditions", () => {
     const result = repairValue(v.array(decorationConditionSchema), [bad, keep], defaultsFrom({}));
 
     expect(result?.value).toEqual([keep]);
+  });
+});
+
+describe("has-note condition schema", () => {
+  it("has-note without presence reads as exists", () => {
+    expect(v.parse(decorationConditionSchema, { type: "has-note" })).toEqual({ type: "has-note", presence: "exists" });
+  });
+
+  it('has-note presence "missing" survives a round trip', () => {
+    const stored = { type: "has-note", presence: "missing" };
+    expect(v.parse(decorationConditionSchema, v.parse(decorationConditionSchema, stored))).toEqual(stored);
+  });
+
+  // Through the whole union an invalid presence already fails at item depth, so only the arm on
+  // its own can tell a climbing field from one reset to its default.
+  it("an invalid presence climbs", () => {
+    const arm = decorationConditionSchema.options.find(
+      (option) => "entries" in option && option.entries.type.literal === "has-note",
+    );
+    if (arm === undefined) throw new Error("no has-note arm");
+    const bad = { type: "has-note", presence: "sometimes" };
+    const keep = { type: "has-note", presence: "missing" };
+
+    const result = repairValue(v.array(arm), [bad, keep], defaultsFrom({}));
+
+    expect(result?.value).toEqual([keep]);
+  });
+});
+
+describe("linked condition schema", () => {
+  it("parses a linked condition", () => {
+    expect(v.parse(decorationConditionSchema, { type: "linked", atLeast: 2 })).toEqual({ type: "linked", atLeast: 2 });
+  });
+
+  it("linked rejects atLeast 0", () => {
+    expect(v.safeParse(decorationConditionSchema, { type: "linked", atLeast: 0 }).success).toBe(false);
+  });
+
+  it("linked is not a calendar condition", () => {
+    expect(v.safeParse(calendarConditionSchema, { type: "linked", atLeast: 1 }).success).toBe(false);
   });
 });

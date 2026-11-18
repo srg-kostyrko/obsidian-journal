@@ -16,6 +16,7 @@ applies.
 | Decorate every calendar, or every journal on a shelf | [Where decorations live](#where-decorations-live)                                |
 | Color days by a property, a tag or the title         | [Frontmatter property](#frontmatter-property), [Title and tags](#title-and-tags) |
 | Show how much you wrote                              | [Note size](#note-size)                                                          |
+| Mark dates other notes link to, or that have no note | [Linked from notes](#linked), [Has note](#has-note)                              |
 | Choose what a decoration paints                      | [Styles](#styles)                                                                |
 | See more than three marks in a cell                  | [Marks shown per position](#marks-shown-per-position)                            |
 | Find out why a date looks the way it does            | [Finding out why](#finding-out-why-a-date-looks-the-way-it-does)                 |
@@ -45,6 +46,7 @@ Which conditions a journal decoration offers depends on the journal's period:
 | **Check title**, **Check tags**   |   ✓   |                  ✓                   |        ✓         |
 | **Check frontmatter property**    |   ✓   |                  ✓                   |        ✓         |
 | **Check if note exists**          |   ✓   |                  ✓                   |        ✓         |
+| **Check links to this date**      |   ✓   |                  ✓                   |        ✓         |
 | **Check note size**               |   ✓   |                  ✓                   |        ✓         |
 | **Check tasks**                   |   ✓   |                  ✓                   |        ✓         |
 | **Check if a notelet exists**     |   ✓   |                  ✓                   |        ✓         |
@@ -52,8 +54,10 @@ Which conditions a journal decoration offers depends on the journal's period:
 | **Check interval offset**         |       |                                      |        ✓         |
 
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
-no note it does not match. **Check tasks** is the exception: with **Look in** set to **Notelets only**
-or **Note and notelets**, a date with only a notelet can match, and a date with only a [task
+no note it does not match. **Check if note exists** set to **Missing** is made for dates with no note,
+and **Check links to this date** counts links whether the note exists or not. **Check tasks** is the
+remaining exception: with **Look in** set to
+**Notelets only** or **Note and notelets**, a date with only a notelet can match, and a date with only a [task
 note](/tasks#task-notes), or a [dated checkbox line](/tasks#dated-lines-from-anywhere-in-the-vault)
 from anywhere in the vault, dated on it can match whatever **Look in** says, provided the journal
 [shows](/tasks#which-dated-lines-a-journal-shows) it. **None** matches a date
@@ -122,6 +126,61 @@ Obsidian shows in its status bar: frontmatter is not counted, everything else is
 conditions to one decoration to match a band, such as at least 250 and fewer than 1000 words.
 
 Example: [Word-count bands](#word-count-bands).
+
+### Has note {#has-note}
+
+**Check if note exists** has one setting, **Note**: **Exists** matches a period that has a note,
+**Missing** one that does not. **Missing** on its own marks every date of the journal's timeline
+that has no note; it is more useful beside another condition, such as a **Check weekday** for the
+days you mean to write, or [**Check links to this date**](#linked).
+
+On a custom interval journal's day cells, both forms look at the note of the interval the day falls
+in. So **Check interval offset** with **Check if note exists** marks that day of every interval that
+has a note.
+
+### Linked from notes {#linked}
+
+**Check links to this date** matches a period that at least **Minimum number of linking notes**
+other notes link to. It counts notes, not links: a planning note that mentions a date ten times is
+one. A note linking to itself does not count, and a link to one of the period's
+[notelets](/notelets) does not count toward the period: only links to its own note do.
+
+A link counts when:
+
+- it leads to the journal's note for the period, once that note exists; or
+- the note does not exist yet, and the link's text is exactly the name the journal would give it —
+  `[[2026-10-05]]` — or its full path without `.md` — `[[Journal/Daily/2026-10-05]]`.
+
+Once the note exists, a link that does not lead to it no longer counts. If you
+[connected](/notes#connect-note-to-a-journal) `Trip.md` to 5 October, `[[2026-10-05]]` in another
+note leads nowhere and counts for no period; disconnect `Trip.md` and it counts again.
+
+Links in the body, embeds — `![[2026-10-05]]` — and links in properties — `due: "[[2026-10-05]]"`
+— all count. A heading or display text after the name changes nothing: `[[2026-10-05#Tasks]]` and
+`[[2026-10-05|Monday]]` count, and so does a link text ending in `.md`. A weekly journal counts links
+to its own week's note, not links to the days inside it.
+
+The condition is offered in journal decorations only — calendar and shelf decorations have no
+journal to name the note — and, like every journal decoration, marks only dates inside the
+journal's timeline.
+
+A link to a note that does not exist yet counts only when the text alone names the period:
+
+- **Questions and clock time.** If the note name uses a [question](/questions)'s answer or `{{time}}`,
+  nothing can say which period a link names until the note exists, so such links never count. If
+  only the folder uses one, the bare name still counts and the full path does not.
+- **Partial paths.** `[[Daily/2026-10-05]]` counts for no journal: use the bare name or the full path.
+  A name that does not tell the date on its own — the year in the folder, the month and day in the
+  name — counts only as the full path.
+- **Two journals, one name.** A bare name that two journals would both give a note counts for
+  neither. Its full path still counts.
+- **Letter case.** Before the note exists the text must match the name exactly, capitals included.
+  Once it exists, Obsidian's own link matching decides, and that ignores case.
+- **Links a template writes.** A link a template writes counts like a link you typed. A daily
+  template holding `[[{{date+1d:YYYY-MM-DD}}]]` therefore marks the day after every note it creates.
+  To step to the next day without writing a link, use a [navigation block](/navigation-blocks).
+
+Example: [Dates linked to but not written](#dates-linked-to-but-not-written).
 
 ### Tasks
 
@@ -237,7 +296,7 @@ decorations mark the interval in interval lists.
 
 ### Repeating a condition
 
-Title, tag, property, date, offset, tasks and note-size conditions can be added more than once.
+Title, tag, property, date, offset, links, tasks and note-size conditions can be added more than once.
 Weekday, has note and has notelet can appear once each: a second copy could not say anything the
 first does not.
 
@@ -341,6 +400,17 @@ the top left:
 
 ![Days with one, two and three dots in a row, a band dot above two of them, and a +3 badge on the longest note](/assets/decorations-word-count-light.png){.light-only}
 ![Days with one, two and three dots in a row, a band dot above two of them, and a +3 badge on the longest note](/assets/decorations-word-count-dark.png){.dark-only}
+
+### Dates linked to but not written
+
+A daily journal with one decoration, set to **Decorate when all conditions are fulfilled**:
+
+- **Check links to this date**, **Minimum number of linking notes** 1
+- **Check if note exists**, **Note** **Missing**
+- style: a red **Corner** at the top left
+
+A note `plan.md` reading `Ship it on [[2026-11-20]].` puts the mark on 20 November. Click the day to
+create its note and the mark goes away: the link now leads to a note that exists.
 
 ### A shelf color and a crowded cell
 

@@ -178,7 +178,28 @@ describe("describeCondition", () => {
 
   describe("has-note", () => {
     it("renders the localized has-note clause", () => {
-      expect(describeCondition({ type: "has-note" }, calendar)).toBe(m.decoration_condition_has_note_describe());
+      expect(describeCondition({ type: "has-note", presence: "exists" }, calendar)).toBe(
+        m.decoration_condition_has_note_describe(),
+      );
+    });
+  });
+
+  describe("has-note missing", () => {
+    it("describes missing", () => {
+      expect(describeCondition({ type: "has-note", presence: "missing" }, calendar)).toBe(
+        m.decoration_condition_has_note_describe_missing(),
+      );
+    });
+  });
+
+  describe("linked", () => {
+    it("describes linked with plural", () => {
+      expect(describeCondition({ type: "linked", atLeast: 1 }, calendar)).toBe(
+        m.decoration_condition_linked_describe({ count: 1 }),
+      );
+      expect(describeCondition({ type: "linked", atLeast: 2 }, calendar)).toBe(
+        m.decoration_condition_linked_describe({ count: 2 }),
+      );
     });
   });
 

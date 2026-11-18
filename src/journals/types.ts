@@ -63,6 +63,7 @@ export type EntryChangedEvent =
 export interface JournalsIndexEvents {
   entryChanged: (event: EntryChangedEvent) => void;
   journalDirty: (event: { journalName: string }) => void;
+  ready: () => void;
 }
 
 export interface JournalMetadata {

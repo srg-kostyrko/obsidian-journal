@@ -1058,6 +1058,29 @@
   "decoration_condition_date_weekday_label": "요일",
   "decoration_condition_date_weekday_of_month_group": "월의 몇째 요일",
   "decoration_condition_has_note_describe": "노트가 있음",
+  "decoration_condition_has_note_describe_missing": "노트가 없음",
+  "decoration_condition_has_note_presence_label": "노트",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "있음",
+        "presence=missing": "없음"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "최소 {count}개의 노트에서 링크됨",
+        "count=*": "최소 {count}개의 노트에서 링크됨"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "링크하는 노트의 최소 개수",
   "decoration_condition_has_notelet_describe_any": "서브노트가 있음",
   "decoration_condition_has_notelet_describe_types": "{types} 유형의 서브노트가 있음",
   "decoration_condition_has_notelet_empty": "이 저널에는 아직 서브노트 유형이 없습니다.",
@@ -1230,6 +1253,7 @@
         "type=weekday": "요일",
         "type=offset": "오프셋",
         "type=has-note": "노트 있음",
+        "type=linked": "링크됨",
         "type=tasks": "작업",
         "type=note-size": "노트 크기",
         "type=has-notelet": "서브노트 있음"
@@ -1248,6 +1272,7 @@
         "type=weekday": "요일 확인",
         "type=offset": "간격 오프셋 확인",
         "type=has-note": "노트 존재 여부 확인",
+        "type=linked": "이 날짜로의 링크 확인",
         "type=tasks": "작업 확인",
         "type=note-size": "노트 크기 확인",
         "type=has-notelet": "서브노트 존재 여부 확인"

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "vue";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { date } from "@/calendar/testing";
 import {
   NoteMetadataService,
@@ -12,11 +12,12 @@ import {
   type VaultPath,
 } from "@/infrastructure/host";
 import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
-import { JournalsIndex, JournalsRepository } from "@/journals";
+import { JournalsIndex, JournalsRepository, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { TaskIndex } from "@/tasks";
@@ -48,6 +49,7 @@ interface DecorationsHarness {
   harness: TestHarness;
   size: FakeNoteSizeService;
   structures: FakeNoteStructureService;
+  links: FakeLinkReferenceIndex;
   store: DecorationsStore;
 }
 
@@ -59,15 +61,17 @@ interface DecorationsHarness {
 async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promise<DecorationsHarness> {
   const size = new FakeNoteSizeService();
   const structures = new FakeNoteStructureService();
+  const links = new FakeLinkReferenceIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
     overrides: [
       overrideWith(NoteSizeService, size as unknown as NoteSizeService),
       overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
+      overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex),
     ],
   });
-  return { harness, size, structures, store: harness.resolve(DecorationsStore) };
+  return { harness, size, structures, links, store: harness.resolve(DecorationsStore) };
 }
 
 function buildHarness(decorations: JournalConfig["decorations"] = []): Promise<DecorationsHarness> {
@@ -449,6 +453,88 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(0);
 
       harness.resolve(TaskIndex).publish("test", { path }, [taskItem(path, "todo")]);
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("a missing-note cell lights when the journals index becomes ready after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      harness.resolve(JournalsIndex).markReady();
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("un-marks a missing-note day across its interval when the interval note is registered after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: -1 }), buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, "2026-01-05", { decorations: [decoration] }),
+      });
+      const index = harness.resolve(JournalsIndex);
+      index.markReady();
+      const lastDay = DayPeriod.containing(date("2026-01-18"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [lastDay],
+          journalNames: () => ["sprint"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(lastDay))!;
+      expect(slot.value).toHaveLength(1);
+
+      const path = "sprint/2026-01-05.md" as VaultPath;
+      harness.host.putFile(path);
+      index.register({ journalName: "sprint", anchor: "2026-01-05" as AnchorString, path });
+      await nextTick();
+
+      expect(slot.value).toHaveLength(0);
+    });
+
+    it("a cell lights when a link arrives after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("linked")],
+        styles: [buildStyle("background")],
+      });
+      const { harness, links } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      // Mount BEFORE the link arrives: a count raised first would pass with the version read deleted.
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      links.setCount("daily", "2026-05-25", 1);
       await nextTick();
 
       expect(slot.value).toHaveLength(1);

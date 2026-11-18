@@ -994,6 +994,29 @@
   "decoration_condition_date_weekday_label": "Weekday",
   "decoration_condition_date_weekday_of_month_group": "Weekday of month",
   "decoration_condition_has_note_describe": "a note exists",
+  "decoration_condition_has_note_describe_missing": "no note exists",
+  "decoration_condition_has_note_presence_label": "Note",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Exists",
+        "presence=missing": "Missing"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "linked from at least {count} note",
+        "count=*": "linked from at least {count} notes"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Minimum number of linking notes",
   "decoration_condition_has_notelet_describe_any": "a notelet exists",
   "decoration_condition_has_notelet_describe_types": "a notelet of type {types} exists",
   "decoration_condition_has_notelet_empty": "This journal has no notelet types yet.",
@@ -1166,6 +1189,7 @@
         "type=weekday": "Weekday",
         "type=offset": "Offset",
         "type=has-note": "Has note",
+        "type=linked": "Linked",
         "type=tasks": "Tasks",
         "type=note-size": "Note size",
         "type=has-notelet": "Has notelet"
@@ -1184,6 +1208,7 @@
         "type=weekday": "Check weekday",
         "type=offset": "Check interval offset",
         "type=has-note": "Check if note exists",
+        "type=linked": "Check links to this date",
         "type=tasks": "Check tasks",
         "type=note-size": "Check note size",
         "type=has-notelet": "Check if a notelet exists"

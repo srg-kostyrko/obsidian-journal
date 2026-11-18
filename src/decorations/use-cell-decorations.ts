@@ -1,16 +1,16 @@
 import { computed, onMounted, onUnmounted, provide, shallowRef, toRaw, toValue, watchEffect } from "vue";
 
-import type { Period } from "@/calendar";
+import { CalendarDate, type AnchorString, type Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
-import { JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { useLinkReferencesVersion } from "@/journals/link-references";
 import { useTasksVersion } from "@/tasks/use-tasks-version";
 
 import { DecorationsStore } from "./decorations-store";
 import {
   cellKey,
   DecorationEngine,
-  periodKindForWrite,
   periodMatchesWrite,
   type DecorationBinding,
   type JournalDecorationBinding,
@@ -39,12 +39,17 @@ export interface CellDecorationsOptions {
   calendarDecorations?: { shelf: MaybeRefOrGetter<string | null> };
 }
 
+function ownerKey(journalName: string, anchor: AnchorString): string {
+  return `${journalName}\0${anchor}`;
+}
+
 export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap<string, CellStyleRef> {
   const scope = options.scope ?? defaultCellDecorationScope;
   const filter = options.filter ?? ((): boolean => true);
   const engine = useService(DecorationEngine);
   const journals = useService(JournalsRepository);
   const index = useService(JournalsIndex);
+  const cycle = useService(CycleService);
   const notes = useService(NotesService);
   const metadata = useService(NoteMetadataService);
   const size = useService(NoteSizeService);
@@ -52,10 +57,14 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
   const tasksVersion = useTasksVersion();
+  const linksVersion = useLinkReferencesVersion();
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
-  let keysByPath = new Map<VaultPath, string>();
+  let keysByPath = new Map<VaultPath, Set<string>>();
+  // Cell keys by the journal period whose note answers them: the cell's own period for a fixed
+  // journal, the owning interval for every day of a custom one (has-note reads the interval's note).
+  let keysByOwner = new Map<string, Set<string>>();
   let journalNamesInScope = new Set<string>();
 
   function gatherDecorations(): readonly DecorationBinding[] {
@@ -72,22 +81,64 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     return toValue(options.periods).map((p) => toRaw(p));
   }
 
+  // One anchorOf per custom journal, then a forward walk over sorted days: a per-day anchorOf would
+  // re-walk the cycle for every cell.
+  function intervalOwners(name: string, anchors: readonly AnchorString[]): Map<AnchorString, AnchorString> {
+    const owners = new Map<AnchorString, AnchorString>();
+    const sorted = [...new Set(anchors)].toSorted();
+    const first = sorted.at(0);
+    if (first === undefined) return owners;
+    const startOpt = cycle.anchorOf(name, CalendarDate.fromAnchor(first));
+    if (startOpt.isNone()) return owners;
+    let start = startOpt.value;
+    let next = cycle.nextAnchor(name, start).getOrUndefined();
+    for (const anchor of sorted) {
+      while (next !== undefined && anchor >= next) {
+        start = next;
+        next = cycle.nextAnchor(name, start).getOrUndefined();
+      }
+      owners.set(anchor, start);
+    }
+    return owners;
+  }
+
+  function addKey<K>(map: Map<K, Set<string>>, at: K, key: string): void {
+    const bucket = map.get(at);
+    if (bucket) bucket.add(key);
+    else map.set(at, new Set([key]));
+  }
+
   function rebuildScopeMaps(periods: readonly Period[]): void {
     const journalNames = toValue(options.journalNames);
     journalNamesInScope = new Set(journalNames);
-    keysByPath = new Map<VaultPath, string>();
-    for (const period of periods) {
-      const anchor = period.anchor.toAnchor();
-      for (const name of journalNames) {
-        const journalOpt = journals.get(name);
-        if (journalOpt.isNone()) continue;
-        if (!periodMatchesWrite(period.kind, journalOpt.value.write.type)) continue;
+    keysByPath = new Map<VaultPath, Set<string>>();
+    keysByOwner = new Map<string, Set<string>>();
+    for (const name of journalNames) {
+      const journalOpt = journals.get(name);
+      if (journalOpt.isNone()) continue;
+      const writeType = journalOpt.value.write.type;
+      const matching = periods.filter((period) => periodMatchesWrite(period.kind, writeType));
+      const owners =
+        writeType === "custom"
+          ? intervalOwners(
+              name,
+              matching.map((period) => period.anchor.toAnchor()),
+            )
+          : undefined;
+      for (const period of matching) {
+        const anchor = period.anchor.toAnchor();
         const key = cellKey(period.kind, anchor);
-        const opt = index.entryByAnchor(name, anchor);
-        if (opt.isSome()) keysByPath.set(opt.value.path, key);
-        // A tasks condition reads notelet structure, and a heading or tag edit there can leave the
-        // published task items — and so tasksVersion — unchanged; only metadata-changed carries it.
-        for (const notelet of index.noteletsAt(name, anchor)) keysByPath.set(notelet.path, key);
+        const owner = owners?.get(anchor) ?? anchor;
+        // The cell's own anchor stays a lookup too: the conditions other than has-note still read it.
+        const lookups = owner === anchor ? [anchor] : [owner, anchor];
+        for (const at of lookups) {
+          addKey(keysByOwner, ownerKey(name, at), key);
+          const opt = index.entryByAnchor(name, at);
+          if (opt.isSome()) addKey(keysByPath, opt.value.path, key);
+          // A tasks condition reads notelet structure, and a heading or tag edit there can leave the
+          // published task items — and so tasksVersion — unchanged; only metadata-changed carries it.
+          for (const notelet of index.noteletsAt(name, at)) addKey(keysByPath, notelet.path, key);
+        }
       }
     }
   }
@@ -97,6 +148,8 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
     // Reading the version here registers it as a dependency.
     void tasksVersion.value;
+    // Same for LinkReferenceIndex, which builds after boot and changes on any linking edit.
+    void linksVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
     periodsByKey = new Map<string, Period[]>();
@@ -142,15 +195,24 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     }
   }
 
+  function repaintKeys(keys: Iterable<string>): void {
+    const live = [...keys].filter((key) => periodsByKey.has(key) && cells.has(key));
+    if (live.length === 0) return;
+    const result = engine.evaluateRange(
+      live.flatMap((key) => periodsByKey.get(key) ?? []),
+      gatherDecorations(),
+    );
+    for (const key of live) {
+      const slot = cells.get(key);
+      if (slot) slot.value = result.get(key) ?? [];
+    }
+  }
+
   // Shared by metadata-changed and size-changed: both name a path, and both mean
-  // "re-evaluate whichever cell owns it, if any is currently live."
+  // "re-evaluate whichever cells it answers, if any is currently live."
   function repaintCell(path: VaultPath): void {
-    const key = keysByPath.get(path);
-    if (key === undefined) return;
-    const periodsAtKey = periodsByKey.get(key);
-    const slot = cells.get(key);
-    if (!periodsAtKey || !slot) return;
-    slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
+    const keys = keysByPath.get(path);
+    if (keys !== undefined) repaintKeys(keys);
   }
 
   watchEffect(reseed);
@@ -168,18 +230,15 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   onMounted(() => {
     const offMeta = notes.events.on("metadata-changed", repaintCell);
     const offSize = size.events.on("size-changed", repaintCell);
+    // Before readiness "missing" reads false everywhere, and becoming ready changes no entry.
+    const offReady = index.events.on("ready", reseed);
     const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
       if (!journalNamesInScope.has(entry.journalName)) return;
-      const journalOpt = journals.get(entry.journalName);
-      if (journalOpt.isNone()) return;
-      const key = cellKey(periodKindForWrite(journalOpt.value.write.type), entry.anchor);
-      if (!periodsByKey.has(key)) return;
-      if (kind === "added") keysByPath.set(entry.path, key);
+      const keys = keysByOwner.get(ownerKey(entry.journalName, entry.anchor));
+      if (keys === undefined) return;
+      if (kind === "added") keysByPath.set(entry.path, new Set(keys));
       else keysByPath.delete(entry.path);
-      const periodsAtKey = periodsByKey.get(key);
-      const slot = cells.get(key);
-      if (!periodsAtKey || !slot) return;
-      slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
+      repaintKeys(keys);
     });
     // A rename re-keys the index (entryChanged above) before metadataCache has re-parsed
     // the new path, so the synchronous re-eval reads stale (often empty) metadata and a
@@ -198,6 +257,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
       offMeta();
       offSize();
       offIndex();
+      offReady();
       offRename();
       offResolved();
     });

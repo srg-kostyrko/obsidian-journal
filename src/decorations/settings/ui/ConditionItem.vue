@@ -5,14 +5,15 @@ import { computed, type Component } from "vue";
 import type { FilterCondition, JournalDecorationCondition } from "@/decorations";
 
 import ConditionDate from "./ConditionDate.vue";
+import ConditionHasNote from "./ConditionHasNote.vue";
 import ConditionHasNotelet from "./ConditionHasNotelet.vue";
+import ConditionLinked from "./ConditionLinked.vue";
 import ConditionNoteSize from "./ConditionNoteSize.vue";
 import ConditionOffset from "./ConditionOffset.vue";
 import ConditionProperty from "./ConditionProperty.vue";
 import ConditionTag from "./ConditionTag.vue";
 import ConditionTasks from "./ConditionTasks.vue";
 import ConditionTitle from "./ConditionTitle.vue";
-import ConditionTypeOnly from "./ConditionTypeOnly.vue";
 import ConditionWeekday from "./ConditionWeekday.vue";
 
 const props = defineProps<{
@@ -32,13 +33,13 @@ const leaf = computed<Component>(() =>
     .with("offset", () => ConditionOffset)
     .with("note-size", () => ConditionNoteSize)
     .with("has-notelet", () => ConditionHasNotelet)
-    .with("has-note", () => ConditionTypeOnly)
+    .with("has-note", () => ConditionHasNote)
+    .with("linked", () => ConditionLinked)
     .with("tasks", () => ConditionTasks)
     .exhaustive(),
 );
 
 const leafProps = computed<Record<string, unknown>>(() => {
-  if (props.condition.type === "has-note") return { type: props.condition.type };
   if (props.condition.type === "has-notelet") return { name: props.name, journalName: props.journalName };
   if (props.condition.type === "tag" || props.condition.type === "property")
     return { name: props.name, journalName: props.journalName, withNoteletScope: props.withNoteletScope };

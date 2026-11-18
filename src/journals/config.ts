@@ -362,7 +362,7 @@ const customIntervalBlock: JournalNavBlock = {
 const fixedDecorations: JournalDecoration[] = [
   {
     mode: "and",
-    conditions: [{ type: "has-note" }],
+    conditions: [{ type: "has-note", presence: "exists" }],
     styles: [
       {
         type: "shape",
@@ -379,7 +379,7 @@ const fixedDecorations: JournalDecoration[] = [
 const customDecorations: JournalDecoration[] = [
   {
     mode: "and",
-    conditions: [{ type: "has-note" }],
+    conditions: [{ type: "has-note", presence: "exists" }],
     styles: [
       {
         type: "border",

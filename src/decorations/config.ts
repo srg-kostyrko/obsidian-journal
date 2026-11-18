@@ -260,7 +260,18 @@ const noteSizeCondition = v.object({
   value: v.pipe(v.number(), v.integer(), v.minValue(0)),
 });
 
-const hasNoteCondition = v.object({ type: v.literal("has-note") });
+const hasNoteCondition = v.object({
+  type: v.literal("has-note"),
+  presence: v.optional(
+    v.pipe(v.union([v.literal("exists"), v.literal("missing")]), climb("missing marks the opposite days")),
+    "exists",
+  ),
+});
+const linkedCondition = v.object({
+  type: v.literal("linked"),
+  // Strict pipe is safe only because the editor is the sole writer and never lets a cleared value through.
+  atLeast: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
 const tasksCondition = v.object({ type: v.literal("tasks"), ...taskQuestionSchema.entries });
 
 const hasNoteletCondition = v.object({
@@ -276,6 +287,7 @@ export const decorationConditionSchema = v.union([
   weekdayCondition,
   offsetCondition,
   hasNoteCondition,
+  linkedCondition,
   tasksCondition,
   noteSizeCondition,
   hasNoteletCondition,

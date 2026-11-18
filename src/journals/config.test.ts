@@ -362,7 +362,7 @@ describe("journalDefaultsFor custom-interval defaults", () => {
     const cfg = journalDefaultsFor(customWrite, "biweekly");
     expect(cfg.decorations).toHaveLength(1);
     const [decoration] = cfg.decorations;
-    expect(decoration.conditions).toEqual([{ type: "has-note" }]);
+    expect(decoration.conditions).toEqual([{ type: "has-note", presence: "exists" }]);
     expect(decoration.styles[0]).toMatchObject({
       type: "border",
       border: "different",
@@ -376,7 +376,7 @@ describe("journalDefaultsFor fixed-interval decorations", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");
     expect(cfg.decorations).toHaveLength(1);
     const [decoration] = cfg.decorations;
-    expect(decoration.conditions).toEqual([{ type: "has-note" }]);
+    expect(decoration.conditions).toEqual([{ type: "has-note", presence: "exists" }]);
     expect(decoration.styles[0]).toMatchObject({
       type: "shape",
       shape: "circle",

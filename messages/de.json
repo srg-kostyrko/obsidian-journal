@@ -1058,6 +1058,29 @@
   "decoration_condition_date_weekday_label": "Wochentag",
   "decoration_condition_date_weekday_of_month_group": "Wochentag im Monat",
   "decoration_condition_has_note_describe": "eine Notiz existiert",
+  "decoration_condition_has_note_describe_missing": "keine Notiz existiert",
+  "decoration_condition_has_note_presence_label": "Notiz",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Vorhanden",
+        "presence=missing": "Fehlend"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "von mindestens {count} Notiz verlinkt",
+        "count=*": "von mindestens {count} Notizen verlinkt"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Mindestanzahl verlinkender Notizen",
   "decoration_condition_has_notelet_describe_any": "eine Kurznotiz existiert",
   "decoration_condition_has_notelet_describe_types": "eine Kurznotiz vom Typ {types} existiert",
   "decoration_condition_has_notelet_empty": "Dieses Journal hat noch keine Kurznotiz-Typen.",
@@ -1230,6 +1253,7 @@
         "type=weekday": "Wochentag",
         "type=offset": "Offset",
         "type=has-note": "Notiz vorhanden",
+        "type=linked": "Verlinkt",
         "type=tasks": "Aufgaben",
         "type=note-size": "Notizgröße",
         "type=has-notelet": "Kurznotiz vorhanden"
@@ -1248,6 +1272,7 @@
         "type=weekday": "Wochentag prüfen",
         "type=offset": "Intervall-Offset prüfen",
         "type=has-note": "Prüfen, ob eine Notiz existiert",
+        "type=linked": "Verlinkungen auf dieses Datum prüfen",
         "type=tasks": "Aufgaben prüfen",
         "type=note-size": "Notizgröße prüfen",
         "type=has-notelet": "Prüfen, ob eine Kurznotiz existiert"

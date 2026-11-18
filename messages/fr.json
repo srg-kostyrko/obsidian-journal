@@ -1058,6 +1058,29 @@
   "decoration_condition_date_weekday_label": "Jour de la semaine",
   "decoration_condition_date_weekday_of_month_group": "Jour de la semaine du mois",
   "decoration_condition_has_note_describe": "il existe une note",
+  "decoration_condition_has_note_describe_missing": "aucune note n'existe",
+  "decoration_condition_has_note_presence_label": "Note",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Existe",
+        "presence=missing": "Manquante"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "liée depuis au moins {count} note",
+        "countPlural=*": "liée depuis au moins {count} notes"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Nombre minimal de notes qui font un lien",
   "decoration_condition_has_notelet_describe_any": "il existe une note brève",
   "decoration_condition_has_notelet_describe_types": "il existe une note brève de type {types}",
   "decoration_condition_has_notelet_empty": "Ce journal n'a pas encore de type de note brève.",
@@ -1230,6 +1253,7 @@
         "type=weekday": "Jour de la semaine",
         "type=offset": "Décalage",
         "type=has-note": "A une note",
+        "type=linked": "Lié",
         "type=tasks": "Tâches",
         "type=note-size": "Taille de la note",
         "type=has-notelet": "A une note brève"
@@ -1248,6 +1272,7 @@
         "type=weekday": "Vérifier le jour de la semaine",
         "type=offset": "Vérifier le décalage d’intervalle",
         "type=has-note": "Vérifier si la note existe",
+        "type=linked": "Vérifier les liens vers cette date",
         "type=tasks": "Vérifier les tâches",
         "type=note-size": "Vérifier la taille de la note",
         "type=has-notelet": "Vérifier si une note brève existe"

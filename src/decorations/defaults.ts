@@ -78,7 +78,8 @@ export function defaultCondition(type: JournalDecorationCondition["type"]): Jour
     .with("date", () => ({ type: "date", day: DATE_CONDITION_ANY, month: DATE_CONDITION_ANY, year: null }))
     .with("weekday", () => ({ type: "weekday", weekdays: [] }))
     .with("offset", () => ({ type: "offset", offset: 1 }))
-    .with("has-note", () => ({ type: "has-note" }))
+    .with("has-note", () => ({ type: "has-note", presence: "exists" }))
+    .with("linked", () => ({ type: "linked", atLeast: 1 }))
     .with("tasks", () => ({
       type: "tasks",
       quantifier: "any",

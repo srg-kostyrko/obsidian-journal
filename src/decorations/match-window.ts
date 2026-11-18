@@ -27,11 +27,12 @@ export function fixedWindow(kind: PeriodKind, reference: CalendarDate, direction
   return direction === "past" ? window(anchorPeriod, horizon - 1, 0) : window(anchorPeriod, 0, horizon - 1);
 }
 
-const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set(["title", "has-note", "note-size"]);
+const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set(["title", "note-size"]);
 
 function isNoteBased(c: JournalDecorationCondition): boolean {
   // Notelets carry their own items, so only a question confined to the period note needs one.
   if (c.type === "tasks" || c.type === "tag" || c.type === "property") return c.source === "note";
+  if (c.type === "has-note") return c.presence === "exists";
   return NOTE_BASED.has(c.type);
 }
 
