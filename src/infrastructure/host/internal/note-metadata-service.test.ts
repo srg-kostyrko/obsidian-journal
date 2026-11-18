@@ -109,6 +109,17 @@ describe("NoteMetadataService", () => {
       expect(sources).toHaveLength(2);
     });
 
+    it("a renamed note keeps its links under the new path", async () => {
+      const { service, host } = build();
+      const file = host.putFile("a.md");
+      host.setLinks("a.md", { resolved: { "x.md": 1 }, unresolved: { y: 1 } });
+
+      await host.app.vault.rename(file, "b.md");
+
+      expect(service.linksFrom("b.md" as VaultPath)).toEqual({ resolved: ["x.md"], unresolved: ["y"] });
+      expect(service.linkSources()).toEqual(["b.md"]);
+    });
+
     it("onLinksResolved fires with the path and stops after dispose", () => {
       const { service, host } = build();
       host.putFile("a.md");

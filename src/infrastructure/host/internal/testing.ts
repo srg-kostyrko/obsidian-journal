@@ -464,6 +464,7 @@ export function createFakeHost(): FakeHost {
       setParent(file);
       fileObjects.set(newPath, file);
       attachChild(file);
+      moveLinks(oldPath, newPath);
       vault.emit("rename", file, oldPath);
     },
     async delete(file: TFile): Promise<void> {
@@ -483,6 +484,14 @@ export function createFakeHost(): FakeHost {
   const dropLinks = (path: string): void => {
     delete resolvedLinks[path];
     delete unresolvedLinks[path];
+  };
+  // Obsidian re-keys a renamed file's own link entries without firing "resolve" for it.
+  const moveLinks = (from: string, to: string): void => {
+    const resolved = resolvedLinks[from];
+    const unresolved = unresolvedLinks[from];
+    dropLinks(from);
+    if (resolved !== undefined) resolvedLinks[to] = resolved;
+    if (unresolved !== undefined) unresolvedLinks[to] = unresolved;
   };
 
   const metadataCacheApi = {

@@ -14,6 +14,8 @@ export { JournalsIndex } from "./journals-index";
 
 export { useIndexVersion } from "./use-index-version";
 
+export { LinkReferenceIndex, useLinkReferencesVersion } from "./link-references";
+
 export { journalsModule } from "./module";
 
 export {

@@ -8,6 +8,7 @@ import { CycleService } from "./cycle";
 import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
+import { LinkReferenceIndex } from "./link-references";
 import { JournalNavigationCommands } from "./navigation-commands";
 import { noteletsCoreModule } from "./notelets/module";
 import { journalNotesCoreModule, journalNotesStartupModule } from "./notes/module";
@@ -29,6 +30,7 @@ export const journalsCoreModule: Module = {
     c.register(CycleService).useClass(CycleService);
     c.register(NumberingService).useClass(NumberingService);
     c.register(FrontmatterService).useClass(FrontmatterService);
+    c.register(LinkReferenceIndex).useClass(LinkReferenceIndex);
     c.register(VaultSubscriptionService).useClass(VaultSubscriptionService).eager();
     c.register(JournalsEventsToken).useFactory(() => createNanoEvents<JournalsEvents>());
     c.register(JournalsRepository).useClass(JournalsRepository).eager();
