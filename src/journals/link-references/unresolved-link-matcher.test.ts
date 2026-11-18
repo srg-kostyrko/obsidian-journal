@@ -171,6 +171,42 @@ describe("UnresolvedLinkMatcher", () => {
     expect(matcher.match("Topics/2026-10-05 (unanswered)").isNone()).toBe(true);
   });
 
+  it("question only in the folder still matches the bare name, never the path", async () => {
+    const matcher = await matcherFor({
+      Topics: fixedJournal(
+        "Topics",
+        { type: "day" },
+        {
+          folder: "Topics/{{topic}}",
+          nameTemplate: "{{date:YYYY-MM-DD}}",
+          prompts: [{ variable: "topic", question: "?", type: "text", frontmatterKey: "topic", required: false }],
+        },
+      ),
+    });
+
+    expect(matcher.match("2026-10-05")).toEqual(Option.some({ journalName: "Topics", anchor: anchor("2026-10-05") }));
+    expect(matcher.match("Topics/Dentist/2026-10-05").isNone()).toBe(true);
+    expect(matcher.match("Topics/(unanswered)/2026-10-05").isNone()).toBe(true);
+  });
+
+  it("clock time only in the folder still matches the bare name, never the path", async () => {
+    const matcher = await matcherFor({
+      Daily: fixedJournal("Daily", { type: "day" }, { folder: "Log/{{time:HH}}", nameTemplate: "{{date:YYYY-MM-DD}}" }),
+    });
+
+    expect(matcher.match("2026-10-05")).toEqual(Option.some({ journalName: "Daily", anchor: anchor("2026-10-05") }));
+    expect(matcher.match("Log/09/2026-10-05").isNone()).toBe(true);
+  });
+
+  it("clock time in the name matches none", async () => {
+    const matcher = await matcherFor({
+      Daily: fixedJournal("Daily", { type: "day" }, { folder: "Log", nameTemplate: "{{date:YYYY-MM-DD}} {{time:HH}}" }),
+    });
+
+    expect(matcher.match("2026-10-05 09").isNone()).toBe(true);
+    expect(matcher.match("Log/2026-10-05 09").isNone()).toBe(true);
+  });
+
   it("date split into the folder matches only by full path", async () => {
     const matcher = await matcherFor({
       Daily: fixedJournal("Daily", { type: "day" }, { folder: "{{date:YYYY}}", nameTemplate: "{{date:MM-DD}}" }),
