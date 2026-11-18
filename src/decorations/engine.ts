@@ -133,6 +133,7 @@ export class DecorationEngine {
     canonical: AnchorString,
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
+    hasNote: () => boolean,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
@@ -145,7 +146,7 @@ export class DecorationEngine {
     // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
     const test = (c: JournalDecorationCondition): boolean =>
-      this.#check(c, period, canonical, journal, metadata, size, path, taskDependencies, scopeFor);
+      this.#check(c, period, canonical, journal, metadata, hasNote, size, path, taskDependencies, scopeFor);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -166,6 +167,7 @@ export class DecorationEngine {
     canonical: AnchorString,
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
+    hasNote: () => boolean,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
@@ -193,10 +195,10 @@ export class DecorationEngine {
       .with({ type: "weekday" }, (c) => checkWeekday(c, period))
       .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
       .with({ type: "has-note" }, (c) => {
-        if (c.presence === "exists") return metadata().isSome();
+        if (c.presence === "exists") return hasNote();
         // Before the boot walk has indexed the vault no period has a note yet, so "missing"
         // would paint the whole calendar until it finishes.
-        return this.#index.isReady() && metadata().isNone();
+        return this.#index.isReady() && !hasNote();
       })
       .with({ type: "linked" }, (c) => this.#links.count(journal.name, canonical) >= c.atLeast)
       .with({ type: "tasks" }, (c) =>
@@ -345,6 +347,9 @@ export class DecorationEngine {
           canonical,
           config,
           () => metadataFor(binding.journalName, anchorString),
+          // Keyed by the owning period, not the cell: a custom journal's note sits at its interval's
+          // start, and the day grid asks about every day of the interval.
+          () => metadataFor(binding.journalName, canonical).isSome(),
           () => sizeFor(binding.journalName, anchorString),
           () => pathFor(binding.journalName, anchorString),
           taskDependencies,

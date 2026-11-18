@@ -541,6 +541,48 @@ describe("DecorationEngine", () => {
       });
     });
 
+    // A custom journal's note is indexed at its interval's start, while the day grid hands the engine
+    // each day — has-note has to answer for the interval that owns the day, as linked does.
+    describe("has-note on a custom journal's day grid", () => {
+      const SPRINT_NOTE = "sprint/2026-01-05.md" as VaultPath;
+
+      async function evaluateSprintLastDays(
+        conditions: JournalDecoration["conditions"],
+      ): Promise<Map<string, unknown>> {
+        const decoration = buildDecoration({ mode: "and", conditions, styles: [buildStyle("background")] });
+        const { harness, links } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, "2026-01-05", { decorations: [decoration] }),
+        });
+        links.setCount("sprint", "2026-01-05", 1);
+        links.setCount("sprint", "2026-01-19", 1);
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "sprint", anchor: "2026-01-05" as AnchorString, path: SPRINT_NOTE });
+        harness.host.putFile(SPRINT_NOTE);
+        index.markReady();
+        return harness.resolve(DecorationEngine).evaluateRange(
+          ["2026-01-18", "2026-02-01"].map((day) => DayPeriod.containing(date(day))),
+          [{ kind: "journal", journalName: "sprint", index: 0, decoration }],
+        );
+      }
+
+      it("missing marks only the last day of a linked interval with no note", async () => {
+        const result = await evaluateSprintLastDays([
+          buildCondition("offset", { offset: -1 }),
+          buildCondition("linked"),
+          buildCondition("has-note", { presence: "missing" }),
+        ]);
+        expect([...result.keys()]).toEqual([cellKey("day", "2026-02-01" as AnchorString)]);
+      });
+
+      it("exists marks the last day of an interval with a note", async () => {
+        const result = await evaluateSprintLastDays([
+          buildCondition("offset", { offset: -1 }),
+          buildCondition("has-note", { presence: "exists" }),
+        ]);
+        expect([...result.keys()]).toEqual([cellKey("day", "2026-01-18" as AnchorString)]);
+      });
+    });
+
     describe("note-size conditions", () => {
       const lessThan100 = buildDecoration({
         mode: "and",

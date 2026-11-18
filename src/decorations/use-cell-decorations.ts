@@ -172,6 +172,8 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   onMounted(() => {
     const offMeta = notes.events.on("metadata-changed", repaintCell);
     const offSize = size.events.on("size-changed", repaintCell);
+    // Before readiness "missing" reads false everywhere, and becoming ready changes no entry.
+    const offReady = index.events.on("ready", reseed);
     const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
       if (!journalNamesInScope.has(entry.journalName)) return;
       const journalOpt = journals.get(entry.journalName);
@@ -202,6 +204,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
       offMeta();
       offSize();
       offIndex();
+      offReady();
       offRename();
       offResolved();
     });

@@ -458,6 +458,31 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(1);
     });
 
+    it("a missing-note cell lights when the journals index becomes ready after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      harness.resolve(JournalsIndex).markReady();
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
     it("a cell lights when a link arrives after mount", async () => {
       const decoration = buildDecoration({
         mode: "and",

@@ -189,8 +189,10 @@ export class JournalsIndex {
   }
 
   markReady(): void {
+    if (this.#readyFlag) return;
     this.#readyFlag = true;
     this.#resolveReady?.();
+    this.#emitter.emit("ready");
   }
 
   entryByPath(path: VaultPath): Option<IndexedNote> {
