@@ -99,7 +99,12 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(DataMigrationService).initialize();
     await container.resolve(AutoAttachService).initialize();
     // Not awaited: it waits for the boot-time vault walk, which onload must not block on.
-    void container.resolve(LinkReferenceIndex).initialize();
+    void container
+      .resolve(LinkReferenceIndex)
+      .initialize()
+      .catch((error: unknown) => {
+        container.resolve(LoggerFactoryToken).named("links").error("link reference index failed to start", { error });
+      });
     // After VaultSubscriptionService above, and load-bearing: clearing a note's task items on the
     // way out runs off that service's unregister, which fires entryChanged{removed} for the host
     // to turn into a refresh that publishes []. Start the providers first and a note that leaves a
