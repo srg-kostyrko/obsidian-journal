@@ -113,6 +113,33 @@ describe("UnresolvedLinkMatcher", () => {
     });
 
     expect(matcher.match("2026-10-05 Dentist").isNone()).toBe(true);
+    expect(matcher.match("Topics/2026-10-05 Dentist").isNone()).toBe(true);
+  });
+
+  it("placeholder name on a select-question journal matches none", async () => {
+    const matcher = await matcherFor({
+      Topics: fixedJournal(
+        "Topics",
+        { type: "day" },
+        {
+          folder: "Topics",
+          nameTemplate: "{{date:YYYY-MM-DD}} {{topic}}",
+          prompts: [
+            {
+              variable: "topic",
+              question: "?",
+              type: "select",
+              frontmatterKey: "topic",
+              required: false,
+              options: [{ label: "Dentist", value: "Dentist" }],
+            },
+          ],
+        },
+      ),
+    });
+
+    expect(matcher.match("2026-10-05 (unanswered)").isNone()).toBe(true);
+    expect(matcher.match("Topics/2026-10-05 (unanswered)").isNone()).toBe(true);
   });
 
   it("custom-interval journal matches only interval starts", async () => {

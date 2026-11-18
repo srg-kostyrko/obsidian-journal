@@ -3,6 +3,7 @@ import { basenameOf, type VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 
 import { invertibilityOf, type InvertibilityServices } from "../notes/invertibility";
+import { promptsInPath } from "../prompts/prompts-in-path";
 
 import type { PathInverter } from "../notes/note-path";
 
@@ -25,17 +26,15 @@ export class UnresolvedLinkMatcher {
     this.#inverters = journalNames.flatMap((journalName) => {
       const config = paths.configFor(journalName);
       if (!config) return [];
-      // A link names a period only through a naming that reads back on its own; anything else
-      // would be a guess at which period the text means.
-      const invertible = (part: Part, warning: unknown) =>
-        warning === null ? paths.inverterFor(journalName, part).getOrUndefined() : undefined;
-      return [
-        {
-          journalName,
-          path: invertible("path", invertibilityOf(config, services)),
-          name: invertible("name", invertibilityOf(config, services, "name")),
-        },
-      ];
+      // A link names a period only through a naming that reads back on its own and that the period
+      // alone decides. A question's answer, or its "(unanswered)" placeholder, is chosen by whoever
+      // answered, so any prompt variable in that part rules the part out.
+      const usable = (part: Part): PathInverter | undefined => {
+        const owner = part === "path" ? config : { ...config, folder: "" };
+        const decidedByPeriod = promptsInPath(owner).length === 0 && invertibilityOf(config, services, part) === null;
+        return decidedByPeriod ? paths.inverterFor(journalName, part).getOrUndefined() : undefined;
+      };
+      return [{ journalName, path: usable("path"), name: usable("name") }];
     });
   }
 
@@ -46,8 +45,6 @@ export class UnresolvedLinkMatcher {
     const inverted = inverter.invert(target);
     if (inverted.isNone()) return undefined;
     const metadata = inverted.value;
-    // A name that carries a question answer is chosen by whoever answered, not by the period.
-    if (metadata.answers !== undefined) return undefined;
     // Inversion falls back to the period a parsed date falls in without re-rendering it, so a
     // mid-interval day would otherwise name its interval. Only text the journal would write counts.
     const rendered = this.#services.paths.pathFor(journalName, metadata);
