@@ -177,6 +177,25 @@ describe("LinkReferenceIndex", () => {
       expect(links.count("Daily", anchor("2026-10-05"))).toBe(0);
     });
 
+    it("a resolved link to an attachment never counts, even once a period claims its path", async () => {
+      const attachment = "Journal/Daily/2026-10-06.png";
+      registerDayNote();
+      harness.host.putFile(attachment);
+      harness.host.putFile("a.md");
+      harness.host.setLinks("a.md", { resolved: { [attachment]: 1, [DAY_NOTE]: 1 } });
+      await settle();
+
+      harness.resolve(JournalsIndex).register({
+        journalName: "Daily",
+        anchor: anchor("2026-10-06"),
+        path: attachment as VaultPath,
+      });
+      await settle();
+
+      expect(links.count("Daily", anchor("2026-10-06"))).toBe(0);
+      expect(links.count("Daily", anchor("2026-10-05"))).toBe(1);
+    });
+
     it("emits changed once per batch", async () => {
       const changed = vi.fn();
       links.events.on("changed", changed);

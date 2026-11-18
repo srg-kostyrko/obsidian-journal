@@ -5,6 +5,7 @@ import { Calendar, type AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import type { Option } from "@/infrastructure/result";
 import { SettingsEventsToken } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
@@ -23,6 +24,8 @@ interface LinkReferenceEvents {
 // The journal edit form writes naming fields straight into the stored config on every keystroke,
 // and each rebuild walks every link in the vault — so wait for the typing to pause.
 export const NAMING_REBUILD_DEBOUNCE_MS = 250;
+
+type Match = Option<{ journalName: string; anchor: AnchorString }>;
 
 const keyOf = (journalName: string, anchor: AnchorString): string => `${journalName}\0${anchor}`;
 
@@ -51,6 +54,9 @@ export class LinkReferenceIndex {
   readonly #sourcesByTargetPath = new Map<VaultPath, Set<VaultPath>>();
   readonly #targetsBySource = new Map<VaultPath, ReadonlySet<VaultPath>>();
   #matcher: UnresolvedLinkMatcher | undefined;
+  // Matching renders and inverts every journal's naming, and the same date is linked from many
+  // notes; the answers hold exactly as long as the matcher they came from.
+  #matches = new Map<string, Match>();
   #stopNamingWatch: WatchStopHandle | undefined;
   #rebuildTimer: number | undefined;
   #changeScheduled = false;
@@ -90,6 +96,7 @@ export class LinkReferenceIndex {
       { engine: this.#engine, cycle: this.#cycle, paths: this.#paths },
       journalNames,
     );
+    this.#matches = new Map();
     const sources = new Set(this.#metadata.linkSources());
     for (const known of this.#bySource.keys()) if (!sources.has(known)) this.#drop(known);
     for (const source of sources) this.#recompute(source);
@@ -102,13 +109,19 @@ export class LinkReferenceIndex {
     const keys = new Set<string>();
     const targets = new Set<VaultPath>();
     for (const target of resolved) {
-      if (target === source) continue;
+      // Only a markdown note can be a period note; attachments would only grow the bookkeeping.
+      if (target === source || !target.endsWith(".md")) continue;
       targets.add(target);
       const entry = this.#index.entryByPath(target).flatMap(periodEntryOf);
       if (entry.isSome()) keys.add(keyOf(entry.value.journalName, entry.value.anchor));
     }
     for (const text of unresolved) {
-      const match = matcher.match(text.endsWith(".md") ? text.slice(0, -".md".length) : text);
+      const linkText = text.endsWith(".md") ? text.slice(0, -".md".length) : text;
+      let match = this.#matches.get(linkText);
+      if (match === undefined) {
+        match = matcher.match(linkText);
+        this.#matches.set(linkText, match);
+      }
       if (match.isSome()) keys.add(keyOf(match.value.journalName, match.value.anchor));
     }
     this.#setTargets(source, targets);
