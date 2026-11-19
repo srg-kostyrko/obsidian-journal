@@ -1,7 +1,12 @@
 import type { CalendarDate, Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService, type Note } from "@/infrastructure/host";
-import { dayNotesSlice, resolveCreationDate, type DayNotesSliceState } from "@/journals/creation-dates";
+import {
+  dayNotesSlice,
+  resolveCreationDate,
+  type CreatedNote,
+  type DayNotesSliceState,
+} from "@/journals/creation-dates";
 import { SettingsService } from "@/settings";
 
 interface DayNotesDependencies {
@@ -10,10 +15,7 @@ interface DayNotesDependencies {
   readonly settings: () => DayNotesSliceState;
 }
 
-export interface CreatedNote {
-  readonly note: Note;
-  readonly created: CalendarDate;
-}
+export type { CreatedNote } from "@/journals/creation-dates";
 
 export interface DayNotesQuery {
   createdOn(note: Note): CalendarDate | null;

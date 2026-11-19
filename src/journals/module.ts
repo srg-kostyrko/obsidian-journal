@@ -4,7 +4,7 @@ import type { Module } from "@/infrastructure/di";
 import { CollectionDefinitionToken, SliceDefinitionToken } from "@/settings";
 
 import { journalConfigCollection } from "./config";
-import { dayNotesSlice } from "./creation-dates";
+import { CreationDateIndex, dayNotesSlice } from "./creation-dates";
 import { CycleService } from "./cycle";
 import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
@@ -33,6 +33,7 @@ export const journalsCoreModule: Module = {
     c.register(NumberingService).useClass(NumberingService);
     c.register(FrontmatterService).useClass(FrontmatterService);
     c.register(LinkReferenceIndex).useClass(LinkReferenceIndex);
+    c.register(CreationDateIndex).useClass(CreationDateIndex);
     c.register(VaultSubscriptionService).useClass(VaultSubscriptionService).eager();
     c.register(JournalsEventsToken).useFactory(() => createNanoEvents<JournalsEvents>());
     c.register(JournalsRepository).useClass(JournalsRepository).eager();

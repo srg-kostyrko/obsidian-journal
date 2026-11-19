@@ -21,6 +21,7 @@ import type { LogRecord } from "@/infrastructure/logger";
 import {
   AutoAttachService,
   AutoCreateService,
+  CreationDateIndex,
   JournalUriHandler,
   LinkReferenceIndex,
   StartupOpenService,
@@ -104,6 +105,15 @@ export default class JournalPlugin extends Plugin {
       .initialize()
       .catch((error: unknown) => {
         container.resolve(LoggerFactoryToken).named("links").error("link reference index failed to start", { error });
+      });
+    void container
+      .resolve(CreationDateIndex)
+      .initialize()
+      .catch((error: unknown) => {
+        container
+          .resolve(LoggerFactoryToken)
+          .named("creation-dates")
+          .error("creation date index failed to start", { error });
       });
     // After VaultSubscriptionService above, and load-bearing: clearing a note's task items on the
     // way out runs off that service's unregister, which fires entryChanged{removed} for the host
