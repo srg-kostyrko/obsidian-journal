@@ -83,6 +83,23 @@ export class CreationDateIndex {
     this.#scheduleChanged();
   }
 
+  // A rename changes neither frontmatter nor file times, so the known date travels with the path
+  // rather than being re-read while the metadata cache may not have caught up with the new path.
+  #move(from: VaultPath, to: VaultPath): void {
+    const known = this.#dayOf.get(from);
+    if (known === undefined || !to.endsWith(".md")) {
+      this.#drop(from);
+      this.#date(to);
+      return;
+    }
+    this.#dayOf.delete(from);
+    this.#dayOf.set(to, known);
+    const paths = this.#byDay.get(known);
+    paths?.delete(from);
+    paths?.add(to);
+    this.#scheduleChanged();
+  }
+
   #rebuild(): void {
     const present = new Set(this.#notes.allMarkdownNotes());
     for (const known of this.#dayOf.keys()) if (!present.has(known)) this.#drop(known);
@@ -118,11 +135,13 @@ export class CreationDateIndex {
     this.#unsubscribes.push(
       this.#notes.events.on("created", (note) => this.#date(note.path)),
       this.#notes.events.on("deleted", (path) => this.#drop(path)),
-      this.#notes.events.on("renamed", ({ from, to }) => {
-        this.#drop(from);
-        this.#date(to);
-      }),
+      this.#notes.events.on("renamed", ({ from, to }) => this.#move(from, to)),
       this.#notes.events.on("metadata-changed", (path) => this.#date(path)),
+      // Period-ness is read at query time, so a dated note joining or leaving a journal changes
+      // counts on its creation day — a cell no journal-index repaint reaches.
+      this.#index.events.on("entryChanged", ({ entry }) => {
+        if (this.#dayOf.has(entry.path)) this.#scheduleChanged();
+      }),
     );
     // A settings reload replaces the slice state reactively, so this covers it too.
     this.#stopSliceWatch = watch([() => this.#slice.state.property, () => this.#slice.state.format], () =>
@@ -148,8 +167,6 @@ export class CreationDateIndex {
     return out;
   }
 
-  // Period-ness is read here rather than indexed, so a note connecting to or leaving a journal
-  // needs no event of this index's own.
   countBetween(start: CalendarDate, end: CalendarDate, options: { excludePeriodNotes: boolean }): number {
     let count = 0;
     for (const path of this.#pathsBetween(start, end)) {

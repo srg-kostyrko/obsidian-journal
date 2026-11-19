@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
-import type { VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, type VaultPath } from "@/infrastructure/host";
+import { Option } from "@/infrastructure/result";
 import { SettingsEventsToken } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -155,7 +156,7 @@ describe("CreationDateIndex", () => {
       expect(count("2026-10-21")).toBe(1);
     });
 
-    it("excludes a note from the period-note-free count once it becomes a period note, with no event of its own", async () => {
+    it("excludes a note from the period-note-free count once it becomes a period note, and announces it", async () => {
       const file = harness.host.putFile("Notes/later.md", "", { created: "2026-10-12" });
       harness.host.emitVault("create", file);
       await settle();
@@ -172,7 +173,21 @@ describe("CreationDateIndex", () => {
       expect(count("2026-10-12", true)).toBe(0);
       expect(count("2026-10-12", false)).toBe(1);
       await settle();
-      expect(changed).not.toHaveBeenCalled();
+      // The connected period's cells repaint on their own; the creation day's cell needs this.
+      expect(changed).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a renamed note's property date even when the new path's metadata is not parsed yet", async () => {
+      const file = harness.host.app.vault.getAbstractFileByPath(PLAIN);
+      if (!(file instanceof TFile)) throw new TypeError("seeded note missing");
+      file.stat.ctime = timestamp(2026, 10, 1);
+      vi.spyOn(harness.resolve(NoteMetadataService), "get").mockReturnValue(Option.none());
+
+      await harness.host.app.vault.rename(file, "Notes/renamed.md");
+      await settle();
+
+      expect(count("2026-10-05")).toBe(3);
+      expect(count("2026-10-01")).toBe(0);
     });
 
     it("ignores an attachment created in the vault", async () => {
