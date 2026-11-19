@@ -17,6 +17,7 @@ applies.
 | Color days by a property, a tag or the title         | [Frontmatter property](#frontmatter-property), [Title and tags](#title-and-tags) |
 | Show how much you wrote                              | [Note size](#note-size)                                                          |
 | Mark dates other notes link to, or that have no note | [Linked from notes](#linked), [Has note](#has-note)                              |
+| Mark days you created notes on                       | [Notes created](#created)                                                        |
 | Choose what a decoration paints                      | [Styles](#styles)                                                                |
 | See more than three marks in a cell                  | [Marks shown per position](#marks-shown-per-position)                            |
 | Find out why a date looks the way it does            | [Finding out why](#finding-out-why-a-date-looks-the-way-it-does)                 |
@@ -41,21 +42,23 @@ other.
 
 Which conditions a journal decoration offers depends on the journal's period:
 
-| Condition                         | Daily | Weekly, monthly, quarterly, annually | Custom intervals |
-| --------------------------------- | :---: | :----------------------------------: | :--------------: |
-| **Check title**, **Check tags**   |   ✓   |                  ✓                   |        ✓         |
-| **Check frontmatter property**    |   ✓   |                  ✓                   |        ✓         |
-| **Check if note exists**          |   ✓   |                  ✓                   |        ✓         |
-| **Check links to this date**      |   ✓   |                  ✓                   |        ✓         |
-| **Check note size**               |   ✓   |                  ✓                   |        ✓         |
-| **Check tasks**                   |   ✓   |                  ✓                   |        ✓         |
-| **Check if a notelet exists**     |   ✓   |                  ✓                   |        ✓         |
-| **Check date**, **Check weekday** |   ✓   |                                      |                  |
-| **Check interval offset**         |       |                                      |        ✓         |
+| Condition                              | Daily | Weekly, monthly, quarterly, annually | Custom intervals |
+| -------------------------------------- | :---: | :----------------------------------: | :--------------: |
+| **Check title**, **Check tags**        |   ✓   |                  ✓                   |        ✓         |
+| **Check frontmatter property**         |   ✓   |                  ✓                   |        ✓         |
+| **Check if note exists**               |   ✓   |                  ✓                   |        ✓         |
+| **Check links to this date**           |   ✓   |                  ✓                   |        ✓         |
+| **Check notes created in this period** |   ✓   |                  ✓                   |        ✓         |
+| **Check note size**                    |   ✓   |                  ✓                   |        ✓         |
+| **Check tasks**                        |   ✓   |                  ✓                   |        ✓         |
+| **Check if a notelet exists**          |   ✓   |                  ✓                   |        ✓         |
+| **Check date**, **Check weekday**      |   ✓   |                                      |                  |
+| **Check interval offset**              |       |                                      |        ✓         |
 
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
 no note it does not match. **Check if note exists** set to **Missing** is made for dates with no note,
-and **Check links to this date** counts links whether the note exists or not. **Check tasks** is the
+**Check links to this date** counts links whether the note exists or not, and **Check notes created in
+this period** counts other notes, never the period's own. **Check tasks** is the
 remaining exception: with **Look in** set to
 **Notelets only** or **Note and notelets**, a date with only a notelet can match, and a date with only a [task
 note](/tasks#task-notes), or a [dated checkbox line](/tasks#dated-lines-from-anywhere-in-the-vault)
@@ -181,6 +184,32 @@ A link to a note that does not exist yet counts only when the text alone names t
   To step to the next day without writing a link, use a [navigation block](/navigation-blocks).
 
 Example: [Dates linked to but not written](#dates-linked-to-but-not-written).
+
+### Notes created {#created}
+
+**Check notes created in this period** matches a period in which at least **Minimum number of created
+notes** notes were created. Leave it at 1 to mark every day you started a new note.
+
+Any note in the vault counts, wherever it is, and so do [notelets](/notelets). The notes of your
+journals do not — the daily, weekly or other note a journal keeps for a period, including a note you
+[connected](/notes#connect-note-to-a-journal) to one. So writing your daily note alone does not mark
+the day. To mark those days as well, set the decoration to **Decorate when any condition is
+fulfilled** and add **Check if note exists** beside it.
+
+A weekly, monthly, quarterly or annual cell counts the notes created on any day of its period, and a
+custom interval counts the notes created on any day of the interval. The count covers the whole vault,
+not just the journal, so two journals with this condition both mark the same day; like every journal
+decoration, it marks only dates inside the journal's timeline.
+
+A note's creation date is the one [Notes by date](/views#notes-by-date) uses: its **Creation date
+property** — `created` unless you changed it — and, without a valid value there, the file's creation
+time. Syncing or copying a vault can reset file creation times, which moves those notes to the day of
+the sync, so set the property if you rely on this mark.
+
+To see which notes made the mark, add a **Notes by date** block to a view, set its **Period** to match
+the cell and turn on **Hide journal notes**: it then lists exactly the notes this condition counts.
+
+Example: [Days you created notes on](#days-you-created-notes-on).
 
 ### Tasks
 
@@ -411,6 +440,24 @@ A daily journal with one decoration, set to **Decorate when all conditions are f
 
 A note `plan.md` reading `Ship it on [[2026-11-20]].` puts the mark on 20 November. Click the day to
 create its note and the mark goes away: the link now leads to a note that exists.
+
+### Days you created notes on
+
+A daily journal with a **Meeting** notelet type and one decoration:
+
+- **Check notes created in this period**, **Minimum number of created notes** 1
+- style: a red **Corner** at the top left
+
+Beside the calendar, a **Notes by date** block with **Period** **Month** and **Hide journal notes** on.
+
+| Note                             | What it is                           | `created`    | Its day's cell | Listed |
+| -------------------------------- | ------------------------------------ | ------------ | -------------- | ------ |
+| `Ideas.md`                       | a plain note                         | `2026-11-09` | corner         | ✓      |
+| `notelets/2026-11-11 Meeting.md` | a **Meeting** notelet of 11 November | `2026-11-11` | corner         | ✓      |
+| `2026-11-13.md`                  | the daily note of 13 November        | `2026-11-13` | not decorated  |        |
+
+9 and 11 November get the corner and 13 November does not: its only note is the journal's own. The
+block lists `Ideas` and `2026-11-11 Meeting`, and not `2026-11-13`.
 
 ### A shelf color and a crowded cell
 

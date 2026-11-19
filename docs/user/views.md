@@ -117,7 +117,8 @@ only journal notes.
 - **Sort notes by** — **Name**, **Last modified** or **Creation date**, with **Sort direction**.
 - **Show period heading**, **Show period navigation**.
 - **Hide journal notes** — leaves out the notes of your journals (daily, weekly and so on), so the list
-  matches what the _created notes_ [decoration condition](/decorations) counts. Notelets stay in the list.
+  matches what the [**Check notes created in this period**](/decorations#created) decoration condition
+  counts. Notelets stay in the list.
 
 A note's creation date comes from **Creation date property** on the main settings page — `created`,
 read with **Creation date format** `YYYY-MM-DD` — and a note without a valid value there falls back to
