@@ -1,6 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { dayNotesSlice } from "@/journals/creation-dates";
 import { journalsCoreModule } from "@/journals/module";
 import { DashboardBlockToken, SliceDefinitionToken } from "@/settings";
 import { shelvesCoreModule } from "@/shelves/module";
@@ -12,7 +13,6 @@ import { ViewBlockDefinitionToken } from "../../tokens";
 import { viewsUiModule } from "../../ui-module";
 
 import { dayNotesBlock } from "./day-notes-block";
-import { dayNotesSlice } from "./slice";
 import DayNotesSettingsBlock from "./ui/DayNotesSettingsBlock.vue";
 
 describe("dayNotesBlock", () => {
