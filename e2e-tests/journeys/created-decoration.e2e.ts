@@ -1,7 +1,7 @@
 import { $, $$, browser } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
-import { seedNote } from "../support/vault.js";
+import { seedNote, waitForFrontmatter } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
 import { dayAnchor, expectDecorated, expectUndecorated, rightClickCell } from "./decorations.js";
@@ -26,23 +26,30 @@ describe("created decoration condition", () => {
     const plain = dayAnchor(PLAIN_DAY);
     const notelet = dayAnchor(NOTELET_DAY);
     const periodNote = dayAnchor(PERIOD_NOTE_DAY);
+    // Dated by its property to its own day, so only the period-note exclusion keeps it unmarked.
+    // Until its frontmatter parses, the index dates it by file creation time — today — so its
+    // cell would read unmarked whether or not the exclusion works. Seeded and parsed first: the
+    // index re-dates on metadataCache "changed" in event order, so once the notes seeded after it
+    // mark their cells, this one has already been re-dated to its own day.
+    await seedNote(
+      `${periodNote}.md`,
+      `---\njournal: daily\njournal-date: ${periodNote}\ncreated: ${periodNote}\n---\n`,
+    );
+    await waitForFrontmatter(
+      `${periodNote}.md`,
+      (frontmatter) => frontmatter.created === periodNote,
+      `waited for ${periodNote}.md to parse its created property`,
+    );
     await seedNote("Ideas.md", `---\ncreated: ${plain}\n---\nSome ideas.\n`);
     await seedNote(
       `notelets/${notelet} Meeting.md`,
       `---\njournal: daily\njournal-date: ${notelet}\njournal-notelet: Meeting\ncreated: ${notelet}\n---\n`,
-    );
-    // Dated by its property to its own day, so only the period-note exclusion keeps it unmarked.
-    await seedNote(
-      `${periodNote}.md`,
-      `---\njournal: daily\njournal-date: ${periodNote}\ncreated: ${periodNote}\n---\n`,
     );
 
     await openCalendarView();
 
     await expectDecorated(calendar.cell(plain));
     await expectDecorated(calendar.cell(notelet));
-    // Absent elements pass expectUndecorated at once, so it only rules something out after the
-    // marked cells have proven this render's creation dates landed.
     await expectUndecorated(calendar.cell(periodNote));
 
     await rightClickCell(plain);

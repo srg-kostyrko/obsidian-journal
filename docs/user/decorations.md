@@ -58,7 +58,7 @@ Which conditions a journal decoration offers depends on the journal's period:
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
 no note it does not match. **Check if note exists** set to **Missing** is made for dates with no note,
 **Check links to this date** counts links whether the note exists or not, and **Check notes created in
-this period** counts other notes, never the period's own. **Check tasks** is the
+this period** counts other notes, never the period notes of any of your journals. **Check tasks** is the
 remaining exception: with **Look in** set to
 **Notelets only** or **Note and notelets**, a date with only a notelet can match, and a date with only a [task
 note](/tasks#task-notes), or a [dated checkbox line](/tasks#dated-lines-from-anywhere-in-the-vault)
@@ -203,11 +203,14 @@ decoration, it marks only dates inside the journal's timeline.
 
 A note's creation date is the one [Notes by date](/views#notes-by-date) uses: its **Creation date
 property** — `created` unless you changed it — and, without a valid value there, the file's creation
-time. Syncing or copying a vault can reset file creation times, which moves those notes to the day of
-the sync, so set the property if you rely on this mark.
+time, or failing that its last modification time. Syncing or copying a vault can reset file creation
+times, which moves those notes to the day of the sync, so set the property if you rely on this mark.
 
-To see which notes made the mark, add a **Notes by date** block to a view, set its **Period** to match
-the cell and turn on **Hide journal notes**: it then lists exactly the notes this condition counts.
+To see which notes marked a day, week, month, quarter or year cell, add a **Notes by date** block to a
+view, set its **Period** to match the cell, turn on **Hide journal notes** and select the cell's date
+in the view: the block lists the notes created in the period around the selected date, which are
+exactly the notes this condition counts. A custom interval has no matching **Period**, so the block
+cannot show an interval's notes.
 
 Example: [Days you created notes on](#days-you-created-notes-on).
 

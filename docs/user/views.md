@@ -122,7 +122,8 @@ only journal notes.
 
 A note's creation date comes from **Creation date property** on the main settings page — `created`,
 read with **Creation date format** `YYYY-MM-DD` — and a note without a valid value there falls back to
-its file creation time. File creation times change when a vault is synced or copied, so set the
+its file creation time, or to its last modification time when the file reports no creation time. A
+note with neither is not listed. File creation times change when a vault is synced or copied, so set the
 property if you rely on this list.
 
 Example: [A sidebar calendar with the day's notes](#a-sidebar-calendar-with-the-day-s-notes).
