@@ -174,6 +174,25 @@ describe("CreationDateIndex", () => {
       expect(changed).not.toHaveBeenCalled();
     });
 
+    it("ignores an attachment created in the vault", async () => {
+      const picture = harness.host.putFile("Notes/pic.png");
+      picture.stat.ctime = timestamp(2026, 10, 5);
+      harness.host.emitVault("create", picture);
+      await settle();
+
+      expect(count("2026-10-05")).toBe(3);
+    });
+
+    it("drops a note renamed to a non-markdown file", async () => {
+      const file = harness.host.app.vault.getAbstractFileByPath(PLAIN);
+      if (!(file instanceof TFile)) throw new TypeError("seeded note missing");
+      file.stat.ctime = timestamp(2026, 10, 5);
+      await harness.host.app.vault.rename(file, "Notes/plain.png");
+      await settle();
+
+      expect(count("2026-10-05")).toBe(2);
+    });
+
     it("coalesces many changes in one tick into one announcement", async () => {
       const changed = vi.fn();
       dates.events.on("changed", changed);

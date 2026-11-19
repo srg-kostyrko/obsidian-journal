@@ -42,6 +42,12 @@ export class CreationDateIndex {
   readonly events: Subscribable<CreationDateEvents> = this.#emitter;
 
   #date(path: VaultPath): void {
+    // NotesService reports every file, attachments included, but only notes are listed by date;
+    // a note renamed to another extension leaves through here too.
+    if (!path.endsWith(".md")) {
+      this.#drop(path);
+      return;
+    }
     const note = this.#notes.find(path);
     const created = note.isSome()
       ? resolveCreationDate(note.value, this.#metadata.get(path).getOrUndefined(), this.#slice.state)
