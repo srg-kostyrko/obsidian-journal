@@ -1018,6 +1018,17 @@
     }
   ],
   "decoration_condition_linked_value_label": "Minimum number of linking notes",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "at least {count} note created",
+        "count=*": "at least {count} notes created"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Minimum number of created notes",
   "decoration_condition_has_notelet_describe_any": "a notelet exists",
   "decoration_condition_has_notelet_describe_types": "a notelet of type {types} exists",
   "decoration_condition_has_notelet_empty": "This journal has no notelet types yet.",
@@ -1191,6 +1202,7 @@
         "type=offset": "Offset",
         "type=has-note": "Has note",
         "type=linked": "Linked",
+        "type=created": "Created",
         "type=tasks": "Tasks",
         "type=note-size": "Note size",
         "type=has-notelet": "Has notelet"
@@ -1210,6 +1222,7 @@
         "type=offset": "Check interval offset",
         "type=has-note": "Check if note exists",
         "type=linked": "Check links to this date",
+        "type=created": "Check notes created in this period",
         "type=tasks": "Check tasks",
         "type=note-size": "Check note size",
         "type=has-notelet": "Check if a notelet exists"

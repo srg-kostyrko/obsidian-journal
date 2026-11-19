@@ -1094,6 +1094,17 @@
     }
   ],
   "decoration_condition_linked_value_label": "Número mínimo de notas com link",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "pelo menos {count} nota criada",
+        "count=*": "pelo menos {count} notas criadas"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Número mínimo de notas criadas",
   "decoration_condition_has_notelet_describe_any": "existe uma nota breve",
   "decoration_condition_has_notelet_describe_types": "existe uma nota breve do tipo {types}",
   "decoration_condition_has_notelet_empty": "Este diário ainda não tem tipos de nota breve.",
@@ -1267,6 +1278,7 @@
         "type=offset": "Deslocamento",
         "type=has-note": "Tem nota",
         "type=linked": "Vinculado",
+        "type=created": "Criadas",
         "type=tasks": "Tarefas",
         "type=note-size": "Tamanho da nota",
         "type=has-notelet": "Tem nota breve"
@@ -1286,6 +1298,7 @@
         "type=offset": "Verificar o deslocamento no intervalo",
         "type=has-note": "Verificar se a nota existe",
         "type=linked": "Verificar links para esta data",
+        "type=created": "Verificar notas criadas neste período",
         "type=tasks": "Verificar tarefas",
         "type=note-size": "Verificar o tamanho da nota",
         "type=has-notelet": "Verificar se existe uma nota breve"

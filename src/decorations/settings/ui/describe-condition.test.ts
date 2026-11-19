@@ -203,6 +203,17 @@ describe("describeCondition", () => {
     });
   });
 
+  describe("created", () => {
+    it("describes created with plural", () => {
+      expect(describeCondition({ type: "created", atLeast: 1 }, calendar)).toBe(
+        m.decoration_condition_created_describe({ count: 1 }),
+      );
+      expect(describeCondition({ type: "created", atLeast: 3 }, calendar)).toBe(
+        m.decoration_condition_created_describe({ count: 3 }),
+      );
+    });
+  });
+
   describe("note-size", () => {
     it("renders the localized note-size clause in words", () => {
       expect(describeCondition({ type: "note-size", unit: "words", condition: "gt", value: 250 }, calendar)).toBe(

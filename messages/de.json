@@ -1082,6 +1082,17 @@
     }
   ],
   "decoration_condition_linked_value_label": "Mindestanzahl verlinkender Notizen",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "mindestens {count} Notiz erstellt",
+        "count=*": "mindestens {count} Notizen erstellt"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Mindestanzahl erstellter Notizen",
   "decoration_condition_has_notelet_describe_any": "eine Kurznotiz existiert",
   "decoration_condition_has_notelet_describe_types": "eine Kurznotiz vom Typ {types} existiert",
   "decoration_condition_has_notelet_empty": "Dieses Journal hat noch keine Kurznotiz-Typen.",
@@ -1255,6 +1266,7 @@
         "type=offset": "Offset",
         "type=has-note": "Notiz vorhanden",
         "type=linked": "Verlinkt",
+        "type=created": "Erstellt",
         "type=tasks": "Aufgaben",
         "type=note-size": "Notizgröße",
         "type=has-notelet": "Kurznotiz vorhanden"
@@ -1274,6 +1286,7 @@
         "type=offset": "Intervall-Offset prüfen",
         "type=has-note": "Prüfen, ob eine Notiz existiert",
         "type=linked": "Verlinkungen auf dieses Datum prüfen",
+        "type=created": "In diesem Zeitraum erstellte Notizen prüfen",
         "type=tasks": "Aufgaben prüfen",
         "type=note-size": "Notizgröße prüfen",
         "type=has-notelet": "Prüfen, ob eine Kurznotiz existiert"

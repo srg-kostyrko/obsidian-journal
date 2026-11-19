@@ -5,7 +5,7 @@ import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
 import type { NoteMetadata, NoteSize, VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
+import { CreationDateIndex, CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
 import { LinkReferenceIndex } from "@/journals/link-references";
 import { answerTaskQuestion, TaskIndex, TaskVisibility } from "@/tasks";
@@ -104,6 +104,7 @@ export class DecorationEngine {
   readonly #visibility = inject(TaskVisibility);
   readonly #structure = inject(NoteStructureService);
   readonly #links = inject(LinkReferenceIndex);
+  readonly #created = inject(CreationDateIndex);
 
   // One structure read per path per evaluation: a note's structure answers every cell and every
   // tasks condition that touches it, and the metadataCache walk behind it is not free.
@@ -201,6 +202,13 @@ export class DecorationEngine {
         return this.#index.isReady() && !hasNote();
       })
       .with({ type: "linked" }, (c) => this.#links.count(journal.name, canonical) >= c.atLeast)
+      .with({ type: "created" }, (c) => {
+        if (!this.#created.isReady()) return false;
+        const start = this.#cycle.startOf(journal.name, canonical);
+        const end = this.#cycle.endOf(journal.name, canonical);
+        if (start.isNone() || end.isNone()) return false;
+        return this.#created.countBetween(start.value, end.value, { excludePeriodNotes: true }) >= c.atLeast;
+      })
       .with({ type: "tasks" }, (c) =>
         answerTaskQuestion(
           taskDependencies,

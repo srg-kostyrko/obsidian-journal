@@ -80,6 +80,7 @@ export function defaultCondition(type: JournalDecorationCondition["type"]): Jour
     .with("offset", () => ({ type: "offset", offset: 1 }))
     .with("has-note", () => ({ type: "has-note", presence: "exists" }))
     .with("linked", () => ({ type: "linked", atLeast: 1 }))
+    .with("created", () => ({ type: "created", atLeast: 1 }))
     .with("tasks", () => ({
       type: "tasks",
       quantifier: "any",

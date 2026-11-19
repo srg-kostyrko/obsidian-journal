@@ -12,8 +12,9 @@ import {
   type VaultPath,
 } from "@/infrastructure/host";
 import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
-import { JournalsIndex, JournalsRepository, LinkReferenceIndex } from "@/journals";
+import { CreationDateIndex, JournalsIndex, JournalsRepository, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeCreationDateIndex } from "@/journals/creation-dates/testing";
 import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
@@ -50,6 +51,7 @@ interface DecorationsHarness {
   size: FakeNoteSizeService;
   structures: FakeNoteStructureService;
   links: FakeLinkReferenceIndex;
+  created: FakeCreationDateIndex;
   store: DecorationsStore;
 }
 
@@ -62,6 +64,7 @@ async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promis
   const size = new FakeNoteSizeService();
   const structures = new FakeNoteStructureService();
   const links = new FakeLinkReferenceIndex();
+  const created = new FakeCreationDateIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
@@ -69,9 +72,10 @@ async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promis
       overrideWith(NoteSizeService, size as unknown as NoteSizeService),
       overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
       overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex),
+      overrideWith(CreationDateIndex, created as unknown as CreationDateIndex),
     ],
   });
-  return { harness, size, structures, links, store: harness.resolve(DecorationsStore) };
+  return { harness, size, structures, links, created, store: harness.resolve(DecorationsStore) };
 }
 
 function buildHarness(decorations: JournalConfig["decorations"] = []): Promise<DecorationsHarness> {
@@ -535,6 +539,32 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(0);
 
       links.setCount("daily", "2026-05-25", 1);
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("a cell lights when a note created on it arrives after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("created")],
+        styles: [buildStyle("background")],
+      });
+      const { harness, created } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      // Mount BEFORE the note arrives: one seeded first would pass with the version read deleted.
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      created.add("inbox/idea.md", "2026-05-25");
       await nextTick();
 
       expect(slot.value).toHaveLength(1);

@@ -1114,6 +1114,19 @@
     }
   ],
   "decoration_condition_linked_value_label": "Минимальное число ссылающихся заметок",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "создана как минимум {count} заметка",
+        "countPlural=few": "созданы как минимум {count} заметки",
+        "countPlural=many": "создано как минимум {count} заметок",
+        "countPlural=*": "создано как минимум {count} заметок"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Минимальное число созданных заметок",
   "decoration_condition_has_notelet_describe_any": "подзаметка существует",
   "decoration_condition_has_notelet_describe_types": "существует подзаметка типа {types}",
   "decoration_condition_has_notelet_empty": "В этом журнале ещё нет типов подзаметок.",
@@ -1287,6 +1300,7 @@
         "type=offset": "Смещение",
         "type=has-note": "Есть заметка",
         "type=linked": "Со ссылками",
+        "type=created": "Созданные",
         "type=tasks": "Задачи",
         "type=note-size": "Размер заметки",
         "type=has-notelet": "Есть подзаметка"
@@ -1306,6 +1320,7 @@
         "type=offset": "Проверить смещение в интервале",
         "type=has-note": "Проверить, существует ли заметка",
         "type=linked": "Проверить ссылки на эту дату",
+        "type=created": "Проверить заметки, созданные в этом периоде",
         "type=tasks": "Проверить задачи",
         "type=note-size": "Проверить размер заметки",
         "type=has-notelet": "Проверить, существует ли подзаметка"

@@ -4,6 +4,7 @@ import { computed, type Component } from "vue";
 
 import type { FilterCondition, JournalDecorationCondition } from "@/decorations";
 
+import ConditionCreated from "./ConditionCreated.vue";
 import ConditionDate from "./ConditionDate.vue";
 import ConditionHasNote from "./ConditionHasNote.vue";
 import ConditionHasNotelet from "./ConditionHasNotelet.vue";
@@ -35,6 +36,7 @@ const leaf = computed<Component>(() =>
     .with("has-notelet", () => ConditionHasNotelet)
     .with("has-note", () => ConditionHasNote)
     .with("linked", () => ConditionLinked)
+    .with("created", () => ConditionCreated)
     .with("tasks", () => ConditionTasks)
     .exhaustive(),
 );

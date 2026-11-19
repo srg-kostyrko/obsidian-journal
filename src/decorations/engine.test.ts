@@ -6,8 +6,9 @@ import { date } from "@/calendar/testing";
 import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
 import type { NoteMetadata, NoteSize, NoteStructure, VaultPath } from "@/infrastructure/host";
 import { FakeNoteMetadataService, FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
-import { JournalsIndex, LinkReferenceIndex } from "@/journals";
+import { CreationDateIndex, JournalsIndex, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeCreationDateIndex } from "@/journals/creation-dates/testing";
 import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
@@ -43,10 +44,12 @@ async function buildHarness(journals: Record<string, JournalConfig> = {}): Promi
   size: FakeNoteSizeService;
   structures: FakeNoteStructureService;
   links: FakeLinkReferenceIndex;
+  created: FakeCreationDateIndex;
 }> {
   const size = new FakeNoteSizeService();
   const structures = new FakeNoteStructureService();
   const links = new FakeLinkReferenceIndex();
+  const created = new FakeCreationDateIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: {}, decorations: { decorations: [] } },
@@ -54,9 +57,10 @@ async function buildHarness(journals: Record<string, JournalConfig> = {}): Promi
       overrideWith(NoteSizeService, size as unknown as NoteSizeService),
       overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
       overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex),
+      overrideWith(CreationDateIndex, created as unknown as CreationDateIndex),
     ],
   });
-  return { harness, size, structures, links };
+  return { harness, size, structures, links, created };
 }
 
 // A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
@@ -103,6 +107,31 @@ async function evaluateLinked(atLeast: number, count: number): Promise<Map<strin
     .resolve(DecorationEngine)
     .evaluateRange(
       [DayPeriod.containing(date("2026-05-25"))],
+      [{ kind: "journal", journalName: "daily", index: 0, decoration }],
+    );
+}
+
+function createdAtLeast(atLeast: number): JournalDecoration {
+  return buildDecoration({
+    mode: "and",
+    conditions: [buildCondition("created", { atLeast })],
+    styles: [buildStyle("background")],
+  });
+}
+
+async function evaluateDailyCreated(
+  atLeast: number,
+  seed: (created: FakeCreationDateIndex) => void,
+): Promise<Map<string, unknown>> {
+  const decoration = createdAtLeast(atLeast);
+  const { harness, created } = await buildHarness({
+    daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+  });
+  seed(created);
+  return harness
+    .resolve(DecorationEngine)
+    .evaluateRange(
+      [DayPeriod.containing(date("2026-10-05"))],
       [{ kind: "journal", journalName: "daily", index: 0, decoration }],
     );
 }
@@ -538,6 +567,84 @@ describe("DecorationEngine", () => {
         expect([...result.keys()]).toEqual(
           ["2026-01-05", "2026-01-12", "2026-01-18"].map((day) => cellKey("day", day as AnchorString)),
         );
+      });
+    });
+
+    describe("created conditions", () => {
+      it("created marks a day with a note created on it", async () => {
+        const result = await evaluateDailyCreated(1, (c) => c.add("inbox/idea.md", "2026-10-05"));
+        expect(result.size).toBe(1);
+      });
+
+      it("created does not mark a day with fewer created notes than asked", async () => {
+        const result = await evaluateDailyCreated(2, (c) => c.add("inbox/idea.md", "2026-10-05"));
+        expect(result.size).toBe(0);
+      });
+
+      it("created ignores a note created on another day", async () => {
+        const result = await evaluateDailyCreated(1, (c) => c.add("inbox/idea.md", "2026-10-06"));
+        expect(result.size).toBe(0);
+      });
+
+      it("created counts a notelet", async () => {
+        const result = await evaluateDailyCreated(1, (c) => c.add("daily/2026-10-05.standup.md", "2026-10-05"));
+        expect(result.size).toBe(1);
+      });
+
+      it("created does not count a period note", async () => {
+        const result = await evaluateDailyCreated(1, (c) =>
+          c.add("daily/2026-10-05.md", "2026-10-05", { periodNote: true }),
+        );
+        expect(result.size).toBe(0);
+      });
+
+      it("created marks nothing before the creation-date index is ready", async () => {
+        const result = await evaluateDailyCreated(1, (c) => {
+          c.add("inbox/idea.md", "2026-10-05");
+          c.setReady(false);
+        });
+        expect(result.size).toBe(0);
+      });
+
+      it("created on a weekly journal counts a note created mid-week", async () => {
+        const decoration = createdAtLeast(1);
+        const { harness, created } = await buildHarness({
+          weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
+        });
+        created.add("inbox/idea.md", "2026-10-07");
+        const week = WeekPeriod.containing(date("2026-10-07"));
+
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange([week], [{ kind: "journal", journalName: "weekly", index: 0, decoration }]);
+
+        expect(result.size).toBe(1);
+      });
+
+      // The interval's default end is 2026-10-14; only the stored end reaches the note on 10-18.
+      it("created on a custom journal counts up to an interval's stored end", async () => {
+        const decoration = createdAtLeast(1);
+        const { harness, created } = await buildHarness({
+          sprint: customJournal("sprint", "week", 2, "2026-10-01", { decorations: [decoration] }),
+        });
+        created.add("inbox/idea.md", "2026-10-18");
+        const index = harness.resolve(JournalsIndex);
+        index.register({
+          journalName: "sprint",
+          anchor: "2026-10-01" as AnchorString,
+          path: "sprint/2026-10-01.md" as VaultPath,
+          endDate: "2026-10-20" as AnchorString,
+        });
+        index.markReady();
+
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange(
+            [DayPeriod.containing(date("2026-10-01"))],
+            [{ kind: "journal", journalName: "sprint", index: 0, decoration }],
+          );
+
+        expect(result.size).toBe(1);
       });
     });
 

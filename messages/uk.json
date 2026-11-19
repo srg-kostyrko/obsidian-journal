@@ -967,6 +967,19 @@
     }
   ],
   "decoration_condition_linked_value_label": "Мінімальна кількість нотаток із посиланнями",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "створено як мінімум {count} нотатку",
+        "countPlural=few": "створено як мінімум {count} нотатки",
+        "countPlural=many": "створено як мінімум {count} нотаток",
+        "countPlural=*": "створено як мінімум {count} нотаток"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Мінімальна кількість створених нотаток",
   "decoration_condition_has_notelet_describe_any": "піднотатка існує",
   "decoration_condition_has_notelet_describe_types": "існує піднотатка типу {types}",
   "decoration_condition_has_notelet_empty": "У цьому журналі ще немає типів піднотаток.",
@@ -1140,6 +1153,7 @@
         "type=offset": "Зсув",
         "type=has-note": "Має нотатку",
         "type=linked": "З посиланнями",
+        "type=created": "Створені",
         "type=tasks": "Завдання",
         "type=note-size": "Розмір нотатки",
         "type=has-notelet": "Має піднотатку"
@@ -1159,6 +1173,7 @@
         "type=offset": "Перевірити зсув інтервалу",
         "type=has-note": "Перевірити, чи існує нотатка",
         "type=linked": "Перевірити посилання на цю дату",
+        "type=created": "Перевірити нотатки, створені в цьому періоді",
         "type=tasks": "Перевірити завдання",
         "type=note-size": "Перевірити розмір нотатки",
         "type=has-notelet": "Перевірити, чи існує піднотатка"

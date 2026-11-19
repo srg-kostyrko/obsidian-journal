@@ -89,6 +89,11 @@ describe("ConditionItem", () => {
     expect(screen.getByLabelText(m.decoration_condition_linked_value_label())).toBeTruthy();
   });
 
+  it("renders the created editor for a created condition", async () => {
+    await mount({ type: "created", atLeast: 1 });
+    expect(screen.getByLabelText(m.decoration_condition_created_value_label())).toBeTruthy();
+  });
+
   it("renders ConditionTasks for a tasks condition", async () => {
     await mount(buildCondition("tasks"));
     expect(screen.getByRole("radiogroup", { name: m.decoration_condition_tasks_status_label() })).toBeTruthy();
