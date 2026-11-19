@@ -139,19 +139,20 @@ describe("CreationDateIndex", () => {
       expect(changed).toHaveBeenCalled();
     });
 
-    it("re-dates every note when the stored settings reload", async () => {
-      // Staged without an event: only the rebuild a reload triggers can see it.
+    it("re-dates every note when a settings reload replaces the slice", async () => {
+      // Staged without an event: only the rebuild the slice change triggers can see it.
       harness.host.files.set(PLAIN, {
         content: "",
-        frontmatter: { created: "2026-10-21" },
-        metadata: { frontmatter: { created: "2026-10-21" } },
+        frontmatter: { born: "2026-10-21" },
+        metadata: { frontmatter: { born: "2026-10-21" } },
       });
 
+      // A reload assigns a freshly parsed slice object, as SettingsService.#refresh does.
+      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: "YYYY-MM-DD" };
       harness.resolve(SettingsEventsToken).emit("reloaded");
       await settle();
 
       expect(count("2026-10-21")).toBe(1);
-      expect(count("2026-10-05")).toBe(2);
     });
 
     it("excludes a note from the period-note-free count once it becomes a period note, with no event of its own", async () => {
@@ -210,6 +211,17 @@ describe("CreationDateIndex", () => {
       await settle();
 
       expect(count("2026-10-07")).toBe(0);
+    });
+
+    it("stops re-dating on a slice change once disposed", async () => {
+      harness.host.emitMetadata(PLAIN, { frontmatter: { created: "2026-10-05", born: "2026-10-20" } });
+      await settle();
+      dates[Symbol.dispose]();
+
+      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: "YYYY-MM-DD" };
+      await settle();
+
+      expect(count("2026-10-20")).toBe(0);
     });
   });
 

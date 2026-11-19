@@ -5,7 +5,7 @@ import { CalendarDate, type AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { NoteMetadataService, NotesService, type Note, type VaultPath } from "@/infrastructure/host";
-import { SettingsEventsToken, SettingsService } from "@/settings";
+import { SettingsService } from "@/settings";
 
 import { JournalsIndex } from "../journals-index";
 import { isNotelet } from "../types";
@@ -27,7 +27,6 @@ export class CreationDateIndex {
   readonly #notes = inject(NotesService);
   readonly #metadata = inject(NoteMetadataService);
   readonly #index = inject(JournalsIndex);
-  readonly #settingsEvents = inject(SettingsEventsToken);
   readonly #slice = inject(SettingsService).getSlice(dayNotesSlice);
   readonly #emitter: TypedEmitter<CreationDateEvents> = createNanoEvents();
   readonly #unsubscribes: (() => void)[] = [];
@@ -124,11 +123,10 @@ export class CreationDateIndex {
         this.#date(to);
       }),
       this.#notes.events.on("metadata-changed", (path) => this.#date(path)),
-      this.#settingsEvents.on("reloaded", () => this.#rebuild()),
     );
-    this.#stopSliceWatch = watch(
-      () => [this.#slice.state.property, this.#slice.state.format],
-      () => this.#rebuild(),
+    // A settings reload replaces the slice state reactively, so this covers it too.
+    this.#stopSliceWatch = watch([() => this.#slice.state.property, () => this.#slice.state.format], () =>
+      this.#rebuild(),
     );
     this.#ready = true;
     this.#scheduleChanged();
@@ -143,7 +141,8 @@ export class CreationDateIndex {
     for (const path of this.#pathsBetween(start, end)) {
       const day = this.#dayOf.get(path);
       const note = this.#notes.find(path);
-      // Looked up at query time so the note's file times are current, not those seen when dated.
+      // The note is looked up at query time; this index announces no edit that leaves the date
+      // unchanged, so a consumer rendering file times must refresh on edits itself.
       if (day !== undefined && note.isSome()) out.push({ note: note.value, created: CalendarDate.fromAnchor(day) });
     }
     return out;
