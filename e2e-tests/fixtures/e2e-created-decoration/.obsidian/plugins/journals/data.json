@@ -1,0 +1,79 @@
+{
+  "version": 9,
+  "logging": { "level": "debug" },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "notelets": {
+        "meeting": {
+          "id": "meeting",
+          "name": "Meeting",
+          "folder": "notelets",
+          "nameTemplate": "{{date}} Meeting",
+          "templates": [],
+          "counter": { "enabled": false, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        }
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [{ "type": "created", "atLeast": 1 }],
+          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+        }
+      ]
+    }
+  },
+  "views": {
+    "5c1e8a3f-2d7b-4e9a-8f6c-1b3d5e7a9c20": {
+      "id": "5c1e8a3f-2d7b-4e9a-8f6c-1b3d5e7a9c20",
+      "name": "Calendar",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": true,
+      "leaf": "right",
+      "openOnStartup": false,
+      "followActiveDate": false,
+      "blocks": [
+        {
+          "id": "6d2f9b4a-3e8c-4fab-9a7d-2c4e6f8b0d31",
+          "key": "month-calendar",
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "default",
+            "showHeading": "default",
+            "showWeekdays": "default",
+            "outsideDays": "default",
+            "monthRows": "default"
+          }
+        },
+        {
+          "id": "7e3a0c5b-4f9d-4abc-8b8e-3d5f7a9c1e42",
+          "key": "day-notes",
+          "config": {
+            "granularity": "month",
+            "sortField": "name",
+            "sortDirection": "asc",
+            "showHeading": false,
+            "showNavigation": false,
+            "hidePeriodNotes": true
+          }
+        }
+      ]
+    }
+  }
+}
