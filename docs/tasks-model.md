@@ -214,12 +214,13 @@ checkbox-only listing returns nothing and their calendar stays unlit.
 
 `src/journals/creation-dates/` (`resolveCreationDate`) is prior art for the lookup
 `note-property` needs — configurable property name and format, falling back to
-`ctime`/`mtime`. It is **not** shared: it resolves one hardcoded date role
-(created) for one slice, and the date→paths index beside it serves creation
-counts and the Notes by date block only. A provider feeding decorations needs
-its own, so `note-property` carries its own date→paths index. Generalizing
-creation dates into a shared capability was considered and declined — it costs a
-migration on a shipped settings slice and buys one index.
+`ctime`/`mtime`. It is **not** shared: it resolves one fixed date role (created)
+from one settings slice, while `note-property` dates a note by a configurable
+role (`scheduled | due`) from its own provider settings, so the two indexes
+differ in what a date means and in which settings drive them. `note-property`
+carries its own date→paths index. Generalizing creation dates into a shared
+capability was considered and declined — it buys one index at the cost of
+coupling two unrelated settings.
 
 ## Status normalization
 
