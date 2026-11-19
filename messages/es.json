@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Descendente",
   "view_block_day_notes_show_heading_label": "Mostrar encabezado del período",
   "view_block_day_notes_show_navigation_label": "Mostrar navegación del período",
+  "view_block_day_notes_hide_period_notes_label": "Ocultar notas de diario",
   "view_block_day_notes_last_modified": "Última modificación: {date}",
   "view_block_day_notes_created": "Creada: {date}",
   "view_block_day_notes_empty": "No se creó ninguna nota en este período.",

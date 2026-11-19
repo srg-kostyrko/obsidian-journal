@@ -63,4 +63,10 @@ const update = (patch: Partial<DayNotesBlockConfig>): void => props.onChange({ .
       @update:model-value="(value: boolean | undefined) => update({ showNavigation: value ?? false })"
     />
   </UiSettingRow>
+  <UiSettingRow :name="m.view_block_day_notes_hide_period_notes_label()">
+    <UiToggle
+      :model-value="config.hidePeriodNotes"
+      @update:model-value="(value: boolean | undefined) => update({ hidePeriodNotes: value ?? false })"
+    />
+  </UiSettingRow>
 </template>

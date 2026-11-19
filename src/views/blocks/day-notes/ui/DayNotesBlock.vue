@@ -6,7 +6,14 @@ import { CalendarDate, periodKinds, periodOfKind, type Period } from "@/calendar
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { defineOpenMode, NoticeService, WorkspaceService, type Note } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import {
+  CreationDateIndex,
+  JournalsIndex,
+  useCreationDatesVersion,
+  useIndexVersion,
+  type CreatedNote,
+} from "@/journals";
+import { isNotelet } from "@/journals/types";
 import { accessibleFormatPattern } from "@/notes-calendar/cell-format";
 import { ShelvesService } from "@/shelves";
 import { icons } from "@/ui/icons";
@@ -18,8 +25,6 @@ import { ViewsService } from "../../../service";
 import { buttonConfigFor, type ButtonAction, type ButtonConfig } from "../../../toolbar-items/button/button-config";
 import ButtonItem from "../../../toolbar-items/button/ui/ButtonItem.vue";
 import { useViewContext } from "../../../view-context";
-import { useDayNotesQuery, type CreatedNote } from "../day-notes";
-import { useDayNotesVersion } from "../use-day-notes-version";
 
 import type { BlockInstanceId } from "../../../config";
 import type { DayNotesBlockConfig } from "../day-notes-block";
@@ -35,9 +40,10 @@ const props = defineProps<{
 }>();
 
 const viewContext = useViewContext();
-const query = useDayNotesQuery();
-const queryVersion = useDayNotesVersion();
+const creationDates = useService(CreationDateIndex);
+const creationDatesVersion = useCreationDatesVersion();
 const index = useService(JournalsIndex);
+const indexVersion = useIndexVersion();
 const shelves = useService(ShelvesService);
 const views = useService(ViewsService);
 const workspace = useService(WorkspaceService);
@@ -76,15 +82,25 @@ function navigationConfig(direction: "prev" | "next"): ButtonConfig {
 const previousNavigationConfig = computed(() => navigationConfig("prev"));
 const nextNavigationConfig = computed(() => navigationConfig("next"));
 
-const cards = computed<readonly DayNoteCard[]>(() => {
-  void queryVersion.value;
+const ready = computed(() => {
+  void creationDatesVersion.value;
+  return creationDates.isReady();
+});
 
-  const result = query.notesCreatedIn(period.value).map((createdNote): DayNoteCard => {
+const cards = computed<readonly DayNoteCard[]>(() => {
+  void creationDatesVersion.value;
+  // Period-ness changes without a creation-date event, so the journals index is a dependency too.
+  void indexVersion.value;
+  if (!ready.value) return [];
+
+  const result: DayNoteCard[] = [];
+  for (const createdNote of creationDates.between(period.value.start, period.value.end)) {
     const entry = index.entryByPath(createdNote.note.path).getOrUndefined();
+    if (props.config.hidePeriodNotes && entry !== undefined && !isNotelet(entry)) continue;
     const journalName = entry?.journalName ?? null;
     const shelfName = journalName ? shelves.shelfOf(journalName) || null : null;
-    return { ...createdNote, journalName, shelfName };
-  });
+    result.push({ ...createdNote, journalName, shelfName });
+  }
 
   return result.toSorted((left, right) => compareCards(left, right, props.config));
 });
@@ -218,10 +234,10 @@ const sortDirectionLabel = computed(() =>
       </div>
     </header>
 
-    <div v-if="cards.length === 0" class="journal-view-day-notes__empty">
+    <div v-if="ready && cards.length === 0" class="journal-view-day-notes__empty">
       {{ m.view_block_day_notes_empty() }}
     </div>
-    <div v-else class="journal-view-day-notes__cards">
+    <div v-else-if="ready" class="journal-view-day-notes__cards">
       <button
         v-for="note in cards"
         :key="note.note.path"

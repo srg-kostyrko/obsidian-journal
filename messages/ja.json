@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "降順",
   "view_block_day_notes_show_heading_label": "期間の見出しを表示",
   "view_block_day_notes_show_navigation_label": "期間ナビゲーションを表示",
+  "view_block_day_notes_hide_period_notes_label": "ジャーナルのノートを非表示",
   "view_block_day_notes_last_modified": "最終更新：{date}",
   "view_block_day_notes_created": "作成日：{date}",
   "view_block_day_notes_empty": "この期間に作成されたノートはありません。",

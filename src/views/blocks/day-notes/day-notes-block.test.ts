@@ -25,7 +25,13 @@ describe("dayNotesBlock", () => {
       sortDirection: "desc",
       showHeading: true,
       showNavigation: false,
+      hidePeriodNotes: false,
     });
+  });
+
+  it("reads a missing hidePeriodNotes as false", () => {
+    const parsed = v.parse(dayNotesBlock.schema, { granularity: "day" });
+    expect(parsed.hidePeriodNotes).toBe(false);
   });
 
   it("accepts every period kind and all sort fields", () => {

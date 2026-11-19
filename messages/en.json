@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Descending",
   "view_block_day_notes_show_heading_label": "Show period heading",
   "view_block_day_notes_show_navigation_label": "Show period navigation",
+  "view_block_day_notes_hide_period_notes_label": "Hide journal notes",
   "view_block_day_notes_last_modified": "Last modified: {date}",
   "view_block_day_notes_created": "Created: {date}",
   "view_block_day_notes_empty": "No notes were created in this period.",

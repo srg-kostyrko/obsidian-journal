@@ -212,14 +212,14 @@ where a task is a note tagged `#task` or identified by a property, carrying
 false for those users: a TaskNotes task contributes no list item, so a
 checkbox-only listing returns nothing and their calendar stays unlit.
 
-`src/views/blocks/day-notes/day-notes.ts` is prior art for the lookup
+`src/journals/creation-dates/` (`resolveCreationDate`) is prior art for the lookup
 `note-property` needs — configurable property name and format, falling back to
 `ctime`/`mtime`. It is **not** shared: it resolves one hardcoded date role
-(created) for one view block, and it iterates `allMarkdownNotes()` per call. A
-provider feeding decorations cannot do that, so `note-property` carries its own
-date→paths index. Generalizing day-notes into a shared capability was considered
-and declined — it costs a migration on a shipped settings slice and buys one
-index.
+(created) for one slice, and the date→paths index beside it serves creation
+counts and the Notes by date block only. A provider feeding decorations needs
+its own, so `note-property` carries its own date→paths index. Generalizing
+creation dates into a shared capability was considered and declined — it costs a
+migration on a shipped settings slice and buys one index.
 
 ## Status normalization
 
