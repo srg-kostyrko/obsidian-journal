@@ -1,5 +1,5 @@
 import { fireEvent, screen } from "@testing-library/vue";
-import { __testing as obsidianTesting } from "obsidian";
+import { __testing as obsidianTesting, TFile } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref, type Ref } from "vue";
 
@@ -309,6 +309,35 @@ describe("DayNotesBlock", () => {
     config.value = { ...config.value, granularity: "month" };
     await nextTick();
     expect(metadataText()).toEqual([expect.stringContaining("Created:"), expect.stringContaining("Last modified:")]);
+  });
+
+  it("refreshes order and the modified label when a listed note is edited after mount", async () => {
+    const { container, harness } = await mountBlock({
+      notes: [
+        { path: "Older.md", created: "2026-05-15", modified: "2026-05-15 09:00" },
+        { path: "Newer.md", created: "2026-05-15", modified: "2026-05-15 10:00" },
+      ],
+    });
+    const modifiedTexts = () =>
+      [...container.querySelectorAll<HTMLElement>(".journal-view-day-notes__metadata")].map(
+        (element) => element.textContent?.trim() ?? "",
+      );
+    expect(cardTitles(container)).toEqual(["Newer", "Older"]);
+    const before = modifiedTexts();
+
+    const edited = harness.host.app.vault.getAbstractFileByPath("Older.md");
+    if (!(edited instanceof TFile)) throw new TypeError("seeded note missing");
+    const editedAt = localMoment("2026-05-15 20:00", "YYYY-MM-DD HH:mm", true).valueOf();
+    edited.stat.mtime = editedAt;
+    harness.host.emitMetadata("Older.md", { frontmatter: { created: "2026-05-15" } });
+    await vi.waitFor(() => expect(cardTitles(container)).toEqual(["Older", "Newer"]));
+
+    const after = modifiedTexts();
+    expect(after).not.toEqual(before);
+    const expected = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
+      new Date(editedAt),
+    );
+    expect(after[1]).toBe(m.view_block_day_notes_last_modified({ date: expected }));
   });
 
   it("shows journal and shelf badges without filtering any notes", async () => {

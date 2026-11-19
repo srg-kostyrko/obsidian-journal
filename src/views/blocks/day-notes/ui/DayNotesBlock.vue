@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Menu } from "obsidian";
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 
 import { CalendarDate, periodKinds, periodOfKind, type Period } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import { defineOpenMode, NoticeService, WorkspaceService, type Note } from "@/infrastructure/host";
+import { defineOpenMode, NoticeService, NotesService, WorkspaceService, type Note } from "@/infrastructure/host";
 import {
   CreationDateIndex,
   JournalsIndex,
@@ -47,9 +47,34 @@ const indexVersion = useIndexVersion();
 const shelves = useService(ShelvesService);
 const views = useService(ViewsService);
 const workspace = useService(WorkspaceService);
+const notes = useService(NotesService);
 const notices = useService(NoticeService);
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const modifiedFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+// An edit moves a note's mtime without moving its creation date, so the index announces nothing;
+// the modified sort and the "Last modified" line need an edit signal of their own.
+const REFRESH_DEBOUNCE_MS = 100;
+const editVersion = shallowRef(0);
+// number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
+let editTimer: number | undefined;
+let stopEditEvents: (() => void) | undefined;
+
+onMounted(() => {
+  stopEditEvents = notes.events.on("metadata-changed", () => {
+    if (editTimer !== undefined) window.clearTimeout(editTimer);
+    editTimer = window.setTimeout(() => {
+      editTimer = undefined;
+      editVersion.value++;
+    }, REFRESH_DEBOUNCE_MS);
+  });
+});
+
+onUnmounted(() => {
+  stopEditEvents?.();
+  if (editTimer !== undefined) window.clearTimeout(editTimer);
+  editTimer = undefined;
+});
 
 const period = computed(() =>
   periodOfKind(props.config.granularity, CalendarDate.fromAnchor(viewContext.refDate.value)),
@@ -91,6 +116,7 @@ const cards = computed<readonly DayNoteCard[]>(() => {
   void creationDatesVersion.value;
   // Period-ness changes without a creation-date event, so the journals index is a dependency too.
   void indexVersion.value;
+  void editVersion.value;
   if (!ready.value) return [];
 
   const result: DayNoteCard[] = [];
