@@ -4,6 +4,7 @@ import { CalendarDate, type AnchorString, type Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { useCreationDatesVersion } from "@/journals/creation-dates";
 import { useLinkReferencesVersion } from "@/journals/link-references";
 import { useTasksVersion } from "@/tasks/use-tasks-version";
 
@@ -58,6 +59,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
   const tasksVersion = useTasksVersion();
   const linksVersion = useLinkReferencesVersion();
+  const createdVersion = useCreationDatesVersion();
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
@@ -148,8 +150,10 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
     // Reading the version here registers it as a dependency.
     void tasksVersion.value;
-    // Same for LinkReferenceIndex, which builds after boot and changes on any linking edit.
+    // Same for LinkReferenceIndex and CreationDateIndex, which build after boot and change on
+    // linking edits and on note creates, renames and deletes.
     void linksVersion.value;
+    void createdVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
     periodsByKey = new Map<string, Period[]>();

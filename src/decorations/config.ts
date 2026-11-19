@@ -272,6 +272,11 @@ const linkedCondition = v.object({
   // Strict pipe is safe only because the editor is the sole writer and never lets a cleared value through.
   atLeast: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
+const createdCondition = v.object({
+  type: v.literal("created"),
+  // Strict pipe for the same reason as linked: the editor never lets a cleared value through.
+  atLeast: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
 const tasksCondition = v.object({ type: v.literal("tasks"), ...taskQuestionSchema.entries });
 
 const hasNoteletCondition = v.object({
@@ -288,6 +293,7 @@ export const decorationConditionSchema = v.union([
   offsetCondition,
   hasNoteCondition,
   linkedCondition,
+  createdCondition,
   tasksCondition,
   noteSizeCondition,
   hasNoteletCondition,

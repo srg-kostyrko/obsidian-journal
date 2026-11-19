@@ -8,6 +8,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useNoteSizeVersion } from "@/infrastructure/host";
 import { CycleService, TimelineService } from "@/journals";
+import { useCreationDatesVersion } from "@/journals/creation-dates";
 import { useLinkReferencesVersion } from "@/journals/link-references";
 import { JournalsRepository } from "@/journals/repository";
 import { useIndexVersion } from "@/journals/use-index-version";
@@ -35,6 +36,7 @@ const timeline = useService(TimelineService);
 const indexVersion = useIndexVersion();
 const sizeVersion = useNoteSizeVersion();
 const linksVersion = useLinkReferencesVersion();
+const createdVersion = useCreationDatesVersion();
 
 const anchor = ref<AnchorString>(CalendarDate.today().toAnchor());
 const datePickerModel = useAnchorField({ anchor, picking: "day" });
@@ -60,6 +62,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
   void indexVersion.value;
   void sizeVersion.value;
   void linksVersion.value;
+  void createdVersion.value;
   const selectedDate = CalendarDate.fromAnchor(anchor.value);
 
   const kinds = new Set<PeriodKind>(["day"]);

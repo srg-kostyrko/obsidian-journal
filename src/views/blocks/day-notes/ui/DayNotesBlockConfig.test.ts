@@ -15,6 +15,7 @@ const config: Config = {
   sortDirection: "desc",
   showHeading: true,
   showNavigation: false,
+  hidePeriodNotes: false,
 };
 
 async function mountConfig(onChange = vi.fn()) {
@@ -35,7 +36,7 @@ describe("DayNotesBlockConfig", () => {
     expect(screen.getAllByRole("combobox")).toHaveLength(3);
     expect(screen.getByText(m.view_block_day_notes_show_heading_label())).toBeTruthy();
     expect(screen.getByText(m.view_block_day_notes_show_navigation_label())).toBeTruthy();
-    expect(screen.getAllByRole("checkbox")).toHaveLength(2);
+    expect(screen.getAllByRole("checkbox")).toHaveLength(3);
   });
 
   it("emits the complete config when granularity changes", async () => {
@@ -61,6 +62,12 @@ describe("DayNotesBlockConfig", () => {
     const onChange = await mountConfig();
     await userEvent.click(within(controlFor(m.view_block_day_notes_show_heading_label())).getByRole("checkbox"));
     expect(onChange).toHaveBeenCalledWith({ ...config, showHeading: false });
+  });
+
+  it("can hide journal notes", async () => {
+    const onChange = await mountConfig();
+    await userEvent.click(within(controlFor(m.view_block_day_notes_hide_period_notes_label())).getByRole("checkbox"));
+    expect(onChange).toHaveBeenCalledWith({ ...config, hidePeriodNotes: true });
   });
 
   it("can enable period navigation without changing the heading", async () => {

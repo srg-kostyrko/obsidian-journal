@@ -1,11 +1,10 @@
 import { createNanoEvents } from "nanoevents";
 
 import type { Module } from "@/infrastructure/di";
-import { CollectionDefinitionToken, SliceDefinitionToken } from "@/settings";
+import { CollectionDefinitionToken } from "@/settings";
 
 import { customIntervalsBlock } from "./blocks/custom-intervals/custom-intervals-block";
 import { dayNotesBlock } from "./blocks/day-notes/day-notes-block";
-import { dayNotesSlice } from "./blocks/day-notes/slice";
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { markdownTemplateBlock } from "./blocks/markdown-template/markdown-template-block";
 import { monthCalendarBlock } from "./blocks/month-calendar/month-calendar-block";
@@ -35,7 +34,6 @@ import { ViewsViewModel } from "./view-model";
 export const viewsCoreModule: Module = {
   register(c) {
     c.register(CollectionDefinitionToken).useValue(viewsCollection);
-    c.register(SliceDefinitionToken).useValue(dayNotesSlice);
     c.register(ViewsEventsToken).useFactory(() => createNanoEvents<ViewsEvents>());
     c.register(ViewsRepository).useClass(ViewsRepository).eager();
     c.register(ViewsViewModel).useClass(ViewsViewModel).eager();

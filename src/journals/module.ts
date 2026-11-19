@@ -1,9 +1,10 @@
 import { createNanoEvents } from "nanoevents";
 
 import type { Module } from "@/infrastructure/di";
-import { CollectionDefinitionToken } from "@/settings";
+import { CollectionDefinitionToken, SliceDefinitionToken } from "@/settings";
 
 import { journalConfigCollection } from "./config";
+import { CreationDateIndex, dayNotesSlice } from "./creation-dates";
 import { CycleService } from "./cycle";
 import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
@@ -25,12 +26,14 @@ import { JournalsViewModel } from "./view-model";
 export const journalsCoreModule: Module = {
   register(c) {
     c.register(CollectionDefinitionToken).useValue(journalConfigCollection);
+    c.register(SliceDefinitionToken).useValue(dayNotesSlice);
     c.register(JournalsIndex).useClass(JournalsIndex);
     c.register(TimelineService).useClass(TimelineService);
     c.register(CycleService).useClass(CycleService);
     c.register(NumberingService).useClass(NumberingService);
     c.register(FrontmatterService).useClass(FrontmatterService);
     c.register(LinkReferenceIndex).useClass(LinkReferenceIndex);
+    c.register(CreationDateIndex).useClass(CreationDateIndex);
     c.register(VaultSubscriptionService).useClass(VaultSubscriptionService).eager();
     c.register(JournalsEventsToken).useFactory(() => createNanoEvents<JournalsEvents>());
     c.register(JournalsRepository).useClass(JournalsRepository).eager();

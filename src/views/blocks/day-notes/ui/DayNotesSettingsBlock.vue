@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { dayNotesSlice } from "@/journals/creation-dates";
 import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
@@ -10,8 +11,6 @@ import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
-
-import { dayNotesSlice } from "../slice";
 
 const settings = useService(SettingsService).getSlice(dayNotesSlice);
 const expanded = ref(false);

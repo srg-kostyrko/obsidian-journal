@@ -151,3 +151,9 @@ describe("needsNotes for linked and missing", () => {
     ).toBe(false);
   });
 });
+
+describe("needsNotes for created", () => {
+  it("a decoration with only created does not need notes", () => {
+    expect(needsNotes(buildDecoration({ mode: "and", conditions: [buildCondition("created")] }))).toBe(false);
+  });
+});

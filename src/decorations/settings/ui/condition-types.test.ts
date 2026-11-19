@@ -30,3 +30,13 @@ describe("linked condition type", () => {
     expect(SINGLETON_CONDITION_TYPES.has("linked")).toBe(false);
   });
 });
+
+describe("created condition type", () => {
+  it("created is offered right after linked for every write type and not in calendar scope", () => {
+    for (const types of Object.values(conditionTypeOptions)) {
+      expect(types.indexOf("created")).toBe(types.indexOf("linked") + 1);
+    }
+    expect(CALENDAR_CONDITION_TYPES).not.toContain("created");
+    expect(SINGLETON_CONDITION_TYPES.has("created")).toBe(false);
+  });
+});

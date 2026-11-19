@@ -18,6 +18,7 @@ const schema = v.object({
   sortDirection: v.optional(v.picklist(dayNotesSortDirections), "desc"),
   showHeading: v.optional(v.boolean(), true),
   showNavigation: v.optional(v.boolean(), false),
+  hidePeriodNotes: v.optional(v.boolean(), false),
 });
 
 export type DayNotesBlockConfig = v.InferOutput<typeof schema>;
@@ -35,6 +36,7 @@ export const dayNotesBlock = defineViewBlock<DayNotesBlockConfig>({
     sortDirection: "desc",
     showHeading: true,
     showNavigation: false,
+    hidePeriodNotes: false,
   },
   component: DayNotesBlock,
   configComponent: DayNotesBlockConfig,

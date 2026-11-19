@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "降順",
   "view_block_day_notes_show_heading_label": "期間の見出しを表示",
   "view_block_day_notes_show_navigation_label": "期間ナビゲーションを表示",
+  "view_block_day_notes_hide_period_notes_label": "ジャーナルのノートを非表示",
   "view_block_day_notes_last_modified": "最終更新：{date}",
   "view_block_day_notes_created": "作成日：{date}",
   "view_block_day_notes_empty": "この期間に作成されたノートはありません。",
@@ -936,6 +937,17 @@
     }
   ],
   "decoration_condition_linked_value_label": "リンク元ノートの最小数",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "少なくとも{count}件のノートが作成された",
+        "count=*": "少なくとも{count}件のノートが作成された"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "作成されたノートの最小数",
   "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
   "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",
   "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
@@ -1109,6 +1121,7 @@
         "type=offset": "オフセット",
         "type=has-note": "ノートあり",
         "type=linked": "リンクあり",
+        "type=created": "作成あり",
         "type=tasks": "タスク",
         "type=note-size": "ノートのサイズ",
         "type=has-notelet": "サブノートあり"
@@ -1128,6 +1141,7 @@
         "type=offset": "間隔内のオフセットを確認",
         "type=has-note": "ノートの有無を確認",
         "type=linked": "この日付へのリンクを確認",
+        "type=created": "この期間に作成されたノートを確認",
         "type=tasks": "タスクを確認",
         "type=note-size": "ノートのサイズを確認",
         "type=has-notelet": "サブノートの有無を確認"

@@ -79,6 +79,7 @@ export function describeCondition(
         : m.decoration_condition_has_note_describe(),
     )
     .with({ type: "linked" }, (c) => m.decoration_condition_linked_describe({ count: c.atLeast }))
+    .with({ type: "created" }, (c) => m.decoration_condition_created_describe({ count: c.atLeast }))
     .with({ type: "note-size" }, (c) =>
       m.decoration_condition_note_size_describe({
         unit: c.unit,

@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Décroissant",
   "view_block_day_notes_show_heading_label": "Afficher l’en-tête de la période",
   "view_block_day_notes_show_navigation_label": "Afficher la navigation de la période",
+  "view_block_day_notes_hide_period_notes_label": "Masquer les notes de journal",
   "view_block_day_notes_last_modified": "Dernière modification : {date}",
   "view_block_day_notes_created": "Créée : {date}",
   "view_block_day_notes_empty": "Aucune note n’a été créée pendant cette période.",
@@ -1081,6 +1082,17 @@
     }
   ],
   "decoration_condition_linked_value_label": "Nombre minimal de notes qui font un lien",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "au moins {count} note créée",
+        "countPlural=*": "au moins {count} notes créées"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Nombre minimal de notes créées",
   "decoration_condition_has_notelet_describe_any": "il existe une note brève",
   "decoration_condition_has_notelet_describe_types": "il existe une note brève de type {types}",
   "decoration_condition_has_notelet_empty": "Ce journal n'a pas encore de type de note brève.",
@@ -1254,6 +1266,7 @@
         "type=offset": "Décalage",
         "type=has-note": "A une note",
         "type=linked": "Lié",
+        "type=created": "Créées",
         "type=tasks": "Tâches",
         "type=note-size": "Taille de la note",
         "type=has-notelet": "A une note brève"
@@ -1273,6 +1286,7 @@
         "type=offset": "Vérifier le décalage d’intervalle",
         "type=has-note": "Vérifier si la note existe",
         "type=linked": "Vérifier les liens vers cette date",
+        "type=created": "Vérifier les notes créées pendant cette période",
         "type=tasks": "Vérifier les tâches",
         "type=note-size": "Vérifier la taille de la note",
         "type=has-notelet": "Vérifier si une note brève existe"

@@ -197,3 +197,20 @@ describe("linked condition schema", () => {
     expect(v.safeParse(calendarConditionSchema, { type: "linked", atLeast: 1 }).success).toBe(false);
   });
 });
+
+describe("created condition schema", () => {
+  it("parses a created condition", () => {
+    expect(v.parse(decorationConditionSchema, { type: "created", atLeast: 2 })).toEqual({
+      type: "created",
+      atLeast: 2,
+    });
+  });
+
+  it.each([0, 1.5])("created rejects atLeast %s", (atLeast) => {
+    expect(v.safeParse(decorationConditionSchema, { type: "created", atLeast }).success).toBe(false);
+  });
+
+  it("created is not a calendar condition", () => {
+    expect(v.safeParse(calendarConditionSchema, { type: "created", atLeast: 1 }).success).toBe(false);
+  });
+});
