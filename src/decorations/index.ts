@@ -4,6 +4,7 @@ export {
   calendarDecorationSchema,
   colorSchema,
   decorationConditionSchema,
+  decorationName,
   decorationSchema,
   decorationStyleSchema,
   filterConditionSchema,

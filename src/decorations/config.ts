@@ -312,6 +312,7 @@ export const calendarDecorationSchema = v.object({
     whole("a decoration missing one condition matches different days"),
   ),
   styles: v.optional(v.array(decorationStyleSchema), () => []),
+  name: v.optional(v.string()),
 });
 export type CalendarDecoration = v.InferOutput<typeof calendarDecorationSchema>;
 
@@ -337,5 +338,12 @@ export const decorationSchema = v.object({
     whole("a decoration missing one condition matches different days"),
   ),
   styles: v.optional(v.array(decorationStyleSchema), () => []),
+  name: v.optional(v.string()),
 });
 export type JournalDecoration = v.InferOutput<typeof decorationSchema>;
+
+/** A decoration's name for display, or undefined when it has none worth showing. */
+export function decorationName(decoration: { readonly name?: string }): string | undefined {
+  const name = decoration.name?.trim();
+  return name === undefined || name === "" ? undefined : name;
+}
