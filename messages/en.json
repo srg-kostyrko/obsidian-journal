@@ -1820,7 +1820,7 @@
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
-  "view_toolbar_shelf_selector_tooltip": "Switch shelf",
+  "view_toolbar_shelf_selector_name": "{shelf} · Switch shelf",
   "view_toolbar_spacer_label": "Spacer",
   "view_toolbar_spacer_description": "Flexible gap that pushes neighboring items apart.",
   "view_toolbar_period_buttons_label": "Period buttons",

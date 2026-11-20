@@ -101,22 +101,34 @@ describe("NotesCalendarCell", () => {
       expect(cell.getAttribute("aria-label")).toBe(label(["Release 3.8", "Anna"]));
     });
 
+    it("keeps a control cell's label across a re-render", async () => {
+      const cells = new Map<string, CellDecorationRef>([
+        [cellKey(may25.kind, may25.anchor.toAnchor()), shallowRef(cellState([], ["Anna"]))],
+      ]);
+      const { container, rerender } = render(NotesCalendarCell, {
+        props: { period: may25, cell: stubApi() },
+        global: { provide: { [CellDecorationMapKey]: cells } },
+      });
+      await rerender({ period: may25, cell: stubApi(), selected: true });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.getAttribute("aria-label")).toBe(label(["Anna"]));
+    });
+
     it("keeps the date alone on a control cell with no named decoration", () => {
       const cell = mountNamed([], stubApi());
       expect(cell.getAttribute("aria-label")).toBe(may25.format("LL"));
     });
 
-    it("gives a read-only cell a tooltip and readable text, not an aria-label", () => {
+    // Obsidian's tooltip is the aria-label, so a read-only cell takes one only to show names on hover.
+    it("labels a read-only cell with its date and names, and reads no second copy", () => {
       const cell = mountNamed(["Anna"], stubApi({ isActionable: () => false }));
-      expect(cell.hasAttribute("aria-label")).toBe(false);
-      expect(cell.dataset.tooltip).toBe(label(["Anna"]));
-      expect(cell.querySelector(".notes-calendar-cell__accessible-name")?.textContent).toBe(label(["Anna"]));
-      expect(screen.getByText("25").getAttribute("aria-hidden")).toBe("true");
+      expect(cell.getAttribute("aria-label")).toBe(label(["Anna"]));
+      expect(cell.querySelector(".notes-calendar-cell__accessible-name")).toBeNull();
     });
 
-    it("adds nothing to a read-only cell with no named decoration", () => {
+    it("leaves a read-only cell with no named decoration unlabelled", () => {
       const cell = mountNamed([], stubApi({ isActionable: () => false }));
-      expect(cell.dataset.tooltip).toBeUndefined();
+      expect(cell.hasAttribute("aria-label")).toBe(false);
       expect(cell.querySelector(".notes-calendar-cell__accessible-name")).toBeNull();
     });
   });

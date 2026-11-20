@@ -2,13 +2,10 @@ import { setTooltip } from "obsidian";
 
 import type { Directive } from "vue";
 
-// Obsidian's own tooltip API, for a control whose accessible name must stay its visible text.
-// Binding a tooltip to `aria-label` (what UiButton/UiIconButton do) would replace that name —
-// fine for an icon or a glyph, wrong when the text is the information the control carries.
+// Obsidian's own tooltip API. It is `setAttribute("aria-label", …)` underneath (checked at 1.8.7 and
+// 1.15.1), so it replaces the element's accessible name, and it re-runs on every re-render — never put
+// it on an element that also binds `aria-label`, or the two overwrite each other.
 export const vTooltip: Directive<HTMLElement, string> = {
-  // An empty value on mount means "no tooltip"; later updates still pass it through to clear one.
-  mounted: (el, binding) => {
-    if (binding.value !== "") setTooltip(el, binding.value);
-  },
+  mounted: (el, binding) => setTooltip(el, binding.value),
   updated: (el, binding) => setTooltip(el, binding.value),
 };

@@ -834,8 +834,7 @@ describe("NavigationCodeBlock decorations", () => {
         entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
       });
       const row = document.querySelector<HTMLElement>(".nav-row");
-      expect(row?.dataset.tooltip).toBe("Release 3.8");
-      expect(row?.querySelector(".nav-row__names")?.textContent).toBe("Release 3.8");
+      expect(row?.getAttribute("aria-label")).toBe(m.decoration_cell_label({ date: "today", names: "Release 3.8" }));
     });
 
     it("gives an undecorated segment no tooltip even when the day is named", async () => {
@@ -853,7 +852,7 @@ describe("NavigationCodeBlock decorations", () => {
         },
         entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
       });
-      expect(document.querySelector<HTMLElement>(".nav-row")?.dataset.tooltip).toBeUndefined();
+      expect(document.querySelector<HTMLElement>(".nav-row")?.hasAttribute("aria-label")).toBe(false);
     });
 
     it("names the whole-block decoration on each segment", async () => {
@@ -876,7 +875,9 @@ describe("NavigationCodeBlock decorations", () => {
       });
       const rows = [...document.querySelectorAll<HTMLElement>(".nav-row")];
       expect(rows.length).toBeGreaterThan(0);
-      expect(rows.every((row) => row.dataset.tooltip === "Anna")).toBe(true);
+      expect(rows.map((row) => row.getAttribute("aria-label"))).toEqual(
+        rows.map((row) => m.decoration_cell_label({ date: row.textContent ?? "", names: "Anna" })),
+      );
     });
   });
 

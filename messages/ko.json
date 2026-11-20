@@ -1809,7 +1809,7 @@
   "view_block_tasks_filter_status_default": "자체 상태 조건이 없으므로 상태를 지정한 저널에서는 그 저널의 목록 필터가 결정합니다.",
   "view_toolbar_shelf_selector_label": "선반 선택기",
   "view_toolbar_shelf_selector_description": "뷰에 표시할 저널의 범위를 정하는 선반을 전환합니다.",
-  "view_toolbar_shelf_selector_tooltip": "선반 전환",
+  "view_toolbar_shelf_selector_name": "{shelf} · 선반 전환",
   "view_toolbar_spacer_label": "여백",
   "view_toolbar_spacer_description": "이웃한 항목을 양쪽으로 밀어내는 가변 여백입니다.",
   "view_toolbar_period_buttons_label": "기간 버튼",

@@ -1875,7 +1875,7 @@
   "view_block_tasks_filter_status_default": "Нет собственного условия статуса, поэтому решает фильтр списка журнала, если он указывает статус.",
   "view_toolbar_shelf_selector_label": "Выбор полки",
   "view_toolbar_shelf_selector_description": "Определяет, какая полка ограничивает журналы представления.",
-  "view_toolbar_shelf_selector_tooltip": "Сменить полку",
+  "view_toolbar_shelf_selector_name": "{shelf} · Сменить полку",
   "view_toolbar_spacer_label": "Отступ",
   "view_toolbar_spacer_description": "Гибкий промежуток, раздвигающий соседние элементы.",
   "view_toolbar_period_buttons_label": "Кнопки периодов",

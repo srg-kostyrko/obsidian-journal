@@ -1809,7 +1809,7 @@
   "view_block_tasks_filter_status_default": "Keine eigene Status-Bedingung, daher entscheidet der Anzeigefilter eines Journals, wo dieser einen Status nennt.",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
   "view_toolbar_shelf_selector_description": "Wechselt, welches Regal die Journale der Ansicht eingrenzt.",
-  "view_toolbar_shelf_selector_tooltip": "Regal wechseln",
+  "view_toolbar_shelf_selector_name": "{shelf} · Regal wechseln",
   "view_toolbar_spacer_label": "Abstand",
   "view_toolbar_spacer_description": "Flexibler Abstand, der benachbarte Elemente auseinanderschiebt.",
   "view_toolbar_period_buttons_label": "Zeitraum-Schaltflächen",

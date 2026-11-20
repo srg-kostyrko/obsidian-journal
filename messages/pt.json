@@ -1821,7 +1821,7 @@
   "view_block_tasks_filter_status_default": "Sem condição de Estado própria, portanto o filtro de listagem de um diário decide onde nomeia um.",
   "view_toolbar_shelf_selector_label": "Seletor de prateleira",
   "view_toolbar_shelf_selector_description": "Alterna qual prateleira delimita os diários da visualização.",
-  "view_toolbar_shelf_selector_tooltip": "Trocar de prateleira",
+  "view_toolbar_shelf_selector_name": "{shelf} · Trocar de prateleira",
   "view_toolbar_spacer_label": "Espaçador",
   "view_toolbar_spacer_description": "Espaço flexível que separa os itens vizinhos.",
   "view_toolbar_period_buttons_label": "Botões de período",

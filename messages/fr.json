@@ -1809,7 +1809,7 @@
   "view_block_tasks_filter_status_default": "Aucune condition d’État propre, donc le filtre de la liste d’un journal décide lorsqu’il en nomme un.",
   "view_toolbar_shelf_selector_label": "Sélecteur d’étagères",
   "view_toolbar_shelf_selector_description": "Change l’étagère qui délimite les journaux de la vue.",
-  "view_toolbar_shelf_selector_tooltip": "Changer d’étagère",
+  "view_toolbar_shelf_selector_name": "{shelf} · Changer d’étagère",
   "view_toolbar_spacer_label": "Espacement",
   "view_toolbar_spacer_description": "Espace flexible qui écarte les éléments voisins.",
   "view_toolbar_period_buttons_label": "Boutons de période",

@@ -1809,7 +1809,7 @@
   "view_block_tasks_filter_status_default": "Sin condición de Estado propia, por lo que decide el filtro de listado de un diario donde nombre uno.",
   "view_toolbar_shelf_selector_label": "Selector de estantes",
   "view_toolbar_shelf_selector_description": "Cambia qué estante delimita los diarios de la vista.",
-  "view_toolbar_shelf_selector_tooltip": "Cambiar de estante",
+  "view_toolbar_shelf_selector_name": "{shelf} · Cambiar de estante",
   "view_toolbar_spacer_label": "Espaciador",
   "view_toolbar_spacer_description": "Espacio flexible que separa los elementos vecinos.",
   "view_toolbar_period_buttons_label": "Botones de período",

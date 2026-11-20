@@ -37,9 +37,10 @@ export class Notice {
   hide(): void {}
 }
 
-// Obsidian renders its own tooltip layer; the real one attaches listeners rather than writing an
-// attribute. Recording it on the element keeps it observable without pretending to be that layer.
+// The real setTooltip writes `aria-label` — the attribute Obsidian's tooltip layer reads — so it
+// replaces the element's accessible name. `data-tooltip` additionally records the call itself.
 export function setTooltip(el: HTMLElement, tooltip: string): void {
+  el.setAttribute("aria-label", tooltip);
   el.dataset.tooltip = tooltip;
 }
 

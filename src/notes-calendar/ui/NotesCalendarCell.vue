@@ -6,7 +6,6 @@ import { useToday } from "@/calendar/ui";
 import { CellDecoration, useCellNames } from "@/decorations";
 import { formatConjunction, m } from "@/i18n";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
-import { vTooltip } from "@/ui/v-tooltip";
 
 import { accessibleFormatPattern, defaultFormatPattern } from "../cell-format";
 
@@ -58,23 +57,22 @@ const fullName = computed(() => {
   const date = rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind));
   return names.value.length === 0 ? date : m.decoration_cell_label({ date, names: formatConjunction(names.value) });
 });
-const accessibleName = computed(() => (isControl.value ? fullName.value : undefined));
-// A non-control cell takes no aria-label, so its text is what is read; a custom format or decoration names
-// would change that text, and the accessible name must not follow the user's format.
+// Obsidian draws its tooltip from aria-label, so a read-only cell with decoration names takes one too:
+// it is the only way to show them on hover.
+const accessibleName = computed(() => (isControl.value || names.value.length > 0 ? fullName.value : undefined));
+// An unlabelled cell's text is what is read; a custom format would change that text, and the accessible
+// name must not follow the user's format.
 const hiddenName = computed(() =>
-  isControl.value || (names.value.length === 0 && pattern.value === defaultFormatPattern(rawPeriod.value.kind))
+  accessibleName.value !== undefined || pattern.value === defaultFormatPattern(rawPeriod.value.kind)
     ? undefined
-    : fullName.value,
+    : rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)),
 );
-// A control's aria-label is already Obsidian's tooltip; a read-only cell has none to carry the names.
-const tooltip = computed(() => (isControl.value || names.value.length === 0 ? "" : fullName.value));
 
 const hover = useModifierHoverPreview();
 </script>
 
 <template>
   <span
-    v-tooltip="tooltip"
     class="notes-calendar-cell"
     :role="resolvedRole"
     :tabindex="resolvedTabIndex"

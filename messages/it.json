@@ -1815,7 +1815,7 @@
   "view_block_tasks_filter_status_default": "Nessuna condizione di Stato propria, quindi decide il filtro dell'elenco di un diario dove ne nomina uno.",
   "view_toolbar_shelf_selector_label": "Selettore di scaffali",
   "view_toolbar_shelf_selector_description": "Cambia lo scaffale che delimita i diari della vista.",
-  "view_toolbar_shelf_selector_tooltip": "Cambia scaffale",
+  "view_toolbar_shelf_selector_name": "{shelf} · Cambia scaffale",
   "view_toolbar_spacer_label": "Distanziatore",
   "view_toolbar_spacer_description": "Spazio flessibile che allontana tra loro gli elementi vicini.",
   "view_toolbar_period_buttons_label": "Pulsanti periodo",

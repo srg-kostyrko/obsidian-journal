@@ -1,6 +1,7 @@
-import { browser } from "@wdio/globals";
+import { browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
+import { waitForJournalFrontmatter } from "../support/vault.js";
 
 import { dayAnchor, expectDecorated } from "./decorations.js";
 import { calendar, openSeededCalendarView } from "./view.js";
@@ -33,5 +34,14 @@ describe("decoration name", () => {
     await browser.waitUntil(async () => (await cell.getAttribute("aria-label")) === expected, {
       timeoutMsg: `the day cell's label never became "${expected}"`,
     });
+
+    // Opening the day's note marks the cell active, which re-renders it; the label must survive that.
+    await cell.scrollIntoView({ block: "center", inline: "center" });
+    await cell.click();
+    await waitForJournalFrontmatter(`${dayAnchor(NAMED_DAY)}.md`, { journal: "daily", date: dayAnchor(NAMED_DAY) });
+    await browser.waitUntil(async () => (await cell.getAttribute("data-active")) !== null, {
+      timeoutMsg: "the named day's cell never became active",
+    });
+    expect(await cell.getAttribute("aria-label")).toBe(expected);
   });
 });
