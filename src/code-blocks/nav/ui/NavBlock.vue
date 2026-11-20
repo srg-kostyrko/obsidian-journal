@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { computed, provide } from "vue";
+
 import type { AnchorString, Period } from "@/calendar";
-import { CellDecoration, type CellDecorationScope } from "@/decorations";
+import { CellDecoration, useCellNames, type CellDecorationScope } from "@/decorations";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 
+import { NavBlockNamesKey } from "./nav-block-names";
 import NavBlockLines from "./NavBlockLines.vue";
 
 // blockScope names the provided decoration map the whole-block decoration draws from (see
 // decoration-scopes.ts). Each segment derives its own per-segment scope from its resolved link
 // target, so it needs no scope prop here.
-defineProps<{
+const props = defineProps<{
   block: JournalNavBlock;
   journal: JournalConfig;
   refDate: AnchorString;
@@ -19,6 +22,12 @@ defineProps<{
 }>();
 
 defineEmits<{ edit: [lineIndex: number, segmentIndex: number] }>();
+
+const cellNames = useCellNames(() => props.period, props.blockScope);
+provide(
+  NavBlockNamesKey,
+  computed(() => (props.block.decorateWholeBlock ? cellNames.value : [])),
+);
 </script>
 
 <template>

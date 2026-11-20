@@ -4,8 +4,8 @@ import { computed, inject } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { useToday } from "@/calendar/ui";
-import { CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
-import { m } from "@/i18n";
+import { cellNamesIn, CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
+import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import {
@@ -30,12 +30,15 @@ import {
 import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
+import { vTooltip } from "@/ui/v-tooltip";
 
 import { navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { resolveLinkCandidates, type LinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
 import { resolveSegmentDecoration } from "../segment-decoration";
 import { resolveSegmentLink } from "../segment-link";
+
+import { NavBlockNamesKey } from "./nav-block-names";
 
 const props = defineProps<{
   journal: JournalConfig;
@@ -104,6 +107,19 @@ const decorationScope = computed(() =>
 // plain computed — inject() itself must run synchronously during setup, not lazily.
 const fixedCells = inject(navSegmentFixedScope.map, null);
 const intervalCells = inject(navSegmentIntervalScope.map, null);
+const blockNames = inject(
+  NavBlockNamesKey,
+  computed(() => []),
+);
+const names = computed(() => {
+  const cell = decorationCell.value;
+  const own =
+    props.segment.addDecorations && cell
+      ? cellNamesIn(cell.scopeKind === "interval" ? intervalCells : fixedCells, cell.period)
+      : [];
+  return [...new Set([...own, ...blockNames.value])];
+});
+const namesText = computed(() => (props.editable || names.value.length === 0 ? "" : formatConjunction(names.value)));
 const fixedDecorationItems = useDecorationMenuItems(fixedCells, () => props.shelf ?? null);
 const intervalDecorationItems = useDecorationMenuItems(intervalCells, () => props.shelf ?? null);
 
@@ -208,6 +224,7 @@ function onPointerEnter(event: PointerEvent): void {
        "segment". ".nav-block-line" (in NavBlock.vue) changed meaning instead — it used to wrap
        a single row and now wraps a whole line of segments. -->
   <div
+    v-tooltip="namesText"
     class="nav-row"
     :class="{ 'nav-row--editable': editable }"
     :tabindex="editable ? 0 : undefined"
@@ -233,10 +250,20 @@ function onPointerEnter(event: PointerEvent): void {
     <!-- An element, not a bare text node, so a host can lift the text over its own layers. -->
     <span v-else class="nav-row__text">{{ text }}</span>
     <span v-if="editable && text.length === 0" class="nav-segment-placeholder">—</span>
+    <span v-if="namesText !== ''" class="nav-row__names">{{ namesText }}</span>
   </div>
 </template>
 
 <style scoped>
+.nav-row__names {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 /* A custom-interval row hands down its highlight text; unset everywhere else, so the segment's own shows.
    Today's text recolors only a segment still on the default color, never one the user chose. */
 .nav-row {

@@ -79,7 +79,7 @@ describe("EditDecorationModal", () => {
       await waitFor(() => {
         expect(submit).toHaveBeenCalled();
       });
-      const [{ decoration }] = submit.mock.calls[0] as [{ decoration: JournalDecoration }];
+      const [{ decoration }] = submit.mock.calls[0] as unknown as [{ decoration: JournalDecoration }];
       expect("name" in decoration).toBe(false);
     });
 

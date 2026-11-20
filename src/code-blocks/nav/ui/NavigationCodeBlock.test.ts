@@ -814,7 +814,72 @@ describe("NavigationCodeBlock hover preview", () => {
   });
 });
 
+function namedCorner(name: string): JournalDecoration {
+  return { ...cornerDecoration(), name };
+}
+
 describe("NavigationCodeBlock decorations", () => {
+  describe("names", () => {
+    it("shows a decorated segment's decoration names as its tooltip", async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            {
+              decorateWholeBlock: false,
+              lines: [[buildNavSegment({ template: "today", color: transparent, link: "self", addDecorations: true })]],
+            },
+            { decorations: [namedCorner("Release 3.8")] },
+          ),
+        },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+      const row = document.querySelector<HTMLElement>(".nav-row");
+      expect(row?.dataset.tooltip).toBe("Release 3.8");
+      expect(row?.querySelector(".nav-row__names")?.textContent).toBe("Release 3.8");
+    });
+
+    it("gives an undecorated segment no tooltip even when the day is named", async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            {
+              decorateWholeBlock: false,
+              lines: [
+                [buildNavSegment({ template: "today", color: transparent, link: "self", addDecorations: false })],
+              ],
+            },
+            { decorations: [namedCorner("Release 3.8")] },
+          ),
+        },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+      expect(document.querySelector<HTMLElement>(".nav-row")?.dataset.tooltip).toBeUndefined();
+    });
+
+    it("names the whole-block decoration on each segment", async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            {
+              decorateWholeBlock: true,
+              lines: [
+                [
+                  buildNavSegment({ template: "a", color: transparent, addDecorations: false }),
+                  buildNavSegment({ template: "b", color: transparent, addDecorations: false }),
+                ],
+              ],
+            },
+            { decorations: [namedCorner("Anna")] },
+          ),
+        },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+      const rows = [...document.querySelectorAll<HTMLElement>(".nav-row")];
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows.every((row) => row.dataset.tooltip === "Anna")).toBe(true);
+    });
+  });
+
   it("wraps individual segment text with CellDecoration when addDecorations is true", async () => {
     await renderNav("Daily/2026-05-27.md", {
       journals: {

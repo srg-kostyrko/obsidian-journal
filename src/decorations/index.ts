@@ -67,6 +67,7 @@ export { colorToString } from "./ui/color";
 export { default as DecorationPreview } from "./ui/DecorationPreview.vue";
 export { useCellDecorations } from "./use-cell-decorations";
 export { useCellPadding } from "./use-cell-padding";
+export { cellNamesIn, useCellNames } from "./ui/use-cell-names";
 export { useDecorationMenuItems } from "./ui/use-decoration-menu-item";
 export {
   DecorationLifecycleFlowError,

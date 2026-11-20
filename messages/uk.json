@@ -1211,6 +1211,7 @@
   "decoration_mark_limit_description": "Скільки фігур і значків комірка малює в кожній із дев'яти позицій. Зайві позначки збираються в бейдж — наведіть на нього, щоб побачити їх усі. Застосовується до всіх календарів, блоків навігації, рядків інтервалів і кнопок періодів, а також до будь-якого оформлення незалежно від власника — журналу, полиці чи всього сховища.",
   "decoration_mark_limit_label": "Позначок на позицію",
   "decoration_mark_limit_unlimited": "Без обмежень",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Додати умову",
   "decoration_modal_add_style": "Додати стиль",
