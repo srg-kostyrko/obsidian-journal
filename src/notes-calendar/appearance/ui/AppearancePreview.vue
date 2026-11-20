@@ -17,7 +17,7 @@ import {
 import { useToday } from "@/calendar/ui";
 import type { JournalDecorationStyle } from "@/decorations/config";
 import { cellKey } from "@/decorations/engine";
-import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
+import { CellDecorationMapKey, type CellDecorationRef } from "@/decorations/ui/cell-decoration-map-key";
 
 import { bandPlacement } from "../../band-placement";
 import { labelPattern, weekdayTexts } from "../../cell-format";
@@ -117,10 +117,11 @@ const inertCell: NotesCellApi = { ...cell, isActive: () => false, isActionable: 
 const isSelected = (period: Period): boolean => period.anchor.toAnchor() === sample.value.selected;
 
 // CellDecoration injects the map once, so the map itself stays and only its entries follow the day.
-const decorations = shallowReactive(new Map<string, CellStyleRef>());
+const decorations = shallowReactive(new Map<string, CellDecorationRef>());
 watchEffect(() => {
   decorations.clear();
-  for (const anchor of sample.value.decorated) decorations.set(cellKey("day", anchor), shallowRef(SAMPLE_DECORATION));
+  for (const anchor of sample.value.decorated)
+    decorations.set(cellKey("day", anchor), shallowRef({ styles: SAMPLE_DECORATION, names: [] }));
 });
 provide(CellDecorationMapKey, decorations);
 

@@ -1,7 +1,7 @@
 import { toValue, type MaybeRefOrGetter } from "vue";
 
 import type { AnchorString, Period } from "@/calendar";
-import { useDecorationMenuItems, type CellStyleRef } from "@/decorations";
+import { useDecorationMenuItems, type CellDecorationRef } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, WorkspaceService } from "@/infrastructure/host";
@@ -34,7 +34,7 @@ export function useNotesCell(options: {
   journalNames: MaybeRefOrGetter<readonly string[]>;
   // Passed in rather than injected: the views that call this also call useCellDecorations,
   // and a component's own provide() is invisible to its own inject().
-  decorations?: ReadonlyMap<string, CellStyleRef> | null;
+  decorations?: ReadonlyMap<string, CellDecorationRef> | null;
   shelf?: MaybeRefOrGetter<string | null>;
   onSelect?: NotesDateSelectSource;
 }): NotesCellApi {

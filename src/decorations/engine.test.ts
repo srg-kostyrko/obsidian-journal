@@ -260,6 +260,15 @@ async function evaluateDaily(
     .evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
 }
 
+function everyDay(overrides: Partial<JournalDecoration> = {}): JournalDecoration {
+  return buildDecoration({
+    mode: "or",
+    conditions: [buildCondition("weekday", { weekdays: [0, 1, 2, 3, 4, 5, 6] })],
+    styles: [buildStyle("background")],
+    ...overrides,
+  });
+}
+
 describe("DecorationEngine", () => {
   describe("evaluateRange", () => {
     it("returns an empty map for empty inputs", async () => {
@@ -302,7 +311,7 @@ describe("DecorationEngine", () => {
         [{ kind: "journal", journalName: "daily", index: 0, decoration }],
       );
 
-      expect(result.get(cellKey(period.kind, period.anchor.toAnchor()))).toHaveLength(1);
+      expect(result.get(cellKey(period.kind, period.anchor.toAnchor()))?.styles).toHaveLength(1);
     });
 
     it("returns no entries when period kind mismatches journal write-type", async () => {
@@ -433,7 +442,7 @@ describe("DecorationEngine", () => {
         [{ kind: "calendar", owner: { kind: "global" }, index: 0, decoration }],
       );
 
-      expect(result.get(cellKey("day", period.anchor.toAnchor()))).toEqual(decoration.styles);
+      expect(result.get(cellKey("day", period.anchor.toAnchor()))?.styles).toEqual(decoration.styles);
     });
 
     it("leaves a week cell untouched for a calendar decoration", async () => {
@@ -1247,6 +1256,60 @@ describe("DecorationEngine", () => {
       const result = engine.explainRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
 
       expect(result.has(cellKey("day", period.anchor.toAnchor()))).toBe(false);
+    });
+  });
+
+  describe("evaluateRange names", () => {
+    const monday = DayPeriod.containing(date("2026-05-25"));
+    const key = cellKey("day", monday.anchor.toAnchor());
+
+    async function namesFor(decorations: readonly JournalDecoration[]): Promise<unknown> {
+      const { harness } = await buildHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [...decorations] }),
+      });
+      return harness
+        .resolve(DecorationEngine)
+        .evaluateRange(
+          [monday],
+          decorations.map((decoration, index) => ({ kind: "journal", journalName: "daily", index, decoration })),
+        )
+        .get(key);
+    }
+
+    it("carries a matching decoration's name beside its styles", async () => {
+      const decoration = everyDay({ name: "Anna" });
+      expect(await namesFor([decoration])).toEqual({ styles: decoration.styles, names: ["Anna"] });
+    });
+
+    it("lists a name shared by two matching decorations once", async () => {
+      const cell = (await namesFor([everyDay({ name: "Anna" }), everyDay({ name: "Anna" })])) as { names: string[] };
+      expect(cell.names).toEqual(["Anna"]);
+    });
+
+    it("names only the named decorations but keeps every style", async () => {
+      const cell = (await namesFor([everyDay(), everyDay({ name: "Release 3.8" })])) as {
+        names: string[];
+        styles: unknown[];
+      };
+      expect(cell.names).toEqual(["Release 3.8"]);
+      expect(cell.styles).toHaveLength(2);
+    });
+
+    it("names a decoration whose style loses the cascade", async () => {
+      const winner = everyDay({ styles: [buildStyle("background")] });
+      const loser = everyDay({ name: "Anna", styles: [buildStyle("background")] });
+      const cell = (await namesFor([winner, loser])) as { names: string[] };
+      expect(cell.names).toEqual(["Anna"]);
+    });
+
+    it("lists names in decoration order", async () => {
+      const cell = (await namesFor([everyDay({ name: "Zed" }), everyDay({ name: "Anna" })])) as { names: string[] };
+      expect(cell.names).toEqual(["Zed", "Anna"]);
+    });
+
+    it("ignores a blank name", async () => {
+      const cell = (await namesFor([everyDay({ name: " ".repeat(3) })])) as { names: string[] };
+      expect(cell.names).toEqual([]);
     });
   });
 });

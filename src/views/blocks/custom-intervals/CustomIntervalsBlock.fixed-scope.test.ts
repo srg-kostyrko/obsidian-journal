@@ -3,7 +3,7 @@ import { defineComponent, h, inject as vueInject, ref } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 import { navSegmentFixedScope, navSegmentIntervalScope } from "@/code-blocks/nav/decoration-scopes";
-import type { CellStyleRef } from "@/decorations";
+import type { CellDecorationRef } from "@/decorations";
 import { cellKey } from "@/decorations/engine";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -55,8 +55,8 @@ function segment(overrides: Partial<NavBlockSegment>): NavBlockSegment {
 // each map without needing NavBlockSegment's own (already-covered-elsewhere) link resolution and
 // rendering.
 const CAPTURED: {
-  fixed: ReadonlyMap<string, CellStyleRef> | null;
-  interval: ReadonlyMap<string, CellStyleRef> | null;
+  fixed: ReadonlyMap<string, CellDecorationRef> | null;
+  interval: ReadonlyMap<string, CellDecorationRef> | null;
 } = { fixed: null, interval: null };
 
 const RowStub = defineComponent({
@@ -113,7 +113,7 @@ describe("CustomIntervalsBlock fixed-scope decoration", () => {
     const cells = CAPTURED.fixed;
     expect(cells).not.toBeNull();
     const key = cellKey("year", "2026-01-01" as AnchorString);
-    expect(cells?.get(key)?.value.some((style) => style.type === "corner")).toBe(true);
+    expect(cells?.get(key)?.value.styles.some((style) => style.type === "corner")).toBe(true);
   });
 
   it("registers another custom journal's own interval anchor for a journal-linked interval segment, not only the raw section periods", async () => {
@@ -143,6 +143,8 @@ describe("CustomIntervalsBlock fixed-scope decoration", () => {
 
     const cells = CAPTURED.interval;
     expect(cells).not.toBeNull();
-    expect([...(cells?.values() ?? [])].some((ref) => ref.value.some((style) => style.type === "corner"))).toBe(true);
+    expect([...(cells?.values() ?? [])].some((ref) => ref.value.styles.some((style) => style.type === "corner"))).toBe(
+      true,
+    );
   });
 });

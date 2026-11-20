@@ -10,12 +10,12 @@ import { cellKey } from "../engine";
 import { decorationCellModal } from "./modals";
 
 import type { BreakdownEntry } from "./breakdown-entry";
-import type { CellStyleRef } from "./cell-decoration-map-key";
+import type { CellDecorationRef } from "./cell-decoration-map-key";
 
 // Contributing nothing for an undecorated cell is what keeps a plain empty cell menu-less:
 // the host only builds a menu when there are paths or contributed items.
 export function useDecorationMenuItems(
-  cells: ReadonlyMap<string, CellStyleRef> | null,
+  cells: ReadonlyMap<string, CellDecorationRef> | null,
   // A shelf narrows which decorations painted the cell, so the breakdown resolves against the
   // surface's shelf rather than all journals — otherwise it can name a winner the cell does
   // not render, or cite a journal that shelf excludes.
@@ -29,7 +29,7 @@ export function useDecorationMenuItems(
 
   return (entry: BreakdownEntry): readonly MenuItemSpec[] => {
     const { period } = entry;
-    const styles = cells.get(cellKey(period.kind, period.anchor.toAnchor()))?.value ?? [];
+    const styles = cells.get(cellKey(period.kind, period.anchor.toAnchor()))?.value.styles ?? [];
     if (styles.length === 0) return [];
     return [
       {

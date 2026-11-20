@@ -13,6 +13,7 @@ import {
   cellKey,
   DecorationEngine,
   periodMatchesWrite,
+  type CellDecorationState,
   type DecorationBinding,
   type JournalDecorationBinding,
 } from "./engine";
@@ -22,12 +23,13 @@ import {
   CellMarkLimitKey,
   defaultCellDecorationScope,
   type CellDecorationScope,
-  type CellStyleRef,
+  EMPTY_CELL_DECORATION,
+  type CellDecorationRef,
 } from "./ui/cell-decoration-map-key";
 import { useCellPadding } from "./use-cell-padding";
 import { useMarkLimit } from "./use-mark-limit";
 
-import type { JournalDecoration, JournalDecorationStyle } from "./config";
+import type { JournalDecoration } from "./config";
 import type { MaybeRefOrGetter } from "vue";
 
 export interface CellDecorationsOptions {
@@ -44,7 +46,7 @@ function ownerKey(journalName: string, anchor: AnchorString): string {
   return `${journalName}\0${anchor}`;
 }
 
-export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap<string, CellStyleRef> {
+export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap<string, CellDecorationRef> {
   const scope = options.scope ?? defaultCellDecorationScope;
   const filter = options.filter ?? ((): boolean => true);
   const engine = useService(DecorationEngine);
@@ -61,7 +63,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   const linksVersion = useLinkReferencesVersion();
   const createdVersion = useCreationDatesVersion();
 
-  const cells = new Map<string, CellStyleRef>();
+  const cells = new Map<string, CellDecorationRef>();
   let periodsByKey = new Map<string, Period[]>();
   let keysByPath = new Map<VaultPath, Set<string>>();
   // Cell keys by the journal period whose note answers them: the cell's own period for a fixed
@@ -171,10 +173,10 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
       if (!periodsByKey.has(key)) cells.delete(key);
     }
     for (const [key] of periodsByKey) {
-      const styles: readonly JournalDecorationStyle[] = initial.get(key) ?? [];
+      const state = initial.get(key) ?? EMPTY_CELL_DECORATION;
       const existing = cells.get(key);
-      if (existing) existing.value = styles;
-      else cells.set(key, shallowRef<readonly JournalDecorationStyle[]>(styles));
+      if (existing) existing.value = state;
+      else cells.set(key, shallowRef<CellDecorationState>(state));
     }
 
     // Detect mutations of any consumed journal's decorations array. Touching .length
@@ -195,7 +197,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   function recomputeSlots(): void {
     const result = engine.evaluateRange(readPeriods(), gatherDecorations());
     for (const [key, slot] of cells) {
-      slot.value = result.get(key) ?? [];
+      slot.value = result.get(key) ?? EMPTY_CELL_DECORATION;
     }
   }
 
@@ -208,7 +210,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     );
     for (const key of live) {
       const slot = cells.get(key);
-      if (slot) slot.value = result.get(key) ?? [];
+      if (slot) slot.value = result.get(key) ?? EMPTY_CELL_DECORATION;
     }
   }
 

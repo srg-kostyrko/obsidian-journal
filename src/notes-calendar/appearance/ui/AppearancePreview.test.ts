@@ -19,7 +19,7 @@ const DecorationProbe = defineComponent({
   setup(props, { slots }) {
     const cells = inject(CellDecorationMapKey, null);
     return () => {
-      const styles = cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value ?? [];
+      const styles = cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value.styles ?? [];
       return h(
         "span",
         { "data-decoration": styles.length > 0 ? styles.map((style) => style.type).join(",") : undefined },

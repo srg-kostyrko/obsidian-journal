@@ -6,6 +6,7 @@ import type {
   JournalDecorationCondition,
   JournalDecorationStyle,
 } from "./config";
+import type { CellDecorationState } from "./engine";
 
 export function buildDecoration(overrides: Partial<JournalDecoration> = {}): JournalDecoration {
   return { ...defaultDecoration(), ...overrides };
@@ -27,4 +28,11 @@ export function buildStyle<T extends JournalDecorationStyle["type"]>(
   overrides: Partial<Extract<JournalDecorationStyle, { type: T }>> = {},
 ): Extract<JournalDecorationStyle, { type: T }> {
   return { ...defaultStyle(type), ...overrides };
+}
+
+export function cellState(
+  styles: readonly JournalDecorationStyle[],
+  names: readonly string[] = [],
+): CellDecorationState {
+  return { styles, names };
 }

@@ -11,6 +11,7 @@ import { LinkReferenceIndex } from "@/journals/link-references";
 import { answerTaskQuestion, TaskIndex, TaskVisibility } from "@/tasks";
 import type { TaskQuestionDependencies } from "@/tasks";
 
+import { decorationName } from "./config";
 import {
   checkDate,
   checkHasNotelet,
@@ -60,9 +61,15 @@ export function sourceOf(binding: DecorationBinding): DecorationSource {
     : { owner: binding.owner, index: binding.index };
 }
 
+export interface CellDecorationState {
+  readonly styles: readonly JournalDecorationStyle[];
+  readonly names: readonly string[];
+}
+
 export interface Contribution {
   readonly source: DecorationSource;
   readonly style: JournalDecorationStyle;
+  readonly name?: string;
 }
 
 export function periodMatchesWrite(kind: PeriodKind, writeType: JournalWrite["type"]): boolean {
@@ -328,7 +335,8 @@ export class DecorationEngine {
         result.set(key, bucket);
       }
       const source = sourceOf(binding);
-      for (const style of styles) bucket.push({ source, style });
+      const name = decorationName(binding.decoration);
+      for (const style of styles) bucket.push({ source, style, name });
     };
 
     for (const binding of decorations) {
@@ -373,13 +381,12 @@ export class DecorationEngine {
   evaluateRange(
     periods: readonly Period[],
     decorations: readonly DecorationBinding[],
-  ): Map<string, JournalDecorationStyle[]> {
-    const result = new Map<string, JournalDecorationStyle[]>();
+  ): Map<string, CellDecorationState> {
+    const result = new Map<string, CellDecorationState>();
     for (const [key, contributions] of this.explainRange(periods, decorations)) {
-      result.set(
-        key,
-        contributions.map((contribution) => contribution.style),
-      );
+      const names = new Set<string>();
+      for (const { name } of contributions) if (name !== undefined) names.add(name);
+      result.set(key, { styles: contributions.map((contribution) => contribution.style), names: [...names] });
     }
     return result;
   }

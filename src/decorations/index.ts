@@ -59,8 +59,8 @@ export {
   CellDecorationMapKey,
   createCellDecorationScope,
   defaultCellDecorationScope,
+  type CellDecorationRef,
   type CellDecorationScope,
-  type CellStyleRef,
 } from "./ui/cell-decoration-map-key";
 export { default as CellDecoration } from "./ui/CellDecoration.vue";
 export { colorToString } from "./ui/color";
