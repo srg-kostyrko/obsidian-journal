@@ -23,7 +23,7 @@ const cells = inject(props.scope?.map ?? CellDecorationMapKey, null);
 const sharedPadding = inject(props.scope?.padding ?? CellPaddingKey, null);
 
 const styles = computed<readonly JournalDecorationStyle[]>(
-  () => cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value ?? [],
+  () => cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value.styles ?? [],
 );
 
 const cell = computed(() => resolveCell(styles.value));

@@ -4,6 +4,7 @@ export {
   calendarDecorationSchema,
   colorSchema,
   decorationConditionSchema,
+  decorationName,
   decorationSchema,
   decorationStyleSchema,
   filterConditionSchema,
@@ -58,14 +59,15 @@ export {
   CellDecorationMapKey,
   createCellDecorationScope,
   defaultCellDecorationScope,
+  type CellDecorationRef,
   type CellDecorationScope,
-  type CellStyleRef,
 } from "./ui/cell-decoration-map-key";
 export { default as CellDecoration } from "./ui/CellDecoration.vue";
 export { colorToString } from "./ui/color";
 export { default as DecorationPreview } from "./ui/DecorationPreview.vue";
 export { useCellDecorations } from "./use-cell-decorations";
 export { useCellPadding } from "./use-cell-padding";
+export { cellNamesIn, useCellNames } from "./ui/use-cell-names";
 export { useDecorationMenuItems } from "./ui/use-decoration-menu-item";
 export {
   DecorationLifecycleFlowError,

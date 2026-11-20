@@ -8,13 +8,13 @@ import { testContainer } from "@/testing";
 import { icons } from "@/ui/icons";
 
 import { cellKey } from "../engine";
-import { buildStyle } from "../testing";
+import { buildStyle, cellState } from "../testing";
 
 import { decorationCellModal } from "./modals";
 import { useDecorationMenuItems } from "./use-decoration-menu-item";
 
 import type { BreakdownEntry } from "./breakdown-entry";
-import type { CellStyleRef } from "./cell-decoration-map-key";
+import type { CellDecorationRef } from "./cell-decoration-map-key";
 
 function date(s: string): CalendarDate {
   const r = CalendarDate.parse(s);
@@ -27,7 +27,7 @@ function renderDiv() {
 }
 
 async function mountItems(
-  cells: ReadonlyMap<string, CellStyleRef> | null,
+  cells: ReadonlyMap<string, CellDecorationRef> | null,
   shelf: string | null = null,
 ): Promise<{
   itemsFor: (entry: BreakdownEntry) => readonly MenuItemSpec[];
@@ -47,14 +47,14 @@ async function mountItems(
   return { itemsFor: captured.value, modals: harness.modals };
 }
 
-function cellsWith(period: Period, ref: CellStyleRef): ReadonlyMap<string, CellStyleRef> {
+function cellsWith(period: Period, ref: CellDecorationRef): ReadonlyMap<string, CellDecorationRef> {
   return new Map([[cellKey(period.kind, period.anchor.toAnchor()), ref]]);
 }
 
 describe("useDecorationMenuItems", () => {
   it("contributes no item for a cell with no decorations", async () => {
     const period = DayPeriod.containing(date("2026-05-25"));
-    const cells = cellsWith(period, shallowRef([]));
+    const cells = cellsWith(period, shallowRef(cellState([])));
 
     const { itemsFor } = await mountItems(cells);
 
@@ -71,7 +71,7 @@ describe("useDecorationMenuItems", () => {
 
   it("contributes an item for a cell carrying at least one style", async () => {
     const period = DayPeriod.containing(date("2026-05-25"));
-    const cells = cellsWith(period, shallowRef([buildStyle("background")]));
+    const cells = cellsWith(period, shallowRef(cellState([buildStyle("background")])));
 
     const { itemsFor } = await mountItems(cells);
     const items = itemsFor({ kind: "fixed", period });
@@ -82,7 +82,7 @@ describe("useDecorationMenuItems", () => {
 
   it("opens the cell readout for the clicked cell", async () => {
     const period = DayPeriod.containing(date("2026-05-25"));
-    const cells = cellsWith(period, shallowRef([buildStyle("background")]));
+    const cells = cellsWith(period, shallowRef(cellState([buildStyle("background")])));
 
     const { itemsFor, modals } = await mountItems(cells);
     itemsFor({ kind: "fixed", period })[0].onClick();
@@ -94,7 +94,7 @@ describe("useDecorationMenuItems", () => {
 
   it("scopes the readout it opens to the surface's shelf", async () => {
     const period = DayPeriod.containing(date("2026-05-25"));
-    const cells = cellsWith(period, shallowRef([buildStyle("background")]));
+    const cells = cellsWith(period, shallowRef(cellState([buildStyle("background")])));
 
     const { itemsFor, modals } = await mountItems(cells, "Work");
     itemsFor({ kind: "fixed", period })[0].onClick();
@@ -104,7 +104,7 @@ describe("useDecorationMenuItems", () => {
 
   it("forwards an interval entry unchanged", async () => {
     const period = DayPeriod.containing(date("2026-05-25"));
-    const cells = cellsWith(period, shallowRef([buildStyle("background")]));
+    const cells = cellsWith(period, shallowRef(cellState([buildStyle("background")])));
 
     const { itemsFor, modals } = await mountItems(cells);
     itemsFor({ kind: "interval", period, journalName: "sprint" })[0].onClick();

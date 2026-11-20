@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsRepository } from "@/journals";
 
+import { decorationName } from "../config";
 import { DecorationsStore } from "../decorations-store";
 import { describeCondition } from "../settings/ui/describe-condition";
 import { useMarkLimit } from "../use-mark-limit";
@@ -97,6 +98,11 @@ interface Clause {
 
 // Mirrors DecorationsSection.vue's row-clauses: the mode word belongs between conditions, or
 // an "or" decoration with two conditions reads as if both had to hold.
+function nameOf(source: DecorationSource): string | undefined {
+  const decoration = decorationOf(source);
+  return decoration ? decorationName(decoration) : undefined;
+}
+
 function clausesOf(source: DecorationSource): readonly Clause[] {
   const decoration = decorationOf(source);
   if (!decoration) return [];
@@ -128,6 +134,9 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
           >
             <strong>{{ m.decoration_breakdown_property({ property: property.property }) }}</strong>
             <span>{{ ownerLabel(property.winner.source.owner) }}</span>
+            <span v-if="nameOf(property.winner.source)" class="decoration-breakdown__name">{{
+              nameOf(property.winner.source)
+            }}</span>
             <template v-for="(clause, i) in clausesOf(property.winner.source)" :key="i">
               <span v-if="i > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: clause.mode }) }}</span>
               <span>{{ clause.text }}</span>
@@ -147,6 +156,7 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
             <h4>{{ m.decoration_breakdown_overridden_heading() }}</h4>
             <div v-for="(loser, i) in property.overridden" :key="i" class="decoration-breakdown__row">
               <span>{{ ownerLabel(loser.source.owner) }}</span>
+              <span v-if="nameOf(loser.source)" class="decoration-breakdown__name">{{ nameOf(loser.source) }}</span>
               <template v-for="(clause, j) in clausesOf(loser.source)" :key="j">
                 <span v-if="j > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: clause.mode }) }}</span>
                 <span>{{ clause.text }}</span>
@@ -168,6 +178,7 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
           <strong>{{ m.decoration_breakdown_slot({ slot: group.slot }) }}</strong>
           <div v-for="(mark, i) in group.contributions" :key="i" class="decoration-breakdown__row">
             <span>{{ ownerLabel(mark.source.owner) }}</span>
+            <span v-if="nameOf(mark.source)" class="decoration-breakdown__name">{{ nameOf(mark.source) }}</span>
             <template v-for="(clause, j) in clausesOf(mark.source)" :key="j">
               <span v-if="j > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: clause.mode }) }}</span>
               <span>{{ clause.text }}</span>
@@ -180,6 +191,9 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
 </template>
 
 <style scoped>
+.decoration-breakdown__name {
+  font-weight: var(--font-semibold);
+}
 .decoration-breakdown__cell {
   padding: var(--size-4-2) 0;
   border-top: 1px solid var(--background-modifier-border);

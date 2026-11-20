@@ -213,4 +213,57 @@ describe("DecorationBreakdownSection", () => {
 
     expect(screen.getByText(m.decoration_condition_has_notelet_describe_types({ types: "One on One" }))).toBeTruthy();
   });
+
+  describe("name", () => {
+    it("names the winning decoration beside its conditions", async () => {
+      await mountSection({
+        journalDecorations: [{ ...hasNoteDecoration, name: "Anna" }],
+        contributions: [
+          { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("background") },
+        ],
+      });
+      const winnerGroup = screen.getByRole("group", {
+        name: m.decoration_breakdown_property({ property: "background" }),
+      });
+      expect(within(winnerGroup).getByText("Anna")).toBeTruthy();
+      expect(within(winnerGroup).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+    });
+
+    it("names an overridden decoration", async () => {
+      await mountSection({
+        globalDecorations: [{ ...anyDayCalendarDecoration, name: "Release 3.8" }],
+        journalDecorations: [hasNoteDecoration],
+        contributions: [
+          { source: { owner: { kind: "global" }, index: 0 }, style: buildStyle("background") },
+          { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("background") },
+        ],
+      });
+      const overriddenGroup = screen.getByRole("group", {
+        name: m.decoration_breakdown_overridden_for({
+          property: m.decoration_breakdown_property({ property: "background" }),
+        }),
+      });
+      expect(within(overriddenGroup).getByText("Release 3.8")).toBeTruthy();
+    });
+
+    it("names a decoration listed under marks", async () => {
+      await mountSection({
+        journalDecorations: [{ ...hasNoteDecoration, name: "Anna" }],
+        contributions: [
+          { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("shape") },
+        ],
+      });
+      expect(screen.getByText("Anna").classList.contains("decoration-breakdown__name")).toBe(true);
+    });
+
+    it("shows no name for an unnamed decoration", async () => {
+      await mountSection({
+        journalDecorations: [hasNoteDecoration],
+        contributions: [
+          { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("background") },
+        ],
+      });
+      expect(document.querySelector(".decoration-breakdown__name")).toBeNull();
+    });
+  });
 });

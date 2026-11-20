@@ -1324,9 +1324,12 @@
   "decoration_mark_limit_description": "셀이 아홉 개의 각 위치에 그리는 도형과 아이콘의 개수입니다. 넘치는 표시는 배지로 묶이며, 마우스를 올리면 전부 볼 수 있습니다. 모든 달력, 탐색 블록, 구간 행, 기간 버튼에 적용되며, 저널, 선반, 보관함 전체 등 소유자와 관계없이 모든 장식에 적용됩니다.",
   "decoration_mark_limit_label": "위치당 표시 개수",
   "decoration_mark_limit_unlimited": "무제한",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "조건 추가",
   "decoration_modal_add_style": "스타일 추가",
+  "decoration_modal_name_label": "이름",
+  "decoration_modal_name_description": "선택 사항입니다. 장식된 날짜를 가리키면 표시되며, 장식 목록에도 표시됩니다.",
   "decoration_modal_mode_label": "장식 조건",
   "decoration_modal_mode_option": [
     {
@@ -1806,7 +1809,7 @@
   "view_block_tasks_filter_status_default": "자체 상태 조건이 없으므로 상태를 지정한 저널에서는 그 저널의 목록 필터가 결정합니다.",
   "view_toolbar_shelf_selector_label": "선반 선택기",
   "view_toolbar_shelf_selector_description": "뷰에 표시할 저널의 범위를 정하는 선반을 전환합니다.",
-  "view_toolbar_shelf_selector_tooltip": "선반 전환",
+  "view_toolbar_shelf_selector_name": "{shelf} · 선반 전환",
   "view_toolbar_spacer_label": "여백",
   "view_toolbar_spacer_description": "이웃한 항목을 양쪽으로 밀어내는 가변 여백입니다.",
   "view_toolbar_period_buttons_label": "기간 버튼",

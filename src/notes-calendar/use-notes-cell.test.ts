@@ -4,9 +4,9 @@ import { defineComponent, shallowRef } from "vue";
 
 import { DayPeriod, type AnchorString } from "@/calendar";
 import { date } from "@/calendar/testing";
-import type { CellStyleRef } from "@/decorations";
+import type { CellDecorationRef } from "@/decorations";
 import { cellKey } from "@/decorations/engine";
-import { buildStyle } from "@/decorations/testing";
+import { buildStyle, cellState } from "@/decorations/testing";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, OpenDateFlow } from "@/journals";
@@ -45,7 +45,7 @@ async function bootHarness(): Promise<{
 function resolveApi(
   harness: TestHarness,
   journalNames: () => readonly string[],
-  decorations?: ReadonlyMap<string, CellStyleRef> | null,
+  decorations?: ReadonlyMap<string, CellDecorationRef> | null,
   onSelect?: (date: AnchorString) => void,
 ): NotesCellApi {
   let captured: NotesCellApi | undefined;
@@ -336,8 +336,8 @@ describe("useNotesCell", () => {
 
     it("contributes the explain item to the context menu of a decorated cell", async () => {
       const { harness } = await bootHarness();
-      const decorations: ReadonlyMap<string, CellStyleRef> = new Map([
-        [cellKey(may25.kind, may25.anchor.toAnchor()), shallowRef([buildStyle("background")])],
+      const decorations: ReadonlyMap<string, CellDecorationRef> = new Map([
+        [cellKey(may25.kind, may25.anchor.toAnchor()), shallowRef(cellState([buildStyle("background")]))],
       ]);
       const api = resolveApi(harness, () => ["daily"], decorations);
 
@@ -348,7 +348,7 @@ describe("useNotesCell", () => {
 
     it("contributes no item to the context menu of an undecorated cell", async () => {
       const { harness } = await bootHarness();
-      const decorations = new Map<string, CellStyleRef>();
+      const decorations = new Map<string, CellDecorationRef>();
       const api = resolveApi(harness, () => ["daily"], decorations);
 
       api.openContextMenu(may25, new MouseEvent("contextmenu"));

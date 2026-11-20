@@ -1211,9 +1211,12 @@
   "decoration_mark_limit_description": "Скільки фігур і значків комірка малює в кожній із дев'яти позицій. Зайві позначки збираються в бейдж — наведіть на нього, щоб побачити їх усі. Застосовується до всіх календарів, блоків навігації, рядків інтервалів і кнопок періодів, а також до будь-якого оформлення незалежно від власника — журналу, полиці чи всього сховища.",
   "decoration_mark_limit_label": "Позначок на позицію",
   "decoration_mark_limit_unlimited": "Без обмежень",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Додати умову",
   "decoration_modal_add_style": "Додати стиль",
+  "decoration_modal_name_label": "Назва",
+  "decoration_modal_name_description": "Необов’язково. Показується, коли наводите на оформлену дату, і в списку оформлення.",
   "decoration_modal_mode_label": "Коли оформлювати",
   "decoration_modal_mode_option": [
     {
@@ -1725,7 +1728,7 @@
   "view_block_tasks_filter_status_default": "Немає власної умови статусу, тому вирішує фільтр списку журналу, якщо він вказує статус.",
   "view_toolbar_shelf_selector_label": "Вибір полиці",
   "view_toolbar_shelf_selector_description": "Визначає, яка полиця обмежує журнали представлення.",
-  "view_toolbar_shelf_selector_tooltip": "Змінити полицю",
+  "view_toolbar_shelf_selector_name": "{shelf} · Змінити полицю",
   "view_toolbar_spacer_label": "Проміжок",
   "view_toolbar_spacer_description": "Гнучкий проміжок, який розсуває сусідні елементи.",
   "view_toolbar_period_buttons_label": "Кнопки періодів",

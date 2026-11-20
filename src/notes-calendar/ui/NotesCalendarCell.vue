@@ -3,7 +3,8 @@ import { computed, toRaw } from "vue";
 
 import type { Period } from "@/calendar";
 import { useToday } from "@/calendar/ui";
-import { CellDecoration } from "@/decorations";
+import { CellDecoration, useCellNames } from "@/decorations";
+import { formatConjunction, m } from "@/i18n";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
 import { accessibleFormatPattern, defaultFormatPattern } from "../cell-format";
@@ -51,13 +52,18 @@ const states = computed(() =>
 // The open note's fill replaces today's, as it did before layers existed; today's ring stays. The selected
 // fill stays: at narrow it is the selection's only mark on a decorated day.
 const fills = computed(() => states.value.filter((state) => state !== "today" || !isActive.value));
-const accessibleName = computed(() =>
-  isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
-);
-// A non-control cell takes no aria-label, so its text is what is read; a custom format would change that
-// text, and the accessible name must not follow the user's format.
+const names = useCellNames(rawPeriod);
+const fullName = computed(() => {
+  const date = rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind));
+  return names.value.length === 0 ? date : m.decoration_cell_label({ date, names: formatConjunction(names.value) });
+});
+// Obsidian draws its tooltip from aria-label, so a read-only cell with decoration names takes one too:
+// it is the only way to show them on hover.
+const accessibleName = computed(() => (isControl.value || names.value.length > 0 ? fullName.value : undefined));
+// An unlabelled cell's text is what is read; a custom format would change that text, and the accessible
+// name must not follow the user's format.
 const hiddenName = computed(() =>
-  isControl.value || pattern.value === defaultFormatPattern(rawPeriod.value.kind)
+  accessibleName.value !== undefined || pattern.value === defaultFormatPattern(rawPeriod.value.kind)
     ? undefined
     : rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)),
 );

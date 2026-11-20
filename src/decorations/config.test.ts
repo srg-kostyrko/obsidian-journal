@@ -3,7 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import { repairValue, defaultsFrom } from "@/settings/repair/repair-value";
 
-import { calendarConditionSchema, decorationConditionSchema, filterConditionSchema } from "./config";
+import {
+  calendarConditionSchema,
+  calendarDecorationSchema,
+  decorationConditionSchema,
+  decorationName,
+  decorationSchema,
+  filterConditionSchema,
+} from "./config";
 
 // Interval offsets are 1-based in both directions (1 = first day, -1 = last day), so a
 // stored 0 could never match anything. It is coerced rather than rejected, since existing
@@ -212,5 +219,34 @@ describe("created condition schema", () => {
 
   it("created is not a calendar condition", () => {
     expect(v.safeParse(calendarConditionSchema, { type: "created", atLeast: 1 }).success).toBe(false);
+  });
+});
+
+describe("decoration name", () => {
+  const base = {
+    mode: "and",
+    conditions: [{ type: "date", day: 12, month: 4, year: null }],
+    styles: [{ type: "background", color: { type: "theme", name: "interactive-accent" } }],
+  };
+
+  it.each([
+    ["journal", decorationSchema],
+    ["calendar", calendarDecorationSchema],
+  ] as const)("a %s decoration without a name parses with no name key", (_, schema) => {
+    const parsed = v.parse(schema, base);
+    expect("name" in parsed).toBe(false);
+  });
+
+  it.each([
+    ["journal", decorationSchema],
+    ["calendar", calendarDecorationSchema],
+  ] as const)("a %s decoration keeps its name", (_, schema) => {
+    expect(v.parse(schema, { ...base, name: "Release 3.8" }).name).toBe("Release 3.8");
+  });
+
+  it("decorationName treats a blank name as unnamed and trims the rest", () => {
+    expect(decorationName({ name: "  " })).toBeUndefined();
+    expect(decorationName({ name: " Anna " })).toBe("Anna");
+    expect(decorationName({})).toBeUndefined();
   });
 });

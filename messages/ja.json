@@ -1179,9 +1179,12 @@
   "decoration_mark_limit_description": "セルが9つの各位置に描画する図形とアイコンの数です。あふれたマークはバッジにまとめられ、マウスを重ねるとすべて表示されます。すべてのカレンダー、ナビゲーションブロック、期間の行、期間ボタンに適用され、ジャーナル・棚・保管庫全体のどの所有者の装飾にも適用されます。",
   "decoration_mark_limit_label": "位置ごとのマーク数",
   "decoration_mark_limit_unlimited": "無制限",
+  "decoration_cell_label": "{date}：{names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "条件を追加",
   "decoration_modal_add_style": "スタイルを追加",
+  "decoration_modal_name_label": "名前",
+  "decoration_modal_name_description": "任意。装飾された日付にポインターを合わせたときと、装飾の一覧に表示されます。",
   "decoration_modal_mode_label": "装飾する条件",
   "decoration_modal_mode_option": [
     {
@@ -1661,7 +1664,7 @@
   "view_block_tasks_filter_status_default": "独自のステータス条件はありません。ステータスを指定しているジャーナルでは、その一覧フィルターが決定します。",
   "view_toolbar_shelf_selector_label": "棚セレクター",
   "view_toolbar_shelf_selector_description": "ビューが対象とするジャーナルを、どの棚に絞り込むかを切り替えます。",
-  "view_toolbar_shelf_selector_tooltip": "棚を切り替え",
+  "view_toolbar_shelf_selector_name": "{shelf}：棚を切り替え",
   "view_toolbar_spacer_label": "スペーサー",
   "view_toolbar_spacer_description": "隣接する項目を左右に押し広げる可変の余白。",
   "view_toolbar_period_buttons_label": "期間ボタン",

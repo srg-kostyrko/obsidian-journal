@@ -1324,9 +1324,12 @@
   "decoration_mark_limit_description": "Wie viele Formen und Symbole eine Zelle an jeder ihrer neun Positionen zeichnet. Zusätzliche Markierungen werden zu einer Plakette zusammengefasst, die beim Überfahren mit der Maus alle anzeigt. Gilt für jeden Kalender, jeden Navigationsblock, jede Intervallzeile und jede Gruppe von Zeitraum-Schaltflächen sowie für jede Dekoration unabhängig vom Besitzer – Journal, Regal oder vault-weit.",
   "decoration_mark_limit_label": "Markierungen pro Position",
   "decoration_mark_limit_unlimited": "Unbegrenzt",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Bedingung hinzufügen",
   "decoration_modal_add_style": "Stil hinzufügen",
+  "decoration_modal_name_label": "Name",
+  "decoration_modal_name_description": "Optional. Wird angezeigt, wenn du auf ein dekoriertes Datum zeigst, und in der Liste der Dekorationen.",
   "decoration_modal_mode_label": "Wann dekoriert wird",
   "decoration_modal_mode_option": [
     {
@@ -1806,7 +1809,7 @@
   "view_block_tasks_filter_status_default": "Keine eigene Status-Bedingung, daher entscheidet der Anzeigefilter eines Journals, wo dieser einen Status nennt.",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
   "view_toolbar_shelf_selector_description": "Wechselt, welches Regal die Journale der Ansicht eingrenzt.",
-  "view_toolbar_shelf_selector_tooltip": "Regal wechseln",
+  "view_toolbar_shelf_selector_name": "{shelf} · Regal wechseln",
   "view_toolbar_spacer_label": "Abstand",
   "view_toolbar_spacer_description": "Flexibler Abstand, der benachbarte Elemente auseinanderschiebt.",
   "view_toolbar_period_buttons_label": "Zeitraum-Schaltflächen",

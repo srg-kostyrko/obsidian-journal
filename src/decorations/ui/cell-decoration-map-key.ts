@@ -1,9 +1,11 @@
-import type { JournalDecorationStyle } from "../config";
+import type { CellDecorationState } from "../engine";
 import type { InjectionKey, Ref, ShallowRef } from "vue";
 
-export type CellStyleRef = ShallowRef<readonly JournalDecorationStyle[]>;
+export const EMPTY_CELL_DECORATION: CellDecorationState = { styles: [], names: [] };
 
-export type CellDecorationMap = ReadonlyMap<string, CellStyleRef>;
+export type CellDecorationRef = ShallowRef<CellDecorationState>;
+
+export type CellDecorationMap = ReadonlyMap<string, CellDecorationRef>;
 export type CellDecorationMapInjectionKey = InjectionKey<CellDecorationMap>;
 export type CellPaddingInjectionKey = InjectionKey<Ref<string>>;
 

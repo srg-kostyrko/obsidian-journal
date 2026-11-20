@@ -19,6 +19,7 @@ applies.
 | Mark dates other notes link to, or that have no note | [Linked from notes](#linked), [Has note](#has-note)                              |
 | Mark days you created notes on                       | [Notes created](#created)                                                        |
 | Choose what a decoration paints                      | [Styles](#styles)                                                                |
+| Say which date a mark stands for                     | [Naming a decoration](#name)                                                     |
 | See more than three marks in a cell                  | [Marks shown per position](#marks-shown-per-position)                            |
 | Find out why a date looks the way it does            | [Finding out why](#finding-out-why-a-date-looks-the-way-it-does)                 |
 
@@ -358,6 +359,23 @@ fits fewer months on each row instead, and a [custom day label](/views#label) is
 mark smaller, move it to the center column — above, on or below the date — which reserves no width,
 or widen the pane. A mark in a top or bottom position reserves height the same way, which can make
 the rows taller.
+
+## Naming a decoration {#name}
+
+**Name** at the top of the decoration editor is optional. Use it when a decoration stands for one
+thing — a birthday, a release, a deadline — so its mark says what it is:
+
+- **Calendars.** Point at a decorated day and the tooltip reads the date followed by the names of
+  every named decoration on it: "May 12, 2026 · Release day". A screen reader hears the same. A
+  decoration counts whether or not its marks made it into the cell — behind another decoration's
+  background, or past the [marks shown per position](#marks-shown-per-position).
+- **Navigation blocks.** A segment with **Add decorations** on shows the names as its tooltip; with
+  **Decorate whole block** on, every segment carries the block's names too.
+- **Settings and the breakdown.** The name heads the decoration's row, and **Explain decorations**
+  shows it next to the owner. The conditions stay listed under it.
+
+An unnamed decoration adds nothing to a tooltip. On mobile there is no pointer to hover with, so the
+names show only through **Explain decorations**. A toolbar's period buttons do not show names.
 
 ## When several decorations apply
 

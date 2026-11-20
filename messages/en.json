@@ -1260,9 +1260,12 @@
   "decoration_mark_limit_description": "How many shapes and icons a cell draws in each of its nine positions. Extra marks collapse into a badge you can hover to see them all. The cap applies to every calendar, navigation block, interval row and set of period buttons, and to every decoration regardless of owner — journal, shelf or vault-wide.",
   "decoration_mark_limit_label": "Marks shown per position",
   "decoration_mark_limit_unlimited": "Unlimited",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Add condition",
   "decoration_modal_add_style": "Add style",
+  "decoration_modal_name_label": "Name",
+  "decoration_modal_name_description": "Optional. Shown when you point at a decorated date, and in the decoration list.",
   "decoration_modal_mode_label": "When to decorate",
   "decoration_modal_mode_option": [
     {
@@ -1817,7 +1820,7 @@
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
-  "view_toolbar_shelf_selector_tooltip": "Switch shelf",
+  "view_toolbar_shelf_selector_name": "{shelf} · Switch shelf",
   "view_toolbar_spacer_label": "Spacer",
   "view_toolbar_spacer_description": "Flexible gap that pushes neighboring items apart.",
   "view_toolbar_period_buttons_label": "Period buttons",

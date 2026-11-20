@@ -1330,9 +1330,12 @@
   "decoration_mark_limit_description": "Quante forme e icone disegna una cella in ciascuna delle sue nove posizioni. I contrassegni in eccesso vengono raccolti in un badge su cui passare il mouse per vederli tutti. Si applica a ogni calendario, blocco di navigazione, riga di intervallo e gruppo di pulsanti periodo, oltre che a ogni decorazione indipendentemente dal proprietario: diario, scaffale o l'intero vault.",
   "decoration_mark_limit_label": "Contrassegni per posizione",
   "decoration_mark_limit_unlimited": "Illimitato",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Aggiungi condizione",
   "decoration_modal_add_style": "Aggiungi stile",
+  "decoration_modal_name_label": "Nome",
+  "decoration_modal_name_description": "Facoltativo. Mostrato quando punti una data decorata e nell’elenco delle decorazioni.",
   "decoration_modal_mode_label": "Quando decorare",
   "decoration_modal_mode_option": [
     {
@@ -1812,7 +1815,7 @@
   "view_block_tasks_filter_status_default": "Nessuna condizione di Stato propria, quindi decide il filtro dell'elenco di un diario dove ne nomina uno.",
   "view_toolbar_shelf_selector_label": "Selettore di scaffali",
   "view_toolbar_shelf_selector_description": "Cambia lo scaffale che delimita i diari della vista.",
-  "view_toolbar_shelf_selector_tooltip": "Cambia scaffale",
+  "view_toolbar_shelf_selector_name": "{shelf} · Cambia scaffale",
   "view_toolbar_spacer_label": "Distanziatore",
   "view_toolbar_spacer_description": "Spazio flessibile che allontana tra loro gli elementi vicini.",
   "view_toolbar_period_buttons_label": "Pulsanti periodo",
