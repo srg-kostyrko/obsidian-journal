@@ -1361,6 +1361,8 @@
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Добавить условие",
   "decoration_modal_add_style": "Добавить стиль",
+  "decoration_modal_name_label": "Название",
+  "decoration_modal_name_description": "Необязательно. Показывается при наведении на оформленную дату и в списке оформления.",
   "decoration_modal_mode_label": "Когда оформлять",
   "decoration_modal_mode_option": [
     {

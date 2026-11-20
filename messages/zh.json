@@ -1182,6 +1182,8 @@
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "添加条件",
   "decoration_modal_add_style": "添加样式",
+  "decoration_modal_name_label": "名称",
+  "decoration_modal_name_description": "可选。指向带装饰的日期时显示，也会显示在装饰列表中。",
   "decoration_modal_mode_label": "何时进行装饰",
   "decoration_modal_mode_option": [
     {

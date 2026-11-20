@@ -57,7 +57,41 @@ async function mountWith(options: { conditions: JournalDecorationCondition[] }) 
   return { options: rendered };
 }
 
+const nameField = (): HTMLInputElement => screen.getByRole("textbox", { name: m.decoration_modal_name_label() });
+
 describe("EditDecorationModal", () => {
+  describe("name", () => {
+    it("submits the typed name", async () => {
+      const { submit } = await mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
+      await userEvent.type(nameField(), "Release 3.8");
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({
+          decoration: expect.objectContaining({ name: "Release 3.8" }) as unknown,
+        });
+      });
+    });
+
+    it.each(["", " ".repeat(3)])("submits no name key when the field is %j", async (typed) => {
+      const { submit } = await mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
+      if (typed !== "") await userEvent.type(nameField(), typed);
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalled();
+      });
+      const [{ decoration }] = submit.mock.calls[0] as [{ decoration: JournalDecoration }];
+      expect("name" in decoration).toBe(false);
+    });
+
+    it("shows an existing decoration's name", async () => {
+      await mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: { ...minimalDecoration, name: "Anna" },
+      });
+      expect(nameField().value).toBe("Anna");
+    });
+  });
+
   describe("submit gating", () => {
     it("disables Save when no conditions are defined", async () => {
       await mountModal({

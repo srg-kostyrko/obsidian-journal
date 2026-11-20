@@ -1327,6 +1327,8 @@
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "조건 추가",
   "decoration_modal_add_style": "스타일 추가",
+  "decoration_modal_name_label": "이름",
+  "decoration_modal_name_description": "선택 사항입니다. 장식된 날짜를 가리키면 표시되며, 장식 목록에도 표시됩니다.",
   "decoration_modal_mode_label": "장식 조건",
   "decoration_modal_mode_option": [
     {

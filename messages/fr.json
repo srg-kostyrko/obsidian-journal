@@ -1327,6 +1327,8 @@
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Ajouter une condition",
   "decoration_modal_add_style": "Ajouter un style",
+  "decoration_modal_name_label": "Nom",
+  "decoration_modal_name_description": "Facultatif. Affiché quand vous pointez une date décorée, et dans la liste des décorations.",
   "decoration_modal_mode_label": "Quand décorer",
   "decoration_modal_mode_option": [
     {

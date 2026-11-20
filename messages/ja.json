@@ -1182,6 +1182,8 @@
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "条件を追加",
   "decoration_modal_add_style": "スタイルを追加",
+  "decoration_modal_name_label": "名前",
+  "decoration_modal_name_description": "任意。装飾された日付にポインターを合わせたときと、装飾の一覧に表示されます。",
   "decoration_modal_mode_label": "装飾する条件",
   "decoration_modal_mode_option": [
     {

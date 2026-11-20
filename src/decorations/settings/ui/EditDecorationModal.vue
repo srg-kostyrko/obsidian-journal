@@ -4,6 +4,7 @@ import { useField, useFieldArray, useForm } from "vee-validate";
 import { computed } from "vue";
 
 import {
+  decorationName,
   decorationSchema,
   defaultCondition,
   type JournalDecoration,
@@ -18,6 +19,7 @@ import UiButtonDropdown from "@/ui/UiButtonDropdown.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { SINGLETON_CONDITION_TYPES } from "./condition-types";
 import ConditionItem from "./ConditionItem.vue";
@@ -39,6 +41,7 @@ const { values, handleSubmit } = useForm<JournalDecoration>({
 
 const conditions = useFieldArray<JournalDecorationCondition>("conditions");
 const { value: mode } = useField<JournalDecoration["mode"]>("mode");
+const { value: name } = useField<string | undefined>("name");
 
 // Storage stays permissive, so an empty narrowing row would save — and still replace the
 // journal's own conditions of its type, widening the question instead of leaving it open.
@@ -64,7 +67,9 @@ function addCondition(type: string): void {
 
 const onSubmit = handleSubmit((decoration) => {
   if (decoration.conditions.length === 0 || decoration.styles.length === 0) return;
-  api.submit({ decoration });
+  const { name: _typed, ...rest } = decoration;
+  const named = decorationName(decoration);
+  api.submit({ decoration: named === undefined ? rest : { ...rest, name: named } });
 });
 </script>
 
@@ -72,6 +77,10 @@ const onSubmit = handleSubmit((decoration) => {
   <form @submit.prevent="onSubmit">
     <div class="edit-decoration-panes">
       <div class="pane-conditions">
+        <UiSettingRow :name="m.decoration_modal_name_label()">
+          <template #description>{{ m.decoration_modal_name_description() }}</template>
+          <UiTextInput v-model="name" :aria-label="m.decoration_modal_name_label()" />
+        </UiSettingRow>
         <UiSettingRow :name="m.decoration_modal_mode_label()">
           <UiDropdown v-model="mode">
             <option value="and">{{ m.decoration_modal_mode_option({ kind: "and" }) }}</option>
