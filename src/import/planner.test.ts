@@ -384,16 +384,18 @@ describe("ImportPlanner", () => {
 
     it("the import planner reports an unrenderable source format instead of throwing", async () => {
       const harness = await harnessWith({ journals: { days: fixedJournal("days", { type: "day" }) } });
-      withPeriodicNotesSets(harness, [buildCalendarSet("Default", { day: buildPeriodicConfig({ format: "YYYYy" }) })]);
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ format: "YYYYy", openAtStartup: true }) }),
+      ]);
 
       withoutEras(() => {
         const failure = CalendarDate.today().tryFormat(userDateFormat("YYYYy"));
         if (failure.isOk()) throw new Error("expected the pattern to throw without eras");
 
-        const [row] = harness.resolve(ImportPlanner).plan().rows;
+        const plan = harness.resolve(ImportPlanner).plan();
 
-        expect(row?.state).toEqual({ kind: "new" });
-        expect(row?.warnings).toEqual([{ kind: "unrenderable-format", reason: failure.error.reason }]);
+        expect(plan.rows.at(0)?.state).toEqual({ kind: "unrenderable", reason: failure.error.reason });
+        expect(plan.startup).toEqual({ kind: "none" });
       });
     });
 

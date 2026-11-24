@@ -37,12 +37,13 @@ import {
 export type RowState =
   | { readonly kind: "new" }
   | { readonly kind: "set-up"; readonly journalName: string }
-  | { readonly kind: "superseded"; readonly by: SourceId };
+  | { readonly kind: "superseded"; readonly by: SourceId }
+  // The format cannot name a note on this device, so an existing journal writing the same notes cannot be
+  // recognized either: importing it could duplicate one. It cannot be switched on.
+  | { readonly kind: "unrenderable"; readonly reason: string };
 
 export type RowWarning =
-  | { readonly kind: "iso-week-under-custom-grid" }
-  | { readonly kind: "missing-template"; readonly path: string }
-  | { readonly kind: "unrenderable-format"; readonly reason: string };
+  { readonly kind: "iso-week-under-custom-grid" } | { readonly kind: "missing-template"; readonly path: string };
 
 export interface PlanRow {
   readonly key: string;
@@ -84,9 +85,14 @@ export function hasAnythingToImport(plan: ImportPlan): boolean {
 const SOURCE_ORDER: readonly SourceId[] = ["periodic-notes", "calendar", "daily-notes"];
 const SUPERSEDED_BY_PERIODIC_NOTES: Partial<Record<SourceId, PeriodKind>> = { "daily-notes": "day", calendar: "week" };
 
-// A nested ternary reads ambiguously about where the parens go, so the three-way choice
-// (superseded / already set up / new) is spelled out as branches instead.
-function rowState(superseded: boolean, setUpBy: string | undefined): RowState {
+// A nested ternary reads ambiguously about where the parens go, so the choice is spelled out as
+// branches instead.
+function rowState(
+  unrenderable: DateFormatError | undefined,
+  superseded: boolean,
+  setUpBy: string | undefined,
+): RowState {
+  if (unrenderable !== undefined) return { kind: "unrenderable", reason: unrenderable.reason };
   if (superseded) return { kind: "superseded", by: "periodic-notes" };
   if (setUpBy !== undefined) return { kind: "set-up", journalName: setUpBy };
   return { kind: "new" };
@@ -220,7 +226,9 @@ export class ImportPlanner {
   }
 
   #startup(rows: readonly PlanRow[]): StartupProposal {
-    const flagged = rows.find((row) => row.state.kind !== "superseded" && row.journal.openAtStartup);
+    const flagged = rows.find(
+      (row) => row.state.kind !== "superseded" && row.state.kind !== "unrenderable" && row.journal.openAtStartup,
+    );
     if (flagged === undefined) return { kind: "none" };
     const { journalName } = this.#settings.getSlice(startupSlice).state;
     return journalName === "" ? { kind: "set", rowKey: flagged.key } : { kind: "kept", journalName };
@@ -228,8 +236,6 @@ export class ImportPlanner {
 
   #warnings(journal: SourceJournal, customGridAfterImport: boolean): RowWarning[] {
     const warnings: RowWarning[] = [];
-    const rendered = sourcePath(journal, CalendarDate.today());
-    if (rendered.isErr()) warnings.push({ kind: "unrenderable-format", reason: rendered.error.reason });
     if (journal.period === "week" && customGridAfterImport && formatHasWrongWeek(journal.format)) {
       warnings.push({ kind: "iso-week-under-custom-grid" });
     }
@@ -276,8 +282,9 @@ export class ImportPlanner {
         const superseded =
           supersededPeriod === journal.period &&
           (periodicNotes?.journals.some((candidate) => candidate.period === journal.period) ?? false);
+        const rendered = sourcePath(journal, CalendarDate.today());
         const setUpBy = this.#setUpBy(journal, existing);
-        const state = rowState(superseded, setUpBy);
+        const state = rowState(rendered.isErr() ? rendered.error : undefined, superseded, setUpBy);
 
         const draft = {
           ...journalDefaultsFor({ type: journal.period }),

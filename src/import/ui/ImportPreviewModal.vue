@@ -114,6 +114,7 @@ function stateText(row: PlanRow): string {
     .with({ kind: "new" }, () => "")
     .with({ kind: "set-up" }, () => m.import_preview_row_set_up())
     .with({ kind: "superseded" }, (state) => m.import_preview_row_superseded({ source: sourceName(state.by) }))
+    .with({ kind: "unrenderable" }, (state) => m.date_format_invalid_preview({ reason: state.reason }))
     .exhaustive();
 }
 
@@ -121,7 +122,6 @@ function warningText(warning: RowWarning): string {
   return match(warning)
     .with({ kind: "iso-week-under-custom-grid" }, () => m.import_preview_warning_iso_week())
     .with({ kind: "missing-template" }, (value) => m.import_preview_warning_missing_template({ path: value.path }))
-    .with({ kind: "unrenderable-format" }, (value) => m.date_format_invalid_preview({ reason: value.reason }))
     .exhaustive();
 }
 
@@ -183,7 +183,9 @@ function confirm(): void {
             <div v-if="row.journal.templates.length > 0">
               {{ m.import_preview_row_template({ path: formatConjunction(row.journal.templates) }) }}
             </div>
-            <div v-if="stateText(row)">{{ stateText(row) }}</div>
+            <div v-if="stateText(row)" :class="{ 'import-warning': row.state.kind === 'unrenderable' }">
+              {{ stateText(row) }}
+            </div>
             <div v-if="row.journal.period === 'week' && weekStartMissed" class="import-warning">
               {{ m.import_preview_warning_week_start() }}
             </div>
@@ -197,6 +199,7 @@ function confirm(): void {
             <span v-if="row.state.kind !== 'set-up'" class="import-toggle">
               <UiToggle
                 :model-value="included.get(row.key) ?? false"
+                :disabled="row.state.kind === 'unrenderable'"
                 :tooltip="m.import_preview_include()"
                 @update:model-value="(value: boolean | undefined) => included.set(row.key, value ?? false)"
               />

@@ -106,7 +106,7 @@ export class ImportService {
           connect: chosen?.connect ?? false,
         };
       }
-      if (!chosen?.include) return { key: row.key, kind: "skipped" };
+      if (row.state.kind === "unrenderable" || !chosen?.include) return { key: row.key, kind: "skipped" };
       const name = freeName(
         chosen.name,
         (index) => m.import_journal_name_indexed({ name: chosen.name, index }),

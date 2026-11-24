@@ -130,12 +130,18 @@ describe("ImportPreviewModal", () => {
     expect(screen.queryByText(m.import_preview_warning_week_start())).toBeNull();
   });
 
-  it("shows why a source format cannot render on this device", () => {
+  it("shows why a source format cannot render on this device and does not import that journal", async () => {
     const reason = "eras are missing";
-    const plan = buildImportPlan({ rows: [buildPlanRow({ warnings: [{ kind: "unrenderable-format", reason }] })] });
-    harness.renderModal(ImportPreviewModal, { props: { plan } });
+    const plan = buildImportPlan({ rows: [buildPlanRow({ state: { kind: "unrenderable", reason } })] });
+    const { submit } = harness.renderModal(ImportPreviewModal, { props: { plan } });
 
     expect(screen.getByText(m.date_format_invalid_preview({ reason }))).toBeTruthy();
+    await userEvent.click(screen.getByLabelText(m.import_preview_include()));
+    await userEvent.click(screen.getByText(m.import_preview_confirm()));
+
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({ rows: [expect.objectContaining({ include: false, connect: false })] }),
+    );
   });
 
   it("does not set the startup journal while that journal is switched off", async () => {
