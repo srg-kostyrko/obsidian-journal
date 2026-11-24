@@ -1,4 +1,9 @@
+import { Err, Ok, type Result } from "@/infrastructure/result";
+
 import { localMoment } from "./calendar";
+import { DateFormatError } from "./errors";
+
+import type { PlainFormatPattern, UserDateFormat } from "./user-date-format";
 
 type ShiftUnit = "y" | "q" | "m" | "w" | "d" | "h";
 type BoundaryUnit = "year" | "quarter" | "month" | "week" | "day" | "hour";
@@ -25,8 +30,16 @@ export class Clock {
     this.#moment = m;
   }
 
-  format(pattern: string): string {
+  format<P extends string>(pattern: PlainFormatPattern<P>): string {
     return this.#moment.format(pattern);
+  }
+
+  tryFormat(pattern: UserDateFormat): Result<string, DateFormatError> {
+    try {
+      return new Ok(this.#moment.format(pattern));
+    } catch (error) {
+      return new Err(new DateFormatError(pattern, error instanceof Error ? error.message : String(error)));
+    }
   }
 
   shift(amount: number, unit: ShiftUnit): Clock {

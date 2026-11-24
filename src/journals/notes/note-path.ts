@@ -17,7 +17,8 @@ import { answersFromBindings, parseSpecFor, renderBindingFor } from "../prompts/
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
-import { EmptyNoteNameError } from "./errors";
+import { EmptyNoteNameError, JournalDateFormatError } from "./errors";
+import { FormatFailureLog } from "./format-failure-log";
 
 import type { JournalConfig } from "../config";
 import type { PromptAnswer } from "../prompts/config";
@@ -32,6 +33,8 @@ export interface PathInverter {
   invert(path: VaultPath): Option<JournalMetadata>;
 }
 
+export type NotePathError = JournalNotFoundError | EmptyNoteNameError | JournalDateFormatError;
+
 export function withNoteName(context: TemplateContext, noteName: string): TemplateContext {
   const noteSpec = { kind: "string", value: noteName } as const;
   return context.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
@@ -45,6 +48,7 @@ export class NotePathService {
   readonly #engine = inject(TemplateEngine);
   readonly #index = inject(JournalsIndex);
   readonly #timeline = inject(TimelineService);
+  readonly #formatFailures = inject(FormatFailureLog);
 
   #parseContext(config: JournalConfig): TemplateContext {
     // start_date/end_date mirror the render context (contextFor) so a note named by its
@@ -72,7 +76,20 @@ export class NotePathService {
     });
   }
 
-  pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+  #render(journalName: string, template: string, context: TemplateContext): Result<string, JournalDateFormatError> {
+    return this.#engine
+      .renderString(template, context)
+      .mapErr((error) => this.#formatFailed(JournalDateFormatError.from(journalName, error)));
+  }
+
+  // Every path a journal cannot render is mapped here, so every caller — a background read that
+  // shows nothing, or a write that also shows a notice — leaves the same single warning.
+  #formatFailed(error: JournalDateFormatError): JournalDateFormatError {
+    this.#formatFailures.warnOnce(error.journalName, error);
+    return error;
+  }
+
+  pathForDate(name: string, date: CalendarDate): Result<VaultPath, NotePathError> {
     return this.#metadataForDate(name, date).flatMap((metadata) => this.pathFor(name, metadata));
   }
 
@@ -83,16 +100,13 @@ export class NotePathService {
    * name — keeps its real path; the rendered template answers only for a note that does not exist
    * yet. Anything that links to a note rather than creating one wants this, not `pathFor`.
    */
-  resolvedPathFor(
-    name: string,
-    metadata: JournalMetadata,
-  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+  resolvedPathFor(name: string, metadata: JournalMetadata): Result<VaultPath, NotePathError> {
     const entry = this.#index.entryByAnchor(name, metadata.anchor);
     if (entry.isSome()) return new Ok(entry.value.path);
     return this.pathFor(name, metadata);
   }
 
-  resolvedPathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+  resolvedPathForDate(name: string, date: CalendarDate): Result<VaultPath, NotePathError> {
     return this.#metadataForDate(name, date).flatMap((metadata) => this.resolvedPathFor(name, metadata));
   }
 
@@ -103,12 +117,9 @@ export class NotePathService {
    * applies. The timeline bounds where a journal *writes*, not what it has already written, so a
    * note that outlived a narrowed timeline is still a real note to link to.
    */
-  linkTargetForDate(
-    name: string,
-    date: CalendarDate,
-  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError | OutOfTimelineError> {
+  linkTargetForDate(name: string, date: CalendarDate): Result<VaultPath, NotePathError | OutOfTimelineError> {
     return this.#metadataForDate(name, date).flatMap(
-      (metadata): Result<VaultPath, EmptyNoteNameError | OutOfTimelineError | JournalNotFoundError> => {
+      (metadata): Result<VaultPath, NotePathError | OutOfTimelineError> => {
         const exists = this.#index.entryByAnchor(name, metadata.anchor).isSome();
         if (!exists && !this.#timeline.contains(name, metadata.anchor)) {
           return new Err(new OutOfTimelineError(name, metadata.anchor));
@@ -118,20 +129,21 @@ export class NotePathService {
     );
   }
 
-  pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
-    return this.#journals.require(name).flatMap((config) => {
+  pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, NotePathError> {
+    return attempt.in(this, function* (this: NotePathService) {
+      const config = yield* this.#journals.require(name);
       const context = this.contextFor(config, metadata);
-      const noteName = this.#engine.renderString(config.nameTemplate, context);
+      const noteName = yield* this.#render(name, config.nameTemplate, context);
       // A note named "" becomes the dotfile ".md", which is invisible in the vault.
       // Reject rather than trim: trimming would move every template that renders
       // trailing space to a different path.
-      if (noteName.trim() === "") return new Err(new EmptyNoteNameError(name));
+      if (noteName.trim() === "") return yield* new Err(new EmptyNoteNameError(name));
       // The rendered note name feeds back into the folder as {{note_name}}/{{title}},
       // so the filename must render first.
       const folderContext = withNoteName(context, noteName);
-      const folder = config.folder ? this.#engine.renderString(config.folder, folderContext) : "";
+      const folder = config.folder ? yield* this.#render(name, config.folder, folderContext) : "";
       const joined = folder ? `${folder}/${noteName}.md` : `${noteName}.md`;
-      return new Ok(normalizePath(joined) as VaultPath);
+      return normalizePath(joined) as VaultPath;
     });
   }
 
@@ -172,6 +184,10 @@ export class NotePathService {
     // reassembles into a single anchor rather than losing the folder's components.
     const template =
       config.folder && part === "path" ? `${config.folder}/${config.nameTemplate}.md` : `${config.nameTemplate}.md`;
+    // A path this device cannot render can never be read back: every candidate is checked by
+    // rendering it. Probing here is what reports it, since a parse that fails on the format looks
+    // like any other non-match to the caller.
+    if (this.#render(name, template, context).isErr()) return Option.none();
     const tokens = tokenize(template);
     const engine = this.#engine;
     const cycle = this.#cycle;
@@ -233,7 +249,13 @@ export class NotePathService {
     return Option.some({
       invert: (path: VaultPath): Option<JournalMetadata> => {
         const parsed = engine.parse(tokens, path, context);
-        if (parsed.kind === "err") return Option.none();
+        if (parsed.kind === "err") {
+          const detail = parsed.error.detail;
+          if (detail.kind === "unrenderable-format") {
+            this.#formatFailed(new JournalDateFormatError(name, detail.format, detail.reason));
+          }
+          return Option.none();
+        }
         const bindings = parsed.value;
         const numbers: Record<string, number> = {};
         for (const source of config.numbering.sources) {
@@ -331,18 +353,19 @@ export class NotePathService {
    * day alone, which on a journal whose format is a plain date says nothing about which
    * interval — or how long an interval even is.
    */
-  periodLabelFor(config: JournalConfig, metadata: JournalMetadata): string {
+  periodLabelFor(config: JournalConfig, metadata: JournalMetadata): Result<string, JournalDateFormatError> {
     const context = this.contextFor(config, metadata);
-    if (config.write.type !== "custom") return this.#engine.renderString("{{date}}", context);
-    return m.journal_period_range({
-      start: this.#engine.renderString("{{start_date}}", context),
-      end: this.#engine.renderString("{{end_date}}", context),
+    if (config.write.type !== "custom") return this.#render(config.name, "{{date}}", context);
+    return attempt.in(this, function* (this: NotePathService) {
+      const start = yield* this.#render(config.name, "{{start_date}}", context);
+      const end = yield* this.#render(config.name, "{{end_date}}", context);
+      return m.journal_period_range({ start, end });
     });
   }
 
   /** What this journal calls the note for a period, whether or not that note exists yet. */
-  noteNameFor(config: JournalConfig, metadata: JournalMetadata): string {
-    return this.#engine.renderString(config.nameTemplate, this.contextFor(config, metadata));
+  noteNameFor(config: JournalConfig, metadata: JournalMetadata): Result<string, JournalDateFormatError> {
+    return this.#render(config.name, config.nameTemplate, this.contextFor(config, metadata));
   }
 
   bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {

@@ -1,7 +1,8 @@
 import { __testing } from "obsidian";
 import { assert, beforeEach, describe, it, expect, vi } from "vitest";
 
-import { anchor, installTestCalendar } from "@/calendar/testing";
+import { userDateFormat } from "@/calendar";
+import { anchor, installTestCalendar, withoutEras } from "@/calendar/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
@@ -9,7 +10,7 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
-import { NoApplicableJournals } from "../notes/errors";
+import { JournalDateFormatError, NoApplicableJournals } from "../notes/errors";
 import { fixedJournal } from "../testing";
 
 import { OpenDateFlow } from "./open-date.flow";
@@ -72,7 +73,11 @@ describe("OpenDateFlow", () => {
       const result = await harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pinned: true });
 
       expect(result.isOk()).toBe(true);
-      expect(invokeSpy).toHaveBeenCalledWith(OpenJournalEntryFlow, expect.objectContaining({ pinned: true }));
+      expect(invokeSpy).toHaveBeenCalledWith(
+        OpenJournalEntryFlow,
+        expect.objectContaining({ pinned: true }),
+        expect.anything(),
+      );
     });
   });
 
@@ -115,6 +120,7 @@ describe("OpenDateFlow", () => {
       expect(invokeSpy).toHaveBeenCalledWith(
         OpenJournalEntryFlow,
         expect.objectContaining({ journalName: "b", pinned: true }),
+        expect.anything(),
       );
     });
 
@@ -222,6 +228,49 @@ describe("OpenDateFlow", () => {
       // Asserted on the seeded path, not the returned one: a note created elsewhere would
       // carry the canonical date too, and prove nothing about repairing this one.
       expect(harness.host.files.get(stale)?.frontmatter["journal-date"]).toBe("2026-05-17");
+    });
+  });
+
+  describe("an unrenderable date format", () => {
+    const broken = { dateFormat: userDateFormat("YYYYy-[W]w"), timeline: TIMELINE_OPEN };
+
+    it("shows the journal's notice once when one journal applies", async () => {
+      installTestCalendar({ dow: 0, doy: 6 });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, broken) } },
+      });
+
+      const result = await withoutEras(() =>
+        harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19") }),
+      );
+
+      assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+      expect(harness.notices.messages).toEqual([result.error.userNotice]);
+    });
+
+    it("shows the journal's notice once after a pick between journals", async () => {
+      installTestCalendar({ dow: 0, doy: 6 });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            a: fixedJournal("a", { type: "week" }, { ...broken, folder: "A" }),
+            b: fixedJournal("b", { type: "week" }, { ...broken, folder: "B" }),
+          },
+        },
+      });
+
+      const result = await withoutEras(async () => {
+        const promise = harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19") });
+        await Promise.resolve();
+        await Promise.resolve();
+        harness.suggests.lastOpen<string[], string>().choose("b");
+        return promise;
+      });
+
+      assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+      expect(harness.notices.messages).toEqual([result.error.userNotice]);
     });
   });
 });

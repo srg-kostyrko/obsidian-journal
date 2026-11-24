@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { AsyncResult } from "@/infrastructure/result";
@@ -75,7 +76,7 @@ describe("PromptsSection", () => {
           daily: fixedJournal(
             "daily",
             { type: "day" },
-            { prompts: [{ ...moodPrompt, type: "date", format: "YYYY-MM-DD" }] },
+            { prompts: [{ ...moodPrompt, type: "date", format: userDateFormat("YYYY-MM-DD") }] },
           ),
         },
       },

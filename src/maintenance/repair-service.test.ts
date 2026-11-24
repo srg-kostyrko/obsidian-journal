@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
@@ -347,7 +348,11 @@ describe("RepairService", () => {
   describe("attaching a note several journals would adopt", () => {
     const TWINS = {
       daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}" }),
-      diary: fixedJournal("diary", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" }),
+      diary: fixedJournal(
+        "diary",
+        { type: "day" },
+        { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("DD.MM.YYYY") },
+      ),
     };
 
     it("claims the note for the chosen journal only", async () => {

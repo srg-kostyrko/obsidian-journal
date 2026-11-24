@@ -12,12 +12,13 @@ import type {
   VaultPath,
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, Err, Ok, attempt, type Result } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
 import { FRONTMATTER_NAME_KEY } from "../config";
 import { CycleService } from "../cycle";
-import { JournalNotFoundError } from "../errors";
+import { JournalNotFoundError, type NoteletTypeNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { PromptsUnansweredError } from "../prompts/errors";
@@ -32,11 +33,13 @@ import {
   BodyFrontmatterError,
   NoteletHoldsPathError,
   NotePathClaimedError,
+  JournalDateFormatError,
   NotePathHeldByPeriodError,
   type EmptyNoteNameError,
 } from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
+import { takeBackEmptyNote } from "./take-back";
 import { TemplateContentService } from "./template-content";
 import { confirmCreationModal } from "./ui/modals";
 
@@ -44,7 +47,9 @@ import type { PromptAnswer } from "../prompts/config";
 
 export type NoteCreationError =
   | JournalNotFoundError
+  | NoteletTypeNotFoundError
   | EmptyNoteNameError
+  | JournalDateFormatError
   | TemplateRenderError
   | NoteReadError
   | NoteCreateError
@@ -78,6 +83,7 @@ function splitFrontmatter(content: string): Result<{ frontmatter: Record<string,
 
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
+  readonly #logger = inject(LoggerFactoryToken).named("note-creation");
   readonly #metadata = inject(NoteMetadataService);
   readonly #index = inject(JournalsIndex);
   readonly #path = inject(NotePathService);
@@ -253,7 +259,11 @@ export class NoteCreationService {
         } else {
           answers = yield* this.#flows
             .invoke(GatherPromptAnswersFlow, { metadata, confirming }, { notify: false })
-            .mapErr((error) => (error instanceof UserAborted ? error : new JournalNotFoundError(name)));
+            .mapErr((error) =>
+              error instanceof UserAborted || error instanceof JournalDateFormatError
+                ? error
+                : new JournalNotFoundError(name),
+            );
         }
       }
       const answered: JournalMetadata =
@@ -297,9 +307,15 @@ export class NoteCreationService {
         this.#guard.release(path);
         return yield* new Err(createResult.error as NoteCreationError);
       }
-      const content = yield* this.#content
-        .renderFor(name, answered, basenameOf(path), path)
-        .tapErr(() => this.#guard.release(path));
+      // The note was created empty so Templater has a target file; a body that cannot render
+      // takes it back rather than leave an empty, unclaimed note behind.
+      const rendered = await this.#content.renderFor(name, answered, basenameOf(path), path);
+      if (rendered.isErr()) {
+        await takeBackEmptyNote(this.#notes, this.#logger, path, rendered.error);
+        this.#guard.release(path);
+        return yield* new Err(rendered.error);
+      }
+      const content = rendered.value;
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }

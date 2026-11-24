@@ -1,4 +1,5 @@
 import type { CalendarDate, Clock } from "@/calendar";
+import type { Result } from "@/infrastructure/result";
 
 export type Unit = "y" | "q" | "m" | "w" | "d" | "h";
 
@@ -29,6 +30,8 @@ export type BoundValue =
 export type Bindings = ReadonlyMap<string, BoundValue>;
 
 export type RenderToken = (token: Token) => string;
+
+export type FallibleRenderToken<E> = (token: Token) => Result<string, E>;
 
 export interface ValidationProblem {
   token: Token;

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { Calendar, calendarSettingsModule } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { Calendar, CalendarDate, calendarSettingsModule, userDateFormat } from "@/calendar";
+import { anchor, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -76,7 +76,7 @@ describe("ImportPlanner", () => {
           days: fixedJournal(
             "days",
             { type: "day" },
-            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -96,7 +96,7 @@ describe("ImportPlanner", () => {
           [taken]: fixedJournal(
             taken,
             { type: "day" },
-            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -115,7 +115,7 @@ describe("ImportPlanner", () => {
           days: fixedJournal(
             "days",
             { type: "day" },
-            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -137,7 +137,7 @@ describe("ImportPlanner", () => {
           days: fixedJournal(
             "days",
             { type: "day" },
-            { folder: "Journal", dateFormat: "DD-MM-YYYY", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("DD-MM-YYYY"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -156,7 +156,7 @@ describe("ImportPlanner", () => {
           weeks: fixedJournal(
             "weeks",
             { type: "week" },
-            { folder: "Journal", dateFormat: "gggg-[W]ww", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("gggg-[W]ww"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -181,7 +181,7 @@ describe("ImportPlanner", () => {
           days: fixedJournal(
             "days",
             { type: "day" },
-            { folder: "Journal", dateFormat: "YYYY-MM-D", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-D"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -200,7 +200,7 @@ describe("ImportPlanner", () => {
           weeks: fixedJournal(
             "weeks",
             { type: "week" },
-            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+            { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}" },
           ),
         },
       });
@@ -380,6 +380,23 @@ describe("ImportPlanner", () => {
       expect(harness.resolve(ImportPlanner).plan().rows.at(0)?.warnings).toEqual([
         { kind: "missing-template", path: "Templates/Day" },
       ]);
+    });
+
+    it("the import planner reports an unrenderable source format instead of throwing", async () => {
+      const harness = await harnessWith({ journals: { days: fixedJournal("days", { type: "day" }) } });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ format: "YYYYy", openAtStartup: true }) }),
+      ]);
+
+      withoutEras(() => {
+        const failure = CalendarDate.today().tryFormat(userDateFormat("YYYYy"));
+        if (failure.isOk()) throw new Error("expected the pattern to throw without eras");
+
+        const plan = harness.resolve(ImportPlanner).plan();
+
+        expect(plan.rows.at(0)?.state).toEqual({ kind: "unrenderable", reason: failure.error.reason });
+        expect(plan.startup).toEqual({ kind: "none" });
+      });
     });
 
     it("accepts a template path written without its extension", async () => {

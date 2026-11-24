@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate, Clock, type AnchorString } from "@/calendar";
-import { anchor } from "@/calendar/testing";
-import { Ok } from "@/infrastructure/result";
+import { CalendarDate, Clock, DateFormatError, type AnchorString } from "@/calendar";
+import { anchor, withoutEras } from "@/calendar/testing";
+import { Err, Ok } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { TemplateContext } from "./context";
+import { UnrenderableDateFormatError } from "./errors";
 import { tokenize } from "./grammar";
 import { applyModifiers } from "./modifiers";
 import { buildFakeContext, FakeHandler, installTestEngine } from "./testing";
@@ -20,93 +21,95 @@ function asDateBinding(bound: BoundValue | undefined): CalendarDate {
 describe("TemplateEngine.renderString", () => {
   it("renders literal-only templates unchanged", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("just literal", buildFakeContext())).toBe("just literal");
+    expect(engine.renderString("just literal", buildFakeContext())).toEqual(new Ok("just literal"));
   });
 
   it("renders a string variable", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Journal: {{journal_name}}", buildFakeContext())).toBe("Journal: Daily");
+    expect(engine.renderString("Journal: {{journal_name}}", buildFakeContext())).toEqual(new Ok("Journal: Daily"));
   });
 
   it("renders a number variable", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Sprint {{index}}", buildFakeContext())).toBe("Sprint 7");
+    expect(engine.renderString("Sprint {{index}}", buildFakeContext())).toEqual(new Ok("Sprint 7"));
   });
 
   it("renders a number variable with an offset", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Sprint {{index+3}}", buildFakeContext())).toBe("Sprint 10");
+    expect(engine.renderString("Sprint {{index+3}}", buildFakeContext())).toEqual(new Ok("Sprint 10"));
   });
 
   it("renders a number variable as an ordinal", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("The {{index:o}} sprint", buildFakeContext())).toBe("The 7th sprint");
+    expect(engine.renderString("The {{index:o}} sprint", buildFakeContext())).toEqual(new Ok("The 7th sprint"));
   });
 
   it("renders a derived variable from its date", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Day {{day_of_month}}", buildFakeContext())).toBe("Day 5");
+    expect(engine.renderString("Day {{day_of_month}}", buildFakeContext())).toEqual(new Ok("Day 5"));
   });
 
   it("computes a derived variable from the date a boundary modifier snaps to", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{day_of_month<endOf=week>}}", buildFakeContext())).toBe("9");
+    expect(engine.renderString("{{day_of_month<endOf=week>}}", buildFakeContext())).toEqual(new Ok("9"));
   });
 
   it("applies an offset to a derived variable after computing it", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{day_of_month+1d-1}}", buildFakeContext())).toBe("5");
+    expect(engine.renderString("{{day_of_month+1d-1}}", buildFakeContext())).toEqual(new Ok("5"));
   });
 
   it("renders a derived variable as an ordinal", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("The {{day_of_month:o}} day", buildFakeContext())).toBe("The 5th day");
+    expect(engine.renderString("The {{day_of_month:o}} day", buildFakeContext())).toEqual(new Ok("The 5th day"));
   });
 
   it("emits the raw token for an unsupported derived format", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{day_of_month:YYYY}}", buildFakeContext())).toBe("{{day_of_month:YYYY}}");
+    expect(engine.renderString("{{day_of_month:YYYY}}", buildFakeContext())).toEqual(new Ok("{{day_of_month:YYYY}}"));
   });
 
   it("emits the raw token for a shift modifier on a number", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{index+1d}}", buildFakeContext())).toBe("{{index+1d}}");
+    expect(engine.renderString("{{index+1d}}", buildFakeContext())).toEqual(new Ok("{{index+1d}}"));
   });
 
   it("emits the raw token for an unsupported number format", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{index:000}}", buildFakeContext())).toBe("{{index:000}}");
+    expect(engine.renderString("{{index:000}}", buildFakeContext())).toEqual(new Ok("{{index:000}}"));
   });
 
   it("ignores an offset on a date variable", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{date+3}}", buildFakeContext())).toBe("2022-01-05");
+    expect(engine.renderString("{{date+3}}", buildFakeContext())).toEqual(new Ok("2022-01-05"));
   });
 
   it("renders a date variable whose name is capitalized", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{Date:YYYY-MM-DD}}", buildFakeContext())).toBe("2022-01-05");
+    expect(engine.renderString("{{Date:YYYY-MM-DD}}", buildFakeContext())).toEqual(new Ok("2022-01-05"));
   });
 
   it("renders a string variable whose name is capitalized", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{Journal_Name}}", buildFakeContext())).toBe("Daily");
+    expect(engine.renderString("{{Journal_Name}}", buildFakeContext())).toEqual(new Ok("Daily"));
   });
 
   it("binds each of two variables differing only in case to its own value", async () => {
     const engine = await installTestEngine();
     const context = buildFakeContext().number("Index", 42);
-    expect(engine.renderString("{{index}}/{{Index}}", context)).toBe("7/42");
+    expect(engine.renderString("{{index}}/{{Index}}", context)).toEqual(new Ok("7/42"));
   });
 
   it("renders a date variable with default format", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Today: {{date}}", buildFakeContext())).toBe("Today: 2022-01-05");
+    expect(engine.renderString("Today: {{date}}", buildFakeContext())).toEqual(new Ok("Today: 2022-01-05"));
   });
 
   it("renders a date variable with format override", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Today: {{date:MMM D, YYYY}}", buildFakeContext())).toBe("Today: Jan 5, 2022");
+    expect(engine.renderString("Today: {{date:MMM D, YYYY}}", buildFakeContext())).toEqual(
+      new Ok("Today: Jan 5, 2022"),
+    );
   });
 
   it.each([
@@ -118,7 +121,7 @@ describe("TemplateEngine.renderString", () => {
     ["{{date+1y}}", "2023-01-05"],
   ])("renders %s with arithmetic", async (template, expected) => {
     const engine = await installTestEngine();
-    expect(engine.renderString(template, buildFakeContext())).toBe(expected);
+    expect(engine.renderString(template, buildFakeContext())).toEqual(new Ok(expected));
   });
 
   it.each([
@@ -132,38 +135,38 @@ describe("TemplateEngine.renderString", () => {
     ["{{date<endOf=decade>}}", "2029-12-31"],
   ])("renders %s with boundary modifier", async (template, expected) => {
     const engine = await installTestEngine();
-    expect(engine.renderString(template, buildFakeContext())).toBe(expected);
+    expect(engine.renderString(template, buildFakeContext())).toEqual(new Ok(expected));
   });
 
   describe("unresolvable tokens pass through as raw text", () => {
     it("passes through unknown variable name verbatim", async () => {
       const engine = await installTestEngine();
-      expect(engine.renderString("hello {{not_a_var}}", buildFakeContext())).toBe("hello {{not_a_var}}");
+      expect(engine.renderString("hello {{not_a_var}}", buildFakeContext())).toEqual(new Ok("hello {{not_a_var}}"));
     });
 
     it("passes through function token when no handler registered", async () => {
       const engine = await installTestEngine();
-      expect(engine.renderString("link: {{journal_link(Other)}}", buildFakeContext())).toBe(
-        "link: {{journal_link(Other)}}",
+      expect(engine.renderString("link: {{journal_link(Other)}}", buildFakeContext())).toEqual(
+        new Ok("link: {{journal_link(Other)}}"),
       );
     });
 
     it("ignores format slot on string variables", async () => {
       const engine = await installTestEngine();
-      expect(engine.renderString("{{journal_name:YYYY}}", buildFakeContext())).toBe("{{journal_name:YYYY}}");
+      expect(engine.renderString("{{journal_name:YYYY}}", buildFakeContext())).toEqual(new Ok("{{journal_name:YYYY}}"));
     });
   });
 
   describe("function dispatch", () => {
     it("invokes a registered handler", async () => {
       const engine = await installTestEngine([FakeHandler.fixed("greet", "hi")]);
-      expect(engine.renderString("{{greet(world)}}", buildFakeContext())).toBe("hi");
+      expect(engine.renderString("{{greet(world)}}", buildFakeContext())).toEqual(new Ok("hi"));
     });
 
     it("passes the source date without applying modifiers to handler", async () => {
       const handler = new FakeHandler("show_date", (input) => new Ok(input.sourceDate.toAnchor()));
       const engine = await installTestEngine([handler]);
-      expect(engine.renderString("{{show_date(x)+1w}}", buildFakeContext())).toBe("2022-01-05");
+      expect(engine.renderString("{{show_date(x)+1w}}", buildFakeContext())).toEqual(new Ok("2022-01-05"));
     });
 
     it("passes the raw modifiers to handler", async () => {
@@ -172,7 +175,94 @@ describe("TemplateEngine.renderString", () => {
         (input) => new Ok(applyModifiers(input.sourceDate, input.modifiers).toAnchor()),
       );
       const engine = await installTestEngine([handler]);
-      expect(engine.renderString("{{show_shift(x)+1w}}", buildFakeContext())).toBe("2022-01-12");
+      expect(engine.renderString("{{show_shift(x)+1w}}", buildFakeContext())).toEqual(new Ok("2022-01-12"));
+    });
+  });
+});
+
+function failFormatFor(pattern: string): void {
+  const tryFormat = CalendarDate.prototype.tryFormat;
+  vi.spyOn(CalendarDate.prototype, "tryFormat").mockImplementation(function (this: CalendarDate, format) {
+    return format === pattern ? new Err(new DateFormatError(format, "boom")) : tryFormat.call(this, format);
+  });
+}
+
+describe("an unrenderable date format", () => {
+  const date = CalendarDate.fromAnchor(anchor("2022-01-05"));
+
+  it("returns UnrenderableDateFormatError for a date token whose format throws", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().date("date", date, "YYYY-MM-DD");
+    const result = withoutEras(() => engine.renderString("{{date:YYYYy}}", context));
+    expectErr(result);
+    expect(result.error).toBeInstanceOf(UnrenderableDateFormatError);
+    expect(result.error.variableName).toBe("date");
+    expect(result.error.pattern).toBe("YYYYy");
+  });
+
+  it("fails the same way when the context default format throws", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().date("date", date, "yyyy");
+    const result = withoutEras(() => engine.renderString("{{date}}", context));
+    expectErr(result);
+    expect(result.error.pattern).toBe("yyyy");
+  });
+
+  it("fails for a clock variable the same way", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().clock("now", Clock.now(), "HH:mm");
+    const result = withoutEras(() => engine.renderString("{{now:y}}", context));
+    expectErr(result);
+    expect(result.error.variableName).toBe("now");
+  });
+
+  it("stops at the first failing token", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().date("date", date, "YYYY-MM-DD").date("other", date, "yyyy");
+    const result = withoutEras(() => engine.renderString("{{date:y}}-{{other}}", context));
+    expectErr(result);
+    expect(result.error.variableName).toBe("date");
+  });
+
+  it("makes renderDocument fail rather than emit partial content", async () => {
+    const engine = await installTestEngine();
+    const context = buildFakeContext();
+    const result = withoutEras(() =>
+      engine.renderDocument("---\ntitle: {{date:y}}\n---\n# {{journal_name}}\n", context),
+    );
+    expectErr(result);
+    expect(result.error.pattern).toBe("y");
+  });
+
+  it("makes parse return unrenderable-format when searching modified captures", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().date("date", date, "YYYY-MM-DD");
+    const result = withoutEras(() =>
+      engine.parse(tokenize("{{date:YYYY-MM-DD}}-{{date+1d:yyyy}}"), "2026-05-05-yyyy", context),
+    );
+    expectErr(result);
+    expect(result.error.detail).toMatchObject({ kind: "unrenderable-format", variableName: "date", format: "yyyy" });
+  });
+
+  // No real pattern reaches the merged-captures guard: moment refuses to parse a capture in the
+  // format it then cannot render, so the formatter is made to throw for a pattern that parses.
+  describe("when merged captures parse but cannot be rendered", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("makes parse return unrenderable-format when combining captures", async () => {
+      const engine = await installTestEngine();
+      const context = TemplateContext.empty().date("date", date, "YYYY-MM-DD");
+      failFormatFor("MM");
+      const result = engine.parse(tokenize("{{date:YYYY}}-{{date:MM}}"), "2026-05", context);
+      expectErr(result);
+      expect(result.error.detail).toEqual({
+        kind: "unrenderable-format",
+        variableName: "date",
+        format: "MM",
+        reason: "boom",
+      });
     });
   });
 });
@@ -372,8 +462,9 @@ describe("TemplateEngine.parse", () => {
     const context = buildFakeContext();
     const template = `{{date:${format}}}.md`;
     const rendered = engine.renderString(template, context);
+    expectOk(rendered);
 
-    const result = engine.parse(tokenize(template), rendered, context);
+    const result = engine.parse(tokenize(template), rendered.value, context);
 
     expectOk(result);
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
@@ -386,8 +477,9 @@ describe("TemplateEngine.parse", () => {
     const context = TemplateContext.empty().date("date", CalendarDate.fromAnchor(anchor(day)), "X");
     const template = "{{date:X}}.md";
     const rendered = engine.renderString(template, context);
+    expectOk(rendered);
 
-    const result = engine.parse(tokenize(template), rendered, context);
+    const result = engine.parse(tokenize(template), rendered.value, context);
 
     expectOk(result);
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe(day);
@@ -786,18 +878,18 @@ describe("TemplateEngine.validate", () => {
 describe("renders realistic journal templates against a real calendar", () => {
   it("renders the daily anchor in its default format", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{date}}", buildFakeContext())).toBe("2022-01-05");
+    expect(engine.renderString("{{date}}", buildFakeContext())).toEqual(new Ok("2022-01-05"));
   });
 
   it("renders the daily anchor with a format override", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("{{date:MMM D, YYYY}}", buildFakeContext())).toBe("Jan 5, 2022");
+    expect(engine.renderString("{{date:MMM D, YYYY}}", buildFakeContext())).toEqual(new Ok("Jan 5, 2022"));
   });
 
   it("renders an index-plus-date name template", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("Sprint {{index}} — {{date:YYYY-MM-DD}}", buildFakeContext())).toBe(
-      "Sprint 7 — 2022-01-05",
+    expect(engine.renderString("Sprint {{index}} — {{date:YYYY-MM-DD}}", buildFakeContext())).toEqual(
+      new Ok("Sprint 7 — 2022-01-05"),
     );
   });
 
@@ -807,9 +899,10 @@ describe("renders realistic journal templates against a real calendar", () => {
     const template = "Реліз{{реліз}}Спринт{{спринт}}";
 
     const rendered = engine.renderString(template, context);
-    expect(rendered).toBe("Реліз4712Спринт3");
+    expect(rendered).toEqual(new Ok("Реліз4712Спринт3"));
+    expectOk(rendered);
 
-    const result = engine.parse(tokenize(template), rendered, context);
+    const result = engine.parse(tokenize(template), rendered.value, context);
     expectOk(result);
     expect(result.value.get("реліз")).toEqual({ kind: "number", value: 4712 });
     expect(result.value.get("спринт")).toEqual({ kind: "number", value: 3 });
@@ -823,7 +916,7 @@ describe("renders realistic journal templates against a real calendar", () => {
       .date("end_date", CalendarDate.fromAnchor(anchor("2022-01-09")), "YYYY-MM-DD")
       .string("journal_name", "Weekly")
       .number("index", 1);
-    expect(engine.renderString("{{date}}", context)).toBe("2022-W1");
+    expect(engine.renderString("{{date}}", context)).toEqual(new Ok("2022-W1"));
   });
 });
 
@@ -840,19 +933,19 @@ describe("renders clock variables", () => {
   it("renders with default format", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
     const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
-    expect(engine.renderString("now is {{time}}", context)).toBe("now is 10:37");
+    expect(engine.renderString("now is {{time}}", context)).toEqual(new Ok("now is 10:37"));
   });
 
   it("renders with format override", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
     const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
-    expect(engine.renderString("{{time:HH:mm:ss}}", context)).toBe("10:37:42");
+    expect(engine.renderString("{{time:HH:mm:ss}}", context)).toEqual(new Ok("10:37:42"));
   });
 
   it("applies modifiers and format", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
     const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
-    expect(engine.renderString("{{time-1h:HH:mm}}", context)).toBe("09:37");
+    expect(engine.renderString("{{time-1h:HH:mm}}", context)).toEqual(new Ok("09:37"));
   });
 });
 
@@ -917,43 +1010,47 @@ describe("TemplateEngine.renderDocument", () => {
   it("renders a template without multi-line values exactly as renderString does", async () => {
     const engine = await installTestEngine();
     const template = "---\ntitle: {{journal_name}}\n---\n# {{date}}\n\n- Sprint {{index}}\n";
-    expect(engine.renderDocument(template, buildFakeContext())).toBe(engine.renderString(template, buildFakeContext()));
+    expect(engine.renderDocument(template, buildFakeContext())).toEqual(
+      engine.renderString(template, buildFakeContext()),
+    );
   });
 
   it("continues a multi-line value under a quote", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderDocument("> {{answer}}", withAnswer())).toBe("> a\n> b\n>\n> c");
+    expect(engine.renderDocument("> {{answer}}", withAnswer())).toEqual(new Ok("> a\n> b\n>\n> c"));
   });
 
   it("counts an earlier value on the same line towards the prefix", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderDocument("- {{journal_name}}: {{answer}}", withAnswer())).toBe("- Daily: a\n  b\n- c");
+    expect(engine.renderDocument("- {{journal_name}}: {{answer}}", withAnswer())).toEqual(
+      new Ok("- Daily: a\n  b\n- c"),
+    );
   });
 
   it("writes the template's own line ending", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderDocument("# {{date}}\r\n> {{answer}}\r\n", withAnswer())).toBe(
-      "# 2022-01-05\r\n> a\r\n> b\r\n>\r\n> c\r\n",
+    expect(engine.renderDocument("# {{date}}\r\n> {{answer}}\r\n", withAnswer())).toEqual(
+      new Ok("# 2022-01-05\r\n> a\r\n> b\r\n>\r\n> c\r\n"),
     );
   });
 
   it("leaves a note name render untouched", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderString("> {{answer}}", withAnswer())).toBe("> a\nb\n\nc");
+    expect(engine.renderString("> {{answer}}", withAnswer())).toEqual(new Ok("> a\nb\n\nc"));
   });
 
   it("does not apply markdown structure inside the frontmatter block", async () => {
     const engine = await installTestEngine();
-    expect(engine.renderDocument("---\n> {{journal_name}}\n---\n> {{answer}}", withAnswer())).toBe(
-      "---\n> Daily\n---\n> a\n> b\n>\n> c",
+    expect(engine.renderDocument("---\n> {{journal_name}}\n---\n> {{answer}}", withAnswer())).toEqual(
+      new Ok("---\n> Daily\n---\n> a\n> b\n>\n> c"),
     );
   });
 
   it("escapes values in the frontmatter block and continues them in the body", async () => {
     const engine = await installTestEngine();
     const context = withAnswer().string("colon", "rough: day");
-    expect(engine.renderDocument("---\nsummary: {{answer}}\ntitle: {{colon}}\n---\n> {{answer}}", context)).toBe(
-      '---\nsummary: |-\n  a\n  b\n\n  c\ntitle: "rough: day"\n---\n> a\n> b\n>\n> c',
+    expect(engine.renderDocument("---\nsummary: {{answer}}\ntitle: {{colon}}\n---\n> {{answer}}", context)).toEqual(
+      new Ok('---\nsummary: |-\n  a\n  b\n\n  c\ntitle: "rough: day"\n---\n> a\n> b\n>\n> c'),
     );
   });
 });

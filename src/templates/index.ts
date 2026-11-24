@@ -6,6 +6,12 @@ export { formatToRegexp } from "./format-regex";
 export { FunctionHandlerToken, type FunctionHandler, type FunctionInput } from "./handlers";
 export { templatesModule } from "./module";
 
-export { TemplatesError, TemplateParseError, TemplateRenderError, type TemplateParseErrorDetail } from "./errors";
+export {
+  TemplatesError,
+  TemplateParseError,
+  TemplateRenderError,
+  UnrenderableDateFormatError,
+  type TemplateParseErrorDetail,
+} from "./errors";
 
 export type { Token, TokenStream, Modifier, VariableSpec, Bindings, BoundValue, ValidationProblem } from "./types";

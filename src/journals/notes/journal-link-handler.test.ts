@@ -3,6 +3,7 @@ import { assert, beforeEach, describe, expect, it } from "vitest";
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
+import { Ok } from "@/infrastructure/result";
 import {
   FunctionHandlerToken,
   TemplateContext,
@@ -256,7 +257,7 @@ describe("JournalLinkHandler", () => {
         .resolve(TemplateEngine)
         .renderString("See [[{{journal_link(bounded)}}]]", hostContext("daily", "2030-07-10", "2030-07-10"));
 
-      expect(rendered).toBe("See [[{{journal_link(bounded)}}]]");
+      expect(rendered).toEqual(new Ok("See [[{{journal_link(bounded)}}]]"));
     });
   });
 
@@ -265,11 +266,13 @@ describe("JournalLinkHandler", () => {
   // so a {{journal_link(...)}} token in a note body actually dispatches to the handler.
   describe("through the template engine (FunctionHandlerToken wiring)", () => {
     it("resolves a {{journal_link}} token to the target note path", () => {
-      expect(engine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toBe("2026");
+      expect(engine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toEqual(new Ok("2026"));
     });
 
     it("resolves a {{journal_link}} token embedded in note body text", () => {
-      expect(engine.renderString("See [[{{journal_link(daily)}}]]", crossYearWeek())).toBe("See [[2025-12-29]]");
+      expect(engine.renderString("See [[{{journal_link(daily)}}]]", crossYearWeek())).toEqual(
+        new Ok("See [[2025-12-29]]"),
+      );
     });
 
     it("leaves the token unresolved when no handler is registered under the token", async () => {
@@ -282,7 +285,7 @@ describe("JournalLinkHandler", () => {
 
       const rendered = bare.resolve(TemplateEngine).renderString("{{journal_link(yearly)}}", crossYearWeek());
 
-      expect(rendered).toBe("{{journal_link(yearly)}}");
+      expect(rendered).toEqual(new Ok("{{journal_link(yearly)}}"));
     });
   });
 });

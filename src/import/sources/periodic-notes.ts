@@ -6,7 +6,7 @@ import { PluginSettingsReader } from "@/infrastructure/host";
 import {
   normalizeFolder,
   PERIOD_KINDS,
-  SOURCE_DEFAULT_FORMATS,
+  sourceFormat,
   templatesOf,
   type ImportSource,
   type PeriodKind,
@@ -95,7 +95,7 @@ function sourceJournal(
     ...(set !== undefined && { set }),
     period,
     folder: normalizeFolder(config.folder),
-    format: config.format.trim() || SOURCE_DEFAULT_FORMATS[period],
+    format: sourceFormat(config.format, period),
     templates: templatesOf(config.template),
     openAtStartup: config.openAtStartup,
   };

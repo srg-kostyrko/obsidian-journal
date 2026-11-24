@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import type { CalendarDate } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import { Flows, UserAborted } from "@/infrastructure/flows";
+import { Flows, isUserFacingFlowError, UserAborted } from "@/infrastructure/flows";
 import { NoticeService, UriService } from "@/infrastructure/host";
 import type { OpenMode, UriParameters } from "@/infrastructure/host";
 
@@ -88,7 +88,7 @@ export class JournalUriHandler {
         this.#notices.show(m.uri_no_journal());
         return;
       }
-      this.#notices.show(m.uri_open_failed());
+      this.#notices.show(isUserFacingFlowError(error) ? error.userNotice : m.uri_open_failed());
     }
   }
 
@@ -129,7 +129,7 @@ export class JournalUriHandler {
         this.#notices.show(m.uri_no_journal());
         return;
       }
-      this.#notices.show(m.uri_notelet_failed());
+      this.#notices.show(isUserFacingFlowError(error) ? error.userNotice : m.uri_notelet_failed());
     }
   }
 

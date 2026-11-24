@@ -3,19 +3,26 @@ import * as v from "valibot";
 import { defineSlice } from "@/settings";
 import { climb, whole } from "@/settings/repair";
 
+import { userDateFormat, userDateFormatSchema, type UserDateFormat } from "../user-date-format";
+
 export type WeekPlacement = "none" | "left" | "right";
 export type OutsideDays = "automatic" | "interactive" | "inert" | "hidden";
 export type MonthRows = "fit" | "six";
-export type WeekdayLabel = { type: "pattern"; pattern: string } | { type: "letter" };
+export type WeekdayLabel = { type: "pattern"; pattern: UserDateFormat } | { type: "letter" };
 export type LabelKind = "day" | "week" | "month" | "quarter" | "year";
-export type Labels = Record<LabelKind, string>;
+export type Labels = Record<LabelKind, UserDateFormat>;
 export type OutsideDates = "active" | "inactive" | "blank";
 export type WeekendSetting = { type: "locale" } | { type: "custom"; days: number[] };
 
-const labelField = v.optional(v.string(), "");
+const NO_PATTERN = userDateFormat("");
+
+const labelField = v.optional(userDateFormatSchema, NO_PATTERN);
 
 const weekdayLabelSchema = v.variant("type", [
-  v.object({ type: v.pipe(v.literal("pattern"), climb("discriminant")), pattern: v.optional(v.string(), "") }),
+  v.object({
+    type: v.pipe(v.literal("pattern"), climb("discriminant")),
+    pattern: v.optional(userDateFormatSchema, NO_PATTERN),
+  }),
   v.object({ type: v.pipe(v.literal("letter"), climb("discriminant")) }),
 ]);
 
@@ -30,8 +37,14 @@ const weekendSchema = v.variant("type", [
 ]);
 
 const stockWeekend = (): WeekendSetting => ({ type: "locale" });
-const stockLabels = (): Labels => ({ day: "", week: "", month: "", quarter: "", year: "" });
-const stockWeekdayLabel = (): WeekdayLabel => ({ type: "pattern", pattern: "" });
+const stockLabels = (): Labels => ({
+  day: NO_PATTERN,
+  week: NO_PATTERN,
+  month: NO_PATTERN,
+  quarter: NO_PATTERN,
+  year: NO_PATTERN,
+});
+const stockWeekdayLabel = (): WeekdayLabel => ({ type: "pattern", pattern: NO_PATTERN });
 
 export const calendarDisplaySliceSchema = v.object({
   weekPlacement: v.optional(v.picklist(["none", "left", "right"]), "left"),

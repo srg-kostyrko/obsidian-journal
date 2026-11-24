@@ -1,7 +1,11 @@
+import type { Result } from "@/infrastructure/result";
+
 import { localMoment } from "./calendar";
 import { CalendarDate } from "./calendar-date";
 
+import type { DateFormatError } from "./errors";
 import type { PeriodBase } from "./period";
+import type { PlainFormatPattern, UserDateFormat } from "./user-date-format";
 
 export class DayPeriod implements PeriodBase<DayPeriod> {
   static containing(date: CalendarDate): DayPeriod {
@@ -43,7 +47,11 @@ export class DayPeriod implements PeriodBase<DayPeriod> {
     yield this.start;
   }
 
-  format(pattern: string): string {
+  format<P extends string>(pattern: PlainFormatPattern<P>): string {
     return this.representative.format(pattern);
+  }
+
+  tryFormat(pattern: UserDateFormat): Result<string, DateFormatError> {
+    return this.representative.tryFormat(pattern);
   }
 }

@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import type { AnchorString } from "@/calendar";
+import { userDateFormat, type AnchorString, type UserDateFormat } from "@/calendar";
 import { colorSchema, decorationSchema, type ColorSettings, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 import { climb } from "@/settings/repair";
@@ -157,7 +157,7 @@ export const journalConfigSchema = v.object({
   name: v.pipe(v.string(), v.minLength(1)),
   write: writeSchema,
   timeline: timelineSchema,
-  dateFormat: v.pipe(v.string(), v.minLength(1)),
+  dateFormat: v.pipe(v.string(), v.minLength(1), v.transform(userDateFormat)),
   frontmatter: frontmatterFieldsSchema,
   numbering: numberingSchema,
   // Back-compat: existing settings tests and persisted configs predate these
@@ -225,13 +225,13 @@ export function reservedFrontmatterKeys(config: Pick<JournalConfig, "frontmatter
 
 // --- Defaults ---
 
-const DATE_FORMATS: Record<JournalWrite["type"], string> = {
-  day: "YYYY-MM-DD",
-  week: "YYYY-[W]w",
-  month: "YYYY-MM",
-  quarter: "YYYY-[Q]Q",
-  year: "YYYY",
-  custom: "YYYY-MM-DD",
+const DATE_FORMATS: Record<JournalWrite["type"], UserDateFormat> = {
+  day: userDateFormat("YYYY-MM-DD"),
+  week: userDateFormat("YYYY-[W]w"),
+  month: userDateFormat("YYYY-MM"),
+  quarter: userDateFormat("YYYY-[Q]Q"),
+  year: userDateFormat("YYYY"),
+  custom: userDateFormat("YYYY-MM-DD"),
 };
 
 const NAME_TEMPLATES: Record<JournalWrite["type"], string> = {

@@ -4,7 +4,8 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { anchor } from "@/calendar/testing";
+import { userDateFormat } from "@/calendar";
+import { anchor, formatFailureReason, withoutEras } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -367,6 +368,51 @@ describe("NavigationCodeBlock segment templates", () => {
     expect(screen.getByText("Renamed day")).toBeTruthy();
     expect(screen.getByText("2026-05-26")).toBeTruthy();
     expect(screen.getByText("2026-05-28")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock segment with an unrenderable date format", () => {
+  it("shows the invalid-format message in the segment while its siblings still render", async () => {
+    await withoutEras(async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock({
+            lines: [
+              [
+                buildNavSegment({ template: "{{date:y}}", color: transparent }),
+                buildNavSegment({ template: "sibling", color: transparent }),
+              ],
+            ],
+          }),
+        },
+        shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+
+      expect(
+        screen.getAllByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") })).length,
+      ).toBeGreaterThan(0);
+      expect(screen.getAllByText("sibling").length).toBeGreaterThan(0);
+    });
+  });
+
+  it("fails a note_name-only segment for a note that does not exist yet", async () => {
+    await withoutEras(async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            { lines: [[buildNavSegment({ template: "{{note_name}}", color: transparent })]] },
+            { dateFormat: userDateFormat("y") },
+          ),
+        },
+        shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+
+      expect(
+        screen.getAllByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") })).length,
+      ).toBeGreaterThan(0);
+    });
   });
 });
 

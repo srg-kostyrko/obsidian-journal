@@ -2,6 +2,7 @@ import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h, ref } from "vue";
 
+import { formatFailureReason, withoutEras } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
 import { MarkdownRenderService, NotesService, type VaultPath } from "@/infrastructure/host";
@@ -45,6 +46,17 @@ describe("MarkdownTemplateBlock", () => {
       "2026-05-15" as AnchorString,
     );
     expect(await screen.findByText("Today is 2026-05-15")).toBeTruthy();
+  });
+
+  it("shows the invalid-format message as the body when a date format cannot render", async () => {
+    await withoutEras(async () => {
+      await seedAndMount(
+        { "templates/today.md": "Today is {{date:y}}" },
+        { templatePath: "templates/today.md" },
+        "2026-05-15" as AnchorString,
+      );
+      expect(await screen.findByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") }))).toBeTruthy();
+    });
   });
 
   it("shows the placeholder when no template path is configured", async () => {

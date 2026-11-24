@@ -2,7 +2,7 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import type { Flow } from "@/infrastructure/flows";
+import type { Flow, UnexpectedFlowError } from "@/infrastructure/flows";
 import type { OpenMode, VaultPath, WorkspaceOpenError } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 
@@ -29,7 +29,8 @@ export interface OpenDateResult {
   created: boolean;
 }
 
-export type OpenDateError = NoApplicableJournals | NoteCreationError | WorkspaceOpenError | UserAborted;
+export type OpenDateError =
+  NoApplicableJournals | NoteCreationError | WorkspaceOpenError | UnexpectedFlowError | UserAborted;
 
 export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, OpenDateError> {
   readonly #resolver = inject(JournalDateResolver);
@@ -47,12 +48,12 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
       if (only === undefined) {
         return AsyncResult.err(new NoApplicableJournals(p.anchor, p.journalNames));
       }
-      return this.#flows.invoke(OpenJournalEntryFlow, {
-        journalName: only.name,
-        anchor: only.anchor,
-        openMode: p.openMode,
-        pinned: p.pinned,
-      });
+      // This flow's own invoke reports the failure; a notice here as well would show it twice.
+      return this.#flows.invoke(
+        OpenJournalEntryFlow,
+        { journalName: only.name, anchor: only.anchor, openMode: p.openMode, pinned: p.pinned },
+        { notify: false },
+      );
     }
 
     const names = applicable.map((entry) => entry.name);
@@ -62,12 +63,11 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
         if (choice === null) throw new UserAborted("journal-picker");
         const chosen = applicable.find((entry) => entry.name === choice);
         if (chosen === undefined) throw new NoApplicableJournals(p.anchor, p.journalNames);
-        const dispatched = await this.#flows.invoke(OpenJournalEntryFlow, {
-          journalName: chosen.name,
-          anchor: chosen.anchor,
-          openMode: p.openMode,
-          pinned: p.pinned,
-        });
+        const dispatched = await this.#flows.invoke(
+          OpenJournalEntryFlow,
+          { journalName: chosen.name, anchor: chosen.anchor, openMode: p.openMode, pinned: p.pinned },
+          { notify: false },
+        );
         if (dispatched.isErr()) throw dispatched.error;
         return dispatched.value;
       })(),

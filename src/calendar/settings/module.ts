@@ -3,6 +3,7 @@ import { SliceDefinitionToken } from "@/settings";
 
 import { CalendarSettingsBridge } from "./bridge";
 import { calendarDisplaySlice } from "./display-slice";
+import { LabelFormatLog } from "./label-format-log";
 import { calendarSlice } from "./slice";
 import { calendarSettingsUiModule } from "./ui-module";
 
@@ -11,6 +12,7 @@ import { calendarSettingsUiModule } from "./ui-module";
 export const calendarDisplayCoreModule: Module = {
   register(c) {
     c.register(SliceDefinitionToken).useValue(calendarDisplaySlice);
+    c.register(LabelFormatLog).useClass(LabelFormatLog);
   },
 };
 

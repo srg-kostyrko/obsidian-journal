@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { useFieldArray, useForm } from "vee-validate";
 import { computed, ref, watch } from "vue";
 
+import { userDateFormat, userDateFormatSchema, type UserDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
@@ -13,6 +14,7 @@ import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-va
 import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -67,12 +69,12 @@ const PROMPT_TYPES = [
   "select",
   "note",
 ] as const satisfies readonly PromptDisplayType[];
-const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
+const DEFAULT_DATE_FORMAT = userDateFormat("YYYY-MM-DD");
 interface FormValues {
   variable: string;
   question: string;
   type: (typeof PROMPT_TYPES)[number];
-  format: string;
+  format: UserDateFormat;
   frontmatterKey: string;
   required: boolean;
   options: { label: string; value: string }[];
@@ -150,7 +152,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
         ),
         question: v.pipe(v.string(), v.nonEmpty(m.journal_prompt_question_required())),
         type: v.picklist(PROMPT_TYPES),
-        format: v.string(),
+        format: userDateFormatSchema,
         frontmatterKey: v.pipe(
           v.optional(v.string(), ""),
           v.check(
@@ -277,7 +279,7 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
         <DateFormatPreview :format="format" />
         <span v-for="error of errorBag.format" :key="error" class="prompt-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="format" />
+      <UiDateFormatInput v-model="format" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.journal_sequence_variable_label()">

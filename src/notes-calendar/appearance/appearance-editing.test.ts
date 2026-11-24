@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calendarDisplaySlice } from "@/calendar";
+import { calendarDisplaySlice, userDateFormat } from "@/calendar";
 
 import {
   formatAt,
@@ -318,19 +318,19 @@ const format = (label: FormatControl["label"]): FormatControl => {
 
 describe("formatAt", () => {
   it("reads a period's pattern at either width", () => {
-    const display = { ...stockDisplay(), labels: { ...stockDisplay().labels, week: "[W]ww" } };
+    const display = { ...stockDisplay(), labels: { ...stockDisplay().labels, week: userDateFormat("[W]ww") } };
     expect(formatAt(display, format("week"), "wide")).toBe("[W]ww");
     expect(formatAt(display, format("week"), "narrow")).toBe("[W]ww");
     expect(formatAt(stockDisplay(), format("day"), "wide")).toBe("");
   });
 
   it("reads the weekday per width, one letter as its object and an unset narrow as the stock one letter", () => {
-    const display = { ...stockDisplay(), weekdayLabel: { type: "pattern" as const, pattern: "dddd" } };
+    const display = { ...stockDisplay(), weekdayLabel: { type: "pattern" as const, pattern: userDateFormat("dddd") } };
     expect(formatAt({ ...display, weekdayLabel: { type: "letter" } }, format("weekday"), "wide")).toEqual({
       type: "letter",
     });
     expect(formatAt(display, format("weekday"), "narrow")).toEqual({ type: "letter" });
-    const narrow = { ...display, weekdayLabelNarrow: { type: "pattern" as const, pattern: "dd" } };
+    const narrow = { ...display, weekdayLabelNarrow: { type: "pattern" as const, pattern: userDateFormat("dd") } };
     expect(formatAt(narrow, format("weekday"), "narrow")).toBe("dd");
     expect(formatAt(stockDisplay(), format("weekday"), "wide")).toBe("");
   });
@@ -339,14 +339,14 @@ describe("formatAt", () => {
 describe("withFormat", () => {
   it("writes a period's pattern and nothing else", () => {
     const base = stockDisplay();
-    const next = withFormat(base, format("day"), "wide", "DD");
+    const next = withFormat(base, format("day"), "wide", userDateFormat("DD"));
     expect(next.labels.day).toBe("DD");
     expect(next).toEqual({ ...base, labels: { ...base.labels, day: "DD" } });
     expect(base.labels.day).toBe("");
   });
 
   it("writes the same period pattern at narrow, since a period has one format", () => {
-    expect(withFormat(stockDisplay(), format("month"), "narrow", "MMM").labels.month).toBe("MMM");
+    expect(withFormat(stockDisplay(), format("month"), "narrow", userDateFormat("MMM")).labels.month).toBe("MMM");
   });
 
   it("writes one letter at narrow as the tagged shape and leaves the wide label alone", () => {
@@ -356,7 +356,7 @@ describe("withFormat", () => {
   });
 
   it("writes the typed word letter as a pattern, never as one letter", () => {
-    const next = withFormat(stockDisplay(), format("weekday"), "wide", "letter");
+    const next = withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("letter"));
     expect(next.weekdayLabel).toEqual({ type: "pattern", pattern: "letter" });
   });
 
@@ -367,33 +367,33 @@ describe("withFormat", () => {
     ["quarter", "[Q]Q", "heading"],
     ["year", "YYYY", "heading"],
   ] as const)("stores the %s default pattern %s as empty, so %s does not read modified", (label, pattern, part) => {
-    const set = withFormat(stockDisplay(), format(label), "wide", "DD");
-    const next = withFormat(set, format(label), "wide", pattern);
+    const set = withFormat(stockDisplay(), format(label), "wide", userDateFormat("DD"));
+    const next = withFormat(set, format(label), "wide", userDateFormat(pattern));
     expect(next.labels[label]).toBe("");
     expect(isModified(fresh(), next, "wide", part)).toBe(false);
   });
 
   it("stores the weekday default pattern as empty at either width", () => {
-    const wide = withFormat(stockDisplay(), format("weekday"), "wide", "ddd");
+    const wide = withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("ddd"));
     expect(wide.weekdayLabel).toEqual({ type: "pattern", pattern: "" });
     expect(isModified(fresh(), wide, "wide", "weekday")).toBe(false);
-    const narrow = withFormat(stockDisplay(), format("weekday"), "narrow", "ddd");
+    const narrow = withFormat(stockDisplay(), format("weekday"), "narrow", userDateFormat("ddd"));
     expect(narrow.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "" });
   });
 
   it("reads an empty narrow weekday as no override, so narrow is not modified", () => {
-    const set = withFormat(stockDisplay(), format("weekday"), "narrow", "dd");
-    const cleared = withFormat(set, format("weekday"), "narrow", "");
+    const set = withFormat(stockDisplay(), format("weekday"), "narrow", userDateFormat("dd"));
+    const cleared = withFormat(set, format("weekday"), "narrow", userDateFormat(""));
     expect(cleared.weekdayLabelNarrow).toBeNull();
     expect(isModified(fresh(), cleared, "narrow", "weekday")).toBe(false);
-    expect(withFormat(stockDisplay(), format("weekday"), "wide", "").weekdayLabel).toEqual({
+    expect(withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("")).weekdayLabel).toEqual({
       type: "pattern",
       pattern: "",
     });
   });
 
   it("writes a wide weekday pattern and leaves narrow alone", () => {
-    const next = withFormat(stockDisplay(), format("weekday"), "wide", "dddd");
+    const next = withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("dddd"));
     expect(next.weekdayLabel).toEqual({ type: "pattern", pattern: "dddd" });
     expect(next.weekdayLabelNarrow).toBeNull();
   });
@@ -417,7 +417,7 @@ const labelled = () => {
     ["year", "YY"],
     ["day", "DD"],
   ] as const) {
-    display = withFormat(display, format(label), "wide", pattern);
+    display = withFormat(display, format(label), "wide", userDateFormat(pattern));
   }
   return display;
 };
@@ -433,10 +433,15 @@ describe("label formats in modified and reset", () => {
 
   it("counts at narrow only the narrow weekday", () => {
     expect(isModified(fresh(), labelled(), "narrow", "heading")).toBe(false);
-    expect(isModified(fresh(), withFormat(stockDisplay(), format("weekday"), "wide", "dd"), "narrow", "weekday")).toBe(
-      false,
-    );
-    const narrow = withFormat(stockDisplay(), format("weekday"), "narrow", "dd");
+    expect(
+      isModified(
+        fresh(),
+        withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("dd")),
+        "narrow",
+        "weekday",
+      ),
+    ).toBe(false);
+    const narrow = withFormat(stockDisplay(), format("weekday"), "narrow", userDateFormat("dd"));
     expect(isModified(fresh(), narrow, "narrow", "weekday")).toBe(true);
     expect(isModified(fresh(), withFormat(narrow, format("weekday"), "narrow", null), "narrow", "weekday")).toBe(false);
   });
@@ -447,7 +452,7 @@ describe("label formats in modified and reset", () => {
   });
 
   it("at wide restores the weekday label and keeps its narrow one", () => {
-    let display = withFormat(stockDisplay(), format("weekday"), "wide", "dddd");
+    let display = withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("dddd"));
     display = withFormat(display, format("weekday"), "narrow", { type: "letter" });
     const reset = withReset(fresh(), display, "wide", "weekday").display;
     expect(reset.weekdayLabel).toEqual(calendarDisplaySlice.defaults.weekdayLabel);
@@ -455,7 +460,7 @@ describe("label formats in modified and reset", () => {
   });
 
   it("at narrow clears only the narrow weekday", () => {
-    let display = withFormat(stockDisplay(), format("weekday"), "wide", "dddd");
+    let display = withFormat(stockDisplay(), format("weekday"), "wide", userDateFormat("dddd"));
     display = withFormat(display, format("weekday"), "narrow", { type: "letter" });
     display = { ...display, showWeekdays: false };
     const reset = withReset(fresh(), display, "narrow", "weekday").display;
@@ -485,7 +490,7 @@ describe("narrow's own stock value", () => {
   });
 
   it("takes the wide weekday label as the narrow one", () => {
-    const display = { ...stockDisplay(), weekdayLabel: { type: "pattern" as const, pattern: "dddd" } };
+    const display = { ...stockDisplay(), weekdayLabel: { type: "pattern" as const, pattern: userDateFormat("dddd") } };
     const next = withNarrowWeekdayFromWide(display);
     expect(next.weekdayLabelNarrow).toEqual({ type: "pattern", pattern: "dddd" });
     expect(next.weekdayLabelNarrow).not.toBe(display.weekdayLabel);

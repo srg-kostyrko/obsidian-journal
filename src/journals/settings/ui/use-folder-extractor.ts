@@ -1,3 +1,4 @@
+import { userDateFormat } from "@/calendar";
 import type { JournalConfig } from "@/journals";
 
 function prependFolder(existing: string, prefix: string): string {
@@ -21,5 +22,5 @@ export function extractFromDateFormat(config: JournalConfig): void {
   const last = parts.pop() ?? "";
   const prefix = parts.map((format) => `{{date:${format}}}`).join("/");
   config.folder = prependFolder(config.folder, prefix);
-  config.dateFormat = last;
+  config.dateFormat = userDateFormat(last);
 }

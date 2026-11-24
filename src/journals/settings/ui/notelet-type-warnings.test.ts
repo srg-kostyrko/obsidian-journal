@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
+
 import { hasNoWithinPeriodVariable, rendersOntoPeriodNotePath } from "./notelet-type-warnings";
 
 import type { Prompt } from "../../prompts/config";
@@ -48,7 +50,7 @@ describe("rendersOntoPeriodNotePath", () => {
   it("is true when the folder and the journal-name-substituted template both match", () => {
     expect(
       rendersOntoPeriodNotePath(
-        { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: "YYYY-MM-DD" },
+        { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: userDateFormat("YYYY-MM-DD") },
         { nameTemplate: "{{date}}", folder: "notes" },
       ),
     ).toBe(true);
@@ -57,7 +59,7 @@ describe("rendersOntoPeriodNotePath", () => {
   it("is false when the folders differ", () => {
     expect(
       rendersOntoPeriodNotePath(
-        { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: "YYYY-MM-DD" },
+        { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: userDateFormat("YYYY-MM-DD") },
         { nameTemplate: "{{date}}", folder: "meetings" },
       ),
     ).toBe(false);
@@ -66,7 +68,7 @@ describe("rendersOntoPeriodNotePath", () => {
   it("is false when the name templates differ", () => {
     expect(
       rendersOntoPeriodNotePath(
-        { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: "YYYY-MM-DD" },
+        { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: userDateFormat("YYYY-MM-DD") },
         { nameTemplate: "{{date}} {{notelet_index}}", folder: "notes" },
       ),
     ).toBe(false);
@@ -75,7 +77,12 @@ describe("rendersOntoPeriodNotePath", () => {
   it("substitutes journal_name in both templates before comparing", () => {
     expect(
       rendersOntoPeriodNotePath(
-        { name: "Work", nameTemplate: "{{journal_name}} {{date}}", folder: "", dateFormat: "YYYY-MM-DD" },
+        {
+          name: "Work",
+          nameTemplate: "{{journal_name}} {{date}}",
+          folder: "",
+          dateFormat: userDateFormat("YYYY-MM-DD"),
+        },
         { nameTemplate: "Work {{date}}", folder: "" },
       ),
     ).toBe(true);

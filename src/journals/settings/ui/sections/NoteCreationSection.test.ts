@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -185,7 +186,9 @@ describe("NoteCreationSection", () => {
     it("shows the move-to-folder recommendation when dateFormat contains a slash", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY/MM/DD" }) } },
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY/MM/DD") }) },
+        },
       });
 
       harness.render(NoteCreationSection, { props: { journalName: "daily" } });
@@ -197,7 +200,9 @@ describe("NoteCreationSection", () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],
         data: {
-          journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY/MM/DD", folder: "" }) },
+          journals: {
+            daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY/MM/DD"), folder: "" }),
+          },
         },
       });
       harness.render(NoteCreationSection, { props: { journalName: "daily" } });

@@ -3,6 +3,8 @@ import { computed, nextTick, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import UiBackLink from "@/ui/UiBackLink.vue";
+import UiErrorBoundary from "@/ui/UiErrorBoundary.vue";
 
 import { ReloadHintService } from "../reload-hint";
 import { SettingsService } from "../settings-service";
@@ -47,9 +49,15 @@ watch(
       <div v-if="reloadHint.pending.value" class="journal-reload-banner">
         {{ m.settings_reload_required_banner() }}
       </div>
-      <component :is="block.component" v-for="block in ui.blocks" :key="block.key" />
+      <UiErrorBoundary v-for="block in ui.blocks" :key="block.key">
+        <component :is="block.component" />
+      </UiErrorBoundary>
     </div>
-    <component :is="current.subpage.component" v-else v-bind="current.props as Record<string, unknown>" :nav="nav" />
+    <UiErrorBoundary v-else :key="`${ui.depth.value}:${current.subpage.key}`">
+      <!-- Subpages draw their own Back link, so a failed one would otherwise strand the user. -->
+      <template #failed><UiBackLink @click="nav.back()" /></template>
+      <component :is="current.subpage.component" v-bind="current.props as Record<string, unknown>" :nav="nav" />
+    </UiErrorBoundary>
   </div>
 </template>
 

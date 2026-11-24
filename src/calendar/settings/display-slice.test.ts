@@ -1,6 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { testContainer } from "@/testing";
 
 import { calendarDisplaySlice, calendarDisplaySliceSchema } from "./display-slice";
@@ -19,8 +20,8 @@ describe("calendarDisplaySlice", () => {
   it("fills the label fields from fresh objects, so filling one in place leaves the stock untouched", () => {
     const first = v.parse(calendarDisplaySliceSchema, {});
     const second = v.parse(calendarDisplaySliceSchema, {});
-    first.labels.day = "DD";
-    if (first.weekdayLabel.type === "pattern") first.weekdayLabel.pattern = "dd";
+    first.labels.day = userDateFormat("DD");
+    if (first.weekdayLabel.type === "pattern") first.weekdayLabel.pattern = userDateFormat("dd");
     expect([second.labels.day, calendarDisplaySlice.defaults.labels.day]).toEqual(["", ""]);
     expect([second.weekdayLabel, calendarDisplaySlice.defaults.weekdayLabel]).toEqual([
       { type: "pattern", pattern: "" },

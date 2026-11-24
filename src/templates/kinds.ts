@@ -1,4 +1,4 @@
-import { CalendarDate, ordinalFor } from "@/calendar";
+import { CalendarDate, ordinalFor, userDateFormat, type DateFormatError } from "@/calendar";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
@@ -38,18 +38,18 @@ export function renderDate(
   spec: Extract<VariableSpec, { kind: "date" }>,
   modifiers: readonly Modifier[],
   format?: string,
-): string {
+): Result<string, DateFormatError> {
   const shifted = applyModifiers(spec.value, modifiers);
-  return shifted.format(format ?? spec.defaultFormat);
+  return shifted.tryFormat(userDateFormat(format ?? spec.defaultFormat));
 }
 
 export function renderClock(
   spec: Extract<VariableSpec, { kind: "clock" }>,
   modifiers: readonly Modifier[],
   format?: string,
-): string {
+): Result<string, DateFormatError> {
   const shifted = applyModifiers(spec.value, modifiers);
-  return shifted.format(format ?? spec.defaultFormat);
+  return shifted.tryFormat(userDateFormat(format ?? spec.defaultFormat));
 }
 
 export function patternForKind(spec: VariableSpec, format?: string): string {

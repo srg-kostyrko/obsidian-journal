@@ -1,3 +1,5 @@
+import type { Result } from "@/infrastructure/result";
+
 import { DayPeriod } from "./period-day";
 import { DecadePeriod } from "./period-decade";
 import { MonthPeriod } from "./period-month";
@@ -6,6 +8,8 @@ import { WeekPeriod } from "./period-week";
 import { YearPeriod } from "./period-year";
 
 import type { CalendarDate } from "./calendar-date";
+import type { DateFormatError } from "./errors";
+import type { PlainFormatPattern, UserDateFormat } from "./user-date-format";
 
 export const periodKinds = ["day", "week", "month", "quarter", "year", "decade"] as const;
 export type PeriodKind = (typeof periodKinds)[number];
@@ -22,7 +26,8 @@ export interface PeriodBase<Self> {
   contains(d: CalendarDate): boolean;
   isSame(other: Self): boolean;
   days(): Iterable<CalendarDate>;
-  format(pattern: string): string;
+  format<P extends string>(pattern: PlainFormatPattern<P>): string;
+  tryFormat(pattern: UserDateFormat): Result<string, DateFormatError>;
 }
 
 export type Period = DayPeriod | WeekPeriod | MonthPeriod | QuarterPeriod | YearPeriod | DecadePeriod;

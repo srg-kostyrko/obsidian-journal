@@ -54,7 +54,10 @@ const rendered = computed(() => {
     .date("current_date", today.value, "YYYY-MM-DD", { invertible: false })
     .withSpec("time", clockSpec)
     .withSpec("current_time", clockSpec);
-  return engine.renderString(rawTemplate.value, context);
+  return engine.renderString(rawTemplate.value, context).match({
+    ok: (text) => text,
+    err: (error) => m.date_format_invalid_preview({ reason: error.reason }),
+  });
 });
 
 const unsubscribes: (() => void)[] = [];

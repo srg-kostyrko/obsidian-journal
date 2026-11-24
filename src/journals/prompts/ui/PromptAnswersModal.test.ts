@@ -2,8 +2,8 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { DayPeriod } from "@/calendar";
-import { anchor, date } from "@/calendar/testing";
+import { CalendarDate, DayPeriod, userDateFormat } from "@/calendar";
+import { anchor, date, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { PlatformService } from "@/infrastructure/host";
 import { journalsCoreModule } from "@/journals/module";
@@ -304,7 +304,7 @@ describe("PromptAnswersModal", () => {
       type: "date",
       frontmatterKey: "when",
       required: false,
-      format: "YYYY-MM-DD",
+      format: userDateFormat("YYYY-MM-DD"),
     };
     const priorityRequired: Prompt = {
       variable: "priority",
@@ -939,6 +939,33 @@ describe("PromptAnswersModal", () => {
         expect(screen.getByText(m.journal_prompt_journal_note_out_of_timeline({ journal: "sprints" }))).toBeTruthy();
       });
       expect(screen.getByRole<HTMLInputElement>("textbox").value).toBe("keep me");
+    });
+
+    it("says the journal's date format can't render when its note is picked", async () => {
+      const broken = userDateFormat("YYYYy");
+      await renderLog(project, { weekly: fixedJournal("weekly", { type: "day" }, { dateFormat: broken }) });
+
+      await withoutEras(async () => {
+        const failure = CalendarDate.today().tryFormat(broken);
+        if (failure.isOk()) throw new Error("expected the pattern to throw without eras");
+        await userEvent.click(screen.getByRole("button", { name: m.journal_prompt_pick_journal_note() }));
+        await tick();
+        harness.suggests.lastOpen().choose("weekly");
+        await tick();
+        harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-01-01")));
+
+        await waitFor(() => {
+          expect(
+            screen.getByText(
+              m.journal_date_format_unrenderable_notice({
+                journalName: "weekly",
+                format: "YYYYy",
+                reason: failure.error.reason,
+              }),
+            ),
+          ).toBeTruthy();
+        });
+      });
     });
 
     it("drops the refusal once the field is edited", async () => {

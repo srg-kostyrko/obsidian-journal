@@ -2,7 +2,9 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
+import { formatFailureReason, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { JournalConfig, NavBlockSegment } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -52,6 +54,17 @@ describe("EditNavBlockSegmentModal", () => {
     });
     const input = screen.getByLabelText<HTMLInputElement>(m.nav_block_segment_field_template());
     expect(input.value).toBe("{{date:YYYY}}");
+  });
+
+  it("previews the invalid-format message when the journal's date format cannot render", async () => {
+    await withoutEras(async () => {
+      await mountModal({
+        journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("y") }) },
+        segment: buildNavSegment({ template: "{{note_name}}" }),
+      });
+      const invalid = m.date_format_invalid_preview({ reason: formatFailureReason("y") });
+      expect(screen.getByText(m.nav_block_segment_resolved_preview({ text: invalid }))).toBeTruthy();
+    });
   });
 
   it("does not submit when template is empty", async () => {

@@ -12,6 +12,7 @@ import { PROMPT_PLACEHOLDER } from "../prompts/placeholder";
 import { promptsInPath } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
 
+import { JournalDateFormatError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
@@ -127,10 +128,11 @@ export class AutoAttachService {
       }
     }
     const result = await this.#creation.attachNote(match.journalName, target, metadata);
-    if (result.isErr()) {
-      this.#logger.error("attach failed", { path: target, error: result.error });
-    } else {
+    if (result.isOk()) {
       this.#logger.info("attached", { path: target, journal: match.journalName });
+    } else if (!(result.error instanceof JournalDateFormatError)) {
+      // A format failure was already logged once where it was mapped; every attach would repeat it.
+      this.#logger.error("attach failed", { path: target, error: result.error });
     }
   }
 

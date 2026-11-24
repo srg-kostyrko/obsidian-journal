@@ -3,9 +3,17 @@ import { render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { shallowRef } from "vue";
 
-import { CalendarDate, DayPeriod, MonthPeriod, QuarterPeriod, WeekPeriod, YearPeriod } from "@/calendar";
-import type { Period } from "@/calendar";
-import { date } from "@/calendar/testing";
+import {
+  CalendarDate,
+  DayPeriod,
+  MonthPeriod,
+  QuarterPeriod,
+  userDateFormat,
+  WeekPeriod,
+  YearPeriod,
+} from "@/calendar";
+import type { Period, UserDateFormat } from "@/calendar";
+import { date, withoutEras } from "@/calendar/testing";
 import { CellDecorationMapKey, type CellDecorationRef } from "@/decorations";
 import { cellKey } from "@/decorations/engine";
 import { cellState } from "@/decorations/testing";
@@ -32,7 +40,7 @@ function stubApi(overrides: Partial<NotesCellApi> = {}): NotesCellApi {
 function mount(props: {
   period: Period;
   cell: NotesCellApi;
-  format?: string;
+  format?: UserDateFormat;
   role?: "gridcell" | "rowheader";
   tabIndex?: number;
   selected?: boolean;
@@ -74,8 +82,15 @@ describe("NotesCalendarCell", () => {
     });
 
     it("respects an explicit format prop", () => {
-      mount({ period: may25, cell: stubApi(), format: "YYYY-MM-DD" });
+      mount({ period: may25, cell: stubApi(), format: userDateFormat("YYYY-MM-DD") });
       expect(screen.getByText("2026-05-25")).toBeTruthy();
+    });
+
+    it("a calendar cell whose label pattern throws falls back to the default pattern", () => {
+      withoutEras(() => {
+        const { container } = mount({ period: may25, cell: stubApi(), format: userDateFormat("YYYYy") });
+        expect(container.querySelector(".notes-calendar-cell__text")?.textContent?.trim()).toBe("25");
+      });
     });
   });
 

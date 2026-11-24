@@ -7,13 +7,12 @@ import type { VaultPath } from "@/infrastructure/host";
 import type { Result } from "@/infrastructure/result";
 
 import { NoteletPathService } from "../../notelets/notelet-path";
-import { EmptyNoteNameError } from "../../notes/errors";
-import { NotePathService } from "../../notes/note-path";
+import { EmptyNoteNameError, JournalDateFormatError } from "../../notes/errors";
+import { NotePathService, type NotePathError } from "../../notes/note-path";
 import { JournalsViewModel } from "../../view-model";
 
 import { useTodayMetadata } from "./use-today-metadata";
 
-import type { JournalNotFoundError } from "../../errors";
 import type { TypeId } from "../../notelets/config";
 
 const props = withDefaults(defineProps<{ journalName: string; typeId?: string }>(), { typeId: undefined });
@@ -23,11 +22,11 @@ const noteletPaths = useService(NoteletPathService);
 const journalsVM = useService(JournalsViewModel);
 const metadata = useTodayMetadata(props.journalName);
 
-type Resolved = { kind: "path"; path: string } | { kind: "empty" } | undefined;
+type Resolved = { kind: "path"; path: string } | { kind: "empty" } | { kind: "invalid"; reason: string } | undefined;
 
 // A type previews the path it would actually take, suffixes and all — the same call creation
 // makes, so a name template that collides shows the number the note would really get.
-function noteletPath(typeId: string): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> | undefined {
+function noteletPath(typeId: string): Result<VaultPath, NotePathError> | undefined {
   const md = metadata.value;
   const config = journalsVM.getJournal(props.journalName).getOrUndefined();
   const type = config?.notelets[typeId];
@@ -46,7 +45,9 @@ const resolved = computed<Resolved>(() => {
   const result = props.typeId === undefined ? pathSvc.pathFor(props.journalName, md) : noteletPath(props.typeId);
   if (!result) return;
   if (result.isErr()) {
-    return result.error instanceof EmptyNoteNameError ? { kind: "empty" } : undefined;
+    if (result.error instanceof EmptyNoteNameError) return { kind: "empty" };
+    if (result.error instanceof JournalDateFormatError) return { kind: "invalid", reason: result.error.reason };
+    return;
   }
   return { kind: "path", path: result.value };
 });
@@ -55,6 +56,9 @@ const resolved = computed<Resolved>(() => {
 <template>
   <div v-if="resolved?.kind === 'empty'" class="note-path-preview journal-hint">
     {{ m.journal_edit_name_template_empty_warning() }}
+  </div>
+  <div v-else-if="resolved?.kind === 'invalid'" class="note-path-preview journal-hint">
+    {{ m.date_format_invalid_preview({ reason: resolved.reason }) }}
   </div>
   <div v-else-if="resolved?.kind === 'path'" class="note-path-preview">
     {{ m.journal_edit_note_path_preview_label() }}

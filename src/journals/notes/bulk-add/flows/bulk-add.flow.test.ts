@@ -1,10 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { Flows } from "@/infrastructure/flows";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../../../module";
 import { fixedJournal } from "../../../testing";
+import { JournalDateFormatError } from "../../errors";
 import { BulkAddService } from "../bulk-add-service";
 import { defaultBulkAddParameters } from "../config";
 
@@ -48,6 +51,23 @@ describe("BulkAddFlow", () => {
     const result = await promise;
 
     expect(result.kind).toBe("err");
+    expect(plan).not.toHaveBeenCalled();
+  });
+
+  it("fails with the journal's notice, before anything is configured, when its path cannot render", async () => {
+    const broken = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }) },
+      },
+    });
+    const plan = vi.spyOn(broken.resolve(BulkAddService), "plan");
+
+    const result = await withoutEras(() => broken.resolve(Flows).invoke(BulkAddFlow, { journalName: "weekly" }));
+
+    assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+    expect(broken.notices.messages).toEqual([result.error.userNotice]);
+    expect(broken.modals.opens).toHaveLength(0);
     expect(plan).not.toHaveBeenCalled();
   });
 });

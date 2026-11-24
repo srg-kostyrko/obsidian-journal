@@ -10,11 +10,9 @@ import { pickingForWrite } from "../../picking";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
 import { journalPickerSuggest } from "../journal-picker";
-import { NotePathService } from "../note-path";
+import { NotePathService, type NotePathError } from "../note-path";
 
-import type { EmptyNoteNameError } from "../errors";
-
-type InsertJournalLinkError = UserAborted | JournalNotFoundError | EmptyNoteNameError;
+type InsertJournalLinkError = UserAborted | NotePathError;
 
 export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLinkError> {
   readonly #suggests = inject(SuggestService);

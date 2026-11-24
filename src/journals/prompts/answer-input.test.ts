@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
+
 import { readAnswerInput, type LinkTextResolver } from "./answer-input";
 import { PROMPT_PLACEHOLDER } from "./placeholder";
 
@@ -10,7 +12,7 @@ const base = { frontmatterKey: "", required: false } as const;
 const mood: Prompt = { ...base, variable: "mood", question: "Mood?", type: "text" };
 const diary: Prompt = { ...base, variable: "diary", question: "Diary", type: "text", multiline: true };
 const hours: Prompt = { ...base, variable: "hours", question: "Hours?", type: "number" };
-const due: Prompt = { ...base, variable: "due", question: "Due?", type: "date", format: "DD.MM.YYYY" };
+const due: Prompt = { ...base, variable: "due", question: "Due?", type: "date", format: userDateFormat("DD.MM.YYYY") };
 const done: Prompt = { variable: "done", question: "Done?", type: "toggle", frontmatterKey: "" };
 const place: Prompt = {
   ...base,

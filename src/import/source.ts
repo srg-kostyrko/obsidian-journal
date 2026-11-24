@@ -1,3 +1,4 @@
+import { userDateFormat, type UserDateFormat } from "@/calendar";
 import { createMultiToken } from "@/infrastructure/di";
 
 export type SourceId = "periodic-notes" | "daily-notes" | "calendar";
@@ -7,20 +8,26 @@ export const PERIOD_KINDS: readonly PeriodKind[] = ["day", "week", "month", "qua
 
 // What Periodic Notes, Calendar and core Daily notes write when a format is left empty. Filling in
 // Journals' own defaults instead would name none of the notes the user already has.
-export const SOURCE_DEFAULT_FORMATS: Readonly<Record<PeriodKind, string>> = {
-  day: "YYYY-MM-DD",
-  week: "gggg-[W]ww",
-  month: "YYYY-MM",
-  quarter: "YYYY-[Q]Q",
-  year: "YYYY",
+export const SOURCE_DEFAULT_FORMATS: Readonly<Record<PeriodKind, UserDateFormat>> = {
+  day: userDateFormat("YYYY-MM-DD"),
+  week: userDateFormat("gggg-[W]ww"),
+  month: userDateFormat("YYYY-MM"),
+  quarter: userDateFormat("YYYY-[Q]Q"),
+  year: userDateFormat("YYYY"),
 };
+
+/** Another plugin's format setting, where empty means that plugin's own default. */
+export function sourceFormat(format: string, period: PeriodKind): UserDateFormat {
+  const trimmed = format.trim();
+  return trimmed === "" ? SOURCE_DEFAULT_FORMATS[period] : userDateFormat(trimmed);
+}
 
 export interface SourceJournal {
   readonly source: SourceId;
   readonly set?: string;
   readonly period: PeriodKind;
   readonly folder: string;
-  readonly format: string;
+  readonly format: UserDateFormat;
   readonly templates: readonly string[];
   readonly openAtStartup: boolean;
 }

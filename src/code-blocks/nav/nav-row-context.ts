@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import { CalendarDate, relativeDate, type AnchorString, type PeriodKind } from "@/calendar";
 import { m } from "@/i18n";
 import { basenameOf } from "@/infrastructure/host";
-import type { Option } from "@/infrastructure/result";
+import { Err, type Option, type Result } from "@/infrastructure/result";
 import type {
   CycleService,
   JournalConfig,
@@ -13,7 +13,7 @@ import type {
   NumberingService,
   JournalWrite,
 } from "@/journals";
-import type { TemplateContext } from "@/templates";
+import { UnrenderableDateFormatError, variableNames, type TemplateContext, type TemplateEngine } from "@/templates";
 
 export interface NavRowContextInputs {
   readonly journal: JournalConfig;
@@ -53,7 +53,12 @@ function customRelativeDate(name: string, cycle: CycleService, refDate: AnchorSt
   return m.relative_date_custom_from_now({ name, count: steps });
 }
 
-export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext {
+const NOTE_NAME_VARIABLES = new Set(["note_name", "title"]);
+
+function buildContext(inputs: NavRowContextInputs): {
+  context: TemplateContext;
+  nameError: { pattern: string; reason: string } | null;
+} {
   const { journal, refDate, entry, cycle, numbering, notePath, today } = inputs;
   const periodKind = fixedPeriodKindFor(journal.write);
   const relative =
@@ -72,14 +77,40 @@ export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext
   // A row names the note it opens, so an existing note is named as it actually is — renamed,
   // or created under a name template the journal has since changed. Only a note that does not
   // exist yet is named by rendering the template.
-  const noteName = entry.isSome() ? basenameOf(entry.value.path) : notePath.noteNameFor(journal, metadata);
+  // A name that cannot render leaves the variable empty and is returned beside the context:
+  // only a segment that reads note_name or title is failed by it (renderNavRow), not every row.
+  const named = entry.isSome() ? undefined : notePath.noteNameFor(journal, metadata);
+  let noteName = "";
+  if (entry.isSome()) noteName = basenameOf(entry.value.path);
+  else if (named?.kind === "ok") noteName = named.value;
+  const nameError = named?.kind === "err" ? named.error : null;
   const noteSpec = { kind: "string", value: noteName } as const;
 
   // Sharing the note's own render context is what keeps a row's variables in step with the
   // note's — the date trio, the numbering fallbacks and the render-time clock included.
-  return notePath
+  const context = notePath
     .contextFor(journal, metadata)
     .string("relative_date", relative)
     .withSpec("note_name", noteSpec)
     .withSpec("title", noteSpec);
+  return { context, nameError };
+}
+
+export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext {
+  return buildContext(inputs).context;
+}
+
+export function renderNavRow(
+  engine: TemplateEngine,
+  template: string,
+  inputs: NavRowContextInputs,
+): Result<string, UnrenderableDateFormatError> {
+  const { context, nameError } = buildContext(inputs);
+  if (nameError) {
+    const used = [...variableNames(template)].find((name) => NOTE_NAME_VARIABLES.has(name.toLowerCase()));
+    if (used !== undefined) {
+      return new Err(new UnrenderableDateFormatError(used, nameError.pattern, nameError.reason));
+    }
+  }
+  return engine.renderString(template, context);
 }

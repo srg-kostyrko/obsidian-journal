@@ -7,6 +7,7 @@ import { AutoCreateService } from "./auto-create";
 import { bulkAddModule } from "./bulk-add/module";
 import { noteCreationSlice } from "./creation-slice";
 import { journalNotesFlowsModule } from "./flows/module";
+import { FormatFailureLog } from "./format-failure-log";
 import { JournalLinkCommands } from "./journal-link-commands";
 import { JournalLinkHandler } from "./journal-link-handler";
 import { NoteConnectionService } from "./note-connection";
@@ -23,6 +24,7 @@ export const journalNotesCoreModule: Module = {
     c.register(FunctionHandlerToken).useClass(JournalLinkHandler);
     c.register(TemplateContentService).useClass(TemplateContentService);
     c.register(SelfWriteGuard).useClass(SelfWriteGuard);
+    c.register(FormatFailureLog).useClass(FormatFailureLog);
     c.register(NoteCreationService).useClass(NoteCreationService);
     c.register(NoteConnectionService).useClass(NoteConnectionService);
     c.register(AutoAttachService).useClass(AutoAttachService).eager();

@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 
-import { calendarSettingsModule } from "@/calendar";
+import { calendarSettingsModule, userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { AsyncResult } from "@/infrastructure/result";
@@ -62,7 +62,7 @@ describe("ImportNoticeBlock", () => {
         days: fixedJournal(
           "days",
           { type: "day" },
-          { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+          { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}" },
         ),
       },
     });
@@ -117,7 +117,11 @@ describe("ImportNoticeBlock", () => {
     vi.spyOn(harness.resolve(Flows), "invoke").mockImplementation(() => {
       const journals = harness.resolve(JournalsRepository);
       journals.create("days", { type: "day" });
-      journals.update("days", { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" });
+      journals.update("days", {
+        folder: "Journal",
+        dateFormat: userDateFormat("YYYY-MM-DD"),
+        nameTemplate: "{{date}}",
+      });
       return AsyncResult.ok(undefined);
     });
     harness.render(ImportNoticeBlock);
