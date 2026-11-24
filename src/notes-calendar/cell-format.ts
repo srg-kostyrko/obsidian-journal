@@ -13,8 +13,12 @@ import {
 import { Ok, type Result } from "@/infrastructure/result";
 import { formatHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 
-export function defaultFormatPattern(kind: PeriodKind): string {
+// Literal types, so a `user || default` fallback keeps the user pattern visible to the plain `format`'s guard.
+export type DefaultFormatPattern = "D" | "[W]w" | "MMMM" | "[Q]Q" | "YYYY";
+
+export function defaultFormatPattern(kind: PeriodKind): DefaultFormatPattern {
   return match(kind)
+    .returnType<DefaultFormatPattern>()
     .with("day", () => "D")
     .with("week", () => "[W]w")
     .with("month", () => "MMMM")

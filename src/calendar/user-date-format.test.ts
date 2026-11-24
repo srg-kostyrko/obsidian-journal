@@ -91,5 +91,11 @@ describe("format typing", () => {
     periodOfKind("day", d).format(userDateFormat("YYYY"));
     // @ts-expect-error same for a clock
     Clock.now().format(userDateFormat("YYYY"));
+    const user = userDateFormat("");
+    const flag = plain === "YYYY";
+    // @ts-expect-error a fallback with || still carries the user pattern
+    d.format(user || "YYYY");
+    // @ts-expect-error so does a ternary
+    d.format(flag ? user : "YYYY");
   });
 });
