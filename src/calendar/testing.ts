@@ -1,3 +1,5 @@
+import { moment } from "obsidian";
+
 import { Calendar, CUSTOM_LOCALE, isLocaleDefined, type WeekConfig } from "./calendar";
 import { CalendarDate } from "./calendar-date";
 
@@ -48,4 +50,18 @@ export function date(s: string): CalendarDate {
     throw new Error(`fixture date(${JSON.stringify(s)}) failed to parse: ${result.error.message}`);
   }
   return result.value;
+}
+
+// Reproduces #663: a locale whose era data is missing makes moment throw on any `y` token.
+export function withoutEras<T>(run: () => T): T {
+  const locales = ["en", CUSTOM_LOCALE].filter((name) => isLocaleDefined(name)).map((name) => moment.localeData(name));
+  const saved = locales.map((locale) => (locale as unknown as { _eras?: unknown })._eras);
+  for (const locale of locales) (locale as unknown as { _eras?: unknown })._eras = undefined;
+  try {
+    return run();
+  } finally {
+    for (const [i, locale] of locales.entries()) {
+      (locale as unknown as { _eras?: unknown })._eras = saved[i];
+    }
+  }
 }

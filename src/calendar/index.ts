@@ -17,7 +17,8 @@ export { advance, periodKinds, periodOfKind, window, type Period, type PeriodKin
 export { relativeDate, type RelativePeriod } from "./relative-date";
 export { type AnchorString } from "./types";
 
-export { DateTimeError, IntervalError, ParseError } from "./errors";
+export { DateFormatError, DateTimeError, IntervalError, ParseError } from "./errors";
+export { userDateFormat, userDateFormatSchema, type UserDateFormat } from "./user-date-format";
 
 export { CalendarModule } from "./module";
 

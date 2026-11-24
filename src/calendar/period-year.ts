@@ -1,9 +1,13 @@
+import type { Result } from "@/infrastructure/result";
+
 import { localMoment } from "./calendar";
 import { CalendarDate } from "./calendar-date";
 import { MonthPeriod } from "./period-month";
 import { QuarterPeriod } from "./period-quarter";
 
+import type { DateFormatError } from "./errors";
 import type { PeriodBase } from "./period";
+import type { PlainFormatPattern, UserDateFormat } from "./user-date-format";
 
 export class YearPeriod implements PeriodBase<YearPeriod> {
   static containing(date: CalendarDate): YearPeriod {
@@ -69,7 +73,11 @@ export class YearPeriod implements PeriodBase<YearPeriod> {
     }
   }
 
-  format(pattern: string): string {
+  format<P extends string>(pattern: PlainFormatPattern<P>): string {
     return this.representative.format(pattern);
+  }
+
+  tryFormat(pattern: UserDateFormat): Result<string, DateFormatError> {
+    return this.representative.tryFormat(pattern);
   }
 }
