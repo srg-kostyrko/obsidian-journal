@@ -39,6 +39,7 @@ import {
 } from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
+import { takeBackEmptyNote } from "./take-back";
 import { TemplateContentService } from "./template-content";
 import { confirmCreationModal } from "./ui/modals";
 
@@ -310,14 +311,7 @@ export class NoteCreationService {
       // takes it back rather than leave an empty, unclaimed note behind.
       const rendered = await this.#content.renderFor(name, answered, basenameOf(path), path);
       if (rendered.isErr()) {
-        const trashed = await this.#notes.delete(path);
-        if (trashed.isErr()) {
-          this.#logger.error("could not take back a note whose body failed to render", {
-            path,
-            renderError: rendered.error,
-            error: trashed.error,
-          });
-        }
+        await takeBackEmptyNote(this.#notes, this.#logger, path, rendered.error);
         this.#guard.release(path);
         return yield* new Err(rendered.error);
       }

@@ -20,6 +20,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { JournalDateFormatError, type EmptyNoteNameError } from "../notes/errors";
 import { SelfWriteGuard } from "../notes/self-write-guard";
+import { takeBackEmptyNote } from "../notes/take-back";
 import { TemplateContentService } from "../notes/template-content";
 import { confirmCreationModal } from "../notes/ui/modals";
 import { PromptsUnansweredError } from "../prompts/errors";
@@ -187,14 +188,7 @@ export class NoteletCreationService {
       // takes it back rather than leave an empty, unclaimed note behind.
       const rendered = await this.#content.renderTemplates(journalName, type.templates, bodyContext, path);
       if (rendered.isErr()) {
-        const trashed = await this.#notes.delete(path);
-        if (trashed.isErr()) {
-          this.#logger.error("could not take back a note whose body failed to render", {
-            path,
-            renderError: rendered.error,
-            error: trashed.error,
-          });
-        }
+        await takeBackEmptyNote(this.#notes, this.#logger, path, rendered.error);
         this.#guard.release(path);
         return yield* new Err(rendered.error);
       }

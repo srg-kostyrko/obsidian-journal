@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import UiBackLink from "@/ui/UiBackLink.vue";
 import UiErrorBoundary from "@/ui/UiErrorBoundary.vue";
 
 import { ReloadHintService } from "../reload-hint";
@@ -53,6 +54,8 @@ watch(
       </UiErrorBoundary>
     </div>
     <UiErrorBoundary v-else :key="`${ui.depth.value}:${current.subpage.key}`">
+      <!-- Subpages draw their own Back link, so a failed one would otherwise strand the user. -->
+      <template #failed><UiBackLink @click="nav.back()" /></template>
       <component :is="current.subpage.component" v-bind="current.props as Record<string, unknown>" :nav="nav" />
     </UiErrorBoundary>
   </div>

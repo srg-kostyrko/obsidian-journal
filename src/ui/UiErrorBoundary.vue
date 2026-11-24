@@ -22,9 +22,12 @@ onErrorCaptured((error, _instance, info) => {
 </script>
 
 <template>
-  <div v-if="failure !== null" class="journal-section-failed">
-    {{ m.settings_section_failed({ reason: failure }) }}
-  </div>
+  <template v-if="failure !== null">
+    <slot name="failed" />
+    <div class="journal-section-failed">
+      {{ m.settings_section_failed({ reason: failure }) }}
+    </div>
+  </template>
   <slot v-else />
 </template>
 
