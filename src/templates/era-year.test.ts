@@ -1,3 +1,4 @@
+// cspell: ignore yyyyo YYYYo
 import { describe, expect, it } from "vitest";
 
 import { hasEraYear, replaceEraYear, replaceEraYearInTemplate, templateHasEraYear } from "./era-year";
@@ -31,7 +32,15 @@ describe("hasEraYear", () => {
 
 describe("replaceEraYear", () => {
   it("maps each run to its calendar-year counterpart and leaves bracketed text alone", () => {
-    expect(replaceEraYear("yyyy-[y]-yy-y")).toBe("YYYY-[y]-YY-Y");
+    expect(replaceEraYear("yyyy-[y]-yy")).toBe("YYYY-[y]-YY");
+  });
+
+  it("maps a lone y to YYYY, since the reverse parser has no pattern for Y", () => {
+    expect(replaceEraYear("D.M.y")).toBe("D.M.YYYY");
+  });
+
+  it("keeps a literal o after a longer run, which is not an ordinal year", () => {
+    expect(replaceEraYear("yyyyo")).toBe("YYYYo");
   });
 
   it("maps an odd-length run to YYYY", () => {
@@ -47,6 +56,12 @@ describe("era year in templates", () => {
   it("rewrites only the format of date tokens and keeps everything else byte-identical", () => {
     expect(replaceEraYearInTemplate("Week {{date+1d:yyyy}}-{{start_date:[y]ww}} {{title}} {{journal_link:x}}")).toBe(
       "Week {{date+1d:YYYY}}-{{start_date:[y]ww}} {{title}} {{journal_link:x}}",
+    );
+  });
+
+  it("keeps whitespace inside a token's braces", () => {
+    expect(replaceEraYearInTemplate("{{date:yyyy }}-{{ date:yyyy-MM-DD }}")).toBe(
+      "{{date:YYYY }}-{{ date:YYYY-MM-DD }}",
     );
   });
 

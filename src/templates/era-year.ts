@@ -15,10 +15,10 @@ export function hasEraYear(format: string): boolean {
 export function replaceEraYear(format: string): string {
   return mapFormatRuns(format, (run, next) => {
     if (!run.startsWith("y")) return { text: run, consumed: 0 };
-    if (next === "o") return { text: "YYYY", consumed: 1 };
-    if (run === "yy") return { text: "YY", consumed: 0 };
-    if (run === "y") return { text: "Y", consumed: 0 };
-    return { text: "YYYY", consumed: 0 };
+    // Only a lone y before o is moment's ordinal era year; after a longer run the o is the user's.
+    if (run === "y" && next === "o") return { text: "YYYY", consumed: 1 };
+    // The reverse parser reads YY and YYYY only, so every other length becomes YYYY.
+    return { text: run === "yy" ? "YY" : "YYYY", consumed: 0 };
   });
 }
 
@@ -35,9 +35,13 @@ export function replaceEraYearInTemplate(template: string): string {
     .map((token) => {
       if (token.kind === "literal") return token.text;
       if (!isDateToken(token)) return token.raw;
-      // A token's raw text ends in its format and the closing braces.
-      const head = token.raw.slice(0, token.raw.length - token.format.length - 2);
-      return `${head}${replaceEraYear(token.format)}}}`;
+      // The parser trims the token's inner text, so the raw text may carry whitespace after the
+      // format; cut the format off the trimmed inner text and keep the rest as written.
+      const inner = token.raw.slice(0, -2);
+      const formatEnd = inner.trimEnd().length;
+      const head = inner.slice(0, formatEnd - token.format.length);
+      const tail = token.raw.slice(formatEnd);
+      return `${head}${replaceEraYear(token.format)}${tail}`;
     })
     .join("");
 }
