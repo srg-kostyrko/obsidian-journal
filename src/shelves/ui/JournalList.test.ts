@@ -101,6 +101,22 @@ describe("JournalList", () => {
       });
     });
 
+    it("marks a journal whose date format cannot render even when its path never uses {{date}}", async () => {
+      const broken = await harnessWith({
+        Weekly: fixedJournal(
+          "Weekly",
+          { type: "week" },
+          { nameTemplate: "{{start_date:YYYY-MM-DD}}", dateFormat: userDateFormat("YYYYy-[W]w") },
+        ),
+      });
+
+      withoutEras(() => {
+        broken.render(JournalList, { props: { entries: entriesOf(broken), emptyText: "Nothing here" } });
+
+        expect(screen.getAllByText(m.journal_dashboard_date_format_unrenderable())).toHaveLength(1);
+      });
+    });
+
     it("marks a journal whose folder carries a date pattern that cannot render", async () => {
       const broken = await harnessWith({
         Daily: fixedJournal("Daily", { type: "day" }, { folder: "Journal/{{date:YYYYy}}" }),

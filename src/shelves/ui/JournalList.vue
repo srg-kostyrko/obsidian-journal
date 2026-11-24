@@ -4,7 +4,7 @@ import { computed } from "vue";
 import { CalendarDate } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import { describeWrite, NotePathService, type JournalConfig } from "@/journals";
+import { describeWrite, JournalsRepository, NotePathService, type JournalConfig } from "@/journals";
 import { JournalDateFormatError } from "@/journals/notes/errors";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -22,14 +22,19 @@ defineEmits<{
 }>();
 
 const paths = useService(NotePathService);
+const journals = useService(JournalsRepository);
 
 // A display check only, never stored: it follows edits and sync merges through the settings store.
-// Rendering the whole path catches a pattern in the name template or folder, not just the format.
+// Rendering the whole path catches a pattern in the name template or folder; the format is tested on
+// its own too, because a path that never uses {{date}} leaves it to fail only in the note's template.
 const unrenderable = computed(() => {
   const today = CalendarDate.today();
   return new Set(
     props.entries
       .filter(([name]) => {
+        // Read live, not from the entry: a sync merge or an edit replaces the stored config.
+        const config = journals.require(name);
+        if (config.isOk() && today.tryFormat(config.value.dateFormat).isErr()) return true;
         const path = paths.pathForDate(name, today);
         return path.isErr() && path.error instanceof JournalDateFormatError;
       })
