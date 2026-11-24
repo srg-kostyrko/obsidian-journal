@@ -33,7 +33,7 @@ import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
 import { navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { resolveLinkCandidates, type LinkTarget } from "../link-targets";
-import { buildNavRowContext } from "../nav-row-context";
+import { renderNavRow } from "../nav-row-context";
 import { resolveSegmentDecoration } from "../segment-decoration";
 import { resolveSegmentLink } from "../segment-link";
 
@@ -139,18 +139,18 @@ function contextMenuItems(): readonly MenuItemSpec[] {
 }
 
 const text = computed(() =>
-  engine.renderString(
-    props.segment.template,
-    buildNavRowContext({
-      journal: props.journal,
-      refDate: props.refDate,
-      entry: entry.value,
-      cycle,
-      numbering,
-      notePath,
-      today: todayAnchor.value,
-    }),
-  ),
+  renderNavRow(engine, props.segment.template, {
+    journal: props.journal,
+    refDate: props.refDate,
+    entry: entry.value,
+    cycle,
+    numbering,
+    notePath,
+    today: todayAnchor.value,
+  }).match({
+    ok: (rendered) => rendered,
+    err: (error) => m.date_format_invalid_preview({ reason: error.reason }),
+  }),
 );
 
 // Obsidian's tooltip is the aria-label, so the names join the segment's own text rather than replace it.
