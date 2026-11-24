@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
@@ -247,6 +248,19 @@ describe("SettingsDashboard", () => {
       await nextTick();
       expect(screen.getByTestId("block-subpage")).toBeTruthy();
       expect(screen.queryByText(m.settings_section_failed({ reason: "boom" }))).toBeNull();
+    });
+
+    it("a failed subpage still offers Back to the dashboard", async () => {
+      const state = { broken: true };
+      const sub = defineSubpage({ key: "edit", component: failing(state, "subpage") });
+      const { harness, service } = await buildHarness({ blocks: [block("only", 0, "tile")], subpages: [sub] });
+      harness.render(SettingsDashboard);
+      service.push(sub, undefined);
+      await nextTick();
+
+      await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
+
+      expect(screen.getByTestId("block-tile")).toBeTruthy();
     });
 
     it("a healthy subpage pushed over a failed one renders normally", async () => {

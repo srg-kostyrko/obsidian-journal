@@ -11,6 +11,7 @@ import { testContainer, type TestContainerOptions, type TestHarness } from "@/te
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { JournalDateFormatError } from "../notes/errors";
+import { TemplateContentService } from "../notes/template-content";
 import { buildNoteletType, fixedJournal } from "../testing";
 import { VaultSubscriptionService } from "../vault-subscription";
 
@@ -166,6 +167,29 @@ describe("NoteletCreationService", () => {
 
     expect(created.isErr() && created.error instanceof JournalDateFormatError).toBe(true);
     expect(harness.host.files.has("Standup 1.md")).toBe(false);
+  });
+
+  it("keeps a notelet that was written to while its body rendered", async () => {
+    const harness = await boot(workWith({ templates: ["Templates/Standup"] }));
+    harness.host.putFile("Templates/Standup.md", "# {{date:YYYYy}}");
+    const content = harness.resolve(TemplateContentService);
+    const renderTemplates = content.renderTemplates.bind(content);
+    const notes = harness.resolve(NotesService);
+    vi.spyOn(content, "renderTemplates").mockImplementation((...parameters: Parameters<typeof renderTemplates>) =>
+      notes
+        .write("Standup 1.md" as VaultPath, "typed while Templater waited")
+        .mapErr((): never => {
+          throw new Error("staging write failed");
+        })
+        .flatMap(() => renderTemplates(...parameters)),
+    );
+
+    const created = await withoutEras(() =>
+      harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR),
+    );
+
+    expect(created.isErr() && created.error instanceof JournalDateFormatError).toBe(true);
+    expect(harness.host.files.get("Standup 1.md")?.content).toBe("typed while Templater waited");
   });
 
   it("logs a take-back that fails and still reports the render error", async () => {

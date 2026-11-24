@@ -10,6 +10,7 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../module";
 import { JournalDateFormatError } from "../notes/errors";
+import { TemplateContentService } from "../notes/template-content";
 import { fixedJournal } from "../testing";
 
 import { EnsureJournalEntryFlow } from "./ensure-journal-entry.flow";
@@ -101,6 +102,32 @@ describe("EnsureJournalEntryFlow — an unrenderable date format in the template
       m.journal_date_format_unrenderable_notice({ journalName: "daily", format: "YYYYy", reason: result.error.reason }),
     ]);
     expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+  });
+
+  it("keeps a note that was written to while its body rendered", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }) } },
+    });
+    harness.host.putFile("Templates/daily.md", "# {{date:YYYYy}}");
+    const content = harness.resolve(TemplateContentService);
+    const renderFor = content.renderFor.bind(content);
+    const notes = harness.resolve(NotesService);
+    vi.spyOn(content, "renderFor").mockImplementation((...parameters: Parameters<typeof renderFor>) =>
+      notes
+        .write("2026-05-19.md" as VaultPath, "typed while Templater waited")
+        .mapErr((): never => {
+          throw new Error("staging write failed");
+        })
+        .flatMap(() => renderFor(...parameters)),
+    );
+
+    const result = await withoutEras(() =>
+      harness.resolve(Flows).invoke(EnsureJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") }),
+    );
+
+    expect(result.isErr() && result.error instanceof JournalDateFormatError).toBe(true);
+    expect(harness.host.files.get("2026-05-19.md")?.content).toBe("typed while Templater waited");
   });
 
   it("logs a take-back that fails and still reports the render error", async () => {
