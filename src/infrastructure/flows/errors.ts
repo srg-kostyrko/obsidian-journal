@@ -10,6 +10,14 @@ export class UserAborted extends FlowError {
   }
 }
 
+export class UnexpectedFlowError extends FlowError {
+  readonly kind = "unexpected" as const;
+  constructor(readonly cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause));
+    this.name = "UnexpectedFlowError";
+  }
+}
+
 export interface BenignFlowError {
   readonly benign: true;
 }

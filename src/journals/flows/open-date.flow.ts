@@ -2,7 +2,7 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import type { Flow } from "@/infrastructure/flows";
+import type { Flow, UnexpectedFlowError } from "@/infrastructure/flows";
 import type { OpenMode, VaultPath, WorkspaceOpenError } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 
@@ -29,7 +29,8 @@ export interface OpenDateResult {
   created: boolean;
 }
 
-export type OpenDateError = NoApplicableJournals | NoteCreationError | WorkspaceOpenError | UserAborted;
+export type OpenDateError =
+  NoApplicableJournals | NoteCreationError | WorkspaceOpenError | UnexpectedFlowError | UserAborted;
 
 export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, OpenDateError> {
   readonly #resolver = inject(JournalDateResolver);
