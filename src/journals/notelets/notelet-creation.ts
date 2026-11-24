@@ -11,6 +11,7 @@ import type {
   VaultPath,
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { type AsyncResult, Err, attempt } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
@@ -67,6 +68,7 @@ export interface CreateNoteletOptions {
 
 export class NoteletCreationService {
   readonly #journals = inject(JournalsRepository);
+  readonly #logger = inject(LoggerFactoryToken).named("notelet-creation");
   readonly #timeline = inject(TimelineService);
   readonly #index = inject(JournalsIndex);
   readonly #paths = inject(NoteletPathService);
@@ -185,7 +187,14 @@ export class NoteletCreationService {
       // takes it back rather than leave an empty, unclaimed note behind.
       const rendered = await this.#content.renderTemplates(journalName, type.templates, bodyContext, path);
       if (rendered.isErr()) {
-        await this.#notes.delete(path);
+        const trashed = await this.#notes.delete(path);
+        if (trashed.isErr()) {
+          this.#logger.error("could not take back a note whose body failed to render", {
+            path,
+            renderError: rendered.error,
+            error: trashed.error,
+          });
+        }
         this.#guard.release(path);
         return yield* new Err(rendered.error);
       }

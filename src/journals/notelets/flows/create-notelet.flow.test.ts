@@ -1,17 +1,20 @@
-import { describe, expect, it, vi } from "vitest";
+import { assert, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { Flows } from "@/infrastructure/flows";
 import { WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer } from "@/testing";
 
 import { journalsCoreModule } from "../../module";
+import { JournalDateFormatError } from "../../notes/errors";
 import { buildNoteletType, fixedJournal } from "../../testing";
 import { VaultSubscriptionService } from "../../vault-subscription";
 
 import { CreateNoteletFlow } from "./create-notelet.flow";
 
+import type { Prompt } from "../../prompts/config";
 import type { TypeId } from "../config";
 
 const ANCHOR = "2026-08-30" as AnchorString;
@@ -129,5 +132,48 @@ describe("CreateNoteletFlow", () => {
 
     expect(result.isErr()).toBe(true);
     expect(harness.resolve(WorkspaceService).isOpen("Standup 1.md" as VaultPath)).toBe(false);
+  });
+});
+
+describe("CreateNoteletFlow — a journal whose date format cannot render", () => {
+  it("shows the format notice, not a missing journal, when the type asks questions first", async () => {
+    const attendee: Prompt = {
+      variable: "attendee",
+      question: "Who?",
+      type: "text",
+      frontmatterKey: "attendee",
+      required: false,
+    };
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          Work: fixedJournal(
+            "Work",
+            { type: "week" },
+            {
+              dateFormat: "YYYYy-[W]w",
+              notelets: {
+                [TYPE]: buildNoteletType({
+                  id: TYPE,
+                  name: "Standup",
+                  nameTemplate: "Standup {{notelet_index}}",
+                  prompts: [attendee],
+                }),
+              },
+            },
+          ),
+        },
+      },
+      initialize: [VaultSubscriptionService],
+    });
+
+    const result = await withoutEras(() =>
+      harness.resolve(Flows).invoke(CreateNoteletFlow, { journalName: "Work", typeId: TYPE, anchor: ANCHOR }),
+    );
+
+    assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+    expect(harness.notices.messages).toEqual([result.error.userNotice]);
+    expect(harness.modals.opens).toHaveLength(0);
   });
 });

@@ -8,6 +8,7 @@ import type { TemplateContext, UnrenderableDateFormatError } from "@/templates";
 import { JournalsRepository } from "../repository";
 
 import { JournalDateFormatError } from "./errors";
+import { FormatFailureLog } from "./format-failure-log";
 import { NotePathService } from "./note-path";
 
 import type { JournalNotFoundError } from "../errors";
@@ -19,6 +20,7 @@ export class TemplateContentService {
   readonly #engine = inject(TemplateEngine);
   readonly #path = inject(NotePathService);
   readonly #templater = inject(TemplaterService);
+  readonly #formatFailures = inject(FormatFailureLog);
 
   /** Renders the first template with content, or "" when none matches. */
   renderTemplates(
@@ -28,8 +30,11 @@ export class TemplateContentService {
     targetPath: VaultPath,
   ): AsyncResult<string, NoteReadError | JournalDateFormatError> {
     if (templates.length === 0) return AsyncResult.ok("");
-    const unrenderable = (error: UnrenderableDateFormatError): JournalDateFormatError =>
-      JournalDateFormatError.from(journalName, error);
+    const unrenderable = (error: UnrenderableDateFormatError): JournalDateFormatError => {
+      const failure = JournalDateFormatError.from(journalName, error);
+      this.#formatFailures.warnOnce(journalName, failure);
+      return failure;
+    };
     return AsyncResult.fromPromise(
       (async (): Promise<Result<string, JournalDateFormatError>> => {
         for (const entry of templates) {

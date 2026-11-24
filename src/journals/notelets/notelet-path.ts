@@ -9,6 +9,7 @@ import { TemplateEngine, type TemplateContext } from "@/templates";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { EmptyNoteNameError, JournalDateFormatError } from "../notes/errors";
+import { FormatFailureLog } from "../notes/format-failure-log";
 import { NotePathService, withNoteName, type NotePathError } from "../notes/note-path";
 import { renderBindingFor } from "../prompts/prompt-binding";
 
@@ -23,6 +24,7 @@ export class NoteletPathService {
   readonly #index = inject(JournalsIndex);
   readonly #engine = inject(TemplateEngine);
   readonly #notes = inject(NotesService);
+  readonly #formatFailures = inject(FormatFailureLog);
 
   // The rendered note name feeds back into the folder as {{note_name}}/{{title}}, so a suffixed
   // name has to re-render the folder rather than being appended to a finished path.
@@ -41,9 +43,11 @@ export class NoteletPathService {
   }
 
   #render(config: JournalConfig, template: string, context: TemplateContext): Result<string, JournalDateFormatError> {
-    return this.#engine
-      .renderString(template, context)
-      .mapErr((error) => JournalDateFormatError.from(config.name, error));
+    return this.#engine.renderString(template, context).mapErr((error) => {
+      const failure = JournalDateFormatError.from(config.name, error);
+      this.#formatFailures.warnOnce(config.name, failure);
+      return failure;
+    });
   }
 
   #contextFromPeriod(

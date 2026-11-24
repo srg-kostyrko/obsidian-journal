@@ -18,6 +18,7 @@ import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
 import { EmptyNoteNameError, JournalDateFormatError } from "./errors";
+import { FormatFailureLog } from "./format-failure-log";
 
 import type { JournalConfig } from "../config";
 import type { PromptAnswer } from "../prompts/config";
@@ -47,6 +48,7 @@ export class NotePathService {
   readonly #engine = inject(TemplateEngine);
   readonly #index = inject(JournalsIndex);
   readonly #timeline = inject(TimelineService);
+  readonly #formatFailures = inject(FormatFailureLog);
 
   #parseContext(config: JournalConfig): TemplateContext {
     // start_date/end_date mirror the render context (contextFor) so a note named by its
@@ -77,7 +79,14 @@ export class NotePathService {
   #render(journalName: string, template: string, context: TemplateContext): Result<string, JournalDateFormatError> {
     return this.#engine
       .renderString(template, context)
-      .mapErr((error) => JournalDateFormatError.from(journalName, error));
+      .mapErr((error) => this.#formatFailed(JournalDateFormatError.from(journalName, error)));
+  }
+
+  // Every path a journal cannot render is mapped here, so every caller — a background read that
+  // shows nothing, or a write that also shows a notice — leaves the same single warning.
+  #formatFailed(error: JournalDateFormatError): JournalDateFormatError {
+    this.#formatFailures.warnOnce(error.journalName, error);
+    return error;
   }
 
   pathForDate(name: string, date: CalendarDate): Result<VaultPath, NotePathError> {
@@ -175,6 +184,10 @@ export class NotePathService {
     // reassembles into a single anchor rather than losing the folder's components.
     const template =
       config.folder && part === "path" ? `${config.folder}/${config.nameTemplate}.md` : `${config.nameTemplate}.md`;
+    // A path this device cannot render can never be read back: every candidate is checked by
+    // rendering it. Probing here is what reports it, since a parse that fails on the format looks
+    // like any other non-match to the caller.
+    if (this.#render(name, template, context).isErr()) return Option.none();
     const tokens = tokenize(template);
     const engine = this.#engine;
     const cycle = this.#cycle;
@@ -236,7 +249,13 @@ export class NotePathService {
     return Option.some({
       invert: (path: VaultPath): Option<JournalMetadata> => {
         const parsed = engine.parse(tokens, path, context);
-        if (parsed.kind === "err") return Option.none();
+        if (parsed.kind === "err") {
+          const detail = parsed.error.detail;
+          if (detail.kind === "unrenderable-format") {
+            this.#formatFailed(new JournalDateFormatError(name, detail.format, detail.reason));
+          }
+          return Option.none();
+        }
         const bindings = parsed.value;
         const numbers: Record<string, number> = {};
         for (const source of config.numbering.sources) {

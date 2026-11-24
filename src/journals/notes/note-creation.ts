@@ -12,6 +12,7 @@ import type {
   VaultPath,
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, Err, Ok, attempt, type Result } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
@@ -80,6 +81,7 @@ function splitFrontmatter(content: string): Result<{ frontmatter: Record<string,
 
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
+  readonly #logger = inject(LoggerFactoryToken).named("note-creation");
   readonly #metadata = inject(NoteMetadataService);
   readonly #index = inject(JournalsIndex);
   readonly #path = inject(NotePathService);
@@ -307,7 +309,14 @@ export class NoteCreationService {
       // takes it back rather than leave an empty, unclaimed note behind.
       const rendered = await this.#content.renderFor(name, answered, basenameOf(path), path);
       if (rendered.isErr()) {
-        await this.#notes.delete(path);
+        const trashed = await this.#notes.delete(path);
+        if (trashed.isErr()) {
+          this.#logger.error("could not take back a note whose body failed to render", {
+            path,
+            renderError: rendered.error,
+            error: trashed.error,
+          });
+        }
         this.#guard.release(path);
         return yield* new Err(rendered.error);
       }

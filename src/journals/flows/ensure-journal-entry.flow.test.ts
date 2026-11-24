@@ -3,8 +3,9 @@ import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { anchor, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
-import { WorkspaceService } from "@/infrastructure/host";
+import { NoteDeleteError, NotesService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { AsyncResult } from "@/infrastructure/result";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../module";
@@ -100,5 +101,26 @@ describe("EnsureJournalEntryFlow — an unrenderable date format in the template
       m.journal_date_format_unrenderable_notice({ journalName: "daily", format: "YYYYy", reason: result.error.reason }),
     ]);
     expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+  });
+
+  it("logs a take-back that fails and still reports the render error", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }) } },
+    });
+    harness.host.putFile("Templates/daily.md", "# {{date:YYYYy}}");
+    vi.spyOn(harness.resolve(NotesService), "delete").mockReturnValue(
+      AsyncResult.err(new NoteDeleteError("2026-05-19.md" as VaultPath, new Error("locked"))),
+    );
+
+    const result = await withoutEras(() =>
+      harness.resolve(Flows).invoke(EnsureJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") }),
+    );
+
+    expect(result.isErr() && result.error instanceof JournalDateFormatError).toBe(true);
+    const logged = harness.logs.records.find((record) => record.message.startsWith("could not take back"));
+    expect(logged?.level).toBe("error");
+    expect(logged?.fields?.path).toBe("2026-05-19.md");
+    expect(logged?.fields?.renderError).toBeInstanceOf(JournalDateFormatError);
   });
 });

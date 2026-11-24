@@ -13,7 +13,6 @@ import { TimelineService } from "../timeline";
 
 import { creationAllowedOn, noteCreationSlice } from "./creation-slice";
 import { JournalDateFormatError } from "./errors";
-import { FormatFailureLog } from "./format-failure-log";
 import { NoteCreationService, type NoteCreationError } from "./note-creation";
 
 const CREATE_BUDGET_MS = 30_000;
@@ -27,7 +26,6 @@ export class AutoCreateService {
   readonly #timeline = inject(TimelineService);
   readonly #platform = inject(PlatformService);
   readonly #logger = inject(LoggerFactoryToken).named("auto-create");
-  readonly #formatFailures = inject(FormatFailureLog);
 
   readonly #noteCreation = inject(SettingsService).getSlice(noteCreationSlice);
 
@@ -86,7 +84,7 @@ export class AutoCreateService {
     }
   }
 
-  /** Creates the journal's note for today; a date format that cannot render is logged once, never noticed. */
+  /** Creates the journal's note for today; a date format that cannot render is never noticed here. */
   async createCurrent(name: string): Promise<Result<void, NoteCreationError>> {
     // Resolve today to the journal period's canonical anchor; a raw mid-period date would be
     // written to frontmatter and then rejected by parseEntry, orphaning the note.
@@ -104,9 +102,8 @@ export class AutoCreateService {
     }
     const result = await this.#creation.ensureNote(name, metadata.value, { skipConfirmation: true, unattended: true });
     if (result.isOk()) return new Ok(undefined);
-    if (result.error instanceof JournalDateFormatError) {
-      this.#formatFailures.warnOnce(name, result.error);
-    } else {
+    // The path service already logged a format failure once; a tick that repeats it says nothing.
+    if (!(result.error instanceof JournalDateFormatError)) {
       this.#logger.error("auto-create: ensureNote failed", { name, error: result.error });
     }
     return new Err(result.error);

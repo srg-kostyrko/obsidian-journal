@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
-import { FrontmatterError, NotesService } from "@/infrastructure/host";
+import { FrontmatterError, NoteDeleteError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
@@ -166,6 +166,24 @@ describe("NoteletCreationService", () => {
 
     expect(created.isErr() && created.error instanceof JournalDateFormatError).toBe(true);
     expect(harness.host.files.has("Standup 1.md")).toBe(false);
+  });
+
+  it("logs a take-back that fails and still reports the render error", async () => {
+    const harness = await boot(workWith({ templates: ["Templates/Standup"] }));
+    harness.host.putFile("Templates/Standup.md", "# {{date:YYYYy}}");
+    vi.spyOn(harness.resolve(NotesService), "delete").mockReturnValue(
+      AsyncResult.err(new NoteDeleteError("Standup 1.md" as VaultPath, new Error("locked"))),
+    );
+
+    const created = await withoutEras(() =>
+      harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR),
+    );
+
+    expect(created.isErr() && created.error instanceof JournalDateFormatError).toBe(true);
+    const logged = harness.logs.records.find((record) => record.message.startsWith("could not take back"));
+    expect(logged?.level).toBe("error");
+    expect(logged?.fields?.path).toBe("Standup 1.md");
+    expect(logged?.fields?.renderError).toBeInstanceOf(JournalDateFormatError);
   });
 
   it("does not take the journal's own derived period path", async () => {
