@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, Clock } from "@/calendar";
 import { anchor } from "@/calendar/testing";
+import { Ok } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import {
@@ -59,7 +60,7 @@ describe("kinds", () => {
         value: CalendarDate.fromAnchor(anchor("2022-01-01")),
         defaultFormat: "YYYY-MM-DD",
       };
-      expect(renderDate(spec, [])).toBe("2022-01-01");
+      expect(renderDate(spec, [])).toEqual(new Ok("2022-01-01"));
     });
 
     it("respects format override", () => {
@@ -68,7 +69,7 @@ describe("kinds", () => {
         value: CalendarDate.fromAnchor(anchor("2022-01-01")),
         defaultFormat: "YYYY-MM-DD",
       };
-      expect(renderDate(spec, [], "MMM D, YYYY")).toBe("Jan 1, 2022");
+      expect(renderDate(spec, [], "MMM D, YYYY")).toEqual(new Ok("Jan 1, 2022"));
     });
 
     it("applies modifiers before formatting", () => {
@@ -78,7 +79,7 @@ describe("kinds", () => {
         defaultFormat: "YYYY-MM-DD",
       };
       const modifiers: Modifier[] = [{ kind: "shift", sign: 1, amount: 1, unit: "w" }];
-      expect(renderDate(spec, modifiers)).toBe("2022-01-08");
+      expect(renderDate(spec, modifiers)).toEqual(new Ok("2022-01-08"));
     });
   });
 
@@ -136,20 +137,20 @@ describe("kinds", () => {
     it("renders Clock with default format when no override", () => {
       vi.setSystemTime(new Date("2026-05-20T10:37:42"));
       const spec = { kind: "clock" as const, value: Clock.now(), defaultFormat: "HH:mm" };
-      expect(renderClock(spec, [])).toBe("10:37");
+      expect(renderClock(spec, [])).toEqual(new Ok("10:37"));
     });
 
     it("renders Clock with format override", () => {
       vi.setSystemTime(new Date("2026-05-20T10:37:42"));
       const spec = { kind: "clock" as const, value: Clock.now(), defaultFormat: "HH:mm" };
-      expect(renderClock(spec, [], "HH:mm:ss")).toBe("10:37:42");
+      expect(renderClock(spec, [], "HH:mm:ss")).toEqual(new Ok("10:37:42"));
     });
 
     it("applies modifiers before rendering", () => {
       vi.setSystemTime(new Date("2026-05-20T10:37:42"));
       const spec = { kind: "clock" as const, value: Clock.now(), defaultFormat: "HH:mm" };
       const result = renderClock(spec, [{ kind: "shift", sign: -1, amount: 1, unit: "h" }]);
-      expect(result).toBe("09:37");
+      expect(result).toEqual(new Ok("09:37"));
     });
   });
 

@@ -1,8 +1,10 @@
+import { Err, Ok, type Result } from "@/infrastructure/result";
+
 import { tokenize } from "./grammar";
 import { continueMultiline, lineEndingOf, type LineEnding } from "./multiline";
 import { renderFrontmatter } from "./yaml-value";
 
-import type { RenderToken } from "./types";
+import type { FallibleRenderToken, RenderToken, Token } from "./types";
 
 export interface FrontmatterSplit {
   readonly open: string;
@@ -43,9 +45,24 @@ export function renderBody(text: string, render: RenderToken, eol: LineEnding): 
   return out;
 }
 
-export function renderDocumentWith(template: string, render: RenderToken): string {
+// The layout code is string-in, string-out; the first failure is held aside and the rest of the
+// tokens render as nothing, so no later token's work is done once the document cannot be produced.
+export function renderDocumentWith<E>(template: string, render: FallibleRenderToken<E>): Result<string, E> {
+  let failure: { error: E } | undefined;
+  const guarded = (token: Token): string => {
+    if (failure) return "";
+    const rendered = render(token);
+    if (rendered.kind === "err") {
+      failure = { error: rendered.error };
+      return "";
+    }
+    return rendered.value;
+  };
   const eol = lineEndingOf(template);
   const split = splitFrontmatter(template);
-  if (split === undefined) return renderBody(template, render, eol);
-  return split.open + renderFrontmatter(split.body, render, eol) + split.close + renderBody(split.rest, render, eol);
+  const out =
+    split === undefined
+      ? renderBody(template, guarded, eol)
+      : split.open + renderFrontmatter(split.body, guarded, eol) + split.close + renderBody(split.rest, guarded, eol);
+  return failure ? new Err(failure.error) : new Ok(out);
 }

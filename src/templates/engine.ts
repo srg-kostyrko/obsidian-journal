@@ -1,11 +1,11 @@
 import { match } from "ts-pattern";
 
-import { CalendarDate, localMoment } from "@/calendar";
+import { CalendarDate, localMoment, userDateFormat, type DateFormatError } from "@/calendar";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { renderDocumentWith } from "./document";
-import { TemplateParseError } from "./errors";
+import { TemplateParseError, UnrenderableDateFormatError } from "./errors";
 import { tokenize } from "./grammar";
 import { FunctionHandlerToken, type FunctionHandler } from "./handlers";
 import {
@@ -18,7 +18,7 @@ import {
   renderDate,
   renderDerived,
   renderNumber,
-  renderString,
+  renderString as renderStringSpec,
 } from "./kinds";
 import { applyModifiers, isBoundaryUnit, sourceDateOf, unapplyOffsets } from "./modifiers";
 
@@ -36,36 +36,42 @@ export class TemplateEngine {
     return (this.#handlersByName ??= new Map(this.#injector.resolve(FunctionHandlerToken).map((h) => [h.name, h])));
   }
 
-  #renderToken(token: Token, context: TemplateContext): string {
+  #renderToken(token: Token, context: TemplateContext): Result<string, UnrenderableDateFormatError> {
     return match(token)
-      .with({ kind: "literal" }, (t) => t.text)
+      .returnType<Result<string, UnrenderableDateFormatError>>()
+      .with({ kind: "literal" }, (t) => new Ok(t.text))
       .with({ kind: "variable" }, (t) => this.#renderVariable(t, context))
-      .with({ kind: "function" }, (t) => this.#renderFunction(t, context))
+      .with({ kind: "function" }, (t) => new Ok(this.#renderFunction(t, context)))
       .exhaustive();
   }
 
-  #renderVariable(token: Extract<Token, { kind: "variable" }>, context: TemplateContext): string {
+  #renderVariable(
+    token: Extract<Token, { kind: "variable" }>,
+    context: TemplateContext,
+  ): Result<string, UnrenderableDateFormatError> {
     const spec = context.get(token.name);
-    if (!spec) return token.raw;
+    if (!spec) return new Ok(token.raw);
     if (spec.kind === "number") {
-      if (!isRenderableNumberToken(token)) return token.raw;
+      if (!isRenderableNumberToken(token)) return new Ok(token.raw);
     } else if (spec.kind === "derived") {
-      if (!hasNumberFormat(token)) return token.raw;
+      if (!hasNumberFormat(token)) return new Ok(token.raw);
     } else if (
       // A string variable takes neither modifiers nor a format; emit the raw token unchanged.
       spec.kind !== "date" &&
       spec.kind !== "clock" &&
       (token.modifiers.length > 0 || token.format !== undefined)
     ) {
-      return token.raw;
+      return new Ok(token.raw);
     }
     return match(spec)
-      .with({ kind: "string" }, (s) => renderString(s))
-      .with({ kind: "number" }, (s) => renderNumber(s, token.modifiers, token.format))
-      .with({ kind: "derived" }, (s) => renderDerived(s, token.modifiers, token.format))
+      .returnType<Result<string, DateFormatError>>()
+      .with({ kind: "string" }, (s) => new Ok(renderStringSpec(s)))
+      .with({ kind: "number" }, (s) => new Ok(renderNumber(s, token.modifiers, token.format)))
+      .with({ kind: "derived" }, (s) => new Ok(renderDerived(s, token.modifiers, token.format)))
       .with({ kind: "date" }, (s) => renderDate(s, token.modifiers, token.format))
       .with({ kind: "clock" }, (s) => renderClock(s, token.modifiers, token.format))
-      .exhaustive();
+      .exhaustive()
+      .mapErr((error) => new UnrenderableDateFormatError(token.name, error.pattern, error.reason));
   }
 
   #renderFunction(token: Extract<Token, { kind: "function" }>, context: TemplateContext): string {
@@ -187,7 +193,8 @@ export class TemplateEngine {
     // reads each modifier chain on its own and keeps the date the whole path renders back from.
     if (entries.some((entry) => entry.token.modifiers.length > 0)) {
       const found = dateRenderingPath(entries);
-      if (found) return new Ok({ kind: "date", value: found });
+      if (found.kind === "err") return new Err(unrenderableFormat(name, found.error));
+      if (found.value) return new Ok({ kind: "date", value: found.value });
       return this.#mergeIndependently(name, entries);
     }
     const fieldSets = entries.map((entry) => dateFields(entry.format));
@@ -219,7 +226,9 @@ export class TemplateEngine {
       // week-year to count in, so week 53 is refused whenever the current year has 52, and a bare year
       // lands on 1 January, whose week-year can be the previous one. The merged date rendering back to
       // the capture is agreement outright; only a capture it does not reproduce is read alone.
-      if (merged.format(entry.format) === entry.capture) {
+      const rendered = merged.tryFormat(userDateFormat(entry.format));
+      if (rendered.kind === "err") return new Err(unrenderableFormat(name, rendered.error));
+      if (rendered.value === entry.capture) {
         candidates.push({ kind: "date", value: merged });
         continue;
       }
@@ -242,20 +251,22 @@ export class TemplateEngine {
     return new Ok({ kind: "date", value: merged });
   }
 
-  renderString(template: string, context: TemplateContext): string {
+  renderString(template: string, context: TemplateContext): Result<string, UnrenderableDateFormatError> {
     return this.renderStream(tokenize(template), context);
   }
 
-  renderStream(stream: TokenStream, context: TemplateContext): string {
+  renderStream(stream: TokenStream, context: TemplateContext): Result<string, UnrenderableDateFormatError> {
     let output = "";
     for (const token of stream) {
-      output += this.#renderToken(token, context);
+      const rendered = this.#renderToken(token, context);
+      if (rendered.kind === "err") return rendered;
+      output += rendered.value;
     }
-    return output;
+    return new Ok(output);
   }
 
   /** Renders a note's content: multi-line values keep the structure of the line they start on. */
-  renderDocument(template: string, context: TemplateContext): string {
+  renderDocument(template: string, context: TemplateContext): Result<string, UnrenderableDateFormatError> {
     return renderDocumentWith(template, (token) => this.#renderToken(token, context));
   }
 
@@ -484,7 +495,7 @@ function weekdayPinned(fieldSets: (Set<DateField> | undefined)[]): boolean {
 // every capture in the path back exactly. Reading a chain against another chain's date supplies the
 // components its own formats never name — "MMM D" has no year — which moment would otherwise take
 // from today.
-function dateRenderingPath(entries: DateCapture[]): CalendarDate | undefined {
+function dateRenderingPath(entries: DateCapture[]): Result<CalendarDate | undefined, DateFormatError> {
   const chains = [...groupByModifiers(entries).values()];
   const candidates = new Map<string, CalendarDate>();
   let frontier: CalendarDate[] = [];
@@ -506,9 +517,20 @@ function dateRenderingPath(entries: DateCapture[]): CalendarDate | undefined {
   }
   // Ties go to the earliest date: a path built from boundaries names a range, and every day in it
   // renders the same path.
-  return [...candidates.values()]
-    .toSorted((a, b) => a.compareTo(b))
-    .find((candidate) => entries.every((entry) => rendersBack(entry, candidate)));
+  const ordered = [...candidates.values()].toSorted((a, b) => a.compareTo(b));
+  for (const candidate of ordered) {
+    let all = true;
+    for (const entry of entries) {
+      const back = rendersBack(entry, candidate);
+      if (back.kind === "err") return new Err(back.error);
+      if (!back.value) {
+        all = false;
+        break;
+      }
+    }
+    if (all) return new Ok(candidate);
+  }
+  return new Ok(undefined);
 }
 
 // Grouped on the chain as written: two chains that mean the same date by a different spelling are
@@ -539,8 +561,19 @@ function readChain(chain: DateCapture[], reference?: CalendarDate): CalendarDate
   return sourceDateOf(parsed.value, chain[0].token.modifiers);
 }
 
-function rendersBack(entry: DateCapture, date: CalendarDate): boolean {
-  return applyModifiers(date, entry.token.modifiers).format(entry.format) === entry.capture;
+function rendersBack(entry: DateCapture, date: CalendarDate): Result<boolean, DateFormatError> {
+  return applyModifiers(date, entry.token.modifiers)
+    .tryFormat(userDateFormat(entry.format))
+    .map((rendered) => rendered === entry.capture);
+}
+
+function unrenderableFormat(variableName: string, error: DateFormatError): TemplateParseError {
+  return new TemplateParseError({
+    kind: "unrenderable-format",
+    variableName,
+    format: error.pattern,
+    reason: error.reason,
+  });
 }
 
 function fieldsAgree(fields: Set<DateField>, a: CalendarDate, b: CalendarDate): boolean {
