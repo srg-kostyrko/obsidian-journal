@@ -2249,6 +2249,7 @@
   "journal_edit_move_to_folder_apply_link": "권장 사항 적용",
   "journal_edit_move_to_folder_recommendation_date_format": "날짜 형식에 경로 구분 기호가 들어 있습니다. 날짜 변수를 폴더 필드로 옮길까요?",
   "journal_edit_move_to_folder_recommendation_name_template": "노트 이름 템플릿에 경로 구분 기호가 들어 있습니다. 경로 접두사를 폴더 필드로 옮길까요?",
+  "journal_edit_era_year_recommendation": "moment에서 y는 달력 연도가 아니라 연호 연도입니다. 대부분의 언어에서 똑같이 보이지만, 이것으로 이름을 붙인 노트는 날짜와 다시 연결할 수 없습니다. 대신 YYYY를 사용할까요?",
   "journal_edit_name_template_description": "새 노트 이름을 만들 때 사용하는 템플릿입니다.",
   "journal_edit_name_template_empty_warning": "이 이름 템플릿은 빈 노트 이름으로 확정되어 노트를 만들 수 없습니다. 변수나 텍스트를 추가하세요.",
   "journal_edit_name_template_collision_warning": "{first} 항목과 {second} 항목이 모두 {path}로 확정됩니다. 둘 중 하나만 노트를 가질 수 있으며, 다른 하나를 열면 거부됩니다.",

@@ -2184,6 +2184,7 @@
   "journal_edit_move_to_folder_apply_link": "Застосувати рекомендацію",
   "journal_edit_move_to_folder_recommendation_date_format": "Формат дати містить роздільник шляхів. Перемістити змінні дати в поле «Папка»?",
   "journal_edit_move_to_folder_recommendation_name_template": "Шаблон назви нотатки містить роздільник шляхів. Перемістити префікс шляху в поле «Папка»?",
+  "journal_edit_era_year_recommendation": "У moment y — це рік ери, а не календарний рік. У більшості мов він виглядає так само, але нотатки, названі з ним, не можна зіставити назад із їхніми датами. Використати YYYY натомість?",
   "journal_edit_name_template_description": "Шаблон, який використовується для створення нових назв нотаток.",
   "journal_edit_name_template_empty_warning": "Цей шаблон назви дає порожню назву нотатки, тому нотатку неможливо створити. Додайте змінну або текст.",
   "journal_edit_name_template_collision_warning": "Записи для {first} і {second} дають один і той самий шлях {path}. Нотатку може мати лише один із них; відкриття другого відхиляється.",

@@ -2263,6 +2263,7 @@
   "journal_edit_move_to_folder_apply_link": "Appliquer la recommandation",
   "journal_edit_move_to_folder_recommendation_date_format": "Le format de date contient un séparateur de chemin. Déplacer les variables de date dans le champ Dossier ?",
   "journal_edit_move_to_folder_recommendation_name_template": "Le modèle de nom de note contient un séparateur de chemin. Déplacer le préfixe du chemin dans le champ Dossier ?",
+  "journal_edit_era_year_recommendation": "Dans moment, y est l’année de l’ère, pas l’année civile. Elle s’affiche de la même façon dans la plupart des langues, mais les notes nommées avec elle ne peuvent pas être rattachées à leurs dates. Utiliser YYYY à la place ?",
   "journal_edit_name_template_description": "Modèle utilisé pour générer les nouveaux noms de notes.",
   "journal_edit_name_template_empty_warning": "Ce modèle de nom aboutit à un nom de note vide, aucune note ne peut donc être créée. Ajoutez-y une variable ou du texte.",
   "journal_edit_name_template_collision_warning": "Les entrées pour {first} et {second} aboutissent toutes deux à {path}. Une seule peut avoir une note ; l’ouverture de l’autre est refusée.",

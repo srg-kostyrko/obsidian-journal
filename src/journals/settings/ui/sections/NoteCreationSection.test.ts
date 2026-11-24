@@ -45,6 +45,15 @@ async function renderUnknownVariable(): Promise<void> {
   harness.render(NoteCreationSection, { props: { journalName: "daily" } });
 }
 
+async function renderEraYear(overrides: Parameters<typeof fixedJournal>[2]): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: fixedJournal("daily", { type: "day" }, overrides) } },
+  });
+  harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+  return harness;
+}
+
 describe("NoteCreationSection", () => {
   describe("section heading", () => {
     it("renders all five setting rows", async () => {
@@ -351,6 +360,39 @@ describe("NoteCreationSection", () => {
       harness.render(NoteCreationSection, { props: { journalName: "daily" } });
 
       expect(screen.queryByText(m.journal_edit_auto_create_desktop_only())).toBeNull();
+    });
+  });
+
+  describe("era-year recommendation", () => {
+    it("replaces an era-year y in the date format and then hides", async () => {
+      const harness = await renderEraYear({ dateFormat: userDateFormat("yyyy-MM-DD") });
+
+      await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
+
+      expect(configOf(harness)?.dateFormat).toBe("YYYY-MM-DD");
+      await waitFor(() => expect(screen.queryByText(m.journal_edit_era_year_recommendation())).toBeNull());
+    });
+
+    it("replaces an era-year y in the name template's date token", async () => {
+      const harness = await renderEraYear({ nameTemplate: "Log {{date:yyyy-MM-DD}}" });
+
+      await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
+
+      expect(configOf(harness)?.nameTemplate).toBe("Log {{date:YYYY-MM-DD}}");
+    });
+
+    it("replaces an era-year y in the folder's date token", async () => {
+      const harness = await renderEraYear({ folder: "Journal/{{date:yyyy}}" });
+
+      await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
+
+      expect(configOf(harness)?.folder).toBe("Journal/{{date:YYYY}}");
+    });
+
+    it("stays quiet for a y inside brackets", async () => {
+      await renderEraYear({ dateFormat: userDateFormat("YYYY-MM-DD [y]") });
+
+      expect(screen.queryByText(m.journal_edit_era_year_recommendation())).toBeNull();
     });
   });
 });

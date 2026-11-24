@@ -12,6 +12,7 @@ import { displayTypeOf, fitsInPath, isRequired } from "@/journals/prompts/config
 import { promptsInPath } from "@/journals/prompts/prompts-in-path";
 import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-variables";
 import { JournalsViewModel } from "@/journals/view-model";
+import { hasEraYear, replaceEraYear } from "@/templates";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
@@ -24,6 +25,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { reservedFrontmatterKeys } from "../../config";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
+import EraYearRecommendation from "./EraYearRecommendation.vue";
 
 import type { Prompt, PromptDisplayType } from "../../prompts/config";
 
@@ -218,6 +220,9 @@ const [variable, variableAttrs] = defineField("variable");
 const [question, questionAttrs] = defineField("question");
 const [type] = defineField("type");
 const [format] = defineField("format");
+function applyEraYear(): void {
+  if (format.value) format.value = userDateFormat(replaceEraYear(format.value));
+}
 const [frontmatterKey, frontmatterKeyAttrs] = defineField("frontmatterKey");
 const [required] = defineField("required");
 
@@ -277,6 +282,7 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
           {{ m.common_moment_format_reference() }}
         </a>
         <DateFormatPreview :format="format" />
+        <EraYearRecommendation :show="hasEraYear(format ?? '')" @apply="applyEraYear" />
         <span v-for="error of errorBag.format" :key="error" class="prompt-form-error">{{ error }}</span>
       </template>
       <UiDateFormatInput v-model="format" />

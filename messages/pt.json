@@ -2272,6 +2272,7 @@
   "journal_edit_move_to_folder_apply_link": "Aplicar recomendação",
   "journal_edit_move_to_folder_recommendation_date_format": "O formato de data contém um separador de caminho. Mover as variáveis de data para o campo Pasta?",
   "journal_edit_move_to_folder_recommendation_name_template": "O modelo de nome da nota contém um separador de caminho. Deseja mover o prefixo do caminho para o campo Pasta?",
+  "journal_edit_era_year_recommendation": "No moment, y é o ano da era, não o ano do calendário. Parece igual na maioria dos idiomas, mas as notas nomeadas com ele não podem ser associadas de volta às suas datas. Usar YYYY no lugar?",
   "journal_edit_name_template_description": "Modelo usado para gerar novos nomes de notas.",
   "journal_edit_name_template_empty_warning": "Este modelo de nome resulta em um nome de nota vazio, portanto nenhuma nota pode ser criada. Adicione uma variável ou algum texto.",
   "journal_edit_name_template_collision_warning": "As entradas de {first} e {second} resultam ambas em {path}. Apenas uma delas pode ter nota; abrir a outra é recusado.",

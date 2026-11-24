@@ -211,4 +211,20 @@ describe("ConfigureBulkAddModal", () => {
     expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeNull();
     expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeNull();
   });
+
+  it("recommends replacing an era-year y in the date format", async () => {
+    const withEraYear = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("yyyy-MM-DD") }) },
+      },
+    });
+    withEraYear.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
+
+    const input = screen.getByRole("textbox", { name: m.bulk_add_date_format_label() });
+    await waitFor(() => expect((input as HTMLInputElement).value).toBe("YYYY-MM-DD"));
+    expect(screen.queryByText(m.journal_edit_era_year_recommendation())).toBeNull();
+  });
 });
