@@ -2040,7 +2040,7 @@
   "journal_colliding_heading": "Paramètres de journaux en conflit",
   "journal_colliding_warning": "Les journaux {names} ont des configurations conflictuelles, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
   "journal_note_name_empty_notice": "Le journal « {journalName} » possède un modèle de nom qui aboutit à un nom de note vide, aucune note ne peut donc être créée. Définissez un modèle de nom dans les paramètres du journal.",
-  "journal_date_format_unrenderable_notice": "Journal « {journalName} » : le format de date {format} ne peut pas être affiché sur cet appareil ({reason}). Modifiez-le dans les paramètres du journal.",
+  "journal_date_format_unrenderable_notice": "Journal « {journalName} » : le format de date {format} ne peut pas être affiché sur cet appareil ({reason}). Modifiez-le dans les paramètres du journal ou dans ses notes modèles.",
   "date_format_invalid_preview": "Format non valide : {reason}",
   "journal_dashboard_date_format_unrenderable": "Le format de date ne peut pas être affiché sur cet appareil.",
   "journal_note_path_claimed_notice": "Le journal « {journalName} » placerait sa note dans « {path} », mais cette note appartient déjà au journal « {claimedBy} », rien n’a donc été modifié. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",

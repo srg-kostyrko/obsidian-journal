@@ -1887,7 +1887,7 @@
   "journal_colliding_heading": "冲突的日记设置",
   "journal_colliding_warning": "日记 {names} 的配置存在冲突，因此它们的笔记会互相覆盖。请更改其中一个日记的文件夹或名称模板。",
   "journal_note_name_empty_notice": "日记“{journalName}”的名称模板解析出的笔记名称为空，因此无法创建笔记。请在该日记的设置中设置名称模板。",
-  "journal_date_format_unrenderable_notice": "日记“{journalName}”：日期格式 {format} 无法在此设备上显示（{reason}）。请在该日记的设置中更改它。",
+  "journal_date_format_unrenderable_notice": "日记“{journalName}”：日期格式 {format} 无法在此设备上显示（{reason}）。请在该日记的设置或其模板笔记中更改它。",
   "date_format_invalid_preview": "格式无效：{reason}",
   "journal_dashboard_date_format_unrenderable": "日期格式无法在此设备上显示。",
   "journal_note_path_claimed_notice": "日记“{journalName}”会把笔记放在“{path}”，但该笔记已属于日记“{claimedBy}”，因此未做任何更改。请更改其中一个日记的文件夹或名称模板。",

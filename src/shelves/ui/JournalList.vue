@@ -3,7 +3,9 @@ import { computed } from "vue";
 
 import { CalendarDate } from "@/calendar";
 import { m } from "@/i18n";
-import { describeWrite, type JournalConfig } from "@/journals";
+import { useService } from "@/infrastructure/di";
+import { describeWrite, NotePathService, type JournalConfig } from "@/journals";
+import { JournalDateFormatError } from "@/journals/notes/errors";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -19,11 +21,19 @@ defineEmits<{
   delete: [name: string];
 }>();
 
+const paths = useService(NotePathService);
+
 // A display check only, never stored: it follows edits and sync merges through the settings store.
+// Rendering the whole path catches a pattern in the name template or folder, not just the format.
 const unrenderable = computed(() => {
   const today = CalendarDate.today();
   return new Set(
-    props.entries.filter(([, config]) => today.tryFormat(config.dateFormat).isErr()).map(([name]) => name),
+    props.entries
+      .filter(([name]) => {
+        const path = paths.pathForDate(name, today);
+        return path.isErr() && path.error instanceof JournalDateFormatError;
+      })
+      .map(([name]) => name),
   );
 });
 </script>
