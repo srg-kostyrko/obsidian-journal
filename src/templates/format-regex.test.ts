@@ -231,4 +231,13 @@ describe("formatToRegexp", () => {
       expect(re.test("03")).toBe(false);
     });
   });
+
+  describe("backslash escapes", () => {
+    it("reads an escaped letter back as that letter, the way moment renders it", () => {
+      const format = String.raw`YYYY-MM-DD \W\e\e\k`;
+      const rendered = localMoment("2026-05-19", "YYYY-MM-DD").format(format);
+
+      expect(formatToRegexp(format).test(rendered)).toBe(true);
+    });
+  });
 });

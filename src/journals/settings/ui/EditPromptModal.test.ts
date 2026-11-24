@@ -833,4 +833,21 @@ describe("EditPromptModal", () => {
       });
     });
   });
+
+  it("recommends replacing an era-year y in the date format", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await userEvent.selectOptions(screen.getByRole("combobox"), "date");
+    const formatInput = screen.getByDisplayValue("YYYY-MM-DD");
+    await userEvent.clear(formatInput);
+    await userEvent.type(formatInput, "yyyy-MM-DD");
+
+    await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
+
+    expect(await screen.findByDisplayValue("YYYY-MM-DD")).toBeTruthy();
+    expect(screen.queryByText(m.journal_edit_era_year_recommendation())).toBeNull();
+  });
 });

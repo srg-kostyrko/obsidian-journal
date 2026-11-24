@@ -100,54 +100,99 @@ function expandLocalizedFormats(format: string): string {
   );
 }
 
-export function formatToRegexp(source: string): RegExp {
-  const format = expandLocalizedFormats(source);
-  const parts: string[] = [];
+type FormatSegment =
+  | { kind: "literal"; text: string }
+  | { kind: "bracketed"; text: string; raw: string }
+  | { kind: "escaped"; text: string; raw: string }
+  | { kind: "run"; text: string };
 
-  let lastChar = "";
-  let lastCharCount = 0;
-  let exact = false;
-  let exactText = "";
-
-  const flushSymbol = () => {
-    if (lastCharCount <= 0) return;
-    const prepared = formatRegExpParts.get(lastChar.repeat(lastCharCount));
-    if (prepared) parts.push(prepared);
-    lastCharCount = 0;
-    lastChar = "";
-  };
-
-  for (const char of format) {
-    if (exact) {
-      if (char === "]") {
-        parts.push(escapeRegexLiteral(exactText));
-        exact = false;
-        exactText = "";
-      } else {
-        exactText += char;
-      }
-      continue;
-    }
+// One walk for everything that reads a moment format: text inside [] is the user's own, and a run of
+// one ASCII letter is a token candidate. Any other character is literal, as it is to moment.
+function* segmentsOf(format: string): Generator<FormatSegment> {
+  let index = 0;
+  while (index < format.length) {
+    const char = format.charAt(index);
     if (char === "[") {
-      flushSymbol();
-      exact = true;
+      const close = format.indexOf("]", index + 1);
+      const stop = close === -1 ? format.length : close;
+      yield { kind: "bracketed", text: format.slice(index + 1, stop), raw: format.slice(index, stop + 1) };
+      index = stop + 1;
       continue;
     }
-    if (supportedSymbols.has(char)) {
-      if (lastChar === char) {
-        lastCharCount++;
-      } else {
-        flushSymbol();
-        lastCharCount = 1;
-        lastChar = char;
-      }
+    // moment renders the character after a backslash as itself and drops the backslash.
+    if (char === "\\") {
+      const escaped = format.charAt(index + 1);
+      yield { kind: "escaped", text: escaped, raw: format.slice(index, index + 2) };
+      index += 2;
+      continue;
+    }
+    if (/[A-Za-z]/.test(char)) {
+      let stop = index + 1;
+      while (format.charAt(stop) === char) stop++;
+      yield { kind: "run", text: format.slice(index, stop) };
+      index = stop;
+      continue;
+    }
+    yield { kind: "literal", text: char };
+    index++;
+  }
+}
+
+export function formatToRegexp(source: string): RegExp {
+  const parts: string[] = [];
+  const segments = segmentsOf(expandLocalizedFormats(source));
+  for (const segment of segments) {
+    if (segment.kind !== "run") {
+      parts.push(escapeRegexLiteral(segment.text));
+    } else if (supportedSymbols.has(segment.text.charAt(0))) {
+      const prepared = formatRegExpParts.get(segment.text);
+      if (prepared) parts.push(prepared);
     } else {
-      flushSymbol();
-      parts.push(escapeRegexLiteral(char));
+      parts.push(escapeRegexLiteral(segment.text));
     }
   }
-  flushSymbol();
   return new RegExp(parts.join(""));
+}
+
+/** The token runs of a moment format, bracketed text excluded. */
+export function momentTokens(format: string): readonly string[] {
+  return [...segmentsOf(expandLocalizedFormats(format))]
+    .filter((segment) => segment.kind === "run")
+    .map((segment) => segment.text);
+}
+
+// Tokens moment renders but the reverse parser does not know. Any other unsupported letter is
+// literal text to moment too, so it renders as itself and reads back fine.
+const UNREADABLE_TOKEN_LETTERS = new Set(["y", "N", "e", "E", "Z", "z"]);
+
+/** The tokens in a format that a rendered note name cannot be read back from. */
+export function unsupportedTokens(format: string): readonly string[] {
+  return momentTokens(format).filter((token) => UNREADABLE_TOKEN_LETTERS.has(token.charAt(0)));
+}
+
+/**
+ * Rewrites the token runs of a format, keeping every other character as written. `map` may swallow
+ * the segment after a run (an ordinal `o`) by returning `consumed: 1`.
+ */
+export function mapFormatRuns(
+  format: string,
+  map: (run: string, next: string | undefined) => { text: string; consumed: 0 | 1 },
+): string {
+  const segments = [...segmentsOf(format)];
+  let output = "";
+  for (let index = 0; index < segments.length; index++) {
+    const segment = segments[index];
+    if (segment === undefined) continue;
+    if (segment.kind === "bracketed" || segment.kind === "escaped") output += segment.raw;
+    else if (segment.kind === "literal") output += segment.text;
+    else {
+      const next = segments[index + 1];
+      const { text, consumed } = map(segment.text, next?.kind === "run" ? next.text : undefined);
+      output += text;
+      index += consumed;
+    }
+  }
+  return output;
 }
 
 export function escapeRegexLiteral(s: string): string {

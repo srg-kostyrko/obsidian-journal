@@ -2265,6 +2265,7 @@
   "journal_edit_move_to_folder_apply_link": "Empfehlung anwenden",
   "journal_edit_move_to_folder_recommendation_date_format": "Das Datumsformat enthält einen Pfadtrenner. Sollen die Datumsvariablen in das Feld „Ordner“ verschoben werden?",
   "journal_edit_move_to_folder_recommendation_name_template": "Die Vorlage für den Notiznamen enthält ein Pfadtrennzeichen. Soll das Pfadpräfix in das Feld „Ordner“ verschoben werden?",
+  "journal_edit_era_year_recommendation": "y ist bei moment das Ära-Jahr, nicht das Kalenderjahr. In den meisten Sprachen sieht es gleich aus, aber damit benannte Notizen lassen sich ihren Daten nicht wieder zuordnen. Stattdessen YYYY verwenden?",
   "journal_edit_name_template_description": "Vorlage zur Generierung neuer Notiznamen.",
   "journal_edit_name_template_empty_warning": "Diese Namensvorlage führt zu einem leeren Notiznamen, daher kann keine Notiz erstellt werden. Füge eine Variable oder etwas Text hinzu.",
   "journal_edit_name_template_collision_warning": "Die Einträge für {first} und {second} ergeben beide {path}. Nur einer davon kann eine Notiz haben; das Öffnen des anderen wird abgelehnt.",
@@ -2296,6 +2297,7 @@
   "journal_edit_name_template_cyclic_top_warning": "Die erste Nummernstelle wird zurückgesetzt, daher wiederholen sich die Nummern und lassen sich nicht in ein Datum zurückrechnen. Füge der Namensvorlage eine Datumsvariable hinzu oder setze die erste Stelle auf „Fortlaufend“, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
   "journal_edit_name_template_coarse_date_warning": "Die Datumsvariable in der Namensvorlage ist nicht genau genug, um die Perioden dieses Journals zu unterscheiden, daher erhalten mehrere Perioden denselben Notiznamen. Verwende ein Datumsformat, das sich in jeder Periode ändert, oder aktiviere fortlaufende Nummern und setze jede Stelle in den Namen oder den Ordner, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
   "journal_edit_name_template_unreadable_date_warning": "Das Plugin kann aus den Notizen dieses Journals kein Datum zurücklesen, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden. Ein Format, das auch eine Zeitzone enthält — Z oder ZZ —, wird zwar korrekt geschrieben, lässt sich aber nicht zurücklesen: verwende ein Format aus Datumssymbolen wie YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "Das Plugin kann aus den Notizen dieses Journals kein Datum zurücklesen, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden. Diese Symbole lassen sich nicht zurücklesen: {tokens}. Verwende ein Format aus Datumssymbolen wie YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Die Einträge für {first} und {second} ergeben beide {path}, weil eine Frage im Namen noch nicht beantwortet ist — sobald sie beantwortet ist, hat jede Notiz einen eigenen Namen.",
   "journal_invertibility_prompt_in_path": [
     {

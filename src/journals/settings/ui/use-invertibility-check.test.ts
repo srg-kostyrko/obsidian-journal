@@ -4,10 +4,13 @@ import { defineComponent, ref, type Ref } from "vue";
 import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
+
+import { invertibilityWarningText } from "../../notes/invertibility";
 
 import { useInvertibilityCheck } from "./use-invertibility-check";
 
@@ -427,9 +430,40 @@ describe("useInvertibilityCheck", () => {
         data: { journals: { [config.name]: config } },
       });
 
-      expect(probe(harness, config.name).value).toEqual({ kind: "unreadable-date" });
+      expect(probe(harness, config.name).value).toEqual({
+        kind: "unreadable-date",
+        tokens: format.endsWith("ZZ") ? ["ZZ"] : ["Z"],
+      });
     },
   );
+
+  it("names the unsupported tokens of the journal's own date format when {{date}} carries none", async () => {
+    const config = fixedJournal(
+      "weekly",
+      { type: "week" },
+      { nameTemplate: "{{date}}", dateFormat: userDateFormat("gggg-[W]ww ZZ") },
+    );
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "unreadable-date", tokens: ["ZZ"] });
+  });
+
+  it("names an era-year y when no recommendation is on screen", async () => {
+    const config = fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:yyyy-MM-DD}}" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+    const warning = { kind: "unreadable-date", tokens: ["yyyy"] } as const;
+
+    expect(probe(harness, config.name).value).toEqual(warning);
+    expect(invertibilityWarningText(warning)).toBe(
+      m.journal_edit_name_template_unreadable_token_warning({ tokens: "yyyy" }),
+    );
+  });
 
   it("flags a date variable too coarse to tell the periods apart when nothing numbers the notes", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
+import { userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
+import { hasEraYear, replaceEraYear, replaceEraYearInTemplate, templateHasEraYear } from "@/templates";
 import VariableChip from "@/templates/ui/VariableChip.vue";
 import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 import { icons } from "@/ui/icons";
@@ -16,9 +18,10 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { noteCreationSlice } from "../../../notes/creation-slice";
-import { invertibilityWarningText } from "../../../notes/invertibility";
+import { invertibilityWarningText, isEraYearOnly } from "../../../notes/invertibility";
 import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
+import EraYearRecommendation from "../EraYearRecommendation.vue";
 import FolderInput from "../FolderInput.vue";
 import NotePathPreview from "../NotePathPreview.vue";
 import { useAutoCreateOnEnable } from "../use-auto-create-on-enable";
@@ -59,11 +62,29 @@ const invertibility = useInvertibilityCheck(config);
 const folderInvertibility = computed(() =>
   invertibility.value?.kind === "non-invertible" && invertibility.value.part === "folder" ? invertibility.value : null,
 );
-const nameInvertibility = computed(() => (folderInvertibility.value ? null : invertibility.value));
+// The era-year recommendation already names the fix for a `y`, so the warning leaves it out — or,
+// when `y` is all that is wrong, steps aside for it.
+const eraYearShown = computed(
+  () =>
+    config.value !== undefined &&
+    (hasEraYear(config.value.dateFormat) ||
+      templateHasEraYear(config.value.nameTemplate) ||
+      templateHasEraYear(config.value.folder)),
+);
+const nameInvertibility = computed(() => {
+  const warning = folderInvertibility.value ? null : invertibility.value;
+  return warning && eraYearShown.value && isEraYearOnly(warning) ? null : warning;
+});
 const collision = useCollisionCheck(config);
 
 function applyNameTemplateRecommendation(): void {
   if (config.value) extractFromNameTemplate(config.value);
+}
+function applyEraYear(field: "nameTemplate" | "folder" | "dateFormat"): void {
+  const current = config.value;
+  if (!current) return;
+  if (field === "dateFormat") current.dateFormat = userDateFormat(replaceEraYear(current.dateFormat));
+  else current[field] = replaceEraYearInTemplate(current[field]);
 }
 function applyDateFormatRecommendation(): void {
   if (config.value) extractFromDateFormat(config.value);
@@ -97,13 +118,16 @@ function applyDateFormatRecommendation(): void {
             {{ m.journal_edit_name_template_collision_warning(collision) }}
           </template>
         </div>
-        <div v-if="nameInvertibility" class="journal-hint">{{ invertibilityWarningText(nameInvertibility) }}</div>
+        <div v-if="nameInvertibility" class="journal-hint">
+          {{ invertibilityWarningText(nameInvertibility, { eraYearShown }) }}
+        </div>
         <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_name_template() }}
           <a href="#" @click.prevent="applyNameTemplateRecommendation">
             {{ m.journal_edit_move_to_folder_apply_link() }}
           </a>
         </div>
+        <EraYearRecommendation :show="templateHasEraYear(config.nameTemplate)" @apply="applyEraYear('nameTemplate')" />
       </template>
       <UiTextInput v-model="config.nameTemplate" />
     </UiSettingRow>
@@ -121,6 +145,7 @@ function applyDateFormatRecommendation(): void {
         />
         <WrongWeekWarning v-if="templateHasWrongWeek(config.folder)" />
         <div v-if="folderInvertibility" class="journal-hint">{{ invertibilityWarningText(folderInvertibility) }}</div>
+        <EraYearRecommendation :show="templateHasEraYear(config.folder)" @apply="applyEraYear('folder')" />
       </template>
       <FolderInput v-model="config.folder" />
     </UiSettingRow>
@@ -137,6 +162,7 @@ function applyDateFormatRecommendation(): void {
           </a>
         </div>
         <DateFormatPreview :format="config.dateFormat" />
+        <EraYearRecommendation :show="hasEraYear(config.dateFormat)" @apply="applyEraYear('dateFormat')" />
         <template v-if="isWeekly">
           <div>
             <I18nWithSlot :message="m.journal_edit_date_format_week_date_note">

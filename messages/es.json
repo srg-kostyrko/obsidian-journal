@@ -2252,6 +2252,7 @@
   "journal_edit_move_to_folder_apply_link": "Aplicar recomendación",
   "journal_edit_move_to_folder_recommendation_date_format": "El formato de fecha contiene un separador de ruta. ¿Mover las variables de fecha al campo Carpeta?",
   "journal_edit_move_to_folder_recommendation_name_template": "La plantilla de nombre de nota contiene un separador de ruta. ¿Mover el prefijo de ruta al campo Carpeta?",
+  "journal_edit_era_year_recommendation": "En moment, y es el año de la era, no el año del calendario. Se ve igual en la mayoría de los idiomas, pero las notas nombradas con él no se pueden volver a asociar con sus fechas. ¿Usar YYYY en su lugar?",
   "journal_edit_name_template_description": "Plantilla utilizada para generar nuevos nombres de notas.",
   "journal_edit_name_template_empty_warning": "Esta plantilla de nombre da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Agrega una variable o algo de texto.",
   "journal_edit_name_template_collision_warning": "Las entradas de {first} y {second} se resuelven ambas en {path}. Solo una de ellas puede tener nota; abrir la otra se rechaza.",
@@ -2283,6 +2284,7 @@
   "journal_edit_name_template_cyclic_top_warning": "El primer dígito de la numeración se reinicia, por lo que los números se repiten y no se pueden convertir de nuevo en una fecha. Agrega una variable de fecha a la plantilla de nombre o pon el primer dígito en «Continuo», para que las notas creadas fuera del complemento se puedan asociar a este diario.",
   "journal_edit_name_template_coarse_date_warning": "La variable de fecha de la plantilla de nombre no es lo bastante precisa para distinguir los periodos de este diario, por lo que varios periodos reciben el mismo nombre de nota. Usa un formato de fecha que cambie en cada periodo, o activa los números secuenciales y pon cada dígito en el nombre o en la carpeta, para que las notas creadas fuera del complemento se puedan asociar a este diario.",
   "journal_edit_name_template_unreadable_date_warning": "El complemento no puede volver a leer una fecha en las notas que crea este diario, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario. Un formato que además lleva una zona horaria — Z o ZZ — se escribe correctamente pero no se puede volver a leer: usa un formato construido con símbolos de fecha como YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "El complemento no puede volver a leer una fecha en las notas que crea este diario, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario. Estos símbolos no se pueden volver a leer: {tokens}. Usa un formato construido con símbolos de fecha como YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Las entradas de {first} y {second} se resuelven ambas en {path} porque una pregunta del nombre aún no tiene respuesta; una vez respondida, cada nota tendrá un nombre único.",
   "journal_invertibility_prompt_in_path": [
     {
