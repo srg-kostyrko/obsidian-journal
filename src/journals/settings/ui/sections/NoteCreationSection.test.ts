@@ -395,4 +395,27 @@ describe("NoteCreationSection", () => {
       expect(screen.queryByText(m.journal_edit_era_year_recommendation())).toBeNull();
     });
   });
+
+  describe("naming the token that keeps a date from reading back", () => {
+    it("shows only the era-year recommendation when y is the one offender", async () => {
+      await renderEraYear({ nameTemplate: "{{date:yyyy-MM-DD}}" });
+
+      expect(screen.getByText(m.journal_edit_era_year_recommendation())).toBeTruthy();
+      expect(screen.queryByText(m.journal_edit_name_template_unreadable_token_warning({ tokens: "yyyy" }))).toBeNull();
+      expect(screen.queryByText(m.journal_edit_name_template_unreadable_date_warning())).toBeNull();
+    });
+
+    it("names the other tokens and leaves y to the recommendation", async () => {
+      await renderEraYear({ nameTemplate: "{{date:yyyy-MM-DD ZZ}}" });
+
+      expect(screen.getByText(m.journal_edit_name_template_unreadable_token_warning({ tokens: "ZZ" }))).toBeTruthy();
+    });
+
+    it("says nothing when the note name carries no date", async () => {
+      await renderEraYear({ nameTemplate: "Log", dateFormat: userDateFormat("yyyy") });
+
+      expect(screen.queryByText(m.journal_edit_name_template_unreadable_token_warning({ tokens: "yyyy" }))).toBeNull();
+      expect(screen.queryByText(m.journal_edit_name_template_unreadable_date_warning())).toBeNull();
+    });
+  });
 });

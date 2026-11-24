@@ -18,7 +18,7 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { noteCreationSlice } from "../../../notes/creation-slice";
-import { invertibilityWarningText } from "../../../notes/invertibility";
+import { invertibilityWarningText, isEraYearOnly } from "../../../notes/invertibility";
 import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import EraYearRecommendation from "../EraYearRecommendation.vue";
@@ -62,7 +62,19 @@ const invertibility = useInvertibilityCheck(config);
 const folderInvertibility = computed(() =>
   invertibility.value?.kind === "non-invertible" && invertibility.value.part === "folder" ? invertibility.value : null,
 );
-const nameInvertibility = computed(() => (folderInvertibility.value ? null : invertibility.value));
+// The era-year recommendation already names the fix for a `y`, so the warning leaves it out — or,
+// when `y` is all that is wrong, steps aside for it.
+const eraYearShown = computed(
+  () =>
+    config.value !== undefined &&
+    (hasEraYear(config.value.dateFormat) ||
+      templateHasEraYear(config.value.nameTemplate) ||
+      templateHasEraYear(config.value.folder)),
+);
+const nameInvertibility = computed(() => {
+  const warning = folderInvertibility.value ? null : invertibility.value;
+  return warning && eraYearShown.value && isEraYearOnly(warning) ? null : warning;
+});
 const collision = useCollisionCheck(config);
 
 function applyNameTemplateRecommendation(): void {
@@ -106,7 +118,9 @@ function applyDateFormatRecommendation(): void {
             {{ m.journal_edit_name_template_collision_warning(collision) }}
           </template>
         </div>
-        <div v-if="nameInvertibility" class="journal-hint">{{ invertibilityWarningText(nameInvertibility) }}</div>
+        <div v-if="nameInvertibility" class="journal-hint">
+          {{ invertibilityWarningText(nameInvertibility, { eraYearShown }) }}
+        </div>
         <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_name_template() }}
           <a href="#" @click.prevent="applyNameTemplateRecommendation">
