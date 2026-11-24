@@ -10,7 +10,7 @@ export abstract class JournalNoteCreationError extends JournalsError {
 }
 
 export class NoApplicableJournals extends JournalNoteCreationError implements BenignFlowError {
-  override name = "NoApplicableJournals";
+  override name = "NoApplicableJournals" as const;
   readonly kind = "no-applicable-journals" as const;
   readonly benign = true as const;
 
@@ -27,7 +27,7 @@ export class NoApplicableJournals extends JournalNoteCreationError implements Be
 }
 
 export class AnchorOccupiedError extends JournalsError {
-  override name = "AnchorOccupiedError";
+  override name = "AnchorOccupiedError" as const;
 
   constructor(
     readonly journalName: string,
@@ -39,7 +39,7 @@ export class AnchorOccupiedError extends JournalsError {
 }
 
 export class NotePathClaimedError extends JournalsError implements UserFacingFlowError {
-  override name = "NotePathClaimedError";
+  override name = "NotePathClaimedError" as const;
 
   constructor(
     readonly journalName: string,
@@ -59,7 +59,7 @@ export class NotePathClaimedError extends JournalsError implements UserFacingFlo
 }
 
 export class NotePathHeldByPeriodError extends JournalsError implements UserFacingFlowError {
-  override name = "NotePathHeldByPeriodError";
+  override name = "NotePathHeldByPeriodError" as const;
 
   constructor(
     readonly journalName: string,
@@ -79,7 +79,7 @@ export class NotePathHeldByPeriodError extends JournalsError implements UserFaci
 }
 
 export class NoteletHoldsPathError extends JournalsError implements UserFacingFlowError {
-  override name = "NoteletHoldsPathError";
+  override name = "NoteletHoldsPathError" as const;
 
   constructor(
     readonly journalName: string,
@@ -94,7 +94,7 @@ export class NoteletHoldsPathError extends JournalsError implements UserFacingFl
 }
 
 export class EmptyNoteNameError extends JournalsError implements UserFacingFlowError {
-  override name = "EmptyNoteNameError";
+  override name = "EmptyNoteNameError" as const;
 
   constructor(readonly journalName: string) {
     super(`Name template of journal ${journalName} resolves to an empty note name`);
@@ -110,7 +110,7 @@ export class JournalDateFormatError extends JournalsError implements UserFacingF
     return new JournalDateFormatError(journalName, error.pattern, error.reason);
   }
 
-  override name = "JournalDateFormatError";
+  override name = "JournalDateFormatError" as const;
 
   constructor(
     readonly journalName: string,
@@ -130,7 +130,7 @@ export class JournalDateFormatError extends JournalsError implements UserFacingF
 }
 
 export class BodyFrontmatterError extends JournalsError {
-  override name = "BodyFrontmatterError";
+  override name = "BodyFrontmatterError" as const;
 
   constructor(
     readonly path: string,

@@ -18,7 +18,7 @@ import type { TemplateRenderError } from "@/templates";
 
 import { FRONTMATTER_NAME_KEY } from "../config";
 import { CycleService } from "../cycle";
-import { JournalNotFoundError } from "../errors";
+import { JournalNotFoundError, type NoteletTypeNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { PromptsUnansweredError } from "../prompts/errors";
@@ -46,6 +46,7 @@ import type { PromptAnswer } from "../prompts/config";
 
 export type NoteCreationError =
   | JournalNotFoundError
+  | NoteletTypeNotFoundError
   | EmptyNoteNameError
   | JournalDateFormatError
   | TemplateRenderError

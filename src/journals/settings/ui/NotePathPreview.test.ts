@@ -1,6 +1,8 @@
 import { screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { CalendarDate, userDateFormat } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -163,5 +165,21 @@ describe("NotePathPreview", () => {
     harness.render(NotePathPreview, { props: { journalName: "daily" } });
 
     expect(screen.getByText(m.journal_edit_name_template_empty_warning())).toBeTruthy();
+  });
+
+  it("shows the invalid-format message when the date format cannot render", async () => {
+    const broken = userDateFormat("YYYYy");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: broken }) } },
+    });
+
+    withoutEras(() => {
+      const failure = CalendarDate.today().tryFormat(broken);
+      if (failure.isOk()) throw new Error("expected the pattern to throw without eras");
+      harness.render(NotePathPreview, { props: { journalName: "daily" } });
+
+      expect(screen.getByText(m.date_format_invalid_preview({ reason: failure.error.reason }))).toBeTruthy();
+    });
   });
 });
