@@ -2,7 +2,8 @@ import { screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { withoutEras } from "@/calendar/testing";
+import { formatFailureReason, withoutEras } from "@/calendar/testing";
+import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
@@ -49,7 +50,7 @@ describe("TemplateStringPreview", () => {
       broken.render(TemplateStringPreview, {
         props: { journalName: "daily", value: "{{date:y}}/journal", label: "Preview:" },
       });
-      expect(screen.getByText(/^Invalid format: /)).toBeTruthy();
+      expect(screen.getByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") }))).toBeTruthy();
     });
   });
 

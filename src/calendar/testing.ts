@@ -4,6 +4,7 @@ import { AsyncResult } from "@/infrastructure/result";
 
 import { Calendar, CUSTOM_LOCALE, isLocaleDefined, type WeekConfig } from "./calendar";
 import { CalendarDate } from "./calendar-date";
+import { userDateFormat } from "./user-date-format";
 
 import type { AnchorString } from "./types";
 
@@ -52,6 +53,13 @@ export function date(s: string): CalendarDate {
     throw new Error(`fixture date(${JSON.stringify(s)}) failed to parse: ${result.error.message}`);
   }
   return result.value;
+}
+
+/** Moment's own reason for `pattern` failing to render today; call it inside `withoutEras`. */
+export function formatFailureReason(pattern: string): string {
+  const failure = CalendarDate.today().tryFormat(userDateFormat(pattern));
+  if (failure.isOk()) throw new Error(`formatFailureReason(${JSON.stringify(pattern)}): the pattern rendered`);
+  return failure.error.reason;
 }
 
 const pendingEraRestores = new Set<() => void>();

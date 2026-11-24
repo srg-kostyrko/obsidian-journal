@@ -2,7 +2,7 @@ import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h, ref } from "vue";
 
-import { withoutEras } from "@/calendar/testing";
+import { formatFailureReason, withoutEras } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
 import { MarkdownRenderService, NotesService, type VaultPath } from "@/infrastructure/host";
@@ -55,7 +55,7 @@ describe("MarkdownTemplateBlock", () => {
         { templatePath: "templates/today.md" },
         "2026-05-15" as AnchorString,
       );
-      expect(await screen.findByText(/^Invalid format: /)).toBeTruthy();
+      expect(await screen.findByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") }))).toBeTruthy();
     });
   });
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
-import { withoutEras } from "@/calendar/testing";
+import { formatFailureReason, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { JournalConfig, NavBlockSegment } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -62,7 +62,8 @@ describe("EditNavBlockSegmentModal", () => {
         journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("y") }) },
         segment: buildNavSegment({ template: "{{note_name}}" }),
       });
-      expect(screen.getByText(/Invalid format: /)).toBeTruthy();
+      const invalid = m.date_format_invalid_preview({ reason: formatFailureReason("y") });
+      expect(screen.getByText(m.nav_block_segment_resolved_preview({ text: invalid }))).toBeTruthy();
     });
   });
 

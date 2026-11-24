@@ -5,7 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { nextTick } from "vue";
 
 import { userDateFormat } from "@/calendar";
-import { anchor, withoutEras } from "@/calendar/testing";
+import { anchor, formatFailureReason, withoutEras } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -389,7 +389,9 @@ describe("NavigationCodeBlock segment with an unrenderable date format", () => {
         entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
       });
 
-      expect(screen.getAllByText(/^Invalid format: /).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") })).length,
+      ).toBeGreaterThan(0);
       expect(screen.getAllByText("sibling").length).toBeGreaterThan(0);
     });
   });
@@ -407,7 +409,9 @@ describe("NavigationCodeBlock segment with an unrenderable date format", () => {
         entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
       });
 
-      expect(screen.getAllByText(/^Invalid format: /).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") })).length,
+      ).toBeGreaterThan(0);
     });
   });
 });
