@@ -1522,6 +1522,7 @@
   "settings_too_new_banner": "Ці налаштування були збережені на іншому пристрої новішою версією Journals. Перезапустіть Obsidian або оновіть Journals тут — зміни, зроблені до того, буде відкинуто.",
   "settings_too_new_boot": "Журнал: налаштування були збережені новішою версією Journals. Оновіть Journals на цьому пристрої, щоб використовувати їх тут.",
   "settings_reload_required_banner": "Перезавантажте Obsidian, щоб застосувати змінені налаштування.",
+  "settings_section_failed": "Не вдалося показати цей розділ: {reason}. Решта налаштувань і далі працює.",
   "settings_tab_title": "Журнали",
   "startup_dashboard_section_title": "Запуск",
   "startup_open_note_title": "Відкривати під час запуску",

@@ -1609,6 +1609,7 @@
   "settings_too_new_banner": "이 설정은 다른 기기에서 최신 버전의 Journals에 의해 저장되었습니다. Obsidian을 다시 시작하거나 이 기기의 Journals를 업데이트하세요 — 그때까지 변경한 내용은 삭제됩니다.",
   "settings_too_new_boot": "저널: 설정이 최신 버전의 Journals에 의해 저장되었습니다. 여기서 사용하려면 이 기기의 Journals를 업데이트하세요.",
   "settings_reload_required_banner": "변경된 설정을 적용하려면 Obsidian을 다시 불러오세요.",
+  "settings_section_failed": "이 섹션을 표시하지 못했습니다: {reason}. 나머지 설정은 계속 사용할 수 있습니다.",
   "settings_tab_title": "저널",
   "startup_dashboard_section_title": "시작",
   "startup_open_note_title": "시작 시 열기",

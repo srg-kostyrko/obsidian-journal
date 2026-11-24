@@ -24,6 +24,15 @@ function block(key: string, order: number, label = key): DashboardBlock {
   return defineDashboardBlock({ key, component: blockComponent(label), order });
 }
 
+function failing(state: { broken: boolean }, label: string) {
+  return defineComponent({
+    render() {
+      if (state.broken) throw new Error("boom");
+      return h("div", { "data-testid": `block-${label}` }, label);
+    },
+  });
+}
+
 function testUiModule(
   options: {
     blocks?: readonly DashboardBlock[];
@@ -198,6 +207,59 @@ describe("SettingsDashboard", () => {
 
       expect(screen.queryByTestId("second")).toBeNull();
       expect(screen.getByTestId("first")).toBeTruthy();
+    });
+  });
+
+  describe("render failure containment", () => {
+    it("a dashboard block that throws during render shows the failure message and the other blocks still render", async () => {
+      const state = { broken: true };
+      const { harness } = await buildHarness({
+        blocks: [
+          block("a", 10, "first"),
+          defineDashboardBlock({ key: "bad", component: failing(state, "bad"), order: 20 }),
+          block("c", 30, "third"),
+        ],
+      });
+
+      harness.render(SettingsDashboard);
+      await nextTick();
+
+      expect(screen.getByText(m.settings_section_failed({ reason: "boom" }))).toBeTruthy();
+      expect(screen.getAllByTestId(/^block-/).map((node) => node.textContent)).toEqual(["first", "third"]);
+    });
+
+    it("a subpage that throws shows the failure message, and back plus reopening after a fix renders normally", async () => {
+      const state = { broken: true };
+      const sub = defineSubpage({ key: "edit", component: failing(state, "subpage") });
+      const { harness, service } = await buildHarness({ blocks: [block("only", 0, "tile")], subpages: [sub] });
+      harness.render(SettingsDashboard);
+
+      service.push(sub, undefined);
+      await nextTick();
+      expect(screen.getByText(m.settings_section_failed({ reason: "boom" }))).toBeTruthy();
+
+      service.pop();
+      await nextTick();
+      expect(screen.getByTestId("block-tile")).toBeTruthy();
+
+      state.broken = false;
+      service.push(sub, undefined);
+      await nextTick();
+      expect(screen.getByTestId("block-subpage")).toBeTruthy();
+      expect(screen.queryByText(m.settings_section_failed({ reason: "boom" }))).toBeNull();
+    });
+
+    it("the boundary logs the captured error", async () => {
+      const state = { broken: true };
+      const { harness } = await buildHarness({
+        blocks: [defineDashboardBlock({ key: "bad", component: failing(state, "bad"), order: 0 })],
+      });
+
+      harness.render(SettingsDashboard);
+      await nextTick();
+
+      const record = harness.logs.records.find((r) => r.level === "error" && r.name === "settings");
+      expect(record?.fields?.reason).toBe("boom");
     });
   });
 });

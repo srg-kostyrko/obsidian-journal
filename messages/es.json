@@ -1609,6 +1609,7 @@
   "settings_too_new_banner": "Esta configuración se guardó en otro dispositivo con una versión más reciente de Journals. Reinicia Obsidian o actualiza Journals aquí: los cambios que hagas hasta entonces se descartan.",
   "settings_too_new_boot": "Diario: tu configuración se guardó con una versión más reciente de Journals. Actualiza Journals en este dispositivo para usarla aquí.",
   "settings_reload_required_banner": "Recarga Obsidian para aplicar los cambios de configuración.",
+  "settings_section_failed": "No se pudo mostrar esta sección: {reason}. El resto de la configuración sigue funcionando.",
   "settings_tab_title": "Diarios",
   "startup_dashboard_section_title": "Inicio",
   "startup_open_note_title": "Abrir al iniciar",

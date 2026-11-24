@@ -1464,6 +1464,7 @@
   "settings_too_new_banner": "这些设置已在另一台设备上由较新版本的 Journals 保存。请重启 Obsidian，或在此处更新 Journals——在此之前所做的更改将被丢弃。",
   "settings_too_new_boot": "日记：您的设置已由较新版本的 Journals 保存。请在此设备上更新 Journals 后再使用。",
   "settings_reload_required_banner": "重新加载 Obsidian 以应用更改后的设置。",
+  "settings_section_failed": "此部分无法显示：{reason}。其余设置仍可正常使用。",
   "settings_tab_title": "日记",
   "startup_dashboard_section_title": "启动",
   "startup_open_note_title": "启动时打开",

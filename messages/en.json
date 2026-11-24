@@ -1614,6 +1614,7 @@
   "settings_too_new_banner": "These settings were saved by a newer version of Journals on another device. Restart Obsidian, or update Journals here — changes you make until then are discarded.",
   "settings_too_new_boot": "Journal: your settings were saved by a newer version of Journals. Update Journals on this device to use it here.",
   "settings_reload_required_banner": "Reload Obsidian to apply the changed settings.",
+  "settings_section_failed": "This section failed to display: {reason}. The rest of the settings still work.",
   "settings_tab_title": "Journals",
 
   "startup_dashboard_section_title": "Startup",

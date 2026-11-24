@@ -1609,6 +1609,7 @@
   "settings_too_new_banner": "Ces paramètres ont été enregistrés sur un autre appareil par une version plus récente de Journals. Redémarrez Obsidian ou mettez Journals à jour ici — les modifications faites d'ici là sont abandonnées.",
   "settings_too_new_boot": "Journal : vos paramètres ont été enregistrés par une version plus récente de Journals. Mettez Journals à jour sur cet appareil pour les utiliser ici.",
   "settings_reload_required_banner": "Rechargez Obsidian pour appliquer les paramètres modifiés.",
+  "settings_section_failed": "Cette section n'a pas pu s'afficher : {reason}. Le reste des paramètres fonctionne toujours.",
   "settings_tab_title": "Journaux",
   "startup_dashboard_section_title": "Démarrage",
   "startup_open_note_title": "Ouvrir au démarrage",

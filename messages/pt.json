@@ -1621,6 +1621,7 @@
   "settings_too_new_banner": "Estas configurações foram salvas em outro dispositivo por uma versão mais recente do Journals. Reinicie o Obsidian ou atualize o Journals aqui — as alterações feitas até lá são descartadas.",
   "settings_too_new_boot": "Diário: suas configurações foram salvas por uma versão mais recente do Journals. Atualize o Journals neste dispositivo para usá-las aqui.",
   "settings_reload_required_banner": "Recarregue o Obsidian para aplicar as configurações alteradas.",
+  "settings_section_failed": "Esta seção não pôde ser exibida: {reason}. As demais configurações continuam funcionando.",
   "settings_tab_title": "Diários",
   "startup_dashboard_section_title": "Inicialização",
   "startup_open_note_title": "Abrir ao iniciar",

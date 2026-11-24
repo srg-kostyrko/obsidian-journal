@@ -1615,6 +1615,7 @@
   "settings_too_new_banner": "Queste impostazioni sono state salvate su un altro dispositivo da una versione più recente di Journals. Riavvia Obsidian o aggiorna Journals qui: le modifiche fatte fino ad allora vengono scartate.",
   "settings_too_new_boot": "Diario: le tue impostazioni sono state salvate da una versione più recente di Journals. Aggiorna Journals su questo dispositivo per usarle qui.",
   "settings_reload_required_banner": "Ricarica Obsidian per applicare le impostazioni modificate.",
+  "settings_section_failed": "Impossibile mostrare questa sezione: {reason}. Il resto delle impostazioni funziona ancora.",
   "settings_tab_title": "Diari",
   "startup_dashboard_section_title": "Avvio",
   "startup_open_note_title": "Apri all'avvio",

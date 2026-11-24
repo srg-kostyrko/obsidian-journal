@@ -1609,6 +1609,7 @@
   "settings_too_new_banner": "Diese Einstellungen wurden auf einem anderen Gerät von einer neueren Version von Journals gespeichert. Starte Obsidian neu oder aktualisiere Journals hier – Änderungen bis dahin werden verworfen.",
   "settings_too_new_boot": "Journal: Deine Einstellungen wurden von einer neueren Version von Journals gespeichert. Aktualisiere Journals auf diesem Gerät, um sie hier zu verwenden.",
   "settings_reload_required_banner": "Lade Obsidian neu, damit die geänderten Einstellungen wirksam werden.",
+  "settings_section_failed": "Dieser Abschnitt konnte nicht angezeigt werden: {reason}. Die übrigen Einstellungen funktionieren weiterhin.",
   "settings_tab_title": "Journale",
   "startup_dashboard_section_title": "Programmstart",
   "startup_open_note_title": "Beim Start öffnen",
