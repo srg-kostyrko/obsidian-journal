@@ -52,16 +52,34 @@ export function date(s: string): CalendarDate {
   return result.value;
 }
 
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return typeof (value as { then?: unknown } | null)?.then === "function";
+}
+
 // Reproduces #663: a locale whose era data is missing makes moment throw on any `y` token.
+// An async `run`, or one returning an AsyncResult, keeps the eras removed until it settles.
 export function withoutEras<T>(run: () => T): T {
   const locales = ["en", CUSTOM_LOCALE].filter((name) => isLocaleDefined(name)).map((name) => moment.localeData(name));
   const saved = locales.map((locale) => (locale as unknown as { _eras?: unknown })._eras);
   for (const locale of locales) (locale as unknown as { _eras?: unknown })._eras = undefined;
-  try {
-    return run();
-  } finally {
+  const restore = (): void => {
     for (const [i, locale] of locales.entries()) {
       (locale as unknown as { _eras?: unknown })._eras = saved[i];
     }
+  };
+  let result: T;
+  try {
+    result = run();
+  } catch (error) {
+    restore();
+    throw error;
   }
+  if (result instanceof Promise) return result.finally(restore) as T;
+  if (isThenable(result)) {
+    // An AsyncResult must come back as itself, so the restore rides alongside it.
+    void Promise.resolve(result).finally(restore);
+    return result;
+  }
+  restore();
+  return result;
 }

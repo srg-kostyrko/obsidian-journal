@@ -1,12 +1,14 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { anchor, withoutEras } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../module";
+import { JournalDateFormatError } from "../notes/errors";
 import { fixedJournal } from "../testing";
 
 import { EnsureJournalEntryFlow } from "./ensure-journal-entry.flow";
@@ -77,5 +79,26 @@ describe("EnsureJournalEntryFlow", () => {
       expect(harness.modals.opens).toHaveLength(0);
       expect(result.isOk() && result.value.created).toBe(true);
     });
+  });
+});
+
+describe("EnsureJournalEntryFlow — an unrenderable date format in the template body", () => {
+  it("a template body with an unrenderable {{date:...}} fails creation with a notice", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }) } },
+    });
+    harness.host.putFile("Templates/daily.md", "# {{date:YYYYy}}");
+
+    const result = await withoutEras(() =>
+      harness.resolve(Flows).invoke(EnsureJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") }),
+    );
+
+    assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+    expect(result.error.pattern).toBe("YYYYy");
+    expect(harness.notices.messages).toEqual([
+      m.journal_date_format_unrenderable_notice({ journalName: "daily", format: "YYYYy", reason: result.error.reason }),
+    ]);
+    expect(harness.host.files.has("2026-05-19.md")).toBe(false);
   });
 });

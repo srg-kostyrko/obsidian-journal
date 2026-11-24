@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
-import { anchor, installTestCalendar } from "@/calendar/testing";
+import { anchor, installTestCalendar, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
+import { Ok } from "@/infrastructure/result";
 import { TemplateEngine, type TemplateContext } from "@/templates";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -13,7 +14,7 @@ import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { customJournal, fixedJournal, unwrap } from "../testing";
 
-import { EmptyNoteNameError } from "./errors";
+import { EmptyNoteNameError, JournalDateFormatError } from "./errors";
 import { NotePathService } from "./note-path";
 
 import type { JournalConfig } from "../config";
@@ -205,6 +206,28 @@ describe("NotePathService.pathForDate", () => {
 
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
   });
+
+  it("returns JournalDateFormatError for a journal whose dateFormat throws", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYYy-[W]w" }) } },
+    });
+
+    const result = withoutEras(() =>
+      harness.resolve(NotePathService).pathForDate("weekly", CalendarDate.fromAnchor(anchor("2026-05-19"))),
+    );
+
+    assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+    expect(result.error.journalName).toBe("weekly");
+    expect(result.error.pattern).toBe("YYYYy-[W]w");
+    expect(result.error.userNotice).toBe(
+      m.journal_date_format_unrenderable_notice({
+        journalName: "weekly",
+        format: "YYYYy-[W]w",
+        reason: result.error.reason,
+      }),
+    );
+  });
 });
 
 describe("NotePathService.noteNameFor", () => {
@@ -213,7 +236,7 @@ describe("NotePathService.noteNameFor", () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
 
-    expect(harness.resolve(NotePathService).noteNameFor(config, meta)).toBe("2026-05-19");
+    expect(harness.resolve(NotePathService).noteNameFor(config, meta)).toEqual(new Ok("2026-05-19"));
   });
 
   it("renders a numbering variable from the metadata's stored numbers", async () => {
@@ -221,7 +244,7 @@ describe("NotePathService.noteNameFor", () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { sprint: config } } });
     const meta: JournalMetadata = { journalName: "sprint", anchor: anchor("2024-01-15"), numbers: { index: 2 } };
 
-    expect(harness.resolve(NotePathService).noteNameFor(config, meta)).toBe("Sprint 2");
+    expect(harness.resolve(NotePathService).noteNameFor(config, meta)).toEqual(new Ok("Sprint 2"));
   });
 });
 
@@ -246,7 +269,7 @@ describe("NotePathService.periodLabelFor", () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly: config } } });
     const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-05-18") };
 
-    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toBe("2026-W21");
+    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toEqual(new Ok("2026-W21"));
   });
 
   it("names a custom interval by its extent, which its start day alone does not give", async () => {
@@ -254,8 +277,8 @@ describe("NotePathService.periodLabelFor", () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { sprint: config } } });
     const meta: JournalMetadata = { journalName: "sprint", anchor: anchor("2024-01-15") };
 
-    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toBe(
-      m.journal_period_range({ start: "2024-01-15", end: "2024-01-28" }),
+    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toEqual(
+      new Ok(m.journal_period_range({ start: "2024-01-15", end: "2024-01-28" })),
     );
   });
 
@@ -268,8 +291,8 @@ describe("NotePathService.periodLabelFor", () => {
       endDate: anchor("2024-01-21"),
     };
 
-    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toBe(
-      m.journal_period_range({ start: "2024-01-15", end: "2024-01-21" }),
+    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toEqual(
+      new Ok(m.journal_period_range({ start: "2024-01-15", end: "2024-01-21" })),
     );
   });
 });
@@ -1306,7 +1329,7 @@ describe("NotePathService prompt answers", () => {
 
     const context = paths.bodyContextFor(config, { journalName: "daily", anchor: anchor("2024-01-01") }, "n");
 
-    expect(engine.renderString("mood: {{mood}}", context)).toBe("mood: ");
+    expect(engine.renderString("mood: {{mood}}", context)).toEqual(new Ok("mood: "));
   });
 
   it("keeps an answered prompt in the body", () => {
@@ -1322,7 +1345,7 @@ describe("NotePathService prompt answers", () => {
 
     const context = paths.bodyContextFor(config, metadata, "n");
 
-    expect(engine.renderString("mood: {{mood}}", context)).toBe("mood: good");
+    expect(engine.renderString("mood: {{mood}}", context)).toEqual(new Ok("mood: good"));
   });
 
   it("inverts an answered name and recovers the answer", () => {
@@ -1472,7 +1495,9 @@ describe("NotePathService.bodyContextFor with unusable prompt answers", () => {
       anchor: anchor("2024-01-01"),
       ...(answers && { answers }),
     };
-    return engine.renderString(template, paths.bodyContextFor(config, metadata, "n"));
+    const rendered = engine.renderString(template, paths.bodyContextFor(config, metadata, "n"));
+    assert(rendered.isOk(), "expected the body to render");
+    return rendered.value;
   }
 
   it("renders a date answer that does not parse as empty, not as the placeholder", () => {
@@ -1530,7 +1555,7 @@ describe("NotePathService.bodyContextFor with a date prompt on a non-daily journ
 
     const context = paths.bodyContextFor(config, metadata, "n");
 
-    expect(engine.renderString("visited: {{visited}}", context)).toBe("visited: 2026-08-28");
+    expect(engine.renderString("visited: {{visited}}", context)).toEqual(new Ok("visited: 2026-08-28"));
   });
 });
 

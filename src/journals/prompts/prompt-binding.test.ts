@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
+import { Ok } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { TemplateContext, tokenize, type Bindings, type BoundValue } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -128,7 +129,7 @@ describe("empty date format falls back to YYYY-MM-DD", () => {
     const emptyFormat: Prompt = { ...dated, format: "" };
     const binding = renderBindingFor(emptyFormat, "2026-08-28");
     const context = TemplateContext.empty().withSpec("answer", binding.spec);
-    expect(engine.renderString("{{answer}}", context)).toBe("2026-08-28");
+    expect(engine.renderString("{{answer}}", context)).toEqual(new Ok("2026-08-28"));
   });
 
   it("still inverts a note name when the date prompt's format is empty", async () => {

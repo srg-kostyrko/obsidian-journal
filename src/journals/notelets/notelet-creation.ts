@@ -17,6 +17,7 @@ import type { TemplateRenderError } from "@/templates";
 import { JournalNotFoundError, NoteletTypeNotFoundError, OutOfTimelineError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { JournalDateFormatError, type EmptyNoteNameError } from "../notes/errors";
 import { SelfWriteGuard } from "../notes/self-write-guard";
 import { TemplateContentService } from "../notes/template-content";
 import { confirmCreationModal } from "../notes/ui/modals";
@@ -28,7 +29,6 @@ import { TimelineService } from "../timeline";
 
 import { NoteletPathService } from "./notelet-path";
 
-import type { EmptyNoteNameError } from "../notes/errors";
 import type { PromptAnswer } from "../prompts/config";
 import type { NoteletMetadata } from "../types";
 import type { TypeId } from "./config";
@@ -38,6 +38,7 @@ export type NoteletCreationError =
   | NoteletTypeNotFoundError
   | OutOfTimelineError
   | EmptyNoteNameError
+  | JournalDateFormatError
   | TemplateRenderError
   | NoteReadError
   | NoteCreateError
@@ -50,6 +51,7 @@ export type NoteletCreationError =
 export type NoteletAttachError =
   | JournalNotFoundError
   | NoteletTypeNotFoundError
+  | JournalDateFormatError
   | TemplateRenderError
   | NoteReadError
   | NoteWriteError
@@ -143,7 +145,11 @@ export class NoteletCreationService {
           };
           answers = yield* this.#flows
             .invoke(GatherPromptAnswersFlow, { metadata: asked, confirming }, { notify: false })
-            .mapErr((error) => (error instanceof UserAborted ? error : new JournalNotFoundError(journalName)));
+            .mapErr((error) =>
+              error instanceof UserAborted || error instanceof JournalDateFormatError
+                ? error
+                : new JournalNotFoundError(journalName),
+            );
         }
       }
 
@@ -175,9 +181,15 @@ export class NoteletCreationService {
         this.#guard.release(path);
         return yield* new Err(createResult.error as NoteletCreationError);
       }
-      const content = yield* this.#content
-        .renderTemplates(type.templates, bodyContext, path)
-        .tapErr(() => this.#guard.release(path));
+      // The note was created empty so Templater has a target file; a body that cannot render
+      // takes it back rather than leave an empty, unclaimed note behind.
+      const rendered = await this.#content.renderTemplates(journalName, type.templates, bodyContext, path);
+      if (rendered.isErr()) {
+        await this.#notes.delete(path);
+        this.#guard.release(path);
+        return yield* new Err(rendered.error);
+      }
+      const content = rendered.value;
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
@@ -212,7 +224,7 @@ export class NoteletCreationService {
       const existing = yield* this.#notes.read(path);
       if (existing.trim() === "") {
         const context = yield* this.#paths.bodyContextFor(config, type, metadata, basenameOf(path));
-        const content = yield* this.#content.renderTemplates(type.templates, context, path);
+        const content = yield* this.#content.renderTemplates(journalName, type.templates, context, path);
         if (content !== "") yield* this.#notes.write(path, content);
       }
       yield* this.#notes.updateFrontmatter(path, (fm) => {

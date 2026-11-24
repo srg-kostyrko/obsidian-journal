@@ -1,6 +1,7 @@
 import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import type { BenignFlowError, UserFacingFlowError } from "@/infrastructure/flows";
+import type { UnrenderableDateFormatError } from "@/templates";
 
 import { JournalsError } from "../errors";
 
@@ -101,6 +102,30 @@ export class EmptyNoteNameError extends JournalsError implements UserFacingFlowE
 
   get userNotice(): string {
     return m.journal_note_name_empty_notice({ journalName: this.journalName });
+  }
+}
+
+export class JournalDateFormatError extends JournalsError implements UserFacingFlowError {
+  static from(journalName: string, error: UnrenderableDateFormatError): JournalDateFormatError {
+    return new JournalDateFormatError(journalName, error.pattern, error.reason);
+  }
+
+  override name = "JournalDateFormatError";
+
+  constructor(
+    readonly journalName: string,
+    readonly pattern: string,
+    readonly reason: string,
+  ) {
+    super(`Journal ${journalName}: date format "${pattern}" cannot be rendered: ${reason}`);
+  }
+
+  get userNotice(): string {
+    return m.journal_date_format_unrenderable_notice({
+      journalName: this.journalName,
+      format: this.pattern,
+      reason: this.reason,
+    });
   }
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { FrontmatterError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
@@ -9,6 +10,7 @@ import { testContainer, type TestContainerOptions, type TestHarness } from "@/te
 
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
+import { JournalDateFormatError } from "../notes/errors";
 import { buildNoteletType, fixedJournal } from "../testing";
 import { VaultSubscriptionService } from "../vault-subscription";
 
@@ -152,6 +154,18 @@ describe("NoteletCreationService", () => {
 
     expectOk(created);
     expect(harness.host.files.get(created.value.path)?.content).toContain("# Standup");
+  });
+
+  it("takes the created note back when its body has an unrenderable date format", async () => {
+    const harness = await boot(workWith({ templates: ["Templates/Standup"] }));
+    harness.host.putFile("Templates/Standup.md", "# {{date:YYYYy}}");
+
+    const created = await withoutEras(() =>
+      harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR),
+    );
+
+    expect(created.isErr() && created.error instanceof JournalDateFormatError).toBe(true);
+    expect(harness.host.files.has("Standup 1.md")).toBe(false);
   });
 
   it("does not take the journal's own derived period path", async () => {

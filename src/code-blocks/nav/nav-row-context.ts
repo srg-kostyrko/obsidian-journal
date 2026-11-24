@@ -72,7 +72,11 @@ export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext
   // A row names the note it opens, so an existing note is named as it actually is — renamed,
   // or created under a name template the journal has since changed. Only a note that does not
   // exist yet is named by rendering the template.
-  const noteName = entry.isSome() ? basenameOf(entry.value.path) : notePath.noteNameFor(journal, metadata);
+  // A name that cannot render leaves the variable empty; the segment's own render reports the
+  // format, since it reads the same date formats through the shared context below.
+  const noteName = entry.isSome()
+    ? basenameOf(entry.value.path)
+    : notePath.noteNameFor(journal, metadata).match({ ok: (name) => name, err: () => "" });
   const noteSpec = { kind: "string", value: noteName } as const;
 
   // Sharing the note's own render context is what keeps a row's variables in step with the

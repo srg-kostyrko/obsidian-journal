@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, ref, type Ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
@@ -73,6 +74,14 @@ describe("useInvertibilityCheck", () => {
     });
 
     expect(probe(harness, config.name).value).toBeNull();
+  });
+
+  it("leaves a format this device cannot render to the format marker", async () => {
+    const config = fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYYy-[W]w" });
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly: config } } });
+    const warning = probe(harness, "weekly");
+
+    expect(withoutEras(() => warning.value)).toBeNull();
   });
 
   it("returns null for a static template", async () => {

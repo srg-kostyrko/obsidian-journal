@@ -2,7 +2,7 @@ import { CalendarDate, Clock } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { PlatformService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
-import { AsyncResult } from "@/infrastructure/result";
+import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { CycleService } from "../cycle";
@@ -12,7 +12,9 @@ import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
 import { creationAllowedOn, noteCreationSlice } from "./creation-slice";
-import { NoteCreationService } from "./note-creation";
+import { JournalDateFormatError } from "./errors";
+import { FormatFailureLog } from "./format-failure-log";
+import { NoteCreationService, type NoteCreationError } from "./note-creation";
 
 const CREATE_BUDGET_MS = 30_000;
 
@@ -25,6 +27,7 @@ export class AutoCreateService {
   readonly #timeline = inject(TimelineService);
   readonly #platform = inject(PlatformService);
   readonly #logger = inject(LoggerFactoryToken).named("auto-create");
+  readonly #formatFailures = inject(FormatFailureLog);
 
   readonly #noteCreation = inject(SettingsService).getSlice(noteCreationSlice);
 
@@ -83,24 +86,29 @@ export class AutoCreateService {
     }
   }
 
-  async createCurrent(name: string): Promise<void> {
+  /** Creates the journal's note for today; a date format that cannot render is logged once, never noticed. */
+  async createCurrent(name: string): Promise<Result<void, NoteCreationError>> {
     // Resolve today to the journal period's canonical anchor; a raw mid-period date would be
     // written to frontmatter and then rejected by parseEntry, orphaning the note.
     const anchorOpt = this.#cycle.anchorOf(name, CalendarDate.today());
-    if (anchorOpt.isNone()) return;
+    if (anchorOpt.isNone()) return new Ok(undefined);
     const anchor = anchorOpt.value;
     if (!this.#timeline.contains(name, anchor)) {
       this.#logger.debug("auto-create: today is outside the journal timeline", { name, anchor });
-      return;
+      return new Ok(undefined);
     }
     const metadata = this.#frontmatter.buildMetadata(name, anchor);
     if (metadata.kind === "err") {
       this.#logger.debug("auto-create: build metadata failed", { name, error: metadata.error });
-      return;
+      return new Ok(undefined);
     }
     const result = await this.#creation.ensureNote(name, metadata.value, { skipConfirmation: true, unattended: true });
-    if (result.isErr()) {
+    if (result.isOk()) return new Ok(undefined);
+    if (result.error instanceof JournalDateFormatError) {
+      this.#formatFailures.warnOnce(name, result.error);
+    } else {
       this.#logger.error("auto-create: ensureNote failed", { name, error: result.error });
     }
+    return new Err(result.error);
   }
 }

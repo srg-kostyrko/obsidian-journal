@@ -12,6 +12,8 @@ import { PROMPT_PLACEHOLDER } from "../prompts/placeholder";
 import { promptsInPath } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
 
+import { JournalDateFormatError } from "./errors";
+import { FormatFailureLog } from "./format-failure-log";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
@@ -28,6 +30,7 @@ export class AutoAttachService {
   readonly #journals = inject(JournalsRepository);
   readonly #flows = inject(Flows);
   readonly #logger = inject(LoggerFactoryToken).named("auto-attach");
+  readonly #formatFailures = inject(FormatFailureLog);
   readonly #unsubscribes: (() => void)[] = [];
   readonly #awaitingParse = new Set<VaultPath>();
 
@@ -127,7 +130,9 @@ export class AutoAttachService {
       }
     }
     const result = await this.#creation.attachNote(match.journalName, target, metadata);
-    if (result.isErr()) {
+    if (result.isErr() && result.error instanceof JournalDateFormatError) {
+      this.#formatFailures.warnOnce(match.journalName, result.error);
+    } else if (result.isErr()) {
       this.#logger.error("attach failed", { path: target, error: result.error });
     } else {
       this.#logger.info("attached", { path: target, journal: match.journalName });

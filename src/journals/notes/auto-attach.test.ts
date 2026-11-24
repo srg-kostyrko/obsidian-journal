@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { anchor, withoutEras } from "@/calendar/testing";
 import { NoteMetadataService, NoteRenameError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult, None } from "@/infrastructure/result";
@@ -563,3 +563,32 @@ async function createIn(journals: Record<string, JournalConfig>, path: string): 
   await settle();
   return harness;
 }
+
+describe("AutoAttachService — a template body with an unrenderable date format", () => {
+  it("warns once per journal and pattern across attach events, with no notice", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }, { timeline: TIMELINE_OPEN, templates: ["Templates/daily.md"] }),
+        },
+      },
+    });
+    harness.host.putFile("Templates/daily.md", "# {{date:YYYYy}}");
+    await harness.resolve(AutoAttachService).initialize();
+
+    await withoutEras(async () => {
+      for (const path of ["2026-05-19.md", "2026-05-20.md", "2026-05-21.md"]) {
+        await harness.resolve(NotesService).create(path as VaultPath, "");
+        harness.host.emitMetadata(path);
+        await settle();
+      }
+    });
+
+    const reported = harness.logs.records.filter((record) => record.level === "warn" || record.level === "error");
+    expect(reported.map((record) => [record.level, record.fields?.journalName, record.fields?.pattern])).toEqual([
+      ["warn", "daily", "YYYYy"],
+    ]);
+    expect(harness.notices.messages).toEqual([]);
+  });
+});

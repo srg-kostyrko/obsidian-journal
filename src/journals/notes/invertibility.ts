@@ -10,6 +10,8 @@ import { isLongText } from "../prompts/config";
 import { parseSpecFor } from "../prompts/prompt-binding";
 import { promptsInPath } from "../prompts/prompts-in-path";
 
+import { JournalDateFormatError } from "./errors";
+
 import type { JournalConfig } from "../config";
 import type { CycleService } from "../cycle";
 import type { Prompt } from "../prompts/config";
@@ -131,6 +133,12 @@ export function invertibilityOf(
   const start = cycle.anchorOf(config.name, probe);
   const next = start.flatMap((anchor) => cycle.nextAnchor(config.name, anchor));
   const yearOn = cycle.anchorOf(config.name, probe.shift(1, "y"));
+  // A format this device cannot render has no path to read back. The journal's format marker
+  // says so; any verdict here would blame the template for what is the format's failure.
+  const rendered = start.map((anchor) => paths.pathForDate(config.name, CalendarDate.fromAnchor(anchor)));
+  if (rendered.isSome() && rendered.value.isErr() && rendered.value.error instanceof JournalDateFormatError) {
+    return null;
+  }
   if (
     start.isSome() &&
     next.isSome() &&

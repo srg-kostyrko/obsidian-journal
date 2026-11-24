@@ -1,6 +1,6 @@
-import { beforeEach, describe, it, expect } from "vitest";
+import { assert, beforeEach, describe, it, expect } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { anchor, withoutEras } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import { expectOk } from "@/infrastructure/result/testing";
 import { TemplateContext } from "@/templates";
@@ -9,6 +9,7 @@ import { testContainer, type TestHarness } from "@/testing";
 import { journalsCoreModule } from "../module";
 import { fixedJournal } from "../testing";
 
+import { JournalDateFormatError } from "./errors";
 import { TemplateContentService } from "./template-content";
 
 import type { JournalMetadata } from "../types";
@@ -248,6 +249,19 @@ describe("TemplateContentService.renderFor — Templater", () => {
       expect(result.value).toBe("body sub 2026-05-19");
     });
 
+    it("fails with the journal's format error when an included sub-template cannot render", async () => {
+      harness.host.putFile("Templates/daily.md", "body");
+      harness.templater.setTransform((content, renderNested) => `${content} ${renderNested?.("{{date:YYYYy}}")}`);
+
+      const result = await withoutEras(() =>
+        harness.resolve(TemplateContentService).renderFor("daily", meta, "2026-05-19", "2026-05-19.md" as VaultPath),
+      );
+
+      assert(result.isErr() && result.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+      expect(result.error.journalName).toBe("daily");
+      expect(result.error.pattern).toBe("YYYYy");
+    });
+
     it("passes the winning template path and target path to Templater", async () => {
       harness.host.putFile("Templates/daily.md", "body");
 
@@ -282,6 +296,7 @@ describe("renderTemplates", () => {
     const context = TemplateContext.empty().string("note_name", "Standup 1");
 
     const rendered = await content.renderTemplates(
+      "meetings",
       ["Templates/Empty", "Templates/Standup"],
       context,
       "Meetings/Standup 1.md" as VaultPath,
@@ -296,7 +311,7 @@ describe("renderTemplates", () => {
     const content = harness.resolve(TemplateContentService);
     const context = TemplateContext.empty();
 
-    const rendered = await content.renderTemplates(["Templates/Gone"], context, "x.md" as VaultPath);
+    const rendered = await content.renderTemplates("meetings", ["Templates/Gone"], context, "x.md" as VaultPath);
 
     expectOk(rendered);
     expect(rendered.value).toBe("");
