@@ -249,6 +249,22 @@ describe("SettingsDashboard", () => {
       expect(screen.queryByText(m.settings_section_failed({ reason: "boom" }))).toBeNull();
     });
 
+    it("a healthy subpage pushed over a failed one renders normally", async () => {
+      const broken = defineSubpage({ key: "broken", component: failing({ broken: true }, "broken") });
+      const fine = defineSubpage({ key: "fine", component: failing({ broken: false }, "fine") });
+      const { harness, service } = await buildHarness({ subpages: [broken, fine] });
+      harness.render(SettingsDashboard);
+
+      service.push(broken, undefined);
+      await nextTick();
+      expect(screen.getByText(m.settings_section_failed({ reason: "boom" }))).toBeTruthy();
+
+      service.push(fine, undefined);
+      await nextTick();
+      expect(screen.getByTestId("block-fine")).toBeTruthy();
+      expect(screen.queryByText(m.settings_section_failed({ reason: "boom" }))).toBeNull();
+    });
+
     it("the boundary logs the captured error", async () => {
       const state = { broken: true };
       const { harness } = await buildHarness({
