@@ -101,7 +101,10 @@ function expandLocalizedFormats(format: string): string {
 }
 
 type FormatSegment =
-  { kind: "literal"; text: string } | { kind: "bracketed"; text: string; raw: string } | { kind: "run"; text: string };
+  | { kind: "literal"; text: string }
+  | { kind: "bracketed"; text: string; raw: string }
+  | { kind: "escaped"; text: string; raw: string }
+  | { kind: "run"; text: string };
 
 // One walk for everything that reads a moment format: text inside [] is the user's own, and a run of
 // one ASCII letter is a token candidate. Any other character is literal, as it is to moment.
@@ -114,6 +117,13 @@ function* segmentsOf(format: string): Generator<FormatSegment> {
       const stop = close === -1 ? format.length : close;
       yield { kind: "bracketed", text: format.slice(index + 1, stop), raw: format.slice(index, stop + 1) };
       index = stop + 1;
+      continue;
+    }
+    // moment renders the character after a backslash as itself and drops the backslash.
+    if (char === "\\") {
+      const escaped = format.charAt(index + 1);
+      yield { kind: "escaped", text: escaped, raw: format.slice(index, index + 2) };
+      index += 2;
       continue;
     }
     if (/[A-Za-z]/.test(char)) {
@@ -173,7 +183,7 @@ export function mapFormatRuns(
   for (let index = 0; index < segments.length; index++) {
     const segment = segments[index];
     if (segment === undefined) continue;
-    if (segment.kind === "bracketed") output += segment.raw;
+    if (segment.kind === "bracketed" || segment.kind === "escaped") output += segment.raw;
     else if (segment.kind === "literal") output += segment.text;
     else {
       const next = segments[index + 1];

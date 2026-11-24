@@ -43,6 +43,11 @@ describe("replaceEraYear", () => {
     expect(replaceEraYear("yyyyo")).toBe("YYYYo");
   });
 
+  it("leaves a backslash-escaped y as the literal it is", () => {
+    expect(hasEraYear(String.raw`YYYY-MM-DD \y`)).toBe(false);
+    expect(replaceEraYear(String.raw`yyyy \y`)).toBe(String.raw`YYYY \y`);
+  });
+
   it("maps an odd-length run to YYYY", () => {
     expect(replaceEraYear("yyy")).toBe("YYYY");
   });
