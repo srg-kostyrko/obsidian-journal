@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, userDateFormat } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Ok } from "@/infrastructure/result";
@@ -19,7 +19,7 @@ const dated: Prompt = {
   type: "date",
   frontmatterKey: "m",
   required: true,
-  format: "YYYY-MM-DD",
+  format: userDateFormat("YYYY-MM-DD"),
 };
 const counted: Prompt = { variable: "n", question: "?", type: "number", frontmatterKey: "n", required: true };
 const flagged: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done" };
@@ -50,7 +50,7 @@ describe("renderBindingFor", () => {
   });
 
   it("binds a date answer using the prompt's own custom format, not a passed-in one", () => {
-    const custom: Prompt = { ...dated, format: "DD/MM/YYYY" };
+    const custom: Prompt = { ...dated, format: userDateFormat("DD/MM/YYYY") };
     expect(renderBindingFor(custom, "2026-08-28")).toEqual({
       spec: {
         kind: "date",
@@ -126,7 +126,7 @@ describe("renderBindingFor", () => {
 describe("empty date format falls back to YYYY-MM-DD", () => {
   it("renders an empty format as YYYY-MM-DD, not moment's bare-call fallback", async () => {
     const engine = await installTestEngine();
-    const emptyFormat: Prompt = { ...dated, format: "" };
+    const emptyFormat: Prompt = { ...dated, format: userDateFormat("") };
     const binding = renderBindingFor(emptyFormat, "2026-08-28");
     const context = TemplateContext.empty().withSpec("answer", binding.spec);
     expect(engine.renderString("{{answer}}", context)).toEqual(new Ok("2026-08-28"));
@@ -134,7 +134,7 @@ describe("empty date format falls back to YYYY-MM-DD", () => {
 
   it("still inverts a note name when the date prompt's format is empty", async () => {
     const engine = await installTestEngine();
-    const emptyFormat: Prompt = { ...dated, format: "" };
+    const emptyFormat: Prompt = { ...dated, format: userDateFormat("") };
     const spec = parseSpecFor(emptyFormat);
     const context = TemplateContext.empty().withSpec("answer", spec);
     const result = engine.parse(tokenize("Log {{answer}}"), "Log 2026-01-02", context);

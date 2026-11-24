@@ -1,5 +1,6 @@
 import { assert, describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
 import { Flows } from "@/infrastructure/flows";
@@ -152,7 +153,7 @@ describe("CreateNoteletFlow — a journal whose date format cannot render", () =
             "Work",
             { type: "week" },
             {
-              dateFormat: "YYYYy-[W]w",
+              dateFormat: userDateFormat("YYYYy-[W]w"),
               notelets: {
                 [TYPE]: buildNoteletType({
                   id: TYPE,

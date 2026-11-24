@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 
-import { Calendar, calendarDisplaySlice, type WeekdayLabel } from "@/calendar";
+import {
+  Calendar,
+  calendarDisplaySlice,
+  userDateFormat,
+  type DateFormatError,
+  type UserDateFormat,
+  type WeekdayLabel,
+} from "@/calendar";
 import { useToday } from "@/calendar/ui/use-today";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import type { Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiTextInput from "@/ui/UiTextInput.vue";
 
-import { formatWeekday, weekFormatNeedsIsoWarning } from "../../cell-format";
+import { tryFormatWeekday, weekFormatNeedsIsoWarning } from "../../cell-format";
 import {
   defaultPattern,
   formatAt,
@@ -54,13 +62,16 @@ function asWeekdayLabel(value: FormatValue): WeekdayLabel {
   return typeof value === "string" ? { type: "pattern", pattern: value } : value;
 }
 
-function sample(value: FormatValue): string {
+function sample(value: FormatValue): Result<string, DateFormatError> {
   if (control.label !== "weekday") {
-    const pattern = typeof value === "string" && value !== "" ? value : defaultPattern(control);
-    return today.value.format(pattern);
+    const pattern = typeof value === "string" && value !== "" ? value : userDateFormat(defaultPattern(control));
+    return today.value.tryFormat(pattern);
   }
-  return formatWeekday(today.value, asWeekdayLabel(value));
+  return tryFormatWeekday(today.value, asWeekdayLabel(value));
 }
+
+const sampleText = (value: FormatValue): string =>
+  sample(value).match({ ok: (text) => text, err: (error) => m.date_format_invalid_preview({ reason: error.reason }) });
 
 const boxText = (value: FormatValue): string => (typeof value === "string" ? value : "");
 
@@ -78,13 +89,13 @@ function sameFormat(a: FormatValue, b: FormatValue): boolean {
 
 // The box keeps what was typed: a typed default is stored as "", and echoing that back would
 // empty the box under the cursor. It follows the store only when the store says something else.
-const text = ref(boxText(stored.value));
+const text = ref(userDateFormat(boxText(stored.value)));
 watch(stored, (next) => {
   const typed = formatAt(withFormat(display.state, control, width, text.value), control, width);
-  if (!sameFormat(typed, next)) text.value = boxText(next);
+  if (!sameFormat(typed, next)) text.value = userDateFormat(boxText(next));
 });
 
-function onType(next: string): void {
+function onType(next: UserDateFormat): void {
   text.value = next;
   display.state = withFormat(display.state, control, width, next);
 }
@@ -94,7 +105,7 @@ const SAME_AS_WIDE = "same-as-wide";
 const choices = computed(() => {
   const named = control.suggestions.map((value, index) => {
     const name = typeof value === "string" ? value : m.calendar_appearance_format_letter();
-    return { key: String(index), text: `${name} — ${sample(value)}` };
+    return { key: String(index), text: `${name} — ${sampleText(value)}` };
   });
   return offersSameAsWide.value
     ? [...named, { key: SAME_AS_WIDE, text: m.calendar_appearance_format_same_as_wide() }]
@@ -113,7 +124,7 @@ function onPick(key: string): void {
     if (value === undefined) return;
     display.state = withFormat(display.state, control, width, value);
   }
-  text.value = boxText(stored.value);
+  text.value = userDateFormat(boxText(stored.value));
 }
 
 const shown = computed(() => sample(stored.value));
@@ -138,15 +149,23 @@ const isoWarning = computed(
           {{ m.common_moment_format_reference() }}
         </a>
       </div>
-      <div>
+      <div v-if="shown.isOk()">
         {{ m.calendar_appearance_format_preview() }}
-        <b class="u-pop">{{ shown }}</b>
+        <b class="u-pop">{{ shown.value }}</b>
+      </div>
+      <div v-else class="appearance-format-control__warning">
+        {{ m.date_format_invalid_preview({ reason: shown.error.reason }) }}
       </div>
       <div v-if="isoWarning" class="appearance-format-control__warning">
         {{ m.calendar_appearance_format_iso_warning() }}
       </div>
     </template>
-    <UiTextInput :model-value="text" :placeholder="placeholder" :aria-label="label" @update:model-value="onType" />
+    <UiDateFormatInput
+      :model-value="text"
+      :placeholder="placeholder"
+      :aria-label="label"
+      @update:model-value="onType"
+    />
     <UiDropdown
       :model-value="picked"
       :aria-label="m.calendar_appearance_format_suggestions()"

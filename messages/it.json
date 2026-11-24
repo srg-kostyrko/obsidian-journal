@@ -2047,6 +2047,7 @@
   "journal_note_name_empty_notice": "Il diario \"{journalName}\" ha un modello di nome che produce un nome di nota vuoto, quindi non è possibile creare alcuna nota. Imposta un modello di nome nelle impostazioni del diario.",
   "journal_date_format_unrenderable_notice": "Diario \"{journalName}\": il formato data {format} non può essere visualizzato su questo dispositivo ({reason}). Modificalo nelle impostazioni del diario.",
   "date_format_invalid_preview": "Formato non valido: {reason}",
+  "journal_dashboard_date_format_unrenderable": "Il formato data non può essere visualizzato su questo dispositivo.",
   "journal_note_path_claimed_notice": "Il diario \"{journalName}\" collocherebbe la sua nota in \"{path}\", ma quella nota appartiene già al diario \"{claimedBy}\", quindi non è stato modificato nulla. Modifica la cartella o il modello di nome in uno di essi.",
   "journal_note_path_notelet_notice": "Il diario \"{journalName}\" non può creare la sua nota in \"{path}\": lì si trova già una delle sue note brevi. Modifica il modello di nome o la cartella del diario, oppure sposta quella nota breve.",
   "journal_note_path_held_by_period_notice": "Il diario \"{journalName}\" collocherebbe la sua nota in \"{path}\", ma quella nota è già la sua nota per il periodo che inizia il {date}, quindi non è stato modificato nulla. Modifica il modello di nome o la cartella in modo che ogni periodo abbia un proprio nome di nota.",

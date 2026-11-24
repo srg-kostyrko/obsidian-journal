@@ -1,5 +1,6 @@
 import { assert, beforeEach, describe, it, expect, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { anchor, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Flows, UserAborted } from "@/infrastructure/flows";
@@ -132,7 +133,9 @@ describe("OpenJournalEntryFlow — an unrenderable date format", () => {
   it("opening a journal entry with an unrenderable format fails with the journal's notice", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYYy-[W]w" }) } },
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }) },
+      },
     });
 
     const result = await withoutEras(() =>
@@ -159,7 +162,7 @@ describe("OpenJournalEntryFlow — an unrenderable date format", () => {
           weekly: fixedJournal(
             "weekly",
             { type: "week" },
-            { dateFormat: "YYYYy-[W]w", nameTemplate: "{{date}} {{mood}}", prompts: [mood] },
+            { dateFormat: userDateFormat("YYYYy-[W]w"), nameTemplate: "{{date}} {{mood}}", prompts: [mood] },
           ),
         },
       },

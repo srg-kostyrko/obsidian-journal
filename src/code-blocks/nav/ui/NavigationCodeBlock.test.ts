@@ -4,6 +4,7 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
+import { userDateFormat } from "@/calendar";
 import { anchor, withoutEras } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { decorationsModule } from "@/decorations/module";
@@ -399,7 +400,7 @@ describe("NavigationCodeBlock segment with an unrenderable date format", () => {
         journals: {
           daily: dailyWithNavBlock(
             { lines: [[buildNavSegment({ template: "{{note_name}}", color: transparent })]] },
-            { dateFormat: "y" },
+            { dateFormat: userDateFormat("y") },
           ),
         },
         shelves: { main: buildShelf("main", { journals: ["daily"] }) },

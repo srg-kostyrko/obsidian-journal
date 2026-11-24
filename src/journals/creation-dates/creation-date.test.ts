@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import type { Note, NoteMetadata, VaultPath } from "@/infrastructure/host";
 
 import { resolveCreationDate } from "./creation-date";
 
 import type { DayNotesSliceState } from "./slice";
 
-const settings: DayNotesSliceState = { property: "created", format: "YYYY-MM-DD" };
+const settings: DayNotesSliceState = { property: "created", format: userDateFormat("YYYY-MM-DD") };
 
 function timestamp(year: number, month: number, day: number): number {
   return new Date(year, month - 1, day, 10, 30).getTime();
@@ -37,7 +38,7 @@ describe("resolveCreationDate", () => {
   it("uses the configured date format strictly", () => {
     const resolved = resolveCreationDate(note(), metadata({ created: "25/05/2026" }), {
       property: "created",
-      format: "DD/MM/YYYY",
+      format: userDateFormat("DD/MM/YYYY"),
     });
     expect(resolved?.toAnchor()).toBe("2026-05-25");
   });

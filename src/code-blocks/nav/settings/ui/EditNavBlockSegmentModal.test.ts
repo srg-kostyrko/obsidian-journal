@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
@@ -58,7 +59,7 @@ describe("EditNavBlockSegmentModal", () => {
   it("previews the invalid-format message when the journal's date format cannot render", async () => {
     await withoutEras(async () => {
       await mountModal({
-        journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "y" }) },
+        journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("y") }) },
         segment: buildNavSegment({ template: "{{note_name}}" }),
       });
       expect(screen.getByText(/Invalid format: /)).toBeTruthy();

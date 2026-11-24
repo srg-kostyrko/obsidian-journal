@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
-import { CalendarDate, type AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString, userDateFormat } from "@/calendar";
 import { anchor, installTestCalendar, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
@@ -210,7 +210,9 @@ describe("NotePathService.pathForDate", () => {
   it("returns JournalDateFormatError for a journal whose dateFormat throws", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYYy-[W]w" }) } },
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }) },
+      },
     });
 
     const result = withoutEras(() =>
@@ -917,7 +919,9 @@ describe("NotePathService.candidateFor weekly round trip", () => {
   it("resolves a day-precision weekly note name to the week's first day", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" }) } },
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYY-MM-DD") }) },
+      },
     });
 
     const result = harness.resolve(NotePathService).candidateFor("weekly", "2026-01-01.md" as VaultPath);
@@ -990,7 +994,7 @@ describe("contextFor — weekly period variables", () => {
   let context: TemplateContext;
 
   beforeEach(async () => {
-    const config = fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" });
+    const config = fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYY-MM-DD") });
     const harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { weekly: config } },
@@ -1014,7 +1018,7 @@ describe("contextFor — weekly period variables", () => {
 });
 
 describe("contextFor — render-time variables", () => {
-  const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
+  const config = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("DD/MM/YYYY") });
   const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
   let service: NotePathService;
 
@@ -1058,7 +1062,7 @@ describe("contextFor — render-time variables", () => {
 });
 
 describe("bodyContextFor", () => {
-  const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
+  const config = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("DD/MM/YYYY") });
   const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
   let service: NotePathService;
 
@@ -1457,7 +1461,7 @@ const bodyPrompts = (): Record<string, JournalConfig> => ({
     {
       // Deliberately different from the prompt's own format below, so a test asserting the
       // prompt's format wins cannot pass by accident from the two happening to agree.
-      dateFormat: "MM.DD.YYYY",
+      dateFormat: userDateFormat("MM.DD.YYYY"),
       prompts: [
         {
           variable: "visited",
@@ -1465,7 +1469,7 @@ const bodyPrompts = (): Record<string, JournalConfig> => ({
           type: "date",
           frontmatterKey: "visited",
           required: false,
-          format: "DD/MM/YYYY",
+          format: userDateFormat("DD/MM/YYYY"),
         },
         { variable: "pages", question: "?", type: "number", frontmatterKey: "pages", required: false },
         { variable: "done", question: "?", type: "toggle", frontmatterKey: "done" },
@@ -1530,7 +1534,7 @@ const promptedWeekly = (): Record<string, JournalConfig> => ({
           type: "date",
           frontmatterKey: "visited",
           required: false,
-          format: "YYYY-MM-DD",
+          format: userDateFormat("YYYY-MM-DD"),
         },
       ],
     },
@@ -1572,7 +1576,7 @@ const promptedDailyName = (): Record<string, JournalConfig> => ({
           type: "date",
           frontmatterKey: "met",
           required: false,
-          format: "DD-MM-YYYY",
+          format: userDateFormat("DD-MM-YYYY"),
         },
       ],
     },

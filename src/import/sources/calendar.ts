@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { inject } from "@/infrastructure/di";
 import { PluginSettingsReader } from "@/infrastructure/host";
 
-import { normalizeFolder, SOURCE_DEFAULT_FORMATS, templatesOf, type ImportSource, type SourceRead } from "../source";
+import { normalizeFolder, sourceFormat, templatesOf, type ImportSource, type SourceRead } from "../source";
 
 const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
 
@@ -40,7 +40,7 @@ export class CalendarSource implements ImportSource {
                 source: this.id,
                 period: "week",
                 folder: normalizeFolder(options.weeklyNoteFolder),
-                format: options.weeklyNoteFormat.trim() || SOURCE_DEFAULT_FORMATS.week,
+                format: sourceFormat(options.weeklyNoteFormat, "week"),
                 templates: templatesOf(options.weeklyNoteTemplate),
                 openAtStartup: false,
               },

@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { calendarDisplaySlice, type CalendarDisplaySliceState, type WeekdayLabel } from "@/calendar";
+import { calendarDisplaySlice, userDateFormat, type CalendarDisplaySliceState, type WeekdayLabel } from "@/calendar";
 
 import { DEFAULT_WEEKDAY_PATTERN, defaultFormatPattern, STOCK_NARROW_WEEKDAY } from "../cell-format";
 
@@ -179,7 +179,7 @@ export function withFormat(
     if (narrowWeekday) return { ...display, weekdayLabelNarrow: null };
     throw new TypeError(`the ${control.label} format at ${width} has no "no override"`);
   }
-  const pattern = typeof value === "string" && value === defaultPattern(control) ? "" : value;
+  const pattern = typeof value === "string" && value === defaultPattern(control) ? userDateFormat("") : value;
   if (control.label !== "weekday") {
     if (typeof pattern !== "string") throw new TypeError(`the ${control.label} format has no one letter`);
     return { ...display, labels: { ...display.labels, [control.label]: pattern } };

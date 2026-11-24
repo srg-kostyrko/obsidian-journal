@@ -1,10 +1,19 @@
 import { normalizePath } from "obsidian";
 
-import { Calendar, CalendarDate, calendarSlice, periodOfKind, type CalendarSliceState } from "@/calendar";
+import {
+  Calendar,
+  CalendarDate,
+  calendarSlice,
+  periodOfKind,
+  type CalendarSliceState,
+  type DateFormatError,
+  type UserDateFormat,
+} from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import type { Result } from "@/infrastructure/result";
 import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
 import { freeName } from "@/journals/free-name";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -31,14 +40,16 @@ export type RowState =
   | { readonly kind: "superseded"; readonly by: SourceId };
 
 export type RowWarning =
-  { readonly kind: "iso-week-under-custom-grid" } | { readonly kind: "missing-template"; readonly path: string };
+  | { readonly kind: "iso-week-under-custom-grid" }
+  | { readonly kind: "missing-template"; readonly path: string }
+  | { readonly kind: "unrenderable-format"; readonly reason: string };
 
 export interface PlanRow {
   readonly key: string;
   readonly journal: SourceJournal;
   readonly name: string;
   readonly folder: string;
-  readonly dateFormat: string;
+  readonly dateFormat: UserDateFormat;
   readonly shelf?: string;
   readonly state: RowState;
   readonly warnings: readonly RowWarning[];
@@ -90,9 +101,10 @@ const SHIFT_UNIT = { day: "d", week: "w", month: "m", quarter: "q", year: "y" } 
 // for them. `NotePathService.pathForDate` reaches the same value through
 // `CycleService.representativeOf`; `periodOfKind` is the same computation without needing an
 // existing journal to look a cycle up from.
-function sourcePath(journal: SourceJournal, date: CalendarDate): string {
-  const name = periodOfKind(journal.period, date).format(journal.format);
-  return normalizePath(journal.folder === "" ? `${name}.md` : `${journal.folder}/${name}.md`);
+function sourcePath(journal: SourceJournal, date: CalendarDate): Result<string, DateFormatError> {
+  return periodOfKind(journal.period, date)
+    .tryFormat(journal.format)
+    .map((name) => normalizePath(journal.folder === "" ? `${name}.md` : `${journal.folder}/${name}.md`));
 }
 
 // Boundary dates a today ± 2 periods sample can miss: two formats can render identically at every
@@ -159,7 +171,13 @@ export class ImportPlanner {
 
   #setUpBy(journal: SourceJournal, existing: readonly JournalConfig[]): string | undefined {
     const samples = sampleDates(journal.period);
-    const expected = samples.map((date) => sourcePath(journal, date));
+    const expected: string[] = [];
+    for (const date of samples) {
+      const path = sourcePath(journal, date);
+      // A format this device cannot render names no note an existing journal could share.
+      if (path.isErr()) return undefined;
+      expected.push(path.value);
+    }
     return existing
       .filter((config) => config.write.type === journal.period)
       .find((config) =>
@@ -210,6 +228,8 @@ export class ImportPlanner {
 
   #warnings(journal: SourceJournal, customGridAfterImport: boolean): RowWarning[] {
     const warnings: RowWarning[] = [];
+    const rendered = sourcePath(journal, CalendarDate.today());
+    if (rendered.isErr()) warnings.push({ kind: "unrenderable-format", reason: rendered.error.reason });
     if (journal.period === "week" && customGridAfterImport && formatHasWrongWeek(journal.format)) {
       warnings.push({ kind: "iso-week-under-custom-grid" });
     }

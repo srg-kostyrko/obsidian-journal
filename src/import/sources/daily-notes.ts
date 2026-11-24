@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { inject } from "@/infrastructure/di";
 import { PluginSettingsReader } from "@/infrastructure/host";
 
-import { normalizeFolder, SOURCE_DEFAULT_FORMATS, templatesOf, type ImportSource, type SourceRead } from "../source";
+import { normalizeFolder, sourceFormat, templatesOf, type ImportSource, type SourceRead } from "../source";
 
 const optionsSchema = v.object({
   folder: v.optional(v.string(), ""),
@@ -31,7 +31,7 @@ export class DailyNotesSource implements ImportSource {
             source: this.id,
             period: "day",
             folder: normalizeFolder(folder),
-            format: format.trim() || SOURCE_DEFAULT_FORMATS.day,
+            format: sourceFormat(format, "day"),
             templates: templatesOf(template),
             // Obsidian turns `autorun` into a vault setting and deletes it the moment the plugin
             // is enabled, so a live read never has it.

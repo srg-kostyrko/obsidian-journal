@@ -1,6 +1,16 @@
 import { match } from "ts-pattern";
 
-import { activeLocale, type CalendarDate, type Labels, type PeriodKind, type WeekdayLabel } from "@/calendar";
+import {
+  activeLocale,
+  userDateFormat,
+  type CalendarDate,
+  type DateFormatError,
+  type Labels,
+  type PeriodKind,
+  type UserDateFormat,
+  type WeekdayLabel,
+} from "@/calendar";
+import { Ok, type Result } from "@/infrastructure/result";
 import { formatHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 
 export function defaultFormatPattern(kind: PeriodKind): string {
@@ -28,9 +38,9 @@ export function accessibleFormatPattern(kind: PeriodKind): string {
     .exhaustive();
 }
 
-export function labelPattern(labels: Labels, kind: PeriodKind): string {
+export function labelPattern(labels: Labels, kind: PeriodKind): UserDateFormat {
   const stored = labels[kind === "decade" ? "year" : kind];
-  return stored === "" ? defaultFormatPattern(kind) : stored;
+  return stored === "" ? userDateFormat(defaultFormatPattern(kind)) : stored;
 }
 
 /** What an empty weekday pattern renders. */
@@ -54,11 +64,14 @@ function narrowWeekdayFormat(locale: string): Intl.DateTimeFormat {
   return created;
 }
 
+export function tryFormatWeekday(date: CalendarDate, label: WeekdayLabel): Result<string, DateFormatError> {
+  if (label.type === "letter") return new Ok(narrowWeekdayFormat(activeLocale()).format(date.toJSDate()));
+  return label.pattern === "" ? new Ok(date.format(DEFAULT_WEEKDAY_PATTERN)) : date.tryFormat(label.pattern);
+}
+
+// A pattern this device cannot render keeps the grid readable; the appearance editor reports it.
 export function formatWeekday(date: CalendarDate, label: WeekdayLabel): string {
-  if (label.type === "pattern") {
-    return date.format(label.pattern || DEFAULT_WEEKDAY_PATTERN);
-  }
-  return narrowWeekdayFormat(activeLocale()).format(date.toJSDate());
+  return tryFormatWeekday(date, label).match({ ok: (text) => text, err: () => date.format(DEFAULT_WEEKDAY_PATTERN) });
 }
 
 /** What a narrow calendar's weekday shows when narrow has no label of its own. */

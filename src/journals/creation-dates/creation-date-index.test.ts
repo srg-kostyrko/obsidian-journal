@@ -1,7 +1,7 @@
 import { TFile } from "obsidian";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate, type AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString, userDateFormat } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { NoteMetadataService, type VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
@@ -133,7 +133,7 @@ describe("CreationDateIndex", () => {
       const changed = vi.fn();
       dates.events.on("changed", changed);
 
-      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: "YYYY-MM-DD" };
+      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: userDateFormat("YYYY-MM-DD") };
       await settle();
 
       expect(count("2026-10-20")).toBe(1);
@@ -149,7 +149,7 @@ describe("CreationDateIndex", () => {
       });
 
       // A reload assigns a freshly parsed slice object, as SettingsService.#refresh does.
-      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: "YYYY-MM-DD" };
+      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: userDateFormat("YYYY-MM-DD") };
       harness.resolve(SettingsEventsToken).emit("reloaded");
       await settle();
 
@@ -233,7 +233,7 @@ describe("CreationDateIndex", () => {
       await settle();
       dates[Symbol.dispose]();
 
-      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: "YYYY-MM-DD" };
+      harness.settings.getSlice(dayNotesSlice).state = { property: "born", format: userDateFormat("YYYY-MM-DD") };
       await settle();
 
       expect(count("2026-10-20")).toBe(0);

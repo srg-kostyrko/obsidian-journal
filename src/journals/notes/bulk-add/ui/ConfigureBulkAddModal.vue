@@ -18,6 +18,7 @@ import { useInvertibilityCheck } from "@/journals/settings/ui/use-invertibility-
 import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -120,7 +121,7 @@ const onSubmit = handleSubmit((parameters) => {
         <DateFormatPreview :format="values.dateFormat" />
         <span v-for="error of errorBag.dateFormat" :key="error" class="bulk-add-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
+      <UiDateFormatInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
     </UiSettingRow>
 
     <UiSettingRow>

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { anchor, withoutEras } from "@/calendar/testing";
 import { PlatformService, type DeviceKind, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
@@ -397,7 +398,11 @@ describe("AutoCreateService — an unrenderable date format", () => {
       modules: [journalsCoreModule],
       data: {
         journals: {
-          weekly: fixedJournal("weekly", { type: "week" }, { autoCreate: true, dateFormat: "YYYYy-[W]w" }),
+          weekly: fixedJournal(
+            "weekly",
+            { type: "week" },
+            { autoCreate: true, dateFormat: userDateFormat("YYYYy-[W]w") },
+          ),
         },
       },
     });
@@ -419,7 +424,9 @@ describe("AutoCreateService — an unrenderable date format", () => {
   it("returns the failure so a caller that started the write can report it", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYYy-[W]w" }) } },
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }) },
+      },
     });
 
     const result = await withoutEras(() => harness.resolve(AutoCreateService).createCurrent("weekly"));

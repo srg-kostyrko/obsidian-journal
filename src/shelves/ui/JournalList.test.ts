@@ -1,7 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
+import { nextTick, reactive } from "vue";
 
+import { userDateFormat } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { fixedJournal } from "@/journals/testing";
 
@@ -51,5 +54,26 @@ describe("JournalList", () => {
     });
     await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Journal A" })));
     expect(emitted().delete).toEqual([["Journal A"]]);
+  });
+
+  it("JournalList marks a journal whose date format cannot render and clears the mark when the format changes", async () => {
+    await withoutEras(async () => {
+      const config = reactive(fixedJournal("Weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }));
+      render(JournalList, {
+        props: {
+          entries: [
+            ["Weekly", config],
+            ["Daily", fixedJournal("Daily", { type: "day" })],
+          ],
+          emptyText: "Nothing here",
+        },
+      });
+      expect(screen.getAllByText(m.journal_dashboard_date_format_unrenderable())).toHaveLength(1);
+
+      config.dateFormat = userDateFormat("YYYY-[W]w");
+      await nextTick();
+
+      expect(screen.queryByText(m.journal_dashboard_date_format_unrenderable())).toBeNull();
+    });
   });
 });

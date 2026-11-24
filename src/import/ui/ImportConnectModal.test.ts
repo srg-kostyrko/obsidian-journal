@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
@@ -23,7 +24,7 @@ async function openedOn(outcome: ImportOutcome, prepare: (harness: TestHarness) 
         daily: fixedJournal(
           "daily",
           { type: "day" },
-          { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+          { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}" },
         ),
       },
     },

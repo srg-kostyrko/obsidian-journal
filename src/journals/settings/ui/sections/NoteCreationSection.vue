@@ -9,6 +9,7 @@ import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
@@ -155,7 +156,7 @@ function applyDateFormatRecommendation(): void {
           </a>
         </div>
       </template>
-      <UiTextInput v-model="config.dateFormat" />
+      <UiDateFormatInput v-model="config.dateFormat" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.journal_edit_confirm_creation_label()">

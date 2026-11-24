@@ -130,6 +130,14 @@ describe("ImportPreviewModal", () => {
     expect(screen.queryByText(m.import_preview_warning_week_start())).toBeNull();
   });
 
+  it("shows why a source format cannot render on this device", () => {
+    const reason = "eras are missing";
+    const plan = buildImportPlan({ rows: [buildPlanRow({ warnings: [{ kind: "unrenderable-format", reason }] })] });
+    harness.renderModal(ImportPreviewModal, { props: { plan } });
+
+    expect(screen.getByText(m.date_format_invalid_preview({ reason }))).toBeTruthy();
+  });
+
   it("does not set the startup journal while that journal is switched off", async () => {
     const row = buildPlanRow();
     const { submit } = harness.renderModal(ImportPreviewModal, {

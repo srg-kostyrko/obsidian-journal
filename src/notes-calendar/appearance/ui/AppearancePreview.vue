@@ -10,6 +10,7 @@ import {
   resolveOutsideDates,
   resolveWeekend,
   type PeriodKind,
+  type UserDateFormat,
   YearPeriod,
   type CalendarDisplaySliceState,
   type Period,
@@ -74,7 +75,7 @@ const rows = computed(() => {
     days: [...week.days()].map((day) => ({ period: DayPeriod.containing(day), outside: !month.value.contains(day) })),
   }));
 });
-const format = (kind: PeriodKind): string => labelPattern(props.display.labels, kind);
+const format = (kind: PeriodKind): UserDateFormat => labelPattern(props.display.labels, kind);
 // Unlike the views' column headers, these spans have no role to name, so the visible text is what is read;
 // the hidden width's text is `display: none`, out of the tree.
 const weekdays = computed(() => {

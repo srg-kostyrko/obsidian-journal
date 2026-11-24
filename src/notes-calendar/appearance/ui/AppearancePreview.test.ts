@@ -3,7 +3,13 @@ import { render } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, inject, type PropType } from "vue";
 
-import { CalendarDate, calendarDisplaySlice, type CalendarDisplaySliceState, type Period } from "@/calendar";
+import {
+  CalendarDate,
+  calendarDisplaySlice,
+  type CalendarDisplaySliceState,
+  type Period,
+  userDateFormat,
+} from "@/calendar";
 import { date } from "@/calendar/testing";
 import { cellKey } from "@/decorations/engine";
 import { CellDecorationMapKey } from "@/decorations/ui/cell-decoration-map-key";
@@ -424,12 +430,28 @@ describe("AppearancePreview", () => {
   describe("renders the label formats", () => {
     it("marks the grid for clipping only when the day label is custom", () => {
       expect(withDisplay({}).container.querySelector("[data-custom-day-label]")).toBeNull();
-      const custom = withDisplay({ labels: { day: "Do", week: "", month: "", quarter: "", year: "" } }).container;
+      const custom = withDisplay({
+        labels: {
+          day: userDateFormat("Do"),
+          week: userDateFormat(""),
+          month: userDateFormat(""),
+          quarter: userDateFormat(""),
+          year: userDateFormat(""),
+        },
+      }).container;
       expect(custom.querySelector(".appearance-preview")?.hasAttribute("data-custom-day-label")).toBe(true);
     });
 
     it("renders the day, week and heading labels in the user's formats", () => {
-      const { container } = withDisplay({ labels: { day: "DD", week: "w", month: "MM", quarter: "", year: "YY" } });
+      const { container } = withDisplay({
+        labels: {
+          day: userDateFormat("DD"),
+          week: userDateFormat("w"),
+          month: userDateFormat("MM"),
+          quarter: userDateFormat(""),
+          year: userDateFormat("YY"),
+        },
+      });
       const heading = container.querySelector('[data-preview-part="heading"]');
 
       expect(cellAt(container, "2026-05-01").textContent?.trim()).toBe("01");
@@ -442,7 +464,7 @@ describe("AppearancePreview", () => {
 
     it("renders each width's weekday text", () => {
       const { container } = withDisplay({
-        weekdayLabel: { type: "pattern", pattern: "ddd" },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("ddd") },
         weekdayLabelNarrow: { type: "letter" },
       });
       expect(weekdays(container)).toContainEqual({ wide: "Mon", narrow: "M" });
@@ -451,13 +473,16 @@ describe("AppearancePreview", () => {
     it("keeps each width's own text when the wide one is one letter", () => {
       const { container } = withDisplay({
         weekdayLabel: { type: "letter" },
-        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+        weekdayLabelNarrow: { type: "pattern", pattern: userDateFormat("dd") },
       });
       expect(weekdays(container)).toContainEqual({ wide: "M", narrow: "Mo" });
     });
 
     it("renders one letter at narrow when the narrow one is unset", () => {
-      const { container } = withDisplay({ weekdayLabel: { type: "pattern", pattern: "dd" }, weekdayLabelNarrow: null });
+      const { container } = withDisplay({
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("dd") },
+        weekdayLabelNarrow: null,
+      });
       expect(weekdays(container)).toContainEqual({ wide: "Mo", narrow: "M" });
     });
   });

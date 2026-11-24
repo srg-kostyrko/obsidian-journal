@@ -121,6 +121,7 @@ function warningText(warning: RowWarning): string {
   return match(warning)
     .with({ kind: "iso-week-under-custom-grid" }, () => m.import_preview_warning_iso_week())
     .with({ kind: "missing-template" }, (value) => m.import_preview_warning_missing_template({ path: value.path }))
+    .with({ kind: "unrenderable-format" }, (value) => m.date_format_invalid_preview({ reason: value.reason }))
     .exhaustive();
 }
 

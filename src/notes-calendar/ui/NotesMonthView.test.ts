@@ -3,7 +3,7 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, MonthPeriod, type CalendarDisplaySliceState } from "@/calendar";
+import { CalendarDate, MonthPeriod, type CalendarDisplaySliceState, userDateFormat } from "@/calendar";
 import { calendarDisplayCoreModule } from "@/calendar/settings/module";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
@@ -452,7 +452,15 @@ describe("NotesMonthView", () => {
     // The attribute gates the rules that let a day shrink below its label, so stock grids keep their size floor.
     it("marks the grid for clipping only when the day label is custom", async () => {
       const stock = await bootHarness(daily);
-      const custom = await bootHarness(daily, { labels: { day: "Do", week: "", month: "", quarter: "", year: "" } });
+      const custom = await bootHarness(daily, {
+        labels: {
+          day: userDateFormat("Do"),
+          week: userDateFormat(""),
+          month: userDateFormat(""),
+          quarter: userDateFormat(""),
+          year: userDateFormat(""),
+        },
+      });
       const stockView = stock.render(NotesMonthView, { props: { shelf: null, month } }).container;
       const customView = custom.render(NotesMonthView, { props: { shelf: null, month } }).container;
 
@@ -461,7 +469,15 @@ describe("NotesMonthView", () => {
     });
 
     it("renders the day label in the user's format and keeps the full date as its name", async () => {
-      const harness = await bootHarness(daily, { labels: { day: "DD", week: "", month: "", quarter: "", year: "" } });
+      const harness = await bootHarness(daily, {
+        labels: {
+          day: userDateFormat("DD"),
+          week: userDateFormat(""),
+          month: userDateFormat(""),
+          quarter: userDateFormat(""),
+          year: userDateFormat(""),
+        },
+      });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
 
       expect(dayCell(container, "2026-08-01")?.textContent?.trim()).toBe("01");
@@ -469,7 +485,15 @@ describe("NotesMonthView", () => {
     });
 
     it("renders week numbers in the user's format", async () => {
-      const harness = await bootHarness(daily, { labels: { day: "", week: "w", month: "", quarter: "", year: "" } });
+      const harness = await bootHarness(daily, {
+        labels: {
+          day: userDateFormat(""),
+          week: userDateFormat("w"),
+          month: userDateFormat(""),
+          quarter: userDateFormat(""),
+          year: userDateFormat(""),
+        },
+      });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
       const first = [...month.weeks()][0];
 
@@ -483,7 +507,15 @@ describe("NotesMonthView", () => {
           monthly: fixedJournal("monthly", { type: "month" }),
           quarterly: fixedJournal("quarterly", { type: "quarter" }),
         },
-        { labels: { day: "", week: "", month: "MMM", quarter: "Qo", year: "YY" } },
+        {
+          labels: {
+            day: userDateFormat(""),
+            week: userDateFormat(""),
+            month: userDateFormat("MMM"),
+            quarter: userDateFormat("Qo"),
+            year: userDateFormat("YY"),
+          },
+        },
       );
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
 
@@ -498,7 +530,15 @@ describe("NotesMonthView", () => {
 
     // With no monthly journal the heading's month is no control, so no aria-label names it: its text would be read.
     it("keeps a non-control heading cell's accessible text fixed whatever the format", async () => {
-      const harness = await bootHarness(daily, { labels: { day: "", week: "", month: "MM", quarter: "", year: "" } });
+      const harness = await bootHarness(daily, {
+        labels: {
+          day: userDateFormat(""),
+          week: userDateFormat(""),
+          month: userDateFormat("MM"),
+          quarter: userDateFormat(""),
+          year: userDateFormat(""),
+        },
+      });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
       const heading = container.querySelector<HTMLElement>('[data-testid="header-month"]');
       const shown = heading?.querySelector('[aria-hidden="true"]:not(.notes-calendar-cell__layer)');
@@ -510,9 +550,11 @@ describe("NotesMonthView", () => {
     });
 
     it.each([
-      ["stock", { day: "", week: "", month: "", quarter: "", year: "" }],
-      ["typed as the default", { day: "", week: "", month: "MMMM", quarter: "", year: "" }],
-    ])("renders a non-control heading cell with a %s format as plain text", async (_name, labels) => {
+      ["stock", ""],
+      ["typed as the default", "MMMM"],
+    ])("renders a non-control heading cell with a %s format as plain text", async (_name, monthLabel) => {
+      const none = userDateFormat("");
+      const labels = { day: none, week: none, month: userDateFormat(monthLabel), quarter: none, year: none };
       const harness = await bootHarness(daily, { labels });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
       const heading = container.querySelector<HTMLElement>('[data-testid="header-month"]');
@@ -525,7 +567,7 @@ describe("NotesMonthView", () => {
 
     it("renders each width's weekday text and names the column by the full weekday", async () => {
       const harness = await bootHarness(daily, {
-        weekdayLabel: { type: "pattern", pattern: "ddd" },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("ddd") },
         weekdayLabelNarrow: { type: "letter" },
       });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
@@ -539,7 +581,7 @@ describe("NotesMonthView", () => {
     it("keeps each width's own text when the wide one is one letter", async () => {
       const harness = await bootHarness(daily, {
         weekdayLabel: { type: "letter" },
-        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+        weekdayLabelNarrow: { type: "pattern", pattern: userDateFormat("dd") },
       });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });
 
@@ -548,7 +590,7 @@ describe("NotesMonthView", () => {
 
     it("renders one letter at narrow when the narrow one is unset", async () => {
       const harness = await bootHarness(daily, {
-        weekdayLabel: { type: "pattern", pattern: "dd" },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("dd") },
         weekdayLabelNarrow: null,
       });
       const { container } = harness.render(NotesMonthView, { props: { shelf: null, month } });

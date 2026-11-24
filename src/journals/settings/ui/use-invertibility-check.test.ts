@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, ref, type Ref } from "vue";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
 import { JournalsRepository } from "@/journals";
@@ -27,7 +28,7 @@ const loggedAtPrompt: Prompt = {
   type: "date",
   frontmatterKey: "logged_at",
   required: false,
-  format: "YYYY-MM-DD",
+  format: userDateFormat("YYYY-MM-DD"),
 };
 const donePrompt: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done" };
 const weatherPrompt: Prompt = {
@@ -77,7 +78,7 @@ describe("useInvertibilityCheck", () => {
   });
 
   it("leaves a format this device cannot render to the format marker", async () => {
-    const config = fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYYy-[W]w" });
+    const config = fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") });
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly: config } } });
     const warning = probe(harness, "weekly");
 

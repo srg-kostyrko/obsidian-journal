@@ -10,6 +10,7 @@ import {
   type AnchorString,
   type Period,
   type PeriodKind,
+  type UserDateFormat,
   type WeekPeriod,
 } from "@/calendar";
 import { useToday, useWeekend } from "@/calendar/ui";
@@ -65,7 +66,7 @@ const days = computed(() =>
     .filter((d) => !hiddenWeekdays.value.has(d.start.weekday())),
 );
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
-const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
+const format = (kind: PeriodKind): UserDateFormat => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
 const weekend = useWeekend();
 const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());

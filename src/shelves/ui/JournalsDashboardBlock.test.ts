@@ -1,7 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
+import { userDateFormat } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { AddJournalFlow, DeleteJournalFlow, CloneJournalFlow, type JournalConfig } from "@/journals";
@@ -9,7 +12,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { journalsSettingsUiModule } from "@/journals/settings/ui-module";
 import { fixedJournal } from "@/journals/testing";
-import { SettingsUiService } from "@/settings";
+import { CURRENT_VERSION, SettingsUiService } from "@/settings";
 import { testContainer } from "@/testing";
 
 import { shelvesCoreModule } from "../module";
@@ -92,5 +95,24 @@ describe("JournalsDashboardBlock", () => {
     harness.render(JournalsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_clone({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(CloneJournalFlow, { journalName: "daily" });
+  });
+
+  it("marks a journal whose date format cannot render, and clears the mark when a sync merge fixes it", async () => {
+    await withoutEras(async () => {
+      const broken = fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") });
+      const { harness } = await setup({ journals: { weekly: broken } });
+      harness.render(JournalsDashboardBlock);
+      expect(screen.getByText(m.journal_dashboard_date_format_unrenderable())).toBeTruthy();
+
+      const loaded = await harness.data.load();
+      const current = loaded.isOk() ? (loaded.value as Record<string, unknown>) : {};
+      const fixed = { ...broken, dateFormat: userDateFormat("YYYY-[W]w") };
+      await harness.data.save({ ...current, version: CURRENT_VERSION, journals: { weekly: fixed } });
+      await harness.settings.reload();
+      await nextTick();
+
+      expect(screen.getByLabelText(m.journal_dashboard_edit({ name: "weekly" }))).toBeTruthy();
+      expect(screen.queryByText(m.journal_dashboard_date_format_unrenderable())).toBeNull();
+    });
   });
 });

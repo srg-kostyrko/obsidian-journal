@@ -1,5 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { anchor, withoutEras } from "@/calendar/testing";
 import { NoteMetadataService, NoteRenameError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
@@ -528,7 +529,7 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
           diary: fixedJournal(
             "diary",
             { type: "day" },
-            { timeline: TIMELINE_OPEN, nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" },
+            { timeline: TIMELINE_OPEN, nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("DD.MM.YYYY") },
           ),
         },
         "2026-05-19.md",
@@ -599,7 +600,11 @@ describe("AutoAttachService — a journal whose date format cannot render", () =
       modules: [journalsCoreModule],
       data: {
         journals: {
-          weekly: fixedJournal("weekly", { type: "week" }, { timeline: TIMELINE_OPEN, dateFormat: "YYYYy-[W]w" }),
+          weekly: fixedJournal(
+            "weekly",
+            { type: "week" },
+            { timeline: TIMELINE_OPEN, dateFormat: userDateFormat("YYYYy-[W]w") },
+          ),
         },
       },
     });

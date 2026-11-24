@@ -4,9 +4,9 @@ import { screen } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { calendarDisplaySlice } from "@/calendar";
+import { CalendarDate, calendarDisplaySlice, userDateFormat } from "@/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
-import { testCalendar } from "@/calendar/testing";
+import { testCalendar, withoutEras } from "@/calendar/testing";
 import { initLocale, m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -58,6 +58,22 @@ describe("AppearanceFormatControl", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("shows the invalid-format message for a pattern this device cannot render, and the sample once it is fixed", async () => {
+    await withoutEras(async () => {
+      const failure = CalendarDate.today().tryFormat(userDateFormat("Dy"));
+      if (failure.isOk()) throw new Error("expected the pattern to throw without eras");
+      const message = m.date_format_invalid_preview({ reason: failure.error.reason });
+      mount("day");
+
+      await type("Dy");
+      expect(screen.getByText(message)).toBeTruthy();
+
+      await type("DD");
+      expect(screen.queryByText(message)).toBeNull();
+      expect(preview()).toContain("04");
+    });
   });
 
   it("renders a row with a text box, a suggestions dropdown and a preview of the default", () => {
@@ -124,7 +140,7 @@ describe("AppearanceFormatControl", () => {
   });
 
   it("writes an empty box as the default and previews the default's output", async () => {
-    display().state = { ...display().state, labels: { ...display().state.labels, day: "DD" } };
+    display().state = { ...display().state, labels: { ...display().state.labels, day: userDateFormat("DD") } };
     mount("day");
     expect(box().value).toBe("DD");
 
@@ -138,7 +154,7 @@ describe("AppearanceFormatControl", () => {
     mount("day");
     await type("Do");
 
-    display().state = { ...display().state, labels: { ...display().state.labels, day: "" } };
+    display().state = { ...display().state, labels: { ...display().state.labels, day: userDateFormat("") } };
     await nextTick();
 
     expect(box().value).toBe("");
@@ -185,7 +201,7 @@ describe("AppearanceFormatControl", () => {
     });
 
     it("at narrow shows the stock one letter until set, and Copy wide format copies the wide label", async () => {
-      display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: "dddd" } };
+      display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: userDateFormat("dddd") } };
       mount("weekday", "narrow");
       expect(optionTexts()).toContain(m.calendar_appearance_format_same_as_wide());
       expect(box().placeholder).toBe(m.calendar_appearance_format_letter());
@@ -203,8 +219,8 @@ describe("AppearanceFormatControl", () => {
     it("clears the narrow box back to the stock one letter", async () => {
       display().state = {
         ...display().state,
-        weekdayLabel: { type: "pattern", pattern: "dddd" },
-        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("dddd") },
+        weekdayLabelNarrow: { type: "pattern", pattern: userDateFormat("dd") },
       };
       mount("weekday", "narrow");
       expect(box().value).toBe("dd");
@@ -218,7 +234,7 @@ describe("AppearanceFormatControl", () => {
     });
 
     it("at Wide, says narrow has its own value and applies the wide label to narrow", async () => {
-      display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: "dddd" } };
+      display().state = { ...display().state, weekdayLabel: { type: "pattern", pattern: userDateFormat("dddd") } };
       mount("weekday");
       expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
 
@@ -232,8 +248,8 @@ describe("AppearanceFormatControl", () => {
     it("at Wide, tags a narrow label that differs from the wide one, and copies the wide label over it", async () => {
       display().state = {
         ...display().state,
-        weekdayLabel: { type: "pattern", pattern: "dddd" },
-        weekdayLabelNarrow: { type: "pattern", pattern: "dd" },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("dddd") },
+        weekdayLabelNarrow: { type: "pattern", pattern: userDateFormat("dd") },
       };
       mount("weekday");
       expect(screen.getByText(m.calendar_appearance_narrow_own())).toBeTruthy();
@@ -247,8 +263,8 @@ describe("AppearanceFormatControl", () => {
     it("carries no narrow tag once narrow has the wide label, an empty pattern read as its default", () => {
       display().state = {
         ...display().state,
-        weekdayLabel: { type: "pattern", pattern: "" },
-        weekdayLabelNarrow: { type: "pattern", pattern: "ddd" },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("") },
+        weekdayLabelNarrow: { type: "pattern", pattern: userDateFormat("ddd") },
       };
       mount("weekday");
 
@@ -264,7 +280,7 @@ describe("AppearanceFormatControl", () => {
     });
 
     it("at Narrow, tags a narrow label Narrow only, whose clear brings the stock back", async () => {
-      display().state = { ...display().state, weekdayLabelNarrow: { type: "pattern", pattern: "dd" } };
+      display().state = { ...display().state, weekdayLabelNarrow: { type: "pattern", pattern: userDateFormat("dd") } };
       mount("weekday", "narrow");
       const tag = screen.getByRole("button", { name: m.calendar_appearance_narrow_only() });
       expect(tag.title).toBe(m.calendar_appearance_narrow_only_clear_stock());

@@ -1,4 +1,4 @@
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, userDateFormat } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { CycleService } from "@/journals/cycle";
@@ -107,7 +107,7 @@ export class ImportConnectService {
         ...defaultBulkAddParameters(),
         folder: staticFolderOf(config.folder),
         datePlace: "path",
-        dateFormat: "",
+        dateFormat: userDateFormat(""),
         existingNote: "skip",
         otherFolder: "keep",
         otherName: "keep",

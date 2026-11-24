@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import type { Period } from "@/calendar";
+import type { Period, UserDateFormat } from "@/calendar";
 import { useToday } from "@/calendar/ui";
 import { CellDecoration, useCellNames } from "@/decorations";
 import { formatConjunction, m } from "@/i18n";
@@ -14,7 +14,7 @@ import type { NotesCellApi } from "../use-notes-cell";
 const props = defineProps<{
   period: Period;
   cell: NotesCellApi;
-  format?: string;
+  format?: UserDateFormat;
   role?: "gridcell" | "rowheader";
   tabIndex?: number;
   selected?: boolean;
@@ -25,8 +25,15 @@ const props = defineProps<{
 }>();
 
 const rawPeriod = computed(() => toRaw(props.period));
-const pattern = computed(() => props.format ?? defaultFormatPattern(rawPeriod.value.kind));
-const label = computed(() => rawPeriod.value.format(pattern.value));
+const stockPattern = computed(() => defaultFormatPattern(rawPeriod.value.kind));
+// A label pattern this device cannot render falls back to the stock one, so the grid stays usable; the
+// appearance editor's preview is where the error shows.
+const customLabel = computed((): string | null => {
+  if (props.format === undefined || props.format === stockPattern.value) return null;
+  const rendered = rawPeriod.value.tryFormat(props.format);
+  return rendered.isOk() ? rendered.value : null;
+});
+const label = computed(() => customLabel.value ?? rawPeriod.value.format(stockPattern.value));
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
 const isControl = computed(() => props.role !== undefined || !isInactive.value);
@@ -63,7 +70,7 @@ const accessibleName = computed(() => (isControl.value || names.value.length > 0
 // An unlabelled cell's text is what is read; a custom format would change that text, and the accessible
 // name must not follow the user's format.
 const hiddenName = computed(() =>
-  accessibleName.value !== undefined || pattern.value === defaultFormatPattern(rawPeriod.value.kind)
+  accessibleName.value !== undefined || customLabel.value === null
     ? undefined
     : rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)),
 );

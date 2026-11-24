@@ -1,5 +1,6 @@
 import { assert, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
 import { initLocale } from "@/i18n";
@@ -282,7 +283,7 @@ describe("buildNavRowContext", () => {
 describe("renderNavRow", () => {
   beforeAll(() => initLocale("en"));
 
-  const broken = fixedJournal("daily", { type: "day" }, { dateFormat: "y" });
+  const broken = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("y") });
 
   async function render(template: string) {
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: broken } } });

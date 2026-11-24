@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { defineComponent, nextTick, ref, type Ref } from "vue";
 
+import { userDateFormat } from "@/calendar";
 import { withoutEras } from "@/calendar/testing";
 import { Ok } from "@/infrastructure/result";
 import { journalsCoreModule } from "@/journals/module";
@@ -71,7 +72,11 @@ describe("useAutoCreateOnEnable", () => {
   });
 
   it("turning auto-create on shows the notice when the format cannot render", async () => {
-    const weekly = fixedJournal("Weekly", { type: "week" }, { autoCreate: false, dateFormat: "YYYYy-[W]w" });
+    const weekly = fixedJournal(
+      "Weekly",
+      { type: "week" },
+      { autoCreate: false, dateFormat: userDateFormat("YYYYy-[W]w") },
+    );
     harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { Weekly: weekly } } });
     const config = ref<JournalConfig>({ ...weekly });
     mount(config);

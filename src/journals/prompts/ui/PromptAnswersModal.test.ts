@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { DayPeriod } from "@/calendar";
+import { DayPeriod, userDateFormat } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { PlatformService } from "@/infrastructure/host";
@@ -304,7 +304,7 @@ describe("PromptAnswersModal", () => {
       type: "date",
       frontmatterKey: "when",
       required: false,
-      format: "YYYY-MM-DD",
+      format: userDateFormat("YYYY-MM-DD"),
     };
     const priorityRequired: Prompt = {
       variable: "priority",

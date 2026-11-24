@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { NotesService } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
@@ -84,7 +85,7 @@ describe("ConfigureBulkAddNoteletsModal", () => {
   it("prefills the date format from the journal's configured format", async () => {
     const withNonDefaultFormat = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY-MM" }) } },
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY-MM") }) } },
     });
 
     withNonDefaultFormat.renderModal(ConfigureBulkAddNoteletsModal, {
