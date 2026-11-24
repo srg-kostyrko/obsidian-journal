@@ -234,9 +234,19 @@ describe("an unrenderable date format", () => {
     expect(result.error.pattern).toBe("y");
   });
 
-  // No real pattern reaches these: moment refuses to parse a capture in the format it then
-  // cannot render, so the formatter is made to throw for a pattern that parses.
-  describe("when a format parses but cannot be rendered", () => {
+  it("makes parse return unrenderable-format when searching modified captures", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().date("date", date, "YYYY-MM-DD");
+    const result = withoutEras(() =>
+      engine.parse(tokenize("{{date:YYYY-MM-DD}}-{{date+1d:yyyy}}"), "2026-05-05-yyyy", context),
+    );
+    expectErr(result);
+    expect(result.error.detail).toMatchObject({ kind: "unrenderable-format", variableName: "date", format: "yyyy" });
+  });
+
+  // No real pattern reaches the merged-captures guard: moment refuses to parse a capture in the
+  // format it then cannot render, so the formatter is made to throw for a pattern that parses.
+  describe("when merged captures parse but cannot be rendered", () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
@@ -253,15 +263,6 @@ describe("an unrenderable date format", () => {
         format: "MM",
         reason: "boom",
       });
-    });
-
-    it("makes parse return unrenderable-format when searching modified captures", async () => {
-      const engine = await installTestEngine();
-      const context = TemplateContext.empty().date("date", date, "YYYY-MM-DD");
-      failFormatFor("MM");
-      const result = engine.parse(tokenize("{{date+1w:YYYY}}-{{date+1w:MM}}"), "2026-05", context);
-      expectErr(result);
-      expect(result.error.detail.kind).toBe("unrenderable-format");
     });
   });
 });
