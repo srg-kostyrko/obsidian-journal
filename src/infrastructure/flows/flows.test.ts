@@ -6,7 +6,7 @@ import { NoticeService } from "@/infrastructure/host";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { LogLevelGate, LogLevelGateToken } from "@/infrastructure/logger/log-level-gate";
 import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
-import { AsyncResult } from "@/infrastructure/result";
+import { AsyncResult, attempt } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { FlowError, UnexpectedFlowError, UserAborted, type BenignFlowError, type UserFacingFlowError } from "./errors";
@@ -70,13 +70,23 @@ class UserFacingFailingFlow implements Flow<null, never, UserFacingError> {
   }
 }
 
-class RejectingFlow implements Flow<null, never, never> {
-  execute(): AsyncResult<never, never> {
-    return AsyncResult._fromPromiseOfResult(
-      Promise.try(() => {
-        throw new Error("boom");
-      }),
-    );
+class ThrowsAfterYieldFlow implements Flow<null, number, never> {
+  execute(): AsyncResult<number, never> {
+    return attempt.in(this, async function* () {
+      const step = yield* AsyncResult.ok(1);
+      if (step === 1) throw new Error("boom");
+      return step;
+    });
+  }
+}
+
+class ThrowsBeforeYieldFlow implements Flow<null, number, never> {
+  execute(): AsyncResult<number, never> {
+    return attempt.in(this, async function* () {
+      await Promise.resolve();
+      if (Date.now() > 0) throw new Error("boom");
+      return yield* AsyncResult.ok(1);
+    });
   }
 }
 
@@ -191,16 +201,25 @@ describe("Flows", () => {
       expect(notices.messages).toHaveLength(0);
     });
 
-    it("a flow whose result rejects logs flow failed and shows the failure notice", async () => {
-      c.register(RejectingFlow).useClass(RejectingFlow);
-      const result = await c.resolve(Flows).invoke(RejectingFlow, null);
+    it("a flow whose generator throws after a yield* logs flow failed and shows the failure notice", async () => {
+      c.register(ThrowsAfterYieldFlow).useClass(ThrowsAfterYieldFlow);
+      const result = await c.resolve(Flows).invoke(ThrowsAfterYieldFlow, null);
       expectErr(result);
       expect(result.error).toBeInstanceOf(UnexpectedFlowError);
       expect(sink.records.find((r) => r.level === "error")?.message).toBe("flow failed");
       expect(notices.messages).toEqual([m.flow_failure_notice({ error: "boom" })]);
     });
 
-    it("a flow that throws before its first yield takes the same path", async () => {
+    it("a flow whose generator throws before its first yield* takes the same path", async () => {
+      c.register(ThrowsBeforeYieldFlow).useClass(ThrowsBeforeYieldFlow);
+      const result = await c.resolve(Flows).invoke(ThrowsBeforeYieldFlow, null);
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(UnexpectedFlowError);
+      expect(sink.records.find((r) => r.level === "error")?.message).toBe("flow failed");
+      expect(notices.messages).toEqual([m.flow_failure_notice({ error: "boom" })]);
+    });
+
+    it("a flow that throws synchronously out of execute takes the same path", async () => {
       c.register(SyncThrowingFlow).useClass(SyncThrowingFlow);
       const result = await c.resolve(Flows).invoke(SyncThrowingFlow, null);
       expectErr(result);
@@ -210,8 +229,8 @@ describe("Flows", () => {
     });
 
     it("notify: false suppresses the notice for an unexpected throw", async () => {
-      c.register(SyncThrowingFlow).useClass(SyncThrowingFlow);
-      await c.resolve(Flows).invoke(SyncThrowingFlow, null, { notify: false });
+      c.register(ThrowsAfterYieldFlow).useClass(ThrowsAfterYieldFlow);
+      await c.resolve(Flows).invoke(ThrowsAfterYieldFlow, null, { notify: false });
       expect(notices.messages).toHaveLength(0);
       expect(settledRecord(sink)?.level).toBe("error");
     });
