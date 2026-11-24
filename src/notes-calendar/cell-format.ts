@@ -73,9 +73,18 @@ export function tryFormatWeekday(date: CalendarDate, label: WeekdayLabel): Resul
   return label.pattern === "" ? new Ok(date.format(DEFAULT_WEEKDAY_PATTERN)) : date.tryFormat(label.pattern);
 }
 
+/** Called when a label pattern cannot render and the stock one is shown instead. */
+export type LabelFallback = (error: DateFormatError) => void;
+
 // A pattern this device cannot render keeps the grid readable; the appearance editor reports it.
-export function formatWeekday(date: CalendarDate, label: WeekdayLabel): string {
-  return tryFormatWeekday(date, label).match({ ok: (text) => text, err: () => date.format(DEFAULT_WEEKDAY_PATTERN) });
+export function formatWeekday(date: CalendarDate, label: WeekdayLabel, onFallback?: LabelFallback): string {
+  return tryFormatWeekday(date, label).match({
+    ok: (text) => text,
+    err: (error) => {
+      onFallback?.(error);
+      return date.format(DEFAULT_WEEKDAY_PATTERN);
+    },
+  });
 }
 
 /** What a narrow calendar's weekday shows when narrow has no label of its own. */
@@ -86,10 +95,11 @@ export function weekdayTexts(
   date: CalendarDate,
   weekdayLabel: WeekdayLabel,
   weekdayLabelNarrow: WeekdayLabel | null,
+  onFallback?: LabelFallback,
 ): { wide: string; narrow: string; name: string } {
   return {
-    wide: formatWeekday(date, weekdayLabel),
-    narrow: formatWeekday(date, weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY),
+    wide: formatWeekday(date, weekdayLabel, onFallback),
+    narrow: formatWeekday(date, weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY, onFallback),
     name: date.format("dddd"),
   };
 }

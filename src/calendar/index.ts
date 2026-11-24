@@ -36,6 +36,7 @@ export {
   type WeekPlacement,
   type WeekendSetting,
 } from "./settings/display-slice";
+export { LabelFormatLog } from "./settings/label-format-log";
 export { calendarSettingsModule } from "./settings/module";
 export { WeekPresetApplierToken, type WeekPresetApplier } from "./settings/week-preset-applier";
 export {

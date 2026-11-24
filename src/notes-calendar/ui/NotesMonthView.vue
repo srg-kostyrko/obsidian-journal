@@ -2,6 +2,8 @@
 import { computed, toRaw, useSlots } from "vue";
 
 import {
+  type DateFormatError,
+  LabelFormatLog,
   advance,
   calendarDisplaySlice,
   DayPeriod,
@@ -105,6 +107,8 @@ const rows = computed<readonly WeekRow[]>(() => {
 });
 
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
+const labelLog = useService(LabelFormatLog);
+const labelFallback = (error: DateFormatError): void => labelLog.warnOnce(error);
 const format = (kind: PeriodKind): UserDateFormat => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
 const weekend = useWeekend();
@@ -112,7 +116,7 @@ const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekd
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
   return (rows.value[0]?.days ?? []).map(({ period }) => ({
-    ...weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow),
+    ...weekdayTexts(period.start, weekdayLabel, weekdayLabelNarrow, labelFallback),
     weekend: isWeekend(period),
   }));
 });
@@ -223,6 +227,7 @@ const isSelected = (period: Period): boolean =>
           :period="monthPeriod"
           :cell="monthCell"
           :format="format('month')"
+          :label-fallback="labelFallback"
         />
         <NotesCalendarCell
           v-if="showQuarter"
@@ -230,8 +235,15 @@ const isSelected = (period: Period): boolean =>
           :period="quarterPeriod"
           :cell="quarterCell"
           :format="format('quarter')"
+          :label-fallback="labelFallback"
         />
-        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" :format="format('year')" />
+        <NotesCalendarCell
+          data-testid="header-year"
+          :period="yearPeriod"
+          :cell="yearCell"
+          :format="format('year')"
+          :label-fallback="labelFallback"
+        />
       </slot>
       <slot name="header-end" />
     </div>
@@ -289,6 +301,7 @@ const isSelected = (period: Period): boolean =>
           :period="row.weekPeriod"
           :cell="weekCell"
           :format="format('week')"
+          :label-fallback="labelFallback"
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
@@ -310,6 +323,7 @@ const isSelected = (period: Period): boolean =>
             :period="day.period"
             :cell="inertDay"
             :format="format('day')"
+            :label-fallback="labelFallback"
             role="gridcell"
           />
           <NotesCalendarCell
@@ -321,6 +335,7 @@ const isSelected = (period: Period): boolean =>
             :period="day.period"
             :cell="dayCell"
             :format="format('day')"
+            :label-fallback="labelFallback"
             role="gridcell"
             :data-grid-key="`day:${day.period.anchor.toAnchor()}`"
             :tab-index="navigation.tabIndex(`day:${day.period.anchor.toAnchor()}`)"
@@ -334,6 +349,7 @@ const isSelected = (period: Period): boolean =>
           :period="row.weekPeriod"
           :cell="weekCell"
           :format="format('week')"
+          :label-fallback="labelFallback"
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"

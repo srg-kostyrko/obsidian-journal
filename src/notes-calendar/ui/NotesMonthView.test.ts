@@ -3,9 +3,15 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, MonthPeriod, type CalendarDisplaySliceState, userDateFormat } from "@/calendar";
+import {
+  CalendarDate,
+  calendarDisplaySlice,
+  MonthPeriod,
+  type CalendarDisplaySliceState,
+  userDateFormat,
+} from "@/calendar";
 import { calendarDisplayCoreModule } from "@/calendar/settings/module";
-import { anchor, installTestCalendar } from "@/calendar/testing";
+import { anchor, installTestCalendar, withoutEras } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
@@ -1228,6 +1234,26 @@ describe("NotesMonthView bands", () => {
           .find((rule) => rule.selector === ".notes-calendar-cell:has(.mark-overflow__popover)")
           ?.declarations.get("z-index"),
       ).toBe("var(--layer-popover)");
+    });
+  });
+});
+
+describe("NotesMonthView label fallback", () => {
+  it("logs each label pattern that cannot render once, however often the grid re-renders", async () => {
+    await withoutEras(async () => {
+      const harness = await bootHarness(daily, {
+        labels: { ...calendarDisplaySlice.defaults.labels, day: userDateFormat("Dy") },
+        weekdayLabel: { type: "pattern", pattern: userDateFormat("ddd y") },
+      });
+      const { container, rerender } = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      await rerender({ shelf: null, month: MonthPeriod.containing(CalendarDate.fromAnchor(anchor("2026-09-15"))) });
+      await rerender({ shelf: null, month });
+
+      const warned = harness.logs.records
+        .filter((record) => record.level === "warn" && record.name === "date-format")
+        .map((record) => record.fields?.pattern);
+      expect(warned.toSorted()).toEqual(["Dy", "ddd y"]);
+      expect(container.querySelector('[data-anchor="2026-08-15"]')?.textContent?.trim()).toContain("15");
     });
   });
 });
