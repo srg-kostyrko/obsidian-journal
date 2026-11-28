@@ -101,8 +101,14 @@ notelets**:
   properties are removed from their frontmatter.
 - **Delete notelets** — every notelet of this type is deleted from your vault.
 
-Deleting a type also takes it out of every **Check if a notelet exists** decoration condition that named
-it, and removes a condition — or a whole decoration — that named nothing else.
+Deleting a type also takes it out of the decoration conditions that name it — **Check if a notelet
+exists**, and **Check tags** or **Check frontmatter property** conditions limited to notelet types. A
+condition left with none of its types can no longer match: in a decoration set to **Decorate when all
+conditions are fulfilled** the whole decoration is removed, and in one set to **Decorate when any condition
+is fulfilled** just that condition, or the whole decoration if it was the last one. A tag or property
+condition set to **Note and notelets** falls back to **Note only** instead, and one set to **Note only** is
+always kept. See [Has notelet](/decorations#has-notelet). The delete dialog lists the decorations it
+will remove before you confirm.
 
 Cloning a journal offers **Copy notelet types**, on by default. See [Journals](/journals).
 

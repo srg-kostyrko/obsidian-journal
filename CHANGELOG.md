@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [3.8.0] - 2026-11-28
 
 ### Features
 
@@ -22,7 +22,8 @@ All notable changes to this project will be documented in this file.
 - On a custom interval journal, a **Check if note exists** condition now looks at the interval's note on every day of the interval, not only on its first day. A decoration combining **Check interval offset** with **Check if note exists** never marked any day but the interval's first; it now marks the day it names whenever the interval has a note.
 - **Notes by date** no longer lists a note under 1 January 1970 when its file reports no creation time. Such a note, without a **Creation date property** value, is now dated by its last modification instead.
 - A date format that this device cannot render no longer breaks Journals (#667, #663). Before, the settings tab could go blank, and creating or opening a note did nothing at all. Now the format's preview shows **Invalid format** with the reason, and the rest of settings keeps working; should anything else in a settings section still fail, only that section is replaced. A journal whose note name, folder or date format cannot be rendered on this device is marked in the journals list. Creating or opening one of its notes, from the calendar, a command, a navigation block or a link, shows one notice naming the journal and the format and saying where to change it, and so does starting a bulk add for that journal, before any note is moved or renamed. A navigation block segment or a **Markdown template** block shows **Invalid format** in place of its text, calendar labels fall back to their default format, and an import source whose format cannot be rendered is held back. An unexpected error while creating or opening a note now shows a notice instead of failing silently. One behavior change: when a note's template fails to render, for any reason including a template that cannot be read, the empty note that was just created is moved to the trash instead of being left behind.
-- A date format written with a lowercase `y` now gets a hint with a one-click fix (#667). In moment `y` is the era year, not the calendar year: it looks the same in most languages, but notes named with it cannot be matched back to their dates. Under **Date format**, a **Note name template** or **Folder** that uses it, a question's date format and the bulk add date format, the hint explains this and **Apply recommendation** replaces it with the calendar year, `YYYY` (or `YY` for `yy`). The warning that a journal's notes cannot be read back now names the symbol that causes it, such as `ZZ`, instead of always pointing at time zones.
+- A date format written with a lowercase `y` now gets a hint with a one-click fix (#667). In moment `y` is the era year, not the calendar year: it looks the same in most languages, but notes named with it cannot be matched back to their dates. Under **Default date format**, a **Note name template** or **Folder** that uses it, a question's date format and the bulk add date format, the hint explains this and **Apply recommendation** replaces it with the calendar year, `YYYY` (or `YY` for `yy`). The warning that a journal's notes cannot be read back now names the symbol that causes it, such as `ZZ`, instead of always pointing at time zones.
+- A date format that escapes a letter with a backslash, such as `YYYY-MM-DD \W`, now reads back. Moment writes the escaped letter as itself and drops the backslash, but Journals expected the backslash in the note name and read the letter as a date symbol, so notes and bulk add names written with such a format could not be matched back to their dates.
 
 ## [3.7.0] - 2026-11-14
 

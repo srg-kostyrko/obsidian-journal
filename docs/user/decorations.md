@@ -57,10 +57,12 @@ Which conditions a journal decoration offers depends on the journal's period:
 | **Check interval offset**              |       |                                      |        ✓         |
 
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
-no note it does not match. **Check if note exists** set to **Missing** is made for dates with no note,
+no note it does not match, except where noted below. **Check if note exists** set to **Missing** is made for dates with no note,
 **Check links to this date** counts links whether the note exists or not, and **Check notes created in
-this period** counts other notes, never the period notes of any of your journals. **Check tasks** is the
-remaining exception: with **Look in** set to
+this period** counts other notes, never the period notes of any of your journals. **Check tags** and
+**Check frontmatter property** [look in notelets](#looking-in-notelets) when **Look in** is set to
+**Notelets only** or **Note and notelets**, so a date with no note but a matching notelet can match.
+**Check tasks** is the other exception: with **Look in** set to
 **Notelets only** or **Note and notelets**, a date with only a notelet can match, and a date with only a [task
 note](/tasks#task-notes), or a [dated checkbox line](/tasks#dated-lines-from-anywhere-in-the-vault)
 from anywhere in the vault, dated on it can match whatever **Look in** says, provided the journal
