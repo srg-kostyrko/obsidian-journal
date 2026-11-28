@@ -41,6 +41,31 @@ is written correctly and matches nothing on the way back. Build the format from 
 - The period's note may already exist elsewhere: a note you moved or renamed keeps its connection, and
   opening that period opens it where it is.
 
+## A journal's date format can't be rendered on this device
+
+A date format can work on one device and fail on another: moment draws some symbols from its
+language data as Obsidian loaded it on that device, and where that data is missing, formatting fails
+there and nowhere else. Lowercase `y` is the known case — see [Note creation](/journals#note-creation).
+On the device where it fails:
+
+- The journals list marks the journal with "The date format can't be rendered on this device."
+- Creating one of its notes — from a calendar, a command, a navigation block or an `obsidian://`
+  link — creates nothing and shows a notice naming the journal and the format. A note that already
+  exists still opens. When its note name or folder is what cannot be rendered, starting a bulk add for
+  it is refused too, before any note is moved or renamed.
+- A format preview in settings, a navigation block segment and a **Markdown template** block show
+  "Invalid format:" with the reason in place of their text, and a calendar label falls back to its
+  default format when its own label format cannot be rendered.
+- An import source whose format cannot be rendered is held back.
+
+The format at fault may be the journal's **Default date format**, or a `{{date:…}}` format in its
+**Note name template**, its **Folder** or one of its template notes; the notice quotes it. Change it in
+the journal's settings, or in the template note. A format that only a template note uses is not
+marked in the journals list and does not stop a bulk add; it shows up when a note is created.
+
+If a part of settings is replaced by "This section failed to display", the rest of settings keeps
+working. Include the reason it shows when [reporting a bug](#reporting-a-bug).
+
 ## Two journals fight over the same notes {#two-journals-fight-over-the-same-notes}
 
 **Colliding journal settings** on the main settings page names journals that write the same note path
