@@ -210,8 +210,7 @@ const TEXT_PARTS = [
   {
     part: "date",
     selector: ".notes-month-view__day:not([data-outside])",
-    size: "1.1em",
-    sizeNarrow: "1em",
+    size: "inherit",
     weight: "inherit",
     color: "inherit",
   },
@@ -221,12 +220,10 @@ function textEntries(): CatalogEntry[] {
   return TEXT_PARTS.flatMap((text) => {
     const { part, selector, size, weight, color } = text;
     const name = (value: string): string => `journal-cell-${part}-${value}`;
-    const sizeNarrow = "sizeNarrow" in text ? { stockNarrow: text.sizeNarrow } : {};
     return [
       {
         name: name("size"),
         stock: size,
-        ...sizeNarrow,
         probe: { selector, property: "font-size", sample: "21px", expect: "21px" },
       },
       {

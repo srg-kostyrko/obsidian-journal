@@ -2,6 +2,8 @@ import { screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { formatFailureReason, withoutEras } from "@/calendar/testing";
+import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
@@ -37,6 +39,19 @@ describe("TemplateStringPreview", () => {
 
     expect(screen.getByText("2026/journal")).toBeTruthy();
     expect(screen.getByText("Preview:")).toBeTruthy();
+  });
+
+  it("shows the invalid-format message where a date format cannot render", async () => {
+    const broken = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    withoutEras(() => {
+      broken.render(TemplateStringPreview, {
+        props: { journalName: "daily", value: "{{date:y}}/journal", label: "Preview:" },
+      });
+      expect(screen.getByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") }))).toBeTruthy();
+    });
   });
 
   it("does not render when the value has no variables", () => {

@@ -2,6 +2,7 @@ import * as v from "valibot";
 import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { decorationStyleSchema } from "@/decorations/config";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { testContainer } from "@/testing";
 
@@ -361,7 +362,7 @@ describe("journalDefaultsFor custom-interval defaults", () => {
     const cfg = journalDefaultsFor(customWrite, "biweekly");
     expect(cfg.decorations).toHaveLength(1);
     const [decoration] = cfg.decorations;
-    expect(decoration.conditions).toEqual([{ type: "has-note" }]);
+    expect(decoration.conditions).toEqual([{ type: "has-note", presence: "exists" }]);
     expect(decoration.styles[0]).toMatchObject({
       type: "border",
       border: "different",
@@ -375,12 +376,18 @@ describe("journalDefaultsFor fixed-interval decorations", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");
     expect(cfg.decorations).toHaveLength(1);
     const [decoration] = cfg.decorations;
-    expect(decoration.conditions).toEqual([{ type: "has-note" }]);
+    expect(decoration.conditions).toEqual([{ type: "has-note", presence: "exists" }]);
     expect(decoration.styles[0]).toMatchObject({
       type: "shape",
       shape: "circle",
+      size: 0.25,
       color: { type: "theme", name: "interactive-accent" },
     });
+  });
+
+  it("leaves a stored shape with no size at the earlier default", () => {
+    const parsed = v.parse(decorationStyleSchema, { type: "shape" });
+    expect(parsed).toMatchObject({ size: 0.4 });
   });
 });
 

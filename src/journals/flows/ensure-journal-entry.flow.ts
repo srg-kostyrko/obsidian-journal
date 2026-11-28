@@ -7,9 +7,9 @@ import type { AsyncResult } from "@/infrastructure/result";
 import { FrontmatterService } from "../frontmatter";
 import { NoteCreationService } from "../notes/note-creation";
 
-import type { OpenJournalEntryResult } from "./open-journal-entry.flow";
 import type { NoteCreationError } from "../notes/note-creation";
 import type { PromptAnswer } from "../prompts/config";
+import type { OpenJournalEntryResult } from "./open-journal-entry.flow";
 
 export interface EnsureJournalEntryParameters {
   journalName: string;

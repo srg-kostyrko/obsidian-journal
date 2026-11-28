@@ -1,4 +1,4 @@
-import { assert, describe, expect, it } from "vitest";
+import { assert, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
@@ -815,6 +815,15 @@ describe("JournalsIndex", () => {
       expect(index.isReady()).toBe(false);
       index.markReady();
       expect(index.isReady()).toBe(true);
+    });
+
+    it("emits ready once, on the first markReady", () => {
+      const index = new JournalsIndex();
+      const ready = vi.fn();
+      index.events.on("ready", ready);
+      index.markReady();
+      index.markReady();
+      expect(ready).toHaveBeenCalledOnce();
     });
   });
 

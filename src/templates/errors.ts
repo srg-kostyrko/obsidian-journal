@@ -11,6 +11,7 @@ export type TemplateParseErrorDetail =
   | { kind: "no-match"; input: string }
   | { kind: "invalid-number"; capture: string; variableName: string }
   | { kind: "invalid-date"; capture: string; variableName: string; format: string }
+  | { kind: "unrenderable-format"; variableName: string; format: string; reason: string }
   | { kind: "conflict"; variableName: string; candidates: BoundValue[] }
   | { kind: "not-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string };
 
@@ -29,6 +30,16 @@ export class TemplateRenderError extends TemplatesError {
   }
 }
 
+export class UnrenderableDateFormatError extends TemplateRenderError {
+  constructor(
+    readonly variableName: string,
+    readonly pattern: string,
+    readonly reason: string,
+  ) {
+    super(`Variable ${variableName}: cannot render date format "${pattern}": ${reason}`);
+  }
+}
+
 function formatParseError(detail: TemplateParseErrorDetail): string {
   switch (detail.kind) {
     case "no-match": {
@@ -41,6 +52,10 @@ function formatParseError(detail: TemplateParseErrorDetail): string {
 
     case "invalid-date": {
       return `Variable ${detail.variableName}: cannot parse "${detail.capture}" with format "${detail.format}"`;
+    }
+
+    case "unrenderable-format": {
+      return `Variable ${detail.variableName}: cannot render date format "${detail.format}": ${detail.reason}`;
     }
 
     case "conflict": {

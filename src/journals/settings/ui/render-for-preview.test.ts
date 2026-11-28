@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { CalendarDate } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { anchor, withoutEras } from "@/calendar/testing";
+import { Ok } from "@/infrastructure/result";
 import { TemplateContext } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
@@ -18,14 +19,20 @@ describe("renderForPreview", () => {
   });
 
   it("renders the template with the given context", () => {
-    expect(renderForPreview(engine, "{{journal_name}}-{{date}}", context)).toBe("daily-2026-05-19");
+    expect(renderForPreview(engine, "{{journal_name}}-{{date}}", context)).toEqual(new Ok("daily-2026-05-19"));
   });
 
   it("returns an empty string when the template cannot render", () => {
-    expect(renderForPreview(engine, "{{unknown_var}}", context)).toBe("");
+    expect(renderForPreview(engine, "{{unknown_var}}", context)).toEqual(new Ok(""));
   });
 
   it("returns an empty string for an empty template", () => {
-    expect(renderForPreview(engine, "", context)).toBe("");
+    expect(renderForPreview(engine, "", context)).toEqual(new Ok(""));
+  });
+
+  it("returns the error for a date format that cannot render", () => {
+    const broken = TemplateContext.empty().date("date", CalendarDate.fromAnchor(anchor("2026-05-19")), "y");
+    const result = withoutEras(() => renderForPreview(engine, "{{date}}", broken));
+    expect(result.isErr() && result.error.variableName).toBe("date");
   });
 });

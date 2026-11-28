@@ -36,6 +36,10 @@ export function isLocaleDefined(name: string): boolean {
   return (moment.localeData(name) as unknown as { _abbr?: string })._abbr === name;
 }
 
+// The plugin's translations are Brazilian Portuguese and Simplified Chinese; moment files those
+// under region tags. Every other plugin language shares its tag with moment.
+const MOMENT_LOCALE_FOR_LANGUAGE: Readonly<Record<string, string>> = { pt: "pt-br", zh: "zh-cn" };
+
 export class Calendar {
   readonly #initial: WeekConfig;
   readonly #globalLocale: string;
@@ -89,6 +93,12 @@ export class Calendar {
     return moment.localeData(CUSTOM_LOCALE).weekdays();
   }
 
+  /** Weekday names (0 = Sunday) in one of the plugin's own languages rather than Obsidian's. */
+  weekdaysIn(language: string): readonly string[] {
+    const name = MOMENT_LOCALE_FOR_LANGUAGE[language] ?? language;
+    return moment.localeData(isLocaleDefined(name) ? name : "en").weekdays();
+  }
+
   weekdaysShort(): readonly { index: number; label: string }[] {
     // Through the ref rather than CUSTOM_LOCALE directly, for the reason localMoment reads it:
     // the value is the same, but the read is what makes a caller rendering these labels depend on
@@ -101,6 +111,14 @@ export class Calendar {
       const index = (first + offset) % 7;
       return { index, label: short[index] };
     });
+  }
+
+  /** The week grid dates are built under right now. */
+  installedWeek(): WeekConfig {
+    // Through the ref for the reason weekdaysShort reads it: a caller deriving from this re-runs
+    // once applyWeekConfig has installed a new grid, never before.
+    const data = moment.localeData(weekLocale.value);
+    return { dow: data.firstDayOfWeek(), doy: data.firstDayOfYear() };
   }
 
   isIsoWeekGrid(): boolean {

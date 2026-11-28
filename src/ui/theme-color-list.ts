@@ -3,7 +3,7 @@
 // fills, and every --background-modifier-border* is a stroke. Obsidian's own
 // --background-modifier-{error,success}-rgb are bare RGB triples, unusable as var() colors,
 // so they are absent entirely. No imports: the e2e suite reads this list in real Obsidian.
-export type ThemeColorTag = "background" | "border" | "text";
+export type ThemeColorTag = "background" | "border" | "text" | "palette";
 
 export const THEME_COLORS = [
   { name: "background-primary", tag: "background" },
@@ -36,6 +36,14 @@ export const THEME_COLORS = [
   { name: "text-selection", tag: "background" },
   { name: "text-highlight-bg", tag: "background" },
   { name: "caret-color", tag: "text" },
+  { name: "color-red", tag: "palette" },
+  { name: "color-orange", tag: "palette" },
+  { name: "color-yellow", tag: "palette" },
+  { name: "color-green", tag: "palette" },
+  { name: "color-cyan", tag: "palette" },
+  { name: "color-blue", tag: "palette" },
+  { name: "color-purple", tag: "palette" },
+  { name: "color-pink", tag: "palette" },
 ] as const satisfies readonly { name: string; tag: ThemeColorTag }[];
 
 export type ThemeColorName = (typeof THEME_COLORS)[number]["name"];

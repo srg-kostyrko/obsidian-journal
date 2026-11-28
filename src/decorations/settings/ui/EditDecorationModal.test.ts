@@ -18,7 +18,7 @@ import EditDecorationModal from "./EditDecorationModal.vue";
 const transparent = { type: "transparent" as const };
 const minimalDecoration: JournalDecoration = {
   mode: "and",
-  conditions: [{ type: "has-note" }],
+  conditions: [{ type: "has-note", presence: "exists" }],
   styles: [{ type: "background", color: transparent }],
 };
 
@@ -57,7 +57,41 @@ async function mountWith(options: { conditions: JournalDecorationCondition[] }) 
   return { options: rendered };
 }
 
+const nameField = (): HTMLInputElement => screen.getByRole("textbox", { name: m.decoration_modal_name_label() });
+
 describe("EditDecorationModal", () => {
+  describe("name", () => {
+    it("submits the typed name", async () => {
+      const { submit } = await mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
+      await userEvent.type(nameField(), "Release 3.8");
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({
+          decoration: expect.objectContaining({ name: "Release 3.8" }) as unknown,
+        });
+      });
+    });
+
+    it.each(["", " ".repeat(3)])("submits no name key when the field is %j", async (typed) => {
+      const { submit } = await mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
+      if (typed !== "") await userEvent.type(nameField(), typed);
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalled();
+      });
+      const [{ decoration }] = submit.mock.calls[0] as unknown as [{ decoration: JournalDecoration }];
+      expect("name" in decoration).toBe(false);
+    });
+
+    it("shows an existing decoration's name", async () => {
+      await mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: { ...minimalDecoration, name: "Anna" },
+      });
+      expect(nameField().value).toBe("Anna");
+    });
+  });
+
   describe("submit gating", () => {
     it("disables Save when no conditions are defined", async () => {
       await mountModal({
@@ -70,7 +104,7 @@ describe("EditDecorationModal", () => {
     it("disables Save when no styles are defined", async () => {
       await mountModal({
         conditionTypes: conditionTypeOptions.day,
-        decoration: { mode: "and", conditions: [{ type: "has-note" }], styles: [] },
+        decoration: { mode: "and", conditions: [{ type: "has-note", presence: "exists" }], styles: [] },
       });
       expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
     });
@@ -122,7 +156,18 @@ describe("EditDecorationModal", () => {
         conditionTypes: conditionTypeOptions.day,
         decoration: {
           mode: "and",
-          conditions: [{ type: "property", name: "", valueType: "text", condition: "exists", value: "" }],
+          conditions: [
+            {
+              type: "property",
+              name: "",
+              valueType: "text",
+              condition: "exists",
+              value: "",
+              source: "note",
+              quantifier: "any",
+              typeIds: [],
+            },
+          ],
           styles: [{ type: "background", color: transparent }],
         },
       });

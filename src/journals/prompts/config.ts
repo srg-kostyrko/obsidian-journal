@@ -1,8 +1,9 @@
 import * as v from "valibot";
 
+import { userDateFormat, userDateFormatSchema, type UserDateFormat } from "@/calendar";
 import { climb } from "@/settings/repair";
 
-const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
+const DEFAULT_DATE_FORMAT = userDateFormat("YYYY-MM-DD");
 
 // No option text is inert: the value is what earlier answers stored, the label what the user reads.
 const promptOptionSchema = v.object({
@@ -43,7 +44,7 @@ export const promptSchema = v.variant("type", [
     // any other per-item drop. The schema default only covers an absent key; a present-but-empty
     // value must fall back on read (dateFormatFor), because moment().format("") is not
     // "YYYY-MM-DD" and formatToRegexp("") does not invert a note name.
-    format: v.optional(v.string(), DEFAULT_DATE_FORMAT),
+    format: v.optional(userDateFormatSchema, DEFAULT_DATE_FORMAT),
   }),
   v.object({ ...promptBase.entries, type: v.pipe(v.literal("toggle"), climb("discriminant")) }),
   v.object({
@@ -102,7 +103,7 @@ export function displayTypeOf(prompt: PromptKind): PromptDisplayType {
   return isLongText(prompt) ? "longtext" : prompt.type;
 }
 
-export function dateFormatFor(prompt: Extract<Prompt, { type: "date" }>): string {
+export function dateFormatFor(prompt: Extract<Prompt, { type: "date" }>): UserDateFormat {
   return prompt.format.trim() === "" ? DEFAULT_DATE_FORMAT : prompt.format;
 }
 

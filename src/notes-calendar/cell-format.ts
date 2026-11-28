@@ -1,10 +1,24 @@
 import { match } from "ts-pattern";
 
-import { activeLocale, type CalendarDate, type Labels, type PeriodKind, type WeekdayLabel } from "@/calendar";
+import {
+  activeLocale,
+  userDateFormat,
+  type CalendarDate,
+  type DateFormatError,
+  type Labels,
+  type PeriodKind,
+  type UserDateFormat,
+  type WeekdayLabel,
+} from "@/calendar";
+import { Ok, type Result } from "@/infrastructure/result";
 import { formatHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 
-export function defaultFormatPattern(kind: PeriodKind): string {
+// Literal types, so a `user || default` fallback keeps the user pattern visible to the plain `format`'s guard.
+export type DefaultFormatPattern = "D" | "[W]w" | "MMMM" | "[Q]Q" | "YYYY";
+
+export function defaultFormatPattern(kind: PeriodKind): DefaultFormatPattern {
   return match(kind)
+    .returnType<DefaultFormatPattern>()
     .with("day", () => "D")
     .with("week", () => "[W]w")
     .with("month", () => "MMMM")
@@ -28,9 +42,9 @@ export function accessibleFormatPattern(kind: PeriodKind): string {
     .exhaustive();
 }
 
-export function labelPattern(labels: Labels, kind: PeriodKind): string {
+export function labelPattern(labels: Labels, kind: PeriodKind): UserDateFormat {
   const stored = labels[kind === "decade" ? "year" : kind];
-  return stored === "" ? defaultFormatPattern(kind) : stored;
+  return stored === "" ? userDateFormat(defaultFormatPattern(kind)) : stored;
 }
 
 /** What an empty weekday pattern renders. */
@@ -54,11 +68,23 @@ function narrowWeekdayFormat(locale: string): Intl.DateTimeFormat {
   return created;
 }
 
-export function formatWeekday(date: CalendarDate, label: WeekdayLabel): string {
-  if (label.type === "pattern") {
-    return date.format(label.pattern || DEFAULT_WEEKDAY_PATTERN);
-  }
-  return narrowWeekdayFormat(activeLocale()).format(date.toJSDate());
+export function tryFormatWeekday(date: CalendarDate, label: WeekdayLabel): Result<string, DateFormatError> {
+  if (label.type === "letter") return new Ok(narrowWeekdayFormat(activeLocale()).format(date.toJSDate()));
+  return label.pattern === "" ? new Ok(date.format(DEFAULT_WEEKDAY_PATTERN)) : date.tryFormat(label.pattern);
+}
+
+/** Called when a label pattern cannot render and the stock one is shown instead. */
+export type LabelFallback = (error: DateFormatError) => void;
+
+// A pattern this device cannot render keeps the grid readable; the appearance editor reports it.
+export function formatWeekday(date: CalendarDate, label: WeekdayLabel, onFallback?: LabelFallback): string {
+  return tryFormatWeekday(date, label).match({
+    ok: (text) => text,
+    err: (error) => {
+      onFallback?.(error);
+      return date.format(DEFAULT_WEEKDAY_PATTERN);
+    },
+  });
 }
 
 /** What a narrow calendar's weekday shows when narrow has no label of its own. */
@@ -69,10 +95,11 @@ export function weekdayTexts(
   date: CalendarDate,
   weekdayLabel: WeekdayLabel,
   weekdayLabelNarrow: WeekdayLabel | null,
+  onFallback?: LabelFallback,
 ): { wide: string; narrow: string; name: string } {
   return {
-    wide: formatWeekday(date, weekdayLabel),
-    narrow: formatWeekday(date, weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY),
+    wide: formatWeekday(date, weekdayLabel, onFallback),
+    narrow: formatWeekday(date, weekdayLabelNarrow ?? STOCK_NARROW_WEEKDAY, onFallback),
     name: date.format("dddd"),
   };
 }

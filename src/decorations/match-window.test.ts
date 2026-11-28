@@ -93,11 +93,30 @@ describe("needsNotes", () => {
     expect(needsNotes({ mode: "and", conditions: [{ type: "has-notelet", typeIds: [] }], styles: [] })).toBe(false);
   });
 
+  it("does not require period notes for a notelet-scoped tag condition", () => {
+    const decoration = buildDecoration({
+      mode: "and",
+      conditions: [buildCondition("tag", { source: "notelets" })],
+    });
+    expect(needsNotes(decoration)).toBe(false);
+  });
+
+  it("requires period notes for a note-scoped property condition", () => {
+    const decoration = buildDecoration({
+      mode: "and",
+      conditions: [buildCondition("property", { source: "note" })],
+    });
+    expect(needsNotes(decoration)).toBe(true);
+  });
+
   it("does not require period notes when has-notelet is or-ed with a note-based condition", () => {
     expect(
       needsNotes({
         mode: "or",
-        conditions: [{ type: "has-notelet", typeIds: [] }, { type: "has-note" }],
+        conditions: [
+          { type: "has-notelet", typeIds: [] },
+          { type: "has-note", presence: "exists" },
+        ],
         styles: [],
       }),
     ).toBe(false);
@@ -113,5 +132,28 @@ describe("needsNotes for tasks conditions", () => {
   it.each(["both", "notelets"] as const)("does not need notes when the source is %s", (source) => {
     const decoration = buildDecoration({ mode: "and", conditions: [buildCondition("tasks", { source })] });
     expect(needsNotes(decoration)).toBe(false);
+  });
+});
+
+describe("needsNotes for linked and missing", () => {
+  it("needsNotes is false for missing and for linked", () => {
+    expect(
+      needsNotes(buildDecoration({ mode: "and", conditions: [buildCondition("has-note", { presence: "missing" })] })),
+    ).toBe(false);
+    expect(needsNotes(buildDecoration({ mode: "and", conditions: [buildCondition("linked")] }))).toBe(false);
+    expect(
+      needsNotes(
+        buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("linked"), buildCondition("has-note", { presence: "missing" })],
+        }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("needsNotes for created", () => {
+  it("a decoration with only created does not need notes", () => {
+    expect(needsNotes(buildDecoration({ mode: "and", conditions: [buildCondition("created")] }))).toBe(false);
   });
 });

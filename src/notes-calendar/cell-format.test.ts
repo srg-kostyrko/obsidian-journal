@@ -1,7 +1,8 @@
 import { moment } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 
-import { activeLocale, CalendarDate, type AnchorString } from "@/calendar";
+import { activeLocale, CalendarDate, type AnchorString, userDateFormat } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 
 import {
   DEFAULT_WEEKDAY_PATTERN,
@@ -13,7 +14,8 @@ import {
   weekFormatNeedsIsoWarning,
 } from "./cell-format";
 
-const NO_LABELS = { day: "", week: "", month: "", quarter: "", year: "" };
+const NO_PATTERN = userDateFormat("");
+const NO_LABELS = { day: NO_PATTERN, week: NO_PATTERN, month: NO_PATTERN, quarter: NO_PATTERN, year: NO_PATTERN };
 
 describe("defaultFormatPattern", () => {
   it("returns 'D' for day", () => {
@@ -50,8 +52,8 @@ describe("labelPattern", () => {
   });
 
   it("returns the stored pattern when set", () => {
-    expect(labelPattern({ ...NO_LABELS, day: "DD" }, "day")).toBe("DD");
-    expect(labelPattern({ ...NO_LABELS, year: "YY" }, "decade")).toBe("YY");
+    expect(labelPattern({ ...NO_LABELS, day: userDateFormat("DD") }, "day")).toBe("DD");
+    expect(labelPattern({ ...NO_LABELS, year: userDateFormat("YY") }, "decade")).toBe("YY");
   });
 });
 
@@ -60,8 +62,14 @@ describe("formatWeekday", () => {
 
   it("formats a pattern label, defaulting to ddd when empty", () => {
     expect(DEFAULT_WEEKDAY_PATTERN).toBe("ddd");
-    expect(formatWeekday(monday, { type: "pattern", pattern: "" })).toBe(monday.format("ddd"));
-    expect(formatWeekday(monday, { type: "pattern", pattern: "dddd" })).toBe("Monday");
+    expect(formatWeekday(monday, { type: "pattern", pattern: userDateFormat("") })).toBe(monday.format("ddd"));
+    expect(formatWeekday(monday, { type: "pattern", pattern: userDateFormat("dddd") })).toBe("Monday");
+  });
+
+  it("falls back to the default pattern when the weekday pattern cannot render", () => {
+    withoutEras(() => {
+      expect(formatWeekday(monday, { type: "pattern", pattern: userDateFormat("dddd y") })).toBe(monday.format("ddd"));
+    });
   });
 
   it("renders one letter as a single grapheme", () => {
@@ -83,7 +91,7 @@ describe("formatWeekday", () => {
   });
 
   it("returns moment's output for an unclosed bracket without throwing", () => {
-    expect(formatWeekday(monday, { type: "pattern", pattern: "[W" })).not.toBe("");
+    expect(formatWeekday(monday, { type: "pattern", pattern: userDateFormat("[W") })).not.toBe("");
   });
 
   it("builds one narrow formatter per locale, not one per label", () => {
@@ -105,7 +113,13 @@ describe("weekdayTexts", () => {
   const monday = CalendarDate.fromAnchor("2027-02-01" as AnchorString);
 
   it("names the day in full and renders each width's text", () => {
-    expect(weekdayTexts(monday, { type: "pattern", pattern: "ddd" }, { type: "pattern", pattern: "dd" })).toEqual({
+    expect(
+      weekdayTexts(
+        monday,
+        { type: "pattern", pattern: userDateFormat("ddd") },
+        { type: "pattern", pattern: userDateFormat("dd") },
+      ),
+    ).toEqual({
       name: "Monday",
       wide: "Mon",
       narrow: "Mo",
@@ -113,7 +127,7 @@ describe("weekdayTexts", () => {
   });
 
   it("a narrow weekday with no override is one letter", () => {
-    const texts = weekdayTexts(monday, { type: "pattern", pattern: "dddd" }, null);
+    const texts = weekdayTexts(monday, { type: "pattern", pattern: userDateFormat("dddd") }, null);
     expect(texts.wide).toBe("Monday");
     expect(texts.narrow).toBe(new Intl.DateTimeFormat(activeLocale(), { weekday: "narrow" }).format(monday.toJSDate()));
     expect(STOCK_NARROW_WEEKDAY).toEqual({ type: "letter" });

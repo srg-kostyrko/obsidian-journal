@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { Menu } from "obsidian";
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 
 import { CalendarDate, periodKinds, periodOfKind, type Period } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import { defineOpenMode, NoticeService, WorkspaceService, type Note } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import { defineOpenMode, NoticeService, NotesService, WorkspaceService, type Note } from "@/infrastructure/host";
+import {
+  CreationDateIndex,
+  JournalsIndex,
+  useCreationDatesVersion,
+  useIndexVersion,
+  type CreatedNote,
+} from "@/journals";
+import { isNotelet } from "@/journals/types";
 import { accessibleFormatPattern } from "@/notes-calendar/cell-format";
 import { ShelvesService } from "@/shelves";
 import { icons } from "@/ui/icons";
@@ -18,8 +25,6 @@ import { ViewsService } from "../../../service";
 import { buttonConfigFor, type ButtonAction, type ButtonConfig } from "../../../toolbar-items/button/button-config";
 import ButtonItem from "../../../toolbar-items/button/ui/ButtonItem.vue";
 import { useViewContext } from "../../../view-context";
-import { useDayNotesQuery, type CreatedNote } from "../day-notes";
-import { useDayNotesVersion } from "../use-day-notes-version";
 
 import type { BlockInstanceId } from "../../../config";
 import type { DayNotesBlockConfig } from "../day-notes-block";
@@ -35,15 +40,41 @@ const props = defineProps<{
 }>();
 
 const viewContext = useViewContext();
-const query = useDayNotesQuery();
-const queryVersion = useDayNotesVersion();
+const creationDates = useService(CreationDateIndex);
+const creationDatesVersion = useCreationDatesVersion();
 const index = useService(JournalsIndex);
+const indexVersion = useIndexVersion();
 const shelves = useService(ShelvesService);
 const views = useService(ViewsService);
 const workspace = useService(WorkspaceService);
+const notes = useService(NotesService);
 const notices = useService(NoticeService);
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const modifiedFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+// An edit moves a note's mtime without moving its creation date, so the index announces nothing;
+// the modified sort and the "Last modified" line need an edit signal of their own.
+const REFRESH_DEBOUNCE_MS = 100;
+const editVersion = shallowRef(0);
+// number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
+let editTimer: number | undefined;
+let stopEditEvents: (() => void) | undefined;
+
+onMounted(() => {
+  stopEditEvents = notes.events.on("metadata-changed", () => {
+    if (editTimer !== undefined) window.clearTimeout(editTimer);
+    editTimer = window.setTimeout(() => {
+      editTimer = undefined;
+      editVersion.value++;
+    }, REFRESH_DEBOUNCE_MS);
+  });
+});
+
+onUnmounted(() => {
+  stopEditEvents?.();
+  if (editTimer !== undefined) window.clearTimeout(editTimer);
+  editTimer = undefined;
+});
 
 const period = computed(() =>
   periodOfKind(props.config.granularity, CalendarDate.fromAnchor(viewContext.refDate.value)),
@@ -76,15 +107,26 @@ function navigationConfig(direction: "prev" | "next"): ButtonConfig {
 const previousNavigationConfig = computed(() => navigationConfig("prev"));
 const nextNavigationConfig = computed(() => navigationConfig("next"));
 
-const cards = computed<readonly DayNoteCard[]>(() => {
-  void queryVersion.value;
+const ready = computed(() => {
+  void creationDatesVersion.value;
+  return creationDates.isReady();
+});
 
-  const result = query.notesCreatedIn(period.value).map((createdNote): DayNoteCard => {
+const cards = computed<readonly DayNoteCard[]>(() => {
+  void creationDatesVersion.value;
+  // Period-ness changes without a creation-date event, so the journals index is a dependency too.
+  void indexVersion.value;
+  void editVersion.value;
+  if (!ready.value) return [];
+
+  const result: DayNoteCard[] = [];
+  for (const createdNote of creationDates.between(period.value.start, period.value.end)) {
     const entry = index.entryByPath(createdNote.note.path).getOrUndefined();
+    if (props.config.hidePeriodNotes && entry !== undefined && !isNotelet(entry)) continue;
     const journalName = entry?.journalName ?? null;
     const shelfName = journalName ? shelves.shelfOf(journalName) || null : null;
-    return { ...createdNote, journalName, shelfName };
-  });
+    result.push({ ...createdNote, journalName, shelfName });
+  }
 
   return result.toSorted((left, right) => compareCards(left, right, props.config));
 });
@@ -218,10 +260,10 @@ const sortDirectionLabel = computed(() =>
       </div>
     </header>
 
-    <div v-if="cards.length === 0" class="journal-view-day-notes__empty">
+    <div v-if="ready && cards.length === 0" class="journal-view-day-notes__empty">
       {{ m.view_block_day_notes_empty() }}
     </div>
-    <div v-else class="journal-view-day-notes__cards">
+    <div v-else-if="ready" class="journal-view-day-notes__cards">
       <button
         v-for="note in cards"
         :key="note.note.path"

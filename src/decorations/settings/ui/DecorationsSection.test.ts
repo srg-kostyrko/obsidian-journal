@@ -32,7 +32,7 @@ afterEach(() => {
 const transparent = { type: "transparent" as const };
 const sampleDecoration: JournalDecoration = {
   mode: "and",
-  conditions: [{ type: "has-note" }],
+  conditions: [{ type: "has-note", presence: "exists" }],
   styles: [{ type: "background", color: transparent }],
 };
 const sampleCalendarDecoration: CalendarDecoration = {
@@ -262,5 +262,20 @@ describe("DecorationsSection", () => {
     await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
 
     expect(screen.getByText(m.decoration_condition_has_notelet_describe_types({ types: "One on One" }))).toBeTruthy();
+  });
+
+  describe("name", () => {
+    it("titles a named decoration's row with its name and keeps the conditions", async () => {
+      await mount({ kind: "journal", journalName: "daily" }, [{ ...sampleDecoration, name: "Release 3.8" }]);
+      await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+      expect(screen.getByText("Release 3.8").classList.contains("row-name")).toBe(true);
+      expect(screen.getByText(m.decoration_describe_when())).toBeTruthy();
+    });
+
+    it("renders no name line for an unnamed decoration", async () => {
+      await mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
+      await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+      expect(document.querySelector(".row-name")).toBeNull();
+    });
   });
 });

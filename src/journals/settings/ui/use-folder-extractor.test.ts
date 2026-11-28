@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { fixedJournal } from "@/journals/testing";
 
 import { extractFromNameTemplate, extractFromDateFormat } from "./use-folder-extractor";
@@ -29,21 +30,21 @@ describe("extractFromNameTemplate", () => {
 
 describe("extractFromDateFormat", () => {
   it("converts path segments into {{date:format}} tokens prefixed onto folder", () => {
-    const config = fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY/MM/DD", folder: "" });
+    const config = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY/MM/DD"), folder: "" });
     extractFromDateFormat(config);
     expect(config.folder).toBe("{{date:YYYY}}/{{date:MM}}");
     expect(config.dateFormat).toBe("DD");
   });
 
   it("appends to an existing folder", () => {
-    const config = fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY/MM", folder: "Daily" });
+    const config = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY/MM"), folder: "Daily" });
     extractFromDateFormat(config);
     expect(config.folder).toBe("Daily/{{date:YYYY}}");
     expect(config.dateFormat).toBe("MM");
   });
 
   it("is a no-op when dateFormat has no slash", () => {
-    const config = fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY-MM-DD", folder: "" });
+    const config = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY-MM-DD"), folder: "" });
     extractFromDateFormat(config);
     expect(config.folder).toBe("");
     expect(config.dateFormat).toBe("YYYY-MM-DD");

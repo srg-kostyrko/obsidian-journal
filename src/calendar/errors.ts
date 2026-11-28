@@ -17,6 +17,16 @@ export class ParseError extends DateTimeError {
   }
 }
 
+export class DateFormatError extends DateTimeError {
+  constructor(
+    readonly pattern: string,
+    readonly reason: string,
+  ) {
+    super(`Cannot render date format "${pattern}": ${reason}`);
+    this.name = "DateFormatError";
+  }
+}
+
 export class IntervalError extends DateTimeError {
   constructor(
     readonly start: CalendarDate,

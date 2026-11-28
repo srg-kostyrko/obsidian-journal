@@ -1,6 +1,7 @@
 import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import type { BenignFlowError, UserFacingFlowError } from "@/infrastructure/flows";
+import type { UnrenderableDateFormatError } from "@/templates";
 
 import { JournalsError } from "../errors";
 
@@ -9,7 +10,7 @@ export abstract class JournalNoteCreationError extends JournalsError {
 }
 
 export class NoApplicableJournals extends JournalNoteCreationError implements BenignFlowError {
-  override name = "NoApplicableJournals";
+  override name = "NoApplicableJournals" as const;
   readonly kind = "no-applicable-journals" as const;
   readonly benign = true as const;
 
@@ -26,7 +27,7 @@ export class NoApplicableJournals extends JournalNoteCreationError implements Be
 }
 
 export class AnchorOccupiedError extends JournalsError {
-  override name = "AnchorOccupiedError";
+  override name = "AnchorOccupiedError" as const;
 
   constructor(
     readonly journalName: string,
@@ -38,7 +39,7 @@ export class AnchorOccupiedError extends JournalsError {
 }
 
 export class NotePathClaimedError extends JournalsError implements UserFacingFlowError {
-  override name = "NotePathClaimedError";
+  override name = "NotePathClaimedError" as const;
 
   constructor(
     readonly journalName: string,
@@ -58,7 +59,7 @@ export class NotePathClaimedError extends JournalsError implements UserFacingFlo
 }
 
 export class NotePathHeldByPeriodError extends JournalsError implements UserFacingFlowError {
-  override name = "NotePathHeldByPeriodError";
+  override name = "NotePathHeldByPeriodError" as const;
 
   constructor(
     readonly journalName: string,
@@ -78,7 +79,7 @@ export class NotePathHeldByPeriodError extends JournalsError implements UserFaci
 }
 
 export class NoteletHoldsPathError extends JournalsError implements UserFacingFlowError {
-  override name = "NoteletHoldsPathError";
+  override name = "NoteletHoldsPathError" as const;
 
   constructor(
     readonly journalName: string,
@@ -93,7 +94,7 @@ export class NoteletHoldsPathError extends JournalsError implements UserFacingFl
 }
 
 export class EmptyNoteNameError extends JournalsError implements UserFacingFlowError {
-  override name = "EmptyNoteNameError";
+  override name = "EmptyNoteNameError" as const;
 
   constructor(readonly journalName: string) {
     super(`Name template of journal ${journalName} resolves to an empty note name`);
@@ -104,8 +105,32 @@ export class EmptyNoteNameError extends JournalsError implements UserFacingFlowE
   }
 }
 
+export class JournalDateFormatError extends JournalsError implements UserFacingFlowError {
+  static from(journalName: string, error: UnrenderableDateFormatError): JournalDateFormatError {
+    return new JournalDateFormatError(journalName, error.pattern, error.reason);
+  }
+
+  override name = "JournalDateFormatError" as const;
+
+  constructor(
+    readonly journalName: string,
+    readonly pattern: string,
+    readonly reason: string,
+  ) {
+    super(`Journal ${journalName}: date format "${pattern}" cannot be rendered: ${reason}`);
+  }
+
+  get userNotice(): string {
+    return m.journal_date_format_unrenderable_notice({
+      journalName: this.journalName,
+      format: this.pattern,
+      reason: this.reason,
+    });
+  }
+}
+
 export class BodyFrontmatterError extends JournalsError {
-  override name = "BodyFrontmatterError";
+  override name = "BodyFrontmatterError" as const;
 
   constructor(
     readonly path: string,

@@ -1,9 +1,20 @@
 import { browser } from "@wdio/globals";
 
 import { seedNote } from "../support/vault.js";
+import { waitForState } from "../support/wait.js";
 
-import { dayAnchor, expectBackgroundHex, expectDecorated, expectUndecorated, STYLE_HEX } from "./decorations.js";
+import {
+  dayAnchor,
+  decorationTextHex,
+  expectBackgroundHex,
+  expectDecorated,
+  expectTextHex,
+  expectUndecorated,
+  STYLE_HEX,
+} from "./decorations.js";
 import { calendar, openSeededCalendarView } from "./view.js";
+
+import type { CellLocator } from "./calendar.js";
 
 // The has-notelet condition reads JournalsIndex's notelet side, which is populated from
 // metadataCache — and JournalsIndex is not Vue-reactive, so the cell repaints only if the
@@ -62,5 +73,48 @@ describe("has-notelet decoration condition", () => {
     await seedNote(`notelets/${live} Meeting 1.md`, notelet(live, "Meeting"));
 
     await expectDecorated(calendar.cell(live));
+  });
+});
+
+// The fixture's third rule is `tag contains decision`, looking in Meeting notelets only and
+// requiring every one to match; its text color is the handle, since the corner is shared with
+// the any-type rule above.
+const DAY_ALL_MEETINGS_TAGGED = 8;
+const DAY_ONE_MEETING_UNTAGGED = 15;
+
+function expectNotTextHex(cell: CellLocator, hex: string): Promise<void> {
+  return waitForState(
+    () => decorationTextHex(cell),
+    (v) => v !== hex,
+    `waited for cell text color to differ from ${hex}`,
+  );
+}
+
+function taggedNotelet(anchor: string, type: string, tag: string): string {
+  return `---\njournal: daily\njournal-date: ${anchor}\njournal-notelet: ${type}\n---\n#${tag}\n`;
+}
+
+describe("notelet-scoped tag condition", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-notelet-deco", plugins: ["journals"] });
+  });
+
+  it("marks a day only when every Meeting notelet carries the tag", async () => {
+    const allTagged = dayAnchor(DAY_ALL_MEETINGS_TAGGED);
+    await seedNote(`notelets/${allTagged} Meeting 1.md`, taggedNotelet(allTagged, "Meeting", "decision"));
+    await seedNote(`notelets/${allTagged} Meeting 2.md`, taggedNotelet(allTagged, "Meeting", "decision"));
+    await seedNote(`notelets/${allTagged} Retro.md`, notelet(allTagged, "Retro"));
+
+    const mixed = dayAnchor(DAY_ONE_MEETING_UNTAGGED);
+    await seedNote(`notelets/${mixed} Meeting 1.md`, taggedNotelet(mixed, "Meeting", "decision"));
+    await seedNote(`notelets/${mixed} Meeting 2.md`, notelet(mixed, "Meeting"));
+
+    await openSeededCalendarView();
+
+    await expectTextHex(calendar.cell(allTagged), STYLE_HEX.color);
+    // The mixed day's any-type red corner proves its notelets are indexed before the negative is
+    // read; the Retro on the first day proves the type scope ignores other types.
+    await expectDecorated(calendar.cell(mixed));
+    await expectNotTextHex(calendar.cell(mixed), STYLE_HEX.color);
   });
 });

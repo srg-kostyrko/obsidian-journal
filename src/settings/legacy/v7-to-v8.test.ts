@@ -12,6 +12,7 @@ import { CURRENT_VERSION } from "../version";
 
 import { legacyMigrations } from "./module";
 import { v7ToV8Migration } from "./v7-to-v8";
+import { v8ToV9Migration } from "./v8-to-v9";
 
 const custom = (color: string) => ({ type: "custom", color });
 const transparent = { type: "transparent" };
@@ -112,9 +113,8 @@ describe("v7ToV8Migration", () => {
     const raw = { version: 7, appearance: { ...stockV7, selectedRing: custom("#555555") } };
     const result = runMigrations(raw, legacyMigrations, CURRENT_VERSION);
 
-    expect(CURRENT_VERSION).toBe(8);
     const value = result.isOk() ? (result.value as { version: number; appearance: unknown }) : undefined;
-    expect(value?.version).toBe(8);
+    expect(value?.version).toBe(CURRENT_VERSION);
     expect(v.parse(appearanceSliceSchema, value?.appearance).wide.selected.color).toEqual(custom("#555555"));
   });
 });
@@ -123,6 +123,7 @@ const migratingModule: Module = {
   register(c) {
     c.register(SliceDefinitionToken).useValue(appearanceSlice);
     c.register(MigrationToken).useValue(v7ToV8Migration);
+    c.register(MigrationToken).useValue(v8ToV9Migration);
   },
 };
 

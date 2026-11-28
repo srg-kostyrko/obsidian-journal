@@ -177,7 +177,13 @@ describe("appearanceVariables", () => {
     state.narrow.cell.minHeight = 30;
 
     expect(mergedPart(state, "cell")).toEqual({ padding: 2, radius: "var(--radius-s)", gap: "1px", minHeight: 30 });
-    expect(mergedPart(state, "date").size).toBe("1em");
+  });
+
+  it("the narrow date takes the wide size, having no stock of its own", () => {
+    const state = fresh();
+    state.wide.date.size = "1.4em";
+
+    expect(mergedPart(state, "date").size).toBe("1.4em");
   });
 
   it("a ring style writes the ring width and zero strength", () => {
@@ -385,7 +391,7 @@ function* selectedStates(): Generator<AppearanceSliceState> {
 }
 
 function* dateAndCellStates(): Generator<AppearanceSliceState> {
-  for (const wideSize of ["1.1em", "1.4em", "1em"])
+  for (const wideSize of ["inherit", "1.4em", "1em"])
     for (const narrowSize of [null, "1em", "2em"])
       for (const wideGap of ["var(--size-2-1)", "3px", "1px"])
         for (const narrowGap of [null, "1px", "4px"])

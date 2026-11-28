@@ -47,6 +47,19 @@ describe("lineHasTag", () => {
     expect(lineHasTag(line, "#rolled")).toBe(expected);
   });
 
+  // A code span closes only on a backtick run of its own length, and inline math never on a `$` that
+  // follows whitespace; these hold the regex to both without a lookbehind, which iOS before 16.4 rejects.
+  it.each([
+    ["- [ ] Task `a``#rolled`", false],
+    ["- [ ] Task ``a`#rolled``", false],
+    ["- [ ] Task ``a``#rolled", true],
+    ["- [ ] Task $x $#rolled", false],
+    ["- [ ] Task $x$#rolled", true],
+    ["- [ ] Task $$#rolled", true],
+  ])("%j carries #rolled: %s", (line, expected) => {
+    expect(lineHasTag(line, "#rolled")).toBe(expected);
+  });
+
   it("an empty marker is never carried", () => {
     expect(lineHasTag("- [ ] Task # #rolled", "")).toBe(false);
   });

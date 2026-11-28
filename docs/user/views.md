@@ -47,10 +47,13 @@ with **Rename view**; below it:
 - **Open in** — **Left sidebar**, **Right sidebar** or **New tab**.
 - **Blocks** — the view's blocks, top to bottom. **Add block** adds one; each block can be configured,
   moved and removed.
+- **CSS snippet** — the CSS rule that reaches this view and no other. Click it to copy it. See
+  [One view only](/reference/css-variables#one-view-only).
 
 Each view's row under **Views** also carries **Clone** _view_ and **Delete** _view_. **Clone** _view_
 makes a copy named after it with `(copy)` appended, with the same icon, settings and blocks; rename it
-from its own page. **Delete** _view_ asks first, then removes the view and its block configuration —
+from its own page. The copy's **CSS snippet** rule is its own, so a snippet written for the original
+does not reach it. **Delete** _view_ asks first, then removes the view and its block configuration —
 your notes are not affected. A tab still showing a deleted view says so and can be closed.
 
 Once a view is open, dragging it elsewhere in the workspace sticks: Obsidian restores it where you left
@@ -87,7 +90,8 @@ block shows the same span as week strips instead.
   global choice there changes every block left on it.
 - **Days outside the month** (Month calendar only) — **Use global default**, **Interactive**, **Inert**
   or **Hidden**: the neighboring months' days that fill a grid's first and last weeks are clickable and
-  decorated, shown but inert, or left blank. An inert day shows its date and nothing else: no
+  decorated, shown but inert, or left blank. An inert day shows its date in the outside-days style,
+  with today's highlight and the weekend and current-week bands where they apply, but no
   decorations, no response to a click, no selecting with **Shift**+click, and the keyboard skips it.
 - **Rows** (Month calendar only) — **Use global default**, **As needed** or **Always six**.
 
@@ -112,10 +116,14 @@ only journal notes.
 - **Period** — **Day**, **Week**, **Month**, **Quarter**, **Year** or **Decade**.
 - **Sort notes by** — **Name**, **Last modified** or **Creation date**, with **Sort direction**.
 - **Show period heading**, **Show period navigation**.
+- **Hide journal notes** — leaves out the notes of your journals (daily, weekly and so on), so the list
+  matches what the [**Check notes created in this period**](/decorations#created) decoration condition
+  counts. Notelets stay in the list.
 
 A note's creation date comes from **Creation date property** on the main settings page — `created`,
 read with **Creation date format** `YYYY-MM-DD` — and a note without a valid value there falls back to
-its file creation time. File creation times change when a vault is synced or copied, so set the
+its file creation time, or to its last modification time when the file reports no creation time. A
+note with neither is not listed. File creation times change when a vault is synced or copied, so set the
 property if you rely on this list.
 
 Example: [A sidebar calendar with the day's notes](#a-sidebar-calendar-with-the-day-s-notes).
@@ -130,6 +138,14 @@ around the selected date.
 
 Each entry is drawn with its journal's
 [Calendar interval lines](/navigation-blocks#calendar-interval-lines) and its decorations.
+
+The rows of the interval holding today, of the one holding the selected date and of the open note
+take the **Today**, **Selected date** and **Open note** highlights from
+[Calendar appearance](#calendar-appearance), and every row takes the **Corner radius** and **Padding**
+set under **Cells** — the narrow values when the block is narrower than about 28em. A row counts as
+today's or the selected one when its interval contains that date. Today's text color recolors only
+text still on the default color, so a segment given a text color of its own keeps it; the open note's and
+the selected date's text color win over every segment's.
 
 ### Notelets
 
@@ -188,11 +204,18 @@ A container for toolbar items such as buttons and the shelf selector. **Add tool
 
 - **Spacer** — a flexible gap that pushes neighboring items apart.
 
+When a toolbar is too narrow for one row, it wraps the items between spacers as groups, so a pair of
+arrows stays together. A group that follows a spacer stays on the right. A toolbar with no spacers
+wraps item by item.
+
 ## Calendar appearance {#calendar-appearance}
 
 **Calendar appearance**, on the main settings page, opens an editor for how every calendar grid
 looks: the month and week calendars in views, and the calendars of timeline code blocks. It applies
 to all of them at once; there is no per-view appearance.
+
+![The Calendar appearance editor with Today chosen for editing](/assets/views-appearance-editor-light.png){.light-only}
+![The Calendar appearance editor with Today chosen for editing](/assets/views-appearance-editor-dark.png){.dark-only}
 
 At the top is a panel headed **Preview**, whose switch moves between **Wide** and **Narrow**. A calendar counts as narrow when the
 calendar itself is narrower than about 28em, however wide the window is — a calendar in a slim
@@ -244,9 +267,11 @@ value.
 
 The controls are headed by the part's name and the width they apply to, **All widths** or
 **Narrow**, and depend on the part. They are grouped in sections by kind (**Visibility**, **Label**, **Text**, **Divider**, **Highlight** or
-**Box**), each open to start with and folded away by clicking its name. Every one but a highlight's **Style** shows, beneath its name, the
-CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override it; while you edit
-**Narrow**, the name shown is the narrow one, ending in `-narrow`.
+**Box**), each open to start with and folded away by clicking its name. Most show, beneath their name, the
+CSS variable a [CSS snippet](#changing-it-with-a-css-snippet) sets to override them; while you edit
+**Narrow**, the name shown is the narrow one, ending in `-narrow`. A highlight's **Style**, the
+**Visibility** and **Label** controls and the week numbers' **Divider** (**Shown** or **Hidden**) have no
+variable and show none.
 
 The highlights share one set:
 
@@ -270,7 +295,7 @@ week**](#weekends-and-the-current-week) instead.
 The text parts — **Month heading**, **Weekday header**, **Week numbers** and **Date number** — offer
 **Size**, **Weight**, **Italic**, **Color** and **Case** (**As written**, **Uppercase**,
 **Lowercase** or **Title case**). **Weight**, **Italic**, **Color** and **Case** also offer
-**Default**, which leaves the value to the calendar's stock style. **Default** names what that
+**Default**, which leaves the value to the calendar's default style. **Default** names what that
 style comes to under your theme, such as **Default (Normal)** for the week numbers' weight, and a
 **Default** color shows a swatch of it; where the editor cannot tell, it reads plain **Default**.
 While you edit **Narrow**, a
@@ -288,10 +313,10 @@ week numbers after the weekdays it moves with them.
 **Cells** offers **Padding**, **Corner radius**, **Gap between cells** and **Row height**, the
 smallest height a row of cells takes. Out of the box the row height is **Default (grows with width)**:
 rows grow with the calendar's width, from 26 pixels up to 64, and the slider sits on the height the
-preview's rows have now. Once you move it, a button beside it puts **Default** back. Dates are drawn a
-little larger than the surrounding text on wide calendars. The decoration editor's style canvas draws
-its sample cell at the all-widths row height, or at 26 pixels while that is **Default**, so a style is
-previewed at a size a calendar shows it; a narrow-only row height does not change the canvas.
+preview's rows have now. Once you move it, a button beside it puts **Default** back. The decoration
+editor's style canvas draws its sample cell at the all-widths row height, or at 26 pixels while that is
+**Default**, so a style is previewed at a size a calendar shows it; a narrow-only row height does not
+change the canvas.
 
 ### Weekends and the current week {#weekends-and-the-current-week}
 
@@ -346,8 +371,9 @@ variable.
 **Automatic** gives each calendar the behavior it has had: a Month calendar block that shows one month
 has interactive outside days; one that shows several months hides them; a timeline in `month` mode has
 interactive ones; a timeline in `quarter` or `calendar` mode hides them. **Inert** days show their
-date in the outside-days style and nothing else: they carry no decorations, do nothing when clicked,
-cannot be selected with **Shift**+click, and the keyboard skips them. Out of the box nothing changes.
+date in the outside-days style, and take today's highlight and the weekend and current-week bands where
+they apply, but they carry no decorations, do nothing when clicked, cannot be selected with
+**Shift**+click, and the keyboard skips them. Out of the box nothing changes.
 
 A Month calendar or Week calendar block and a
 [timeline](/reference/code-blocks) can override these per block.
@@ -408,16 +434,18 @@ the weekends and the current week's days, so the ring changes nothing about the 
 current week's number is the exception: its color is the accent and its weight bold.
 
 **Unchanged** needs a WebView that supports CSS container style queries: Obsidian on desktop, iOS 18
-or later, or Android with WebView 111 or later. On older ones, an **Unchanged** text shows the
-part's own color and weight, never a lower highlight's, so a selected day that is also today shows
-the plain number color rather than today's accent.
+or later, or Android with WebView 111 or later. On older ones, **Unchanged** still works for a
+text value the highlight leaves alone out of the box. For one it sets out of the box — the text color of
+today, the open note and days outside the month, and the current week's number's color and weight — an
+**Unchanged** there shows the part's own value, never a lower highlight's: with the open note's text
+color **Unchanged**, an open note's day that is also today shows the plain number color rather than
+today's accent.
 
 ### Narrow calendars {#narrow-calendars}
 
-A narrow calendar is drawn tighter than a wide one, and out of the box it differs in five ways:
+A narrow calendar is drawn tighter than a wide one, and out of the box it differs in four ways:
 
 - rows are 26 pixels high, rather than growing with the width;
-- dates are the size of the surrounding text, a little smaller than on a wide calendar;
 - the gap between cells is one pixel;
 - weekday names are one letter, such as `M` for Monday;
 - the selected date is a 20% tint of the accent color, drawn over decorations, rather than a ring.
@@ -425,13 +453,14 @@ A narrow calendar is drawn tighter than a wide one, and out of the box it differ
 Opening a note selects its date too, so on the open note's own day the tint draws over the open note's
 fill and shades it toward the accent color. On a decorated day the open note's fill sits under the
 decoration, and the tint is what still shows the day is selected. On a wide calendar the selected date's
-ring shows around the open note's fill instead.
+ring is drawn over the decoration instead. On an undecorated open note's day it does not stand out:
+out of the box the ring and the open note's fill are the same accent color.
 
-These narrow defaults win over a value set under **Wide**: a date size chosen under **Wide**, say, does
-not reach narrow calendars, which keep their own. Under **Wide**, each control this applies to — the
-selected date's **Style** and **Strength**, the date number's **Size**, and the cells' **Gap between
-cells** and **Row height** — and the weekday's format carry a **Narrow has its own value** tag, with
-**Use at narrow too** beside it to copy the wide value to narrow calendars as a narrow-only value. A
+These narrow defaults win over a value set under **Wide**: a gap between cells chosen under **Wide**,
+say, does not reach narrow calendars, which keep their own. Under **Wide**, each control this applies
+to — the selected date's **Style** and **Strength**, and the cells' **Gap between cells** and **Row
+height** — and the weekday's format carry a **Narrow has its own value** tag, with **Use at narrow
+too** beside it to copy the wide value to narrow calendars as a narrow-only value. A
 **Row height** left at **Default** has nothing to copy, so it shows the tag alone. A wide value that is
 already the narrow default carries no tag, since narrow calendars show it either way.
 
@@ -455,20 +484,10 @@ defaults. Either is dimmed when there is nothing to reset.
 
 ### Changing it with a CSS snippet
 
-The editor keeps its values to itself; the variable a control shows is the public one a
-[CSS snippet](https://help.obsidian.md/snippets) sets to override it. Each is a `--journal-cell-*`
-variable, such as `--journal-cell-today-color`, and each has a narrow form ending in `-narrow`. A
-snippet that sets one, on `body` or anywhere else, wins over the value chosen in the editor, without
-`!important`, and the editor's preview shows it too. Most names follow the part and the control, but
-three do not: **Over decorations** is `--journal-cell-<state>-layer`, `1` for over and `-1` for under,
-as in `--journal-cell-today-layer`; **Row height** is `--journal-cell-cell-min-height`; and **Week
-numbers** are `--journal-cell-week-number-*`, the divider included, which a width of `0px` hides. A
-snippet can also set a highlight's text color, weight or italic to `unchanged`.
-
-Five values have a default of their own on [narrow calendars](#narrow-calendars), so their wide names do
-not reach them: `--journal-cell-date-size`, `--journal-cell-cell-gap`, `--journal-cell-cell-min-height`,
-`--journal-cell-selected-ring-width` and `--journal-cell-selected-strength`. To change one there, set its
-`-narrow` name as well.
+The variable a control shows is the one a [CSS snippet](https://help.obsidian.md/snippets) sets to
+override it. A snippet wins over the editor without `!important`, and the editor's preview shows it
+too. [CSS variables](/reference/css-variables) lists every one, with its default value, the order a
+narrow calendar reads them in, and a few snippets to start from.
 
 ## Examples
 

@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "За спаданням",
   "view_block_day_notes_show_heading_label": "Показувати заголовок періоду",
   "view_block_day_notes_show_navigation_label": "Показувати навігацію періодом",
+  "view_block_day_notes_hide_period_notes_label": "Приховати нотатки журналів",
   "view_block_day_notes_last_modified": "Остання зміна: {date}",
   "view_block_day_notes_created": "Створено: {date}",
   "view_block_day_notes_empty": "У цьому періоді не створено жодної нотатки.",
@@ -884,7 +885,101 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "останній день",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=0": "перша {weekday}",
+        "nth=1,weekdayIndex=3": "перша {weekday}",
+        "nth=1,weekdayIndex=5": "перша {weekday}",
+        "nth=1,weekdayIndex=6": "перша {weekday}",
+        "nth=1,weekdayIndex=*": "перший {weekday}",
+        "nth=2,weekdayIndex=0": "друга {weekday}",
+        "nth=2,weekdayIndex=3": "друга {weekday}",
+        "nth=2,weekdayIndex=5": "друга {weekday}",
+        "nth=2,weekdayIndex=6": "друга {weekday}",
+        "nth=2,weekdayIndex=*": "другий {weekday}",
+        "nth=3,weekdayIndex=0": "третя {weekday}",
+        "nth=3,weekdayIndex=3": "третя {weekday}",
+        "nth=3,weekdayIndex=5": "третя {weekday}",
+        "nth=3,weekdayIndex=6": "третя {weekday}",
+        "nth=3,weekdayIndex=*": "третій {weekday}",
+        "nth=4,weekdayIndex=0": "четверта {weekday}",
+        "nth=4,weekdayIndex=3": "четверта {weekday}",
+        "nth=4,weekdayIndex=5": "четверта {weekday}",
+        "nth=4,weekdayIndex=6": "четверта {weekday}",
+        "nth=4,weekdayIndex=*": "четвертий {weekday}",
+        "nth=5,weekdayIndex=0": "пʼята {weekday}",
+        "nth=5,weekdayIndex=3": "пʼята {weekday}",
+        "nth=5,weekdayIndex=5": "пʼята {weekday}",
+        "nth=5,weekdayIndex=6": "пʼята {weekday}",
+        "nth=5,weekdayIndex=*": "пʼятий {weekday}",
+        "nth=last,weekdayIndex=0": "остання {weekday}",
+        "nth=last,weekdayIndex=3": "остання {weekday}",
+        "nth=last,weekdayIndex=5": "остання {weekday}",
+        "nth=last,weekdayIndex=6": "остання {weekday}",
+        "nth=last,weekdayIndex=*": "останній {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Останній день",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1-й",
+        "nth=2": "2-й",
+        "nth=3": "3-й",
+        "nth=4": "4-й",
+        "nth=5": "5-й",
+        "nth=last": "Останній"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "День тижня",
+  "decoration_condition_date_weekday_of_month_group": "День тижня в місяці",
   "decoration_condition_has_note_describe": "нотатка існує",
+  "decoration_condition_has_note_describe_missing": "нотатка не існує",
+  "decoration_condition_has_note_presence_label": "Нотатка",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Існує",
+        "presence=missing": "Відсутня"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "є посилання як мінімум з {count} нотатки",
+        "countPlural=few": "є посилання як мінімум з {count} нотаток",
+        "countPlural=many": "є посилання як мінімум з {count} нотаток",
+        "countPlural=*": "є посилання як мінімум з {count} нотаток"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Мінімальна кількість нотаток із посиланнями",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "створено як мінімум {count} нотатку",
+        "countPlural=few": "створено як мінімум {count} нотатки",
+        "countPlural=many": "створено як мінімум {count} нотаток",
+        "countPlural=*": "створено як мінімум {count} нотаток"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Мінімальна кількість створених нотаток",
   "decoration_condition_has_notelet_describe_any": "піднотатка існує",
   "decoration_condition_has_notelet_describe_types": "існує піднотатка типу {types}",
   "decoration_condition_has_notelet_empty": "У цьому журналі ще немає типів піднотаток.",
@@ -952,6 +1047,30 @@
   "decoration_condition_property_condition_label": "Умова",
   "decoration_condition_property_describe": "властивість {name} {op} {value}",
   "decoration_condition_property_value_label": "Значення",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — немає в нотатці",
+        "quantifier=any,source=notelets,typed=yes": "{base} — будь-яка піднотатка ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — будь-яка піднотатка",
+        "quantifier=all,source=notelets,typed=yes": "{base} — усі піднотатки ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — усі піднотатки",
+        "quantifier=none,source=notelets,typed=yes": "{base} — жодної піднотатки ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — жодної піднотатки",
+        "quantifier=any,source=both,typed=yes": "{base} — нотатка або будь-яка піднотатка ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — нотатка або будь-яка піднотатка",
+        "quantifier=all,source=both,typed=yes": "{base} — нотатка і всі піднотатки ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — нотатка і всі піднотатки",
+        "quantifier=none,source=both,typed=yes": "{base} — ні нотатка, ні її піднотатки ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ні нотатка, ні її піднотатки",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Які нотатки",
+  "decoration_condition_scope_source_label": "Де шукати",
   "decoration_condition_tag_describe": "тег {op} {value}",
   "decoration_condition_tag_value_label": "Значення тегу",
   "decoration_condition_tasks_quantifier_label": "Які завдання",
@@ -1033,6 +1152,8 @@
         "type=weekday": "День тижня",
         "type=offset": "Зсув",
         "type=has-note": "Має нотатку",
+        "type=linked": "З посиланнями",
+        "type=created": "Створені",
         "type=tasks": "Завдання",
         "type=note-size": "Розмір нотатки",
         "type=has-notelet": "Має піднотатку"
@@ -1051,6 +1172,8 @@
         "type=weekday": "Перевірити день тижня",
         "type=offset": "Перевірити зсув інтервалу",
         "type=has-note": "Перевірити, чи існує нотатка",
+        "type=linked": "Перевірити посилання на цю дату",
+        "type=created": "Перевірити нотатки, створені в цьому періоді",
         "type=tasks": "Перевірити завдання",
         "type=note-size": "Перевірити розмір нотатки",
         "type=has-notelet": "Перевірити, чи існує піднотатка"
@@ -1088,9 +1211,12 @@
   "decoration_mark_limit_description": "Скільки фігур і значків комірка малює в кожній із дев'яти позицій. Зайві позначки збираються в бейдж — наведіть на нього, щоб побачити їх усі. Застосовується до всіх календарів, блоків навігації, рядків інтервалів і кнопок періодів, а також до будь-якого оформлення незалежно від власника — журналу, полиці чи всього сховища.",
   "decoration_mark_limit_label": "Позначок на позицію",
   "decoration_mark_limit_unlimited": "Без обмежень",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Додати умову",
   "decoration_modal_add_style": "Додати стиль",
+  "decoration_modal_name_label": "Назва",
+  "decoration_modal_name_description": "Необов’язково. Показується, коли наводите на оформлену дату, і в списку оформлення.",
   "decoration_modal_mode_label": "Коли оформлювати",
   "decoration_modal_mode_option": [
     {
@@ -1214,7 +1340,8 @@
       "match": {
         "group=text": "Текст",
         "group=background": "Фон",
-        "group=border": "Межа"
+        "group=border": "Межа",
+        "group=palette": "Палітра"
       }
     }
   ],
@@ -1248,6 +1375,14 @@
   "ui_theme_color_text_selection": "Фон виділеного тексту",
   "ui_theme_color_text_highlight_bg": "Фон підсвіченого тексту",
   "ui_theme_color_caret_color": "Колір курсора",
+  "ui_theme_color_red": "Червоний",
+  "ui_theme_color_orange": "Помаранчевий",
+  "ui_theme_color_yellow": "Жовтий",
+  "ui_theme_color_green": "Зелений",
+  "ui_theme_color_cyan": "Блакитний",
+  "ui_theme_color_blue": "Синій",
+  "ui_theme_color_purple": "Фіолетовий",
+  "ui_theme_color_pink": "Рожевий",
   "journal_add_modal_anchor_description": "Ця дата використовується для відліку користувацьких інтервалів. Її не можна змінити після створення журналу.",
   "common_label_today": "Сьогодні",
   "relative_date_yesterday": "Вчора",
@@ -1387,6 +1522,7 @@
   "settings_too_new_banner": "Ці налаштування були збережені на іншому пристрої новішою версією Journals. Перезапустіть Obsidian або оновіть Journals тут — зміни, зроблені до того, буде відкинуто.",
   "settings_too_new_boot": "Журнал: налаштування були збережені новішою версією Journals. Оновіть Journals на цьому пристрої, щоб використовувати їх тут.",
   "settings_reload_required_banner": "Перезавантажте Obsidian, щоб застосувати змінені налаштування.",
+  "settings_section_failed": "Не вдалося показати цей розділ: {reason}. Решта налаштувань і далі працює.",
   "settings_tab_title": "Журнали",
   "startup_dashboard_section_title": "Запуск",
   "startup_open_note_title": "Відкривати під час запуску",
@@ -1472,6 +1608,9 @@
   "view_reposition_modal_confirm": "Перемістити",
   "view_edit_blocks_title": "Блоки",
   "view_edit_blocks_empty": "Блоків поки що немає.",
+  "view_edit_css_title": "CSS-фрагмент",
+  "view_edit_css_selector_label": "Селектор",
+  "view_edit_css_selector_description": "Вибирає лише це представлення. Клацніть правило, щоб скопіювати його, а потім задайте змінні CSS між його фігурними дужками у CSS-фрагменті.",
   "view_block_unknown_label": "Невідомий блок: {key}",
   "view_block_edit": "Редагувати блок",
   "view_block_edit_title": "Редагувати блок: {type}",
@@ -1590,7 +1729,7 @@
   "view_block_tasks_filter_status_default": "Немає власної умови статусу, тому вирішує фільтр списку журналу, якщо він вказує статус.",
   "view_toolbar_shelf_selector_label": "Вибір полиці",
   "view_toolbar_shelf_selector_description": "Визначає, яка полиця обмежує журнали представлення.",
-  "view_toolbar_shelf_selector_tooltip": "Змінити полицю",
+  "view_toolbar_shelf_selector_name": "{shelf} · Змінити полицю",
   "view_toolbar_spacer_label": "Проміжок",
   "view_toolbar_spacer_description": "Гнучкий проміжок, який розсуває сусідні елементи.",
   "view_toolbar_period_buttons_label": "Кнопки періодів",
@@ -1812,6 +1951,9 @@
   "journal_colliding_heading": "Зіткнення налаштувань журналу",
   "journal_colliding_warning": "Журнали {names} мають конфігурації, що конфліктують, тому їхні нотатки перезаписуватимуть одна одну. Змініть папку або шаблон назви в одному з них.",
   "journal_note_name_empty_notice": "У журналі «{journalName}» шаблон назви дає порожню назву нотатки, тому нотатку неможливо створити. Задайте шаблон назви в налаштуваннях журналу.",
+  "journal_date_format_unrenderable_notice": "Журнал «{journalName}»: формат дати {format} неможливо відобразити на цьому пристрої ({reason}). Змініть його в налаштуваннях журналу або в його шаблонах нотаток.",
+  "date_format_invalid_preview": "Недійсний формат: {reason}",
+  "journal_dashboard_date_format_unrenderable": "Формат дати неможливо відобразити на цьому пристрої.",
   "journal_note_path_claimed_notice": "Журнал «{journalName}» розмістив би свою нотатку в «{path}», але ця нотатка вже належить журналу «{claimedBy}», тому нічого не змінено. Змініть папку або шаблон назви в одному з них.",
   "journal_note_path_notelet_notice": "Журнал «{journalName}» не може створити нотатку в «{path}»: там уже є одна з його власних піднотаток. Змініть шаблон назви або папку журналу або перемістіть цю піднотатку.",
   "journal_note_path_held_by_period_notice": "Журнал «{journalName}» розмістив би свою нотатку в «{path}», але ця нотатка вже належить йому за період, що починається {date}, тому нічого не змінено. Змініть шаблон назви або папку, щоб кожен період мав власну назву нотатки.",
@@ -2042,6 +2184,7 @@
   "journal_edit_move_to_folder_apply_link": "Застосувати рекомендацію",
   "journal_edit_move_to_folder_recommendation_date_format": "Формат дати містить роздільник шляхів. Перемістити змінні дати в поле «Папка»?",
   "journal_edit_move_to_folder_recommendation_name_template": "Шаблон назви нотатки містить роздільник шляхів. Перемістити префікс шляху в поле «Папка»?",
+  "journal_edit_era_year_recommendation": "У moment y — це рік ери, а не календарний рік. У більшості мов він виглядає так само, але нотатки, названі з ним, не можна зіставити назад із їхніми датами. Використати YYYY натомість?",
   "journal_edit_name_template_description": "Шаблон, який використовується для створення нових назв нотаток.",
   "journal_edit_name_template_empty_warning": "Цей шаблон назви дає порожню назву нотатки, тому нотатку неможливо створити. Додайте змінну або текст.",
   "journal_edit_name_template_collision_warning": "Записи для {first} і {second} дають один і той самий шлях {path}. Нотатку може мати лише один із них; відкриття другого відхиляється.",
@@ -2073,6 +2216,7 @@
   "journal_edit_name_template_cyclic_top_warning": "Перший розряд нумерації скидається, тому номери повторюються і їх неможливо перетворити назад на дату. Додайте змінну дати до шаблону назви або встановіть для першого розряду значення «Безперервний», щоб нотатки, створені поза плагіном, можна було зіставити з цим журналом.",
   "journal_edit_name_template_coarse_date_warning": "Змінна дати в шаблоні назви недостатньо точна, щоб розрізняти періоди цього журналу, тому кілька періодів отримують однакову назву нотатки. Використайте формат дати, який змінюється щоперіоду, або увімкніть послідовні номери й додайте кожен розряд до назви чи теки, щоб нотатки, створені поза плагіном, можна було зіставити з цим журналом.",
   "journal_edit_name_template_unreadable_date_warning": "Плагін не може прочитати дату з нотаток, які створює цей журнал, тому нотатки, створені поза плагіном, не можна зіставити з цим журналом. Формат, який несе ще й часовий пояс — Z або ZZ, — записується правильно, але не читається назад: використайте формат із символів дати, наприклад YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "Плагін не може прочитати дату з нотаток, які створює цей журнал, тому нотатки, створені поза плагіном, не можна зіставити з цим журналом. Ці символи не читаються назад: {tokens}. Використайте формат із символів дати, наприклад YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Записи для {first} і {second} дають один і той самий шлях {path}, бо питання в назві ще не отримало відповіді — після відповіді кожна нотатка матиме унікальну назву.",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2109,7 +2253,7 @@
   "journal_edit_code_block_reference_link": "Підтримувані блоки коду.",
   "journal_edit_code_block_reference_modal_title": "Підтримувані блоки коду",
   "journal_edit_code_block_copy_hint": "Клацніть блок коду, щоб скопіювати його в буфер обміну.",
-  "journal_edit_code_block_copied": "Скопійовано в буфер обміну.",
+  "common_copied_to_clipboard": "Скопійовано в буфер обміну.",
   "journal_edit_code_block_nav_description": "Блок навігації допомагає переходити між нотатками, що прилягають до поточної.",
   "journal_edit_code_block_nav_current": "Його конфігурація для журналу {name} виглядає так:",
   "journal_edit_code_block_nav_aliases_lead": "Ці старіші назви блоків є псевдонімами, які поводяться ідентично:",
@@ -2252,6 +2396,18 @@
         "mode=keep": "Піднотатки залишаються у вашому сховищі без змін.",
         "mode=clear": "Піднотатки залишаються у вашому сховищі, але властивості журналу та типу піднотатки видаляються з їхньої вхідної сторінки.",
         "mode=delete": "Усі піднотатки цього типу видаляються з вашого сховища."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "Буде видалено {count} оформлення:",
+        "count=*,countPlural=few": "Буде видалено {count} оформлення:",
+        "count=*,countPlural=many": "Буде видалено {count} оформлень:",
+        "count=*,countPlural=*": "Буде видалено {count} оформлення:"
       }
     }
   ],

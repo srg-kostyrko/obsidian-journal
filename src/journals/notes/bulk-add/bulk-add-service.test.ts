@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { localMoment } from "@/calendar";
+import { localMoment, userDateFormat } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import { InvariantError } from "@/infrastructure/result";
@@ -15,10 +15,10 @@ import { NoteConnectionService } from "../note-connection";
 import { BulkAddService } from "./bulk-add-service";
 import { defaultBulkAddParameters } from "./config";
 
-import type { PlannedAction } from "./bulk-add-service";
-import type { BulkAddParameters } from "./config";
 import type { TypeId } from "../../notelets/config";
 import type { Prompt } from "../../prompts/config";
+import type { PlannedAction } from "./bulk-add-service";
+import type { BulkAddParameters } from "./config";
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
@@ -145,12 +145,15 @@ describe("BulkAddService", () => {
           const value = localMoment("2026-06-01 21:31", "YYYY-MM-DD HH:mm", true).format(dateFormat);
           harness.host.putFile("src/entry.md", "", { creationDate: value });
 
-          const planResult = await harness
-            .resolve(BulkAddService)
-            .plan(
-              "daily",
-              makeParameters({ folder: "src", datePlace: "property", propertyName: "creationDate", dateFormat }),
-            );
+          const planResult = await harness.resolve(BulkAddService).plan(
+            "daily",
+            makeParameters({
+              folder: "src",
+              datePlace: "property",
+              propertyName: "creationDate",
+              dateFormat: userDateFormat(dateFormat),
+            }),
+          );
 
           expectOk(planResult);
           const note = planResult.value.notes.find((n) => n.path === "src/entry.md");
@@ -303,7 +306,7 @@ describe("BulkAddService", () => {
 
       const planResult = await harness
         .resolve(BulkAddService)
-        .plan("weekly", makeParameters({ folder: "src", dateFormat: "gggg-[W]ww" }));
+        .plan("weekly", makeParameters({ folder: "src", dateFormat: userDateFormat("gggg-[W]ww") }));
 
       expectOk(planResult);
       const note = planResult.value.notes.find((n) => n.path === "src/2026-W01.md");
@@ -355,7 +358,7 @@ describe("BulkAddService", () => {
 
         const planResult = await harness
           .resolve(BulkAddService)
-          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: userDateFormat("") }));
 
         expectOk(planResult);
         const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun/01-Mon.md");
@@ -367,7 +370,7 @@ describe("BulkAddService", () => {
 
         const planResult = await harness
           .resolve(BulkAddService)
-          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: userDateFormat("") }));
 
         expectOk(planResult);
         const note = planResult.value.notes.find((n) => n.path === "Journal/misfiled/01-Mon.md");
@@ -382,9 +385,15 @@ describe("BulkAddService", () => {
         });
         harness.host.putFile("Journal/2026/06-Jun/01-Mon.md");
 
-        const planResult = await harness
-          .resolve(BulkAddService)
-          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "", existingNote: "ask" }));
+        const planResult = await harness.resolve(BulkAddService).plan(
+          "daily",
+          makeParameters({
+            folder: "Journal",
+            datePlace: "path",
+            dateFormat: userDateFormat(""),
+            existingNote: "ask",
+          }),
+        );
 
         expectOk(planResult);
         const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun/01-Mon.md");
@@ -398,7 +407,7 @@ describe("BulkAddService", () => {
             makeParameters({
               folder: "Journal",
               datePlace: "path",
-              dateFormat: "",
+              dateFormat: userDateFormat(""),
               noteletTypeId: "nt_1" as TypeId,
             }),
           ),
@@ -423,7 +432,7 @@ describe("BulkAddService", () => {
 
       const planResult = await harness
         .resolve(BulkAddService)
-        .plan("monthly", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+        .plan("monthly", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: userDateFormat("") }));
 
       expectOk(planResult);
       const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun.md");
@@ -451,7 +460,7 @@ describe("BulkAddService", () => {
 
       const planResult = await harness
         .resolve(BulkAddService)
-        .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+        .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: userDateFormat("") }));
 
       expectOk(planResult);
       const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun/01-Mon.md");

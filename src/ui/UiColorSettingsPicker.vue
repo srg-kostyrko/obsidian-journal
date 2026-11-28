@@ -98,22 +98,11 @@ const customColor = computed<string>({
         :aria-label="m.ui_color_theme_variable_label()"
       >
         <option value="">{{ m.ui_color_theme_variable_label() }}</option>
-        <template v-if="groups.length > 1">
-          <optgroup
-            v-for="group of groups"
-            :key="group.tag"
-            :label="m.ui_theme_color_group_label({ group: group.tag })"
-          >
-            <option v-for="colorName of group.names" :key="colorName" :value="colorName">
-              {{ themeColorLabel(colorName) }}
-            </option>
-          </optgroup>
-        </template>
-        <template v-else>
-          <option v-for="colorName of groups[0]?.names ?? []" :key="colorName" :value="colorName">
+        <optgroup v-for="group of groups" :key="group.tag" :label="m.ui_theme_color_group_label({ group: group.tag })">
+          <option v-for="colorName of group.names" :key="colorName" :value="colorName">
             {{ themeColorLabel(colorName) }}
           </option>
-        </template>
+        </optgroup>
         <option v-if="themeName && !offered.has(themeName)" :value="themeName">
           {{ themeColorLabel(themeName) }}
         </option>

@@ -14,6 +14,10 @@ export { JournalsIndex } from "./journals-index";
 
 export { useIndexVersion } from "./use-index-version";
 
+export { LinkReferenceIndex, useLinkReferencesVersion } from "./link-references";
+
+export { CreationDateIndex, useCreationDatesVersion, type CreatedNote } from "./creation-dates";
+
 export { journalsModule } from "./module";
 
 export {

@@ -18,7 +18,14 @@ import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { BufferSinkToken, LoggerFactoryToken, LoggerModule } from "@/infrastructure/logger";
 import type { LogRecord } from "@/infrastructure/logger";
-import { AutoAttachService, AutoCreateService, JournalUriHandler, StartupOpenService } from "@/journals";
+import {
+  AutoAttachService,
+  AutoCreateService,
+  CreationDateIndex,
+  JournalUriHandler,
+  LinkReferenceIndex,
+  StartupOpenService,
+} from "@/journals";
 import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
@@ -92,6 +99,22 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(DataMigrationService).initialize();
     await container.resolve(AutoAttachService).initialize();
+    // Not awaited: it waits for the boot-time vault walk, which onload must not block on.
+    void container
+      .resolve(LinkReferenceIndex)
+      .initialize()
+      .catch((error: unknown) => {
+        container.resolve(LoggerFactoryToken).named("links").error("link reference index failed to start", { error });
+      });
+    void container
+      .resolve(CreationDateIndex)
+      .initialize()
+      .catch((error: unknown) => {
+        container
+          .resolve(LoggerFactoryToken)
+          .named("creation-dates")
+          .error("creation date index failed to start", { error });
+      });
     // After VaultSubscriptionService above, and load-bearing: clearing a note's task items on the
     // way out runs off that service's unregister, which fires entryChanged{removed} for the host
     // to turn into a refresh that publishes []. Start the providers first and a note that leaves a

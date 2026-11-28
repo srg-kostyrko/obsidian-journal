@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CalendarDate, type AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString, userDateFormat } from "@/calendar";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
@@ -60,8 +60,16 @@ describe("findCollidingJournals", () => {
 
   it("flags journals whose default date formats differ but whose template sets its own", async () => {
     const groups = await collisions({
-      a: fixedJournal("a", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "YYYY-MM-DD" }),
-      b: fixedJournal("b", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" }),
+      a: fixedJournal(
+        "a",
+        { type: "day" },
+        { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("YYYY-MM-DD") },
+      ),
+      b: fixedJournal(
+        "b",
+        { type: "day" },
+        { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("DD.MM.YYYY") },
+      ),
     });
 
     expect(groups).toEqual([["a", "b"]]);
@@ -69,8 +77,8 @@ describe("findCollidingJournals", () => {
 
   it("does not flag journals whose default date formats render different paths", async () => {
     const groups = await collisions({
-      a: fixedJournal("a", { type: "day" }, { nameTemplate: "{{date}}", dateFormat: "YYYY-MM-DD" }),
-      b: fixedJournal("b", { type: "day" }, { nameTemplate: "{{date}}", dateFormat: "DD.MM.YYYY" }),
+      a: fixedJournal("a", { type: "day" }, { nameTemplate: "{{date}}", dateFormat: userDateFormat("YYYY-MM-DD") }),
+      b: fixedJournal("b", { type: "day" }, { nameTemplate: "{{date}}", dateFormat: userDateFormat("DD.MM.YYYY") }),
     });
 
     expect(groups).toEqual([]);
@@ -126,7 +134,11 @@ describe("findCollidingJournals", () => {
 
   it("joins journals linked through a shared third journal into one group", async () => {
     const groups = await collisions({
-      a: fixedJournal("a", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "YYYY" }),
+      a: fixedJournal(
+        "a",
+        { type: "day" },
+        { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("YYYY") },
+      ),
       b: fixedJournal("b", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}" }),
       c: fixedJournal("c", { type: "week" }, { nameTemplate: "{{start_date:YYYY-MM-DD}}" }),
     });

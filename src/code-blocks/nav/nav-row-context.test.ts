@@ -1,15 +1,18 @@
 import { assert, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
+import { withoutEras } from "@/calendar/testing";
 import { initLocale } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
-import { Option } from "@/infrastructure/result";
+import { Ok, Option } from "@/infrastructure/result";
 import { CycleService, NotePathService, NumberingService, type JournalConfig, type JournalEntry } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
+import { TemplateEngine } from "@/templates";
 import { testContainer } from "@/testing";
 
-import { buildNavRowContext } from "./nav-row-context";
+import { buildNavRowContext, renderNavRow } from "./nav-row-context";
 
 interface NavServices {
   cycle: CycleService;
@@ -274,5 +277,40 @@ describe("buildNavRowContext", () => {
       today,
     });
     expect(context.get("index")).toEqual({ kind: "number", value: 2 });
+  });
+});
+
+describe("renderNavRow", () => {
+  beforeAll(() => initLocale("en"));
+
+  const broken = fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("y") });
+
+  async function render(template: string) {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: broken } } });
+    return withoutEras(() =>
+      renderNavRow(harness.resolve(TemplateEngine), template, {
+        journal: broken,
+        refDate,
+        entry: Option.none(),
+        cycle: harness.resolve(CycleService),
+        numbering: harness.resolve(NumberingService),
+        notePath: harness.resolve(NotePathService),
+        today,
+      }),
+    );
+  }
+
+  it("fails a segment that reads only note_name when the name cannot render", async () => {
+    const result = await render("{{note_name}}");
+    expect(result.isErr() && result.error.variableName).toBe("note_name");
+  });
+
+  it("fails a segment that reads only title when the name cannot render", async () => {
+    const result = await render("{{Title}}");
+    expect(result.isErr()).toBe(true);
+  });
+
+  it("leaves a segment that reads neither variable to render", async () => {
+    expect(await render("{{journal_name}}")).toEqual(new Ok("daily"));
   });
 });

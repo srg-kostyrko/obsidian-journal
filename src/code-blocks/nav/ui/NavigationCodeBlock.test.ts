@@ -4,7 +4,8 @@ import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { anchor } from "@/calendar/testing";
+import { userDateFormat } from "@/calendar";
+import { anchor, formatFailureReason, withoutEras } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
@@ -367,6 +368,51 @@ describe("NavigationCodeBlock segment templates", () => {
     expect(screen.getByText("Renamed day")).toBeTruthy();
     expect(screen.getByText("2026-05-26")).toBeTruthy();
     expect(screen.getByText("2026-05-28")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock segment with an unrenderable date format", () => {
+  it("shows the invalid-format message in the segment while its siblings still render", async () => {
+    await withoutEras(async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock({
+            lines: [
+              [
+                buildNavSegment({ template: "{{date:y}}", color: transparent }),
+                buildNavSegment({ template: "sibling", color: transparent }),
+              ],
+            ],
+          }),
+        },
+        shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+
+      expect(
+        screen.getAllByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") })).length,
+      ).toBeGreaterThan(0);
+      expect(screen.getAllByText("sibling").length).toBeGreaterThan(0);
+    });
+  });
+
+  it("fails a note_name-only segment for a note that does not exist yet", async () => {
+    await withoutEras(async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            { lines: [[buildNavSegment({ template: "{{note_name}}", color: transparent })]] },
+            { dateFormat: userDateFormat("y") },
+          ),
+        },
+        shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+
+      expect(
+        screen.getAllByText(m.date_format_invalid_preview({ reason: formatFailureReason("y") })).length,
+      ).toBeGreaterThan(0);
+    });
   });
 });
 
@@ -814,7 +860,73 @@ describe("NavigationCodeBlock hover preview", () => {
   });
 });
 
+function namedCorner(name: string): JournalDecoration {
+  return { ...cornerDecoration(), name };
+}
+
 describe("NavigationCodeBlock decorations", () => {
+  describe("names", () => {
+    it("shows a decorated segment's decoration names as its tooltip", async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            {
+              decorateWholeBlock: false,
+              lines: [[buildNavSegment({ template: "today", color: transparent, link: "self", addDecorations: true })]],
+            },
+            { decorations: [namedCorner("Release 3.8")] },
+          ),
+        },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+      const row = document.querySelector<HTMLElement>(".nav-row");
+      expect(row?.getAttribute("aria-label")).toBe(m.decoration_cell_label({ date: "today", names: "Release 3.8" }));
+    });
+
+    it("gives an undecorated segment no tooltip even when the day is named", async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            {
+              decorateWholeBlock: false,
+              lines: [
+                [buildNavSegment({ template: "today", color: transparent, link: "self", addDecorations: false })],
+              ],
+            },
+            { decorations: [namedCorner("Release 3.8")] },
+          ),
+        },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+      expect(document.querySelector<HTMLElement>(".nav-row")?.hasAttribute("aria-label")).toBe(false);
+    });
+
+    it("names the whole-block decoration on each segment", async () => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: {
+          daily: dailyWithNavBlock(
+            {
+              decorateWholeBlock: true,
+              lines: [
+                [
+                  buildNavSegment({ template: "a", color: transparent, addDecorations: false }),
+                  buildNavSegment({ template: "b", color: transparent, addDecorations: false }),
+                ],
+              ],
+            },
+            { decorations: [namedCorner("Anna")] },
+          ),
+        },
+        entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      });
+      const rows = [...document.querySelectorAll<HTMLElement>(".nav-row")];
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows.map((row) => row.getAttribute("aria-label"))).toEqual(
+        rows.map((row) => m.decoration_cell_label({ date: row.textContent ?? "", names: "Anna" })),
+      );
+    });
+  });
+
   it("wraps individual segment text with CellDecoration when addDecorations is true", async () => {
     await renderNav("Daily/2026-05-27.md", {
       journals: {

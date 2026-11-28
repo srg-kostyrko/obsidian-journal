@@ -1,0 +1,4 @@
+body {
+  --journal-cell-weekend-color: var(--color-blue);
+  --journal-cell-weekend-strength: 0.15;
+}

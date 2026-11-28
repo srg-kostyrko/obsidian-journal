@@ -6,7 +6,7 @@ import { checkProperty, checkTag, checkTitle } from "@/decorations/engine-checks
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { FolderNotFoundError, NoteMetadata, VaultPath } from "@/infrastructure/host";
-import { AsyncResult, InvariantError, Option, attempt } from "@/infrastructure/result";
+import { AsyncResult, Err, InvariantError, Ok, Option, attempt, type Result } from "@/infrastructure/result";
 import { formatToRegexp } from "@/templates";
 
 import { CycleService } from "../../cycle";
@@ -15,12 +15,13 @@ import { NoteletPathService } from "../../notelets/notelet-path";
 import { promptsInTemplate } from "../../prompts/prompts-in-path";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
+import { JournalDateFormatError } from "../errors";
 import { NoteConnectionService } from "../note-connection";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
 
-import type { BulkAddParameters } from "./config";
 import type { TypeId } from "../../notelets/config";
+import type { BulkAddParameters } from "./config";
 
 export type SkipReason =
   "already-connected" | "filtered" | "no-date" | "invalid-date" | "out-of-bounds" | "not-on-journal-path";
@@ -353,6 +354,32 @@ export class BulkAddService {
       moveRefused: a.folder === "refused-prompt",
       renameRefused: a.name === "refused-prompt",
     }));
+  }
+
+  /**
+   * Refuses a run on a journal whose path this device cannot render: every note would otherwise
+   * stay where it is unannounced, or be skipped as off the journal's path.
+   */
+  checkRenders(journalName: string, typeId?: string): Result<void, JournalDateFormatError> {
+    const today = CalendarDate.today();
+    const probes = [this.#path.pathForDate(journalName, today)];
+    const config = this.#journals.get(journalName).getOrUndefined();
+    const type = typeId === undefined ? undefined : config?.notelets[typeId];
+    const anchor = this.#cycle.anchorOf(journalName, today);
+    if (config !== undefined && type !== undefined && anchor.isSome()) {
+      probes.push(
+        this.#noteletPaths.pathFor(config, type, {
+          kind: "notelet",
+          journalName,
+          anchor: anchor.value,
+          typeId: typeId as TypeId,
+        }),
+      );
+    }
+    for (const probe of probes) {
+      if (probe.isErr() && probe.error instanceof JournalDateFormatError) return new Err(probe.error);
+    }
+    return new Ok(undefined);
   }
 
   plan(journalName: string, parameters: BulkAddParameters): AsyncResult<BulkPlan, FolderNotFoundError> {

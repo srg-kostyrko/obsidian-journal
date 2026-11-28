@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CalendarDate, calendarSettingsModule, type CalendarSliceState } from "@/calendar";
+import { CalendarDate, calendarSettingsModule, type CalendarSliceState, userDateFormat } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import type { JournalConfig } from "@/journals/config";
@@ -22,7 +22,7 @@ const daily = (name: string, overrides: Partial<JournalConfig> = {}): JournalCon
   fixedJournal(
     name,
     { type: "day" },
-    { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}", ...overrides },
+    { folder: "Journal", dateFormat: userDateFormat("YYYY-MM-DD"), nameTemplate: "{{date}}", ...overrides },
   );
 
 const WEEKS_AROUND_NEW_YEAR = ["2025-12-22", "2025-12-29", "2026-01-05", "2026-12-21", "2026-12-28", "2027-01-04"];
@@ -37,7 +37,7 @@ async function weekYearRoundTrip(calendar?: CalendarSliceState) {
         weekly: fixedJournal(
           "weekly",
           { type: "week" },
-          { folder: "Weekly", dateFormat: "gggg-[W]ww", nameTemplate: "{{date}}" },
+          { folder: "Weekly", dateFormat: userDateFormat("gggg-[W]ww"), nameTemplate: "{{date}}" },
         ),
       },
       ...(calendar !== undefined && { calendar }),
@@ -92,7 +92,7 @@ describe("ImportConnectService", () => {
 
   it("scans from the deepest folder without date variables", async () => {
     const harness = await harnessWith({
-      daily: daily("daily", { folder: "Journal/{{date:YYYY}}", dateFormat: "MM-DD" }),
+      daily: daily("daily", { folder: "Journal/{{date:YYYY}}", dateFormat: userDateFormat("MM-DD") }),
     });
     harness.host.putFile("Journal/2026/06-01.md");
 

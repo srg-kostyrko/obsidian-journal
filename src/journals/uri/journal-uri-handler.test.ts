@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { CalendarDate, userDateFormat } from "@/calendar";
+import { anchor, withoutEras } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { testContainer, type TestHarness } from "@/testing";
@@ -9,6 +9,8 @@ import { testContainer, type TestHarness } from "@/testing";
 import { OpenDateFlow } from "../flows/open-date.flow";
 import { journalsCoreModule } from "../module";
 import { CreateNoteletFlow } from "../notelets/flows/create-notelet.flow";
+import { JournalDateFormatError } from "../notes/errors";
+import { NotePathService } from "../notes/note-path";
 import { buildNoteletType, fixedJournal } from "../testing";
 import { VaultSubscriptionService } from "../vault-subscription";
 
@@ -180,6 +182,25 @@ describe("JournalUriHandler errors", () => {
     expect(harness.notices.messages).toHaveLength(1);
   });
 
+  it("shows only the journal's own notice for a date format that cannot render", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }) },
+      },
+      initialize: [JournalUriHandler],
+    });
+
+    const expected = await withoutEras(async () => {
+      trigger(harness, { journal: "weekly", date: "2026-06-04" });
+      await flush();
+      return harness.resolve(NotePathService).pathForDate("weekly", CalendarDate.fromAnchor(anchor("2026-06-04")));
+    });
+
+    assert(expected.isErr() && expected.error instanceof JournalDateFormatError, "expected JournalDateFormatError");
+    expect(harness.notices.messages).toEqual([expected.error.userNotice]);
+  });
+
   it("stays silent when the journal picker is dismissed", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
@@ -325,6 +346,19 @@ describe("JournalUriHandler notelet creation", () => {
 
     expect(harness.notices.messages).toEqual([]);
     expect(harness.host.files.has("Meeting 1.md")).toBe(false);
+  });
+
+  it("shows the journal's own notice for a date format that cannot render", async () => {
+    const harness = await noteletHarness(withMeetingType({}, { nameTemplate: "Meeting {{date:YYYYy}}" }));
+
+    await withoutEras(async () => {
+      trigger(harness, { journal: "Work", notelet: "Meeting", date: "2026-09-02" });
+      await flush();
+    });
+
+    expect(harness.notices.messages).toHaveLength(1);
+    expect(harness.notices.messages[0]).toContain("YYYYy");
+    expect(harness.notices.messages[0]).not.toBe(m.uri_notelet_failed());
   });
 
   it("reports a date outside the journal's timeline", async () => {

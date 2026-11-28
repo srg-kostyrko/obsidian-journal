@@ -6,17 +6,15 @@ import { attempt, Err, type AsyncResult } from "@/infrastructure/result";
 
 import { JournalNotFoundError, type OutOfTimelineError } from "../errors";
 import { journalPickerSuggest } from "../notes/journal-picker";
-import { NotePathService } from "../notes/note-path";
+import { NotePathService, type NotePathError } from "../notes/note-path";
 import { pickingForWrite } from "../picking";
 import { JournalsRepository } from "../repository";
 
 import { JournalNoteLinkCancelledError, NamedByAnswersError } from "./errors";
 import { promptsInPath } from "./prompts-in-path";
 
-import type { EmptyNoteNameError } from "../notes/errors";
-
 export type JournalNoteLinkError =
-  JournalNoteLinkCancelledError | JournalNotFoundError | OutOfTimelineError | EmptyNoteNameError | NamedByAnswersError;
+  JournalNoteLinkCancelledError | OutOfTimelineError | NotePathError | NamedByAnswersError;
 
 export class JournalNoteLinkPicker {
   readonly #suggests = inject(SuggestService);

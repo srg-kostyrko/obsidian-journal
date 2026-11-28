@@ -142,15 +142,16 @@ describe("stock narrow values", () => {
     ).toEqual(withStockNarrow.map((entry) => ({ name: entry.name, css: entry.stockNarrow })));
   });
 
-  it("states the growing row height and the larger wide dates as their stock", () => {
-    expect([
-      find("journal-cell-cell-min-height"),
-      find("journal-cell-date-size"),
-      find("journal-cell-cell-gap"),
-    ]).toEqual([
+  it("states the growing row height and the wide gap as their stock", () => {
+    expect([find("journal-cell-cell-min-height"), find("journal-cell-cell-gap")]).toEqual([
       expect.objectContaining({ stock: "clamp(26px, 7cqi, 64px)", stockNarrow: "26px" }),
-      expect.objectContaining({ stock: "1.1em", stockNarrow: "1em" }),
       expect.objectContaining({ stock: "var(--size-2-1)", stockNarrow: "1px" }),
     ]);
+  });
+
+  it("draws dates at the surrounding text's size at every width", () => {
+    const date = find("journal-cell-date-size");
+    expect(date?.stock).toBe("inherit");
+    expect(date?.stockNarrow).toBeUndefined();
   });
 });

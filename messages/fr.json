@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Décroissant",
   "view_block_day_notes_show_heading_label": "Afficher l’en-tête de la période",
   "view_block_day_notes_show_navigation_label": "Afficher la navigation de la période",
+  "view_block_day_notes_hide_period_notes_label": "Masquer les notes de journal",
   "view_block_day_notes_last_modified": "Dernière modification : {date}",
   "view_block_day_notes_created": "Créée : {date}",
   "view_block_day_notes_empty": "Aucune note n’a été créée pendant cette période.",
@@ -1025,7 +1026,73 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "dernier jour",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "1er {weekday}",
+        "nth=2,weekdayIndex=*": "2e {weekday}",
+        "nth=3,weekdayIndex=*": "3e {weekday}",
+        "nth=4,weekdayIndex=*": "4e {weekday}",
+        "nth=5,weekdayIndex=*": "5e {weekday}",
+        "nth=last,weekdayIndex=*": "dernier {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Dernier jour",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1er",
+        "nth=2": "2e",
+        "nth=3": "3e",
+        "nth=4": "4e",
+        "nth=5": "5e",
+        "nth=last": "Dernier"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Jour de la semaine",
+  "decoration_condition_date_weekday_of_month_group": "Jour de la semaine du mois",
   "decoration_condition_has_note_describe": "il existe une note",
+  "decoration_condition_has_note_describe_missing": "aucune note n'existe",
+  "decoration_condition_has_note_presence_label": "Note",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Existe",
+        "presence=missing": "Manquante"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "liée depuis au moins {count} note",
+        "countPlural=*": "liée depuis au moins {count} notes"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Nombre minimal de notes qui font un lien",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "au moins {count} note créée",
+        "countPlural=*": "au moins {count} notes créées"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Nombre minimal de notes créées",
   "decoration_condition_has_notelet_describe_any": "il existe une note brève",
   "decoration_condition_has_notelet_describe_types": "il existe une note brève de type {types}",
   "decoration_condition_has_notelet_empty": "Ce journal n'a pas encore de type de note brève.",
@@ -1093,6 +1160,30 @@
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "propriété {name} {op} {value}",
   "decoration_condition_property_value_label": "Valeur",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — pas dans la note",
+        "quantifier=any,source=notelets,typed=yes": "{base} — n’importe quelle note brève ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — n’importe quelle note brève",
+        "quantifier=all,source=notelets,typed=yes": "{base} — toutes les notes brèves ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — toutes les notes brèves",
+        "quantifier=none,source=notelets,typed=yes": "{base} — aucune note brève ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — aucune note brève",
+        "quantifier=any,source=both,typed=yes": "{base} — la note ou n’importe quelle note brève ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — la note ou n’importe quelle note brève",
+        "quantifier=all,source=both,typed=yes": "{base} — la note et toutes les notes brèves ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — la note et toutes les notes brèves",
+        "quantifier=none,source=both,typed=yes": "{base} — ni la note ni ses notes brèves ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ni la note ni ses notes brèves",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Quelles notes",
+  "decoration_condition_scope_source_label": "Chercher dans",
   "decoration_condition_tag_describe": "étiquette {op} {value}",
   "decoration_condition_tag_value_label": "Valeur de l’étiquette",
   "decoration_condition_tasks_quantifier_label": "Quelles tâches",
@@ -1174,6 +1265,8 @@
         "type=weekday": "Jour de la semaine",
         "type=offset": "Décalage",
         "type=has-note": "A une note",
+        "type=linked": "Lié",
+        "type=created": "Créées",
         "type=tasks": "Tâches",
         "type=note-size": "Taille de la note",
         "type=has-notelet": "A une note brève"
@@ -1192,6 +1285,8 @@
         "type=weekday": "Vérifier le jour de la semaine",
         "type=offset": "Vérifier le décalage d’intervalle",
         "type=has-note": "Vérifier si la note existe",
+        "type=linked": "Vérifier les liens vers cette date",
+        "type=created": "Vérifier les notes créées pendant cette période",
         "type=tasks": "Vérifier les tâches",
         "type=note-size": "Vérifier la taille de la note",
         "type=has-notelet": "Vérifier si une note brève existe"
@@ -1229,9 +1324,12 @@
   "decoration_mark_limit_description": "Combien de formes et d'icônes une cellule affiche à chacune de ses neuf positions. Les marques en trop sont regroupées dans un badge à survoler pour toutes les afficher. S'applique à chaque calendrier, bloc de navigation, ligne d'intervalle et groupe de boutons de période, ainsi qu'à chaque décoration quel que soit son propriétaire : journal, étagère ou tout le coffre-fort.",
   "decoration_mark_limit_label": "Marques par position",
   "decoration_mark_limit_unlimited": "Illimité",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Ajouter une condition",
   "decoration_modal_add_style": "Ajouter un style",
+  "decoration_modal_name_label": "Nom",
+  "decoration_modal_name_description": "Facultatif. Affiché quand vous pointez une date décorée, et dans la liste des décorations.",
   "decoration_modal_mode_label": "Quand décorer",
   "decoration_modal_mode_option": [
     {
@@ -1355,7 +1453,8 @@
       "match": {
         "group=text": "Texte",
         "group=background": "Arrière-plan",
-        "group=border": "Bordure"
+        "group=border": "Bordure",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1389,6 +1488,14 @@
   "ui_theme_color_text_selection": "Arrière-plan du texte sélectionné",
   "ui_theme_color_text_highlight_bg": "Arrière-plan du texte surligné",
   "ui_theme_color_caret_color": "Couleur du curseur",
+  "ui_theme_color_red": "Rouge",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Jaune",
+  "ui_theme_color_green": "Vert",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Bleu",
+  "ui_theme_color_purple": "Violet",
+  "ui_theme_color_pink": "Rose",
   "journal_add_modal_anchor_description": "Cette date sert de point de départ au comptage des intervalles personnalisés. Elle ne peut plus être modifiée après la création du journal.",
   "common_label_today": "Aujourd’hui",
   "relative_date_yesterday": "Hier",
@@ -1502,6 +1609,7 @@
   "settings_too_new_banner": "Ces paramètres ont été enregistrés sur un autre appareil par une version plus récente de Journals. Redémarrez Obsidian ou mettez Journals à jour ici — les modifications faites d'ici là sont abandonnées.",
   "settings_too_new_boot": "Journal : vos paramètres ont été enregistrés par une version plus récente de Journals. Mettez Journals à jour sur cet appareil pour les utiliser ici.",
   "settings_reload_required_banner": "Rechargez Obsidian pour appliquer les paramètres modifiés.",
+  "settings_section_failed": "Cette section n'a pas pu s'afficher : {reason}. Le reste des paramètres fonctionne toujours.",
   "settings_tab_title": "Journaux",
   "startup_dashboard_section_title": "Démarrage",
   "startup_open_note_title": "Ouvrir au démarrage",
@@ -1587,6 +1695,9 @@
   "view_reposition_modal_confirm": "Déplacer",
   "view_edit_blocks_title": "Blocs",
   "view_edit_blocks_empty": "Aucun bloc pour l’instant.",
+  "view_edit_css_title": "Extrait CSS",
+  "view_edit_css_selector_label": "Sélecteur",
+  "view_edit_css_selector_description": "Ne cible que cette vue. Cliquez sur la règle pour la copier, puis définissez des variables CSS entre ses accolades dans un extrait CSS.",
   "view_block_unknown_label": "Bloc inconnu : {key}",
   "view_block_edit": "Modifier le bloc",
   "view_block_edit_title": "Modifier le bloc : {type}",
@@ -1699,7 +1810,7 @@
   "view_block_tasks_filter_status_default": "Aucune condition d’État propre, donc le filtre de la liste d’un journal décide lorsqu’il en nomme un.",
   "view_toolbar_shelf_selector_label": "Sélecteur d’étagères",
   "view_toolbar_shelf_selector_description": "Change l’étagère qui délimite les journaux de la vue.",
-  "view_toolbar_shelf_selector_tooltip": "Changer d’étagère",
+  "view_toolbar_shelf_selector_name": "{shelf} · Changer d’étagère",
   "view_toolbar_spacer_label": "Espacement",
   "view_toolbar_spacer_description": "Espace flexible qui écarte les éléments voisins.",
   "view_toolbar_period_buttons_label": "Boutons de période",
@@ -1929,6 +2040,9 @@
   "journal_colliding_heading": "Paramètres de journaux en conflit",
   "journal_colliding_warning": "Les journaux {names} ont des configurations conflictuelles, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
   "journal_note_name_empty_notice": "Le journal « {journalName} » possède un modèle de nom qui aboutit à un nom de note vide, aucune note ne peut donc être créée. Définissez un modèle de nom dans les paramètres du journal.",
+  "journal_date_format_unrenderable_notice": "Journal « {journalName} » : le format de date {format} ne peut pas être affiché sur cet appareil ({reason}). Modifiez-le dans les paramètres du journal ou dans ses notes modèles.",
+  "date_format_invalid_preview": "Format non valide : {reason}",
+  "journal_dashboard_date_format_unrenderable": "Le format de date ne peut pas être affiché sur cet appareil.",
   "journal_note_path_claimed_notice": "Le journal « {journalName} » placerait sa note dans « {path} », mais cette note appartient déjà au journal « {claimedBy} », rien n’a donc été modifié. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
   "journal_note_path_notelet_notice": "Le journal « {journalName} » ne peut pas créer sa note dans « {path} » : l’une de ses propres notes brèves s’y trouve déjà. Modifiez le modèle de nom ou le dossier du journal, ou déplacez cette note brève.",
   "journal_note_path_held_by_period_notice": "Le journal « {journalName} » placerait sa note dans « {path} », mais cette note est déjà sa note pour la période commençant le {date}, rien n’a donc été modifié. Modifiez le modèle de nom ou le dossier pour que chaque période ait son propre nom de note.",
@@ -2149,6 +2263,7 @@
   "journal_edit_move_to_folder_apply_link": "Appliquer la recommandation",
   "journal_edit_move_to_folder_recommendation_date_format": "Le format de date contient un séparateur de chemin. Déplacer les variables de date dans le champ Dossier ?",
   "journal_edit_move_to_folder_recommendation_name_template": "Le modèle de nom de note contient un séparateur de chemin. Déplacer le préfixe du chemin dans le champ Dossier ?",
+  "journal_edit_era_year_recommendation": "Dans moment, y est l’année de l’ère, pas l’année civile. Elle s’affiche de la même façon dans la plupart des langues, mais les notes nommées avec elle ne peuvent pas être rattachées à leurs dates. Utiliser YYYY à la place ?",
   "journal_edit_name_template_description": "Modèle utilisé pour générer les nouveaux noms de notes.",
   "journal_edit_name_template_empty_warning": "Ce modèle de nom aboutit à un nom de note vide, aucune note ne peut donc être créée. Ajoutez-y une variable ou du texte.",
   "journal_edit_name_template_collision_warning": "Les entrées pour {first} et {second} aboutissent toutes deux à {path}. Une seule peut avoir une note ; l’ouverture de l’autre est refusée.",
@@ -2180,6 +2295,7 @@
   "journal_edit_name_template_cyclic_top_warning": "Le premier chiffre de la numérotation se réinitialise ; les numéros se répètent donc et ne peuvent pas être reconvertis en date. Ajoutez une variable de date au modèle de nom, ou réglez le premier chiffre sur « Continu », afin que les notes créées en dehors du plugin puissent être associées à ce journal.",
   "journal_edit_name_template_coarse_date_warning": "La variable de date du modèle de nom n'est pas assez précise pour distinguer les périodes de ce journal ; plusieurs périodes reçoivent donc le même nom de note. Utilisez un format de date qui change à chaque période, ou activez les numéros séquentiels et placez chaque chiffre dans le nom ou le dossier, afin que les notes créées en dehors du plugin puissent être associées à ce journal.",
   "journal_edit_name_template_unreadable_date_warning": "Le plugin ne peut pas relire une date dans les notes que ce journal écrit, donc les notes créées en dehors du plugin ne peuvent pas être associées à ce journal. Un format qui porte aussi un fuseau horaire — Z ou ZZ — est écrit correctement mais ne peut pas être relu : utilisez un format composé de symboles de date comme YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "Le plugin ne peut pas relire une date dans les notes que ce journal écrit, donc les notes créées en dehors du plugin ne peuvent pas être associées à ce journal. Ces symboles ne peuvent pas être relus : {tokens}. Utilisez un format composé de symboles de date comme YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Les entrées pour {first} et {second} aboutissent toutes deux à {path} parce qu'une question du nom n'a pas encore de réponse — une fois répondue, chaque note aura un nom unique.",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2216,7 +2332,7 @@
   "journal_edit_code_block_reference_link": "Blocs de code pris en charge.",
   "journal_edit_code_block_reference_modal_title": "Blocs de code pris en charge",
   "journal_edit_code_block_copy_hint": "Cliquez sur un bloc de code pour le copier dans votre presse-papiers.",
-  "journal_edit_code_block_copied": "Copié dans le presse-papiers.",
+  "common_copied_to_clipboard": "Copié dans le presse-papiers.",
   "journal_edit_code_block_nav_description": "Le bloc de navigation vous permet de vous déplacer entre les notes adjacentes à la note actuelle.",
   "journal_edit_code_block_nav_current": "Sa configuration pour le journal {name} ressemble à ceci :",
   "journal_edit_code_block_nav_aliases_lead": "Ces anciens noms de blocs sont des alias qui se comportent de manière identique :",
@@ -2357,6 +2473,16 @@
         "mode=keep": "Vos notes brèves restent inchangées dans votre coffre-fort.",
         "mode=clear": "Les notes brèves restent dans votre coffre-fort, mais toutes les propriétés du journal et du type de note brève sont retirées de leur frontmatter.",
         "mode=delete": "Toutes les notes brèves de ce type sont supprimées de votre coffre-fort."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "{count} décoration sera supprimée :",
+        "count=*,countPlural=*": "{count} décorations seront supprimées :"
       }
     }
   ],

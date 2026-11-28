@@ -2,6 +2,8 @@
 import { computed, toRaw, useSlots } from "vue";
 
 import {
+  type DateFormatError,
+  LabelFormatLog,
   calendarDisplaySlice,
   DayPeriod,
   MonthPeriod,
@@ -10,6 +12,7 @@ import {
   type AnchorString,
   type Period,
   type PeriodKind,
+  type UserDateFormat,
   type WeekPeriod,
 } from "@/calendar";
 import { useToday, useWeekend } from "@/calendar/ui";
@@ -65,14 +68,16 @@ const days = computed(() =>
     .filter((d) => !hiddenWeekdays.value.has(d.start.weekday())),
 );
 const display = useService(SettingsService).getSlice(calendarDisplaySlice);
-const format = (kind: PeriodKind): string => labelPattern(display.state.labels, kind);
+const labelLog = useService(LabelFormatLog);
+const labelFallback = (error: DateFormatError): void => labelLog.warnOnce(error);
+const format = (kind: PeriodKind): UserDateFormat => labelPattern(display.state.labels, kind);
 const customDayLabel = computed(() => display.state.labels.day !== "");
 const weekend = useWeekend();
 const isWeekend = (day: DayPeriod): boolean => weekend.value.has(day.start.weekday());
 const weekdays = computed(() => {
   const { weekdayLabel, weekdayLabelNarrow } = display.state;
   return days.value.map((day) => ({
-    ...weekdayTexts(day.start, weekdayLabel, weekdayLabelNarrow),
+    ...weekdayTexts(day.start, weekdayLabel, weekdayLabelNarrow, labelFallback),
     weekend: isWeekend(day),
   }));
 });
@@ -179,6 +184,7 @@ const isSelected = (period: Period): boolean =>
           :period="monthPeriod"
           :cell="monthCell"
           :format="format('month')"
+          :label-fallback="labelFallback"
         />
         <NotesCalendarCell
           v-if="showQuarter"
@@ -186,8 +192,15 @@ const isSelected = (period: Period): boolean =>
           :period="quarterPeriod"
           :cell="quarterCell"
           :format="format('quarter')"
+          :label-fallback="labelFallback"
         />
-        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" :format="format('year')" />
+        <NotesCalendarCell
+          data-testid="header-year"
+          :period="yearPeriod"
+          :cell="yearCell"
+          :format="format('year')"
+          :label-fallback="labelFallback"
+        />
       </slot>
       <slot name="header-end" />
     </div>
@@ -246,6 +259,7 @@ const isSelected = (period: Period): boolean =>
           :period="rawWeek"
           :cell="weekCell"
           :format="format('week')"
+          :label-fallback="labelFallback"
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
@@ -260,6 +274,7 @@ const isSelected = (period: Period): boolean =>
           :current-week="isCurrentWeek"
           :cell="dayCell"
           :format="format('day')"
+          :label-fallback="labelFallback"
           role="gridcell"
           :data-grid-key="`day:${day.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`day:${day.anchor.toAnchor()}`)"
@@ -272,6 +287,7 @@ const isSelected = (period: Period): boolean =>
           :period="rawWeek"
           :cell="weekCell"
           :format="format('week')"
+          :label-fallback="labelFallback"
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
@@ -458,7 +474,7 @@ const isSelected = (period: Period): boolean =>
   text-transform: var(--_v-week-number-case);
 }
 .notes-week-view__day {
-  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, 1.1em));
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
@@ -635,7 +651,13 @@ const isSelected = (period: Period): boolean =>
     );
   }
   .notes-week-view__day {
-    --_v-date-size: var(--journal-cell-date-size-narrow, var(--journal-saved-cell-date-size-narrow, 1em));
+    --_v-date-size: var(
+      --journal-cell-date-size-narrow,
+      var(
+        --journal-saved-cell-date-size-narrow,
+        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
+      )
+    );
     --_v-date-weight: var(
       --journal-cell-date-weight-narrow,
       var(

@@ -1,5 +1,5 @@
 import { fireEvent, screen } from "@testing-library/vue";
-import { __testing as obsidianTesting } from "obsidian";
+import { __testing as obsidianTesting, TFile } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref, type Ref } from "vue";
 
@@ -7,11 +7,12 @@ import { localMoment, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { WorkspaceOpenError, WorkspaceService, type OpenMode, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { JournalsIndex } from "@/journals";
+import { CreationDateIndex, JournalsIndex } from "@/journals";
+import { FakeCreationDateIndex } from "@/journals/creation-dates/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 import { icons } from "@/ui/icons";
 
 import { UnknownViewError } from "../../errors";
@@ -33,6 +34,7 @@ const defaultConfig: DayNotesBlockConfig = {
   sortDirection: "desc",
   showHeading: true,
   showNavigation: false,
+  hidePeriodNotes: false,
 };
 
 interface NoteSeed {
@@ -54,10 +56,14 @@ async function mountBlock(
     config?: DayNotesBlockConfig;
     context?: Partial<ViewContext>;
     shelves?: Record<string, ReturnType<typeof buildShelf>>;
+    creationIndex?: FakeCreationDateIndex;
   } = {},
 ) {
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule],
+    overrides: options.creationIndex
+      ? [overrideWith(CreationDateIndex, options.creationIndex as unknown as CreationDateIndex)]
+      : [],
     data: {
       journals: {},
       shelves: options.shelves ?? {},
@@ -71,6 +77,10 @@ async function mountBlock(
   });
   const noteSeeds = options.notes ?? [];
   for (const note of noteSeeds) seedNote(harness, note);
+  if (!options.creationIndex) {
+    harness.resolve(JournalsIndex).markReady();
+    await harness.resolve(CreationDateIndex).initialize();
+  }
 
   const refDate: Readonly<Ref<AnchorString>> =
     options.context?.refDate ?? ref<AnchorString>("2026-05-15" as AnchorString);
@@ -103,6 +113,30 @@ function menuItem(title: string): ReturnType<typeof obsidianTesting.lastOpenMenu
   const item = obsidianTesting.lastOpenMenu().items.find((candidate) => candidate.title === title);
   if (!item) throw new Error(`No menu item named ${title}`);
   return item;
+}
+
+function seedPeriodAndNotelet(hidePeriodNotes: boolean) {
+  const index = new FakeCreationDateIndex();
+  index.add("Daily.md", "2026-05-15");
+  index.add("Meeting.md", "2026-05-15");
+  index.add("Plain.md", "2026-05-15");
+  return mountBlock({ creationIndex: index, config: { ...defaultConfig, hidePeriodNotes } }).then((mounted) => {
+    const journals = mounted.harness.resolve(JournalsIndex);
+    journals.register({
+      path: "Daily.md" as VaultPath,
+      journalName: "daily",
+      anchor: "2026-05-15" as AnchorString,
+    });
+    journals.register({
+      kind: "notelet",
+      path: "Meeting.md" as VaultPath,
+      journalName: "daily",
+      anchor: "2026-05-15" as AnchorString,
+      typeName: "Meeting",
+      typeId: null,
+    });
+    return mounted;
+  });
 }
 
 beforeEach(() => {
@@ -277,6 +311,35 @@ describe("DayNotesBlock", () => {
     expect(metadataText()).toEqual([expect.stringContaining("Created:"), expect.stringContaining("Last modified:")]);
   });
 
+  it("refreshes order and the modified label when a listed note is edited after mount", async () => {
+    const { container, harness } = await mountBlock({
+      notes: [
+        { path: "Older.md", created: "2026-05-15", modified: "2026-05-15 09:00" },
+        { path: "Newer.md", created: "2026-05-15", modified: "2026-05-15 10:00" },
+      ],
+    });
+    const modifiedTexts = () =>
+      [...container.querySelectorAll<HTMLElement>(".journal-view-day-notes__metadata")].map(
+        (element) => element.textContent?.trim() ?? "",
+      );
+    expect(cardTitles(container)).toEqual(["Newer", "Older"]);
+    const before = modifiedTexts();
+
+    const edited = harness.host.app.vault.getAbstractFileByPath("Older.md");
+    if (!(edited instanceof TFile)) throw new TypeError("seeded note missing");
+    const editedAt = localMoment("2026-05-15 20:00", "YYYY-MM-DD HH:mm", true).valueOf();
+    edited.stat.mtime = editedAt;
+    harness.host.emitMetadata("Older.md", { frontmatter: { created: "2026-05-15" } });
+    await vi.waitFor(() => expect(cardTitles(container)).toEqual(["Older", "Newer"]));
+
+    const after = modifiedTexts();
+    expect(after).not.toEqual(before);
+    const expected = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
+      new Date(editedAt),
+    );
+    expect(after[1]).toBe(m.view_block_day_notes_last_modified({ date: expected }));
+  });
+
   it("shows journal and shelf badges without filtering any notes", async () => {
     const { container, harness } = await mountBlock({
       notes: [
@@ -313,6 +376,36 @@ describe("DayNotesBlock", () => {
     });
 
     expect(await screen.findByLabelText("daily")).toBeTruthy();
+  });
+
+  describe("against the creation-date index", () => {
+    it("shows no cards and no empty message until the index is ready, then renders", async () => {
+      const index = new FakeCreationDateIndex();
+      index.setReady(false);
+      index.add("Selected.md", "2026-05-15");
+      const { container } = await mountBlock({ creationIndex: index });
+      expect(container.querySelector(".journal-view-day-notes__card")).toBeNull();
+      expect(screen.queryByText(m.view_block_day_notes_empty())).toBeNull();
+
+      index.setReady(true);
+      await vi.waitFor(() => expect(cardTitles(container)).toEqual(["Selected"]));
+    });
+
+    it("shows the empty message when ready with nothing in the period", async () => {
+      const index = new FakeCreationDateIndex();
+      index.add("Other.md", "2026-05-16");
+      await mountBlock({ creationIndex: index });
+      expect(screen.getByText(m.view_block_day_notes_empty())).toBeTruthy();
+    });
+
+    it("hides journal period notes but keeps notelets and plain notes when asked", async () => {
+      const hidden = await seedPeriodAndNotelet(true);
+      await vi.waitFor(() => expect(cardTitles(hidden.container).toSorted()).toEqual(["Meeting", "Plain"]));
+      hidden.unmount();
+
+      const shown = await seedPeriodAndNotelet(false);
+      await vi.waitFor(() => expect(cardTitles(shown.container).toSorted()).toEqual(["Daily", "Meeting", "Plain"]));
+    });
   });
 
   it("persists live granularity, sort-field and sort-direction controls for this view and block", async () => {

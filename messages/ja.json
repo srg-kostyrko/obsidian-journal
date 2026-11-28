@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "降順",
   "view_block_day_notes_show_heading_label": "期間の見出しを表示",
   "view_block_day_notes_show_navigation_label": "期間ナビゲーションを表示",
+  "view_block_day_notes_hide_period_notes_label": "ジャーナルのノートを非表示",
   "view_block_day_notes_last_modified": "最終更新：{date}",
   "view_block_day_notes_created": "作成日：{date}",
   "view_block_day_notes_empty": "この期間に作成されたノートはありません。",
@@ -880,7 +881,73 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "末",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "第1{weekday}の",
+        "nth=2,weekdayIndex=*": "第2{weekday}の",
+        "nth=3,weekdayIndex=*": "第3{weekday}の",
+        "nth=4,weekdayIndex=*": "第4{weekday}の",
+        "nth=5,weekdayIndex=*": "第5{weekday}の",
+        "nth=last,weekdayIndex=*": "最終{weekday}の"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "末日",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "第1",
+        "nth=2": "第2",
+        "nth=3": "第3",
+        "nth=4": "第4",
+        "nth=5": "第5",
+        "nth=last": "最終"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "曜日",
+  "decoration_condition_date_weekday_of_month_group": "月内の第n曜日",
   "decoration_condition_has_note_describe": "ノートが存在する",
+  "decoration_condition_has_note_describe_missing": "ノートが存在しない",
+  "decoration_condition_has_note_presence_label": "ノート",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "存在する",
+        "presence=missing": "存在しない"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "少なくとも{count}件のノートからリンクされている",
+        "count=*": "少なくとも{count}件のノートからリンクされている"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "リンク元ノートの最小数",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "少なくとも{count}件のノートが作成された",
+        "count=*": "少なくとも{count}件のノートが作成された"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "作成されたノートの最小数",
   "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
   "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",
   "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
@@ -948,6 +1015,30 @@
   "decoration_condition_property_condition_label": "条件",
   "decoration_condition_property_describe": "プロパティ {name} {value} {op}",
   "decoration_condition_property_value_label": "値",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — ノートにない",
+        "quantifier=any,source=notelets,typed=yes": "{base} — いずれかのサブノート ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — いずれかのサブノート",
+        "quantifier=all,source=notelets,typed=yes": "{base} — すべてのサブノート ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — すべてのサブノート",
+        "quantifier=none,source=notelets,typed=yes": "{base} — どのサブノートにもない ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — どのサブノートにもない",
+        "quantifier=any,source=both,typed=yes": "{base} — ノートまたはいずれかのサブノート ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — ノートまたはいずれかのサブノート",
+        "quantifier=all,source=both,typed=yes": "{base} — ノートとすべてのサブノート ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — ノートとすべてのサブノート",
+        "quantifier=none,source=both,typed=yes": "{base} — ノートにもサブノートにもない ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ノートにもサブノートにもない",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "対象のノート",
+  "decoration_condition_scope_source_label": "対象の場所",
   "decoration_condition_tag_describe": "タグ {value} {op}",
   "decoration_condition_tag_value_label": "タグの値",
   "decoration_condition_tasks_quantifier_label": "対象のタスク",
@@ -1029,6 +1120,8 @@
         "type=weekday": "曜日",
         "type=offset": "オフセット",
         "type=has-note": "ノートあり",
+        "type=linked": "リンクあり",
+        "type=created": "作成あり",
         "type=tasks": "タスク",
         "type=note-size": "ノートのサイズ",
         "type=has-notelet": "サブノートあり"
@@ -1047,6 +1140,8 @@
         "type=weekday": "曜日を確認",
         "type=offset": "間隔内のオフセットを確認",
         "type=has-note": "ノートの有無を確認",
+        "type=linked": "この日付へのリンクを確認",
+        "type=created": "この期間に作成されたノートを確認",
         "type=tasks": "タスクを確認",
         "type=note-size": "ノートのサイズを確認",
         "type=has-notelet": "サブノートの有無を確認"
@@ -1084,9 +1179,12 @@
   "decoration_mark_limit_description": "セルが9つの各位置に描画する図形とアイコンの数です。あふれたマークはバッジにまとめられ、マウスを重ねるとすべて表示されます。すべてのカレンダー、ナビゲーションブロック、期間の行、期間ボタンに適用され、ジャーナル・棚・保管庫全体のどの所有者の装飾にも適用されます。",
   "decoration_mark_limit_label": "位置ごとのマーク数",
   "decoration_mark_limit_unlimited": "無制限",
+  "decoration_cell_label": "{date}：{names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "条件を追加",
   "decoration_modal_add_style": "スタイルを追加",
+  "decoration_modal_name_label": "名前",
+  "decoration_modal_name_description": "任意。装飾された日付にポインターを合わせたときと、装飾の一覧に表示されます。",
   "decoration_modal_mode_label": "装飾する条件",
   "decoration_modal_mode_option": [
     {
@@ -1210,7 +1308,8 @@
       "match": {
         "group=text": "テキスト",
         "group=background": "背景",
-        "group=border": "枠線"
+        "group=border": "枠線",
+        "group=palette": "パレット"
       }
     }
   ],
@@ -1244,6 +1343,14 @@
   "ui_theme_color_text_selection": "選択テキストの背景",
   "ui_theme_color_text_highlight_bg": "ハイライトテキストの背景",
   "ui_theme_color_caret_color": "キャレットの色",
+  "ui_theme_color_red": "赤",
+  "ui_theme_color_orange": "オレンジ",
+  "ui_theme_color_yellow": "黄",
+  "ui_theme_color_green": "緑",
+  "ui_theme_color_cyan": "シアン",
+  "ui_theme_color_blue": "青",
+  "ui_theme_color_purple": "紫",
+  "ui_theme_color_pink": "ピンク",
   "journal_add_modal_anchor_description": "この日付は、カスタム間隔のカウント開始日として使用されます。ジャーナル作成後は変更できません。",
   "common_label_today": "今日",
   "relative_date_yesterday": "昨日",
@@ -1357,6 +1464,7 @@
   "settings_too_new_banner": "この設定は別のデバイスで、より新しいバージョンのJournalsによって保存されました。Obsidianを再起動するか、このデバイスのJournalsを更新してください — それまでの変更は破棄されます。",
   "settings_too_new_boot": "ジャーナル: 設定はより新しいバージョンのJournalsによって保存されました。このデバイスで使用するにはJournalsを更新してください。",
   "settings_reload_required_banner": "変更した設定を適用するには、Obsidian を再読み込みしてください。",
+  "settings_section_failed": "このセクションを表示できませんでした: {reason}。ほかの設定は引き続き使えます。",
   "settings_tab_title": "ジャーナル",
   "startup_dashboard_section_title": "起動時",
   "startup_open_note_title": "起動時に開く",
@@ -1442,6 +1550,9 @@
   "view_reposition_modal_confirm": "移動",
   "view_edit_blocks_title": "ブロック",
   "view_edit_blocks_empty": "まだブロックはありません。",
+  "view_edit_css_title": "CSSスニペット",
+  "view_edit_css_selector_label": "セレクター",
+  "view_edit_css_selector_description": "このビューだけに一致します。ルールをクリックしてコピーし、CSSスニペットでその波括弧の中にCSS変数を設定します。",
   "view_block_unknown_label": "不明なブロック: {key}",
   "view_block_edit": "ブロックを編集",
   "view_block_edit_title": "ブロックを編集: {type}",
@@ -1554,7 +1665,7 @@
   "view_block_tasks_filter_status_default": "独自のステータス条件はありません。ステータスを指定しているジャーナルでは、その一覧フィルターが決定します。",
   "view_toolbar_shelf_selector_label": "棚セレクター",
   "view_toolbar_shelf_selector_description": "ビューが対象とするジャーナルを、どの棚に絞り込むかを切り替えます。",
-  "view_toolbar_shelf_selector_tooltip": "棚を切り替え",
+  "view_toolbar_shelf_selector_name": "{shelf}：棚を切り替え",
   "view_toolbar_spacer_label": "スペーサー",
   "view_toolbar_spacer_description": "隣接する項目を左右に押し広げる可変の余白。",
   "view_toolbar_period_buttons_label": "期間ボタン",
@@ -1776,6 +1887,9 @@
   "journal_colliding_heading": "ジャーナル設定の衝突",
   "journal_colliding_warning": "ジャーナル {names} の設定が競合しているため、ノートが互いに上書きされます。いずれかのフォルダまたは名前テンプレートを変更してください。",
   "journal_note_name_empty_notice": "ジャーナル「{journalName}」の名前テンプレートはノート名が空になるため、ノートを作成できません。ジャーナル設定で名前テンプレートを設定してください。",
+  "journal_date_format_unrenderable_notice": "ジャーナル「{journalName}」: 日付形式 {format} はこのデバイスでは表示できません（{reason}）。ジャーナル設定またはテンプレートノートで変更してください。",
+  "date_format_invalid_preview": "無効な形式: {reason}",
+  "journal_dashboard_date_format_unrenderable": "日付形式はこのデバイスでは表示できません。",
   "journal_note_path_claimed_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成しようとしましたが、そのノートはすでにジャーナル「{claimedBy}」のものです。何も変更していません。いずれかのフォルダまたは名前テンプレートを変更してください。",
   "journal_note_path_notelet_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成できません。そこにはすでにそのジャーナル自身のサブノートがあります。ジャーナルの名前テンプレートかフォルダを変更するか、そのサブノートを移動してください。",
   "journal_note_path_held_by_period_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成しようとしましたが、そのノートはすでに {date} から始まる期間のノートです。何も変更していません。期間ごとに異なるノート名になるよう、名前テンプレートまたはフォルダを変更してください。",
@@ -1993,6 +2107,7 @@
   "journal_edit_move_to_folder_apply_link": "推奨設定を適用",
   "journal_edit_move_to_folder_recommendation_date_format": "日付形式にパス区切り文字が含まれています。日付変数をフォルダの項目に移動しますか？",
   "journal_edit_move_to_folder_recommendation_name_template": "ノート名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダの項目に移動しますか？",
+  "journal_edit_era_year_recommendation": "moment の y は暦年ではなく元号の年です。多くの言語では同じに見えますが、これで名前を付けたノートは日付に照合し直せません。代わりに YYYY を使いますか？",
   "journal_edit_name_template_description": "新しいノート名を生成するために使用するテンプレート。",
   "journal_edit_name_template_empty_warning": "この名前テンプレートはノート名が空になるため、ノートを作成できません。変数かテキストを追加してください。",
   "journal_edit_name_template_collision_warning": "{first} と {second} はどちらも {path} に解決されます。ノートを持てるのは一方だけで、もう一方を開こうとすると拒否されます。",
@@ -2024,6 +2139,7 @@
   "journal_edit_name_template_cyclic_top_warning": "連番の最初の桁がリセットされるため、番号が繰り返され、日付に戻せません。名前テンプレートに日付変数を追加するか、最初の桁を「連続」に設定してください。そうすればプラグイン外で作成されたノートをこのジャーナルに関連付けられます。",
   "journal_edit_name_template_coarse_date_warning": "名前テンプレートの日付変数はこのジャーナルの期間を区別できるほど細かくないため、複数の期間が同じノート名になります。期間ごとに変わる日付書式を使うか、連番を有効にしてすべての桁を名前かフォルダーに入れてください。そうすればプラグイン外で作成されたノートをこのジャーナルに関連付けられます。",
   "journal_edit_name_template_unreadable_date_warning": "このジャーナルが書き出すノートからプラグインが日付を読み戻せないため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。タイムゾーンも含む書式（Z や ZZ）は正しく書き込まれますが読み戻せません。YYYY-MM-DD のような日付記号で組み立てた書式を使ってください。",
+  "journal_edit_name_template_unreadable_token_warning": "このジャーナルが書き出すノートからプラグインが日付を読み戻せないため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。次の記号は読み戻せません：{tokens}。YYYY-MM-DD のような日付記号で組み立てた書式を使ってください。",
   "journal_edit_name_template_collision_prompt_warning": "{first} と {second} はどちらも {path} に解決されます。名前に含まれる質問がまだ回答されていないためで、回答されれば各ノートの名前は一意になります。",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2060,7 +2176,7 @@
   "journal_edit_code_block_reference_link": "サポートされているコードブロック。",
   "journal_edit_code_block_reference_modal_title": "サポートされているコードブロック",
   "journal_edit_code_block_copy_hint": "コードブロックをクリックすると、クリップボードにコピーされます。",
-  "journal_edit_code_block_copied": "クリップボードにコピーされました。",
+  "common_copied_to_clipboard": "クリップボードにコピーされました。",
   "journal_edit_code_block_nav_description": "ナビゲーションブロックを使用すると、現在表示されているノートに隣接するノート間を移動できます。",
   "journal_edit_code_block_nav_current": "{name}ジャーナルでの設定は次のとおりです:",
   "journal_edit_code_block_nav_aliases_lead": "これらの古いブロック名は、まったく同じ動作をするエイリアスです:",
@@ -2201,6 +2317,16 @@
         "mode=keep": "サブノートは保管庫にそのまま残ります。",
         "mode=clear": "サブノートは保管庫に残りますが、フロントマターからジャーナルとサブノートの種類のプロパティがすべて削除されます。",
         "mode=delete": "このサブノートの種類に接続されたすべてのサブノートが保管庫から削除されます。"
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1件の装飾が削除されます:",
+        "count=*": "{count}件の装飾が削除されます:"
       }
     }
   ],

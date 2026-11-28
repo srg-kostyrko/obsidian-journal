@@ -226,4 +226,20 @@ describe("PeriodButtonsItem", () => {
       expect(flows.mock.calls).toHaveLength(0);
     });
   });
+
+  describe("label group", () => {
+    const journals = { monthly: fixedJournal("monthly", { type: "month" }) };
+
+    it("draws every label inside one group", async () => {
+      const { container } = await mountItem(journals, { week: true, month: true, quarter: false, year: true });
+      const groups = container.querySelectorAll(".jv-period-group");
+      expect(groups).toHaveLength(1);
+      expect(groups[0].querySelectorAll("[data-period]")).toHaveLength(3);
+    });
+
+    it("draws no group when every label is off", async () => {
+      const { container } = await mountItem(journals, { week: false, month: false, quarter: false, year: false });
+      expect(container.querySelector(".jv-period-group")).toBeNull();
+    });
+  });
 });

@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Descendente",
   "view_block_day_notes_show_heading_label": "Mostrar encabezado del período",
   "view_block_day_notes_show_navigation_label": "Mostrar navegación del período",
+  "view_block_day_notes_hide_period_notes_label": "Ocultar notas de diario",
   "view_block_day_notes_last_modified": "Última modificación: {date}",
   "view_block_day_notes_created": "Creada: {date}",
   "view_block_day_notes_empty": "No se creó ninguna nota en este período.",
@@ -1025,7 +1026,73 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "último día",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "primer {weekday}",
+        "nth=2,weekdayIndex=*": "segundo {weekday}",
+        "nth=3,weekdayIndex=*": "tercer {weekday}",
+        "nth=4,weekdayIndex=*": "cuarto {weekday}",
+        "nth=5,weekdayIndex=*": "quinto {weekday}",
+        "nth=last,weekdayIndex=*": "último {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Último día",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1.º",
+        "nth=2": "2.º",
+        "nth=3": "3.º",
+        "nth=4": "4.º",
+        "nth=5": "5.º",
+        "nth=last": "Último"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Día de la semana",
+  "decoration_condition_date_weekday_of_month_group": "Día de la semana del mes",
   "decoration_condition_has_note_describe": "existe una nota",
+  "decoration_condition_has_note_describe_missing": "no existe ninguna nota",
+  "decoration_condition_has_note_presence_label": "Nota",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Existe",
+        "presence=missing": "Falta"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "enlazada desde al menos {count} nota",
+        "count=*": "enlazada desde al menos {count} notas"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Número mínimo de notas que enlazan",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "al menos {count} nota creada",
+        "count=*": "al menos {count} notas creadas"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Número mínimo de notas creadas",
   "decoration_condition_has_notelet_describe_any": "existe una nota breve",
   "decoration_condition_has_notelet_describe_types": "existe una nota breve del tipo {types}",
   "decoration_condition_has_notelet_empty": "Este diario aún no tiene tipos de nota breve.",
@@ -1093,6 +1160,30 @@
   "decoration_condition_property_condition_label": "Condición",
   "decoration_condition_property_describe": "propiedad {name} {op} {value}",
   "decoration_condition_property_value_label": "Valor",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — no en la nota",
+        "quantifier=any,source=notelets,typed=yes": "{base} — cualquier nota breve ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — cualquier nota breve",
+        "quantifier=all,source=notelets,typed=yes": "{base} — todas las notas breves ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — todas las notas breves",
+        "quantifier=none,source=notelets,typed=yes": "{base} — ninguna nota breve ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — ninguna nota breve",
+        "quantifier=any,source=both,typed=yes": "{base} — la nota o cualquier nota breve ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — la nota o cualquier nota breve",
+        "quantifier=all,source=both,typed=yes": "{base} — la nota y todas las notas breves ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — la nota y todas las notas breves",
+        "quantifier=none,source=both,typed=yes": "{base} — ni la nota ni sus notas breves ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ni la nota ni sus notas breves",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Qué notas",
+  "decoration_condition_scope_source_label": "Buscar en",
   "decoration_condition_tag_describe": "etiqueta {op} {value}",
   "decoration_condition_tag_value_label": "Valor de la etiqueta",
   "decoration_condition_tasks_quantifier_label": "Qué tareas",
@@ -1174,6 +1265,8 @@
         "type=weekday": "Día de la semana",
         "type=offset": "Desplazamiento",
         "type=has-note": "Tiene nota",
+        "type=linked": "Enlazado",
+        "type=created": "Creadas",
         "type=tasks": "Tareas",
         "type=note-size": "Tamaño de nota",
         "type=has-notelet": "Tiene nota breve"
@@ -1192,6 +1285,8 @@
         "type=weekday": "Comprobar el día de la semana",
         "type=offset": "Comprobar el desplazamiento dentro del intervalo",
         "type=has-note": "Comprobar si existe la nota",
+        "type=linked": "Comprobar enlaces a esta fecha",
+        "type=created": "Comprobar notas creadas en este período",
         "type=tasks": "Comprobar tareas",
         "type=note-size": "Comprobar el tamaño de la nota",
         "type=has-notelet": "Comprobar si existe una nota breve"
@@ -1229,9 +1324,12 @@
   "decoration_mark_limit_description": "Cuántas formas e iconos dibuja una celda en cada una de sus nueve posiciones. Las marcas sobrantes se agrupan en una insignia sobre la que puedes pasar el ratón para verlas todas. Se aplica a cada calendario, bloque de navegación, fila de intervalo y conjunto de botones de período, y a cada decoración sin importar su propietario: diario, estante o toda la bóveda.",
   "decoration_mark_limit_label": "Marcas por posición",
   "decoration_mark_limit_unlimited": "Sin límite",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Agregar condición",
   "decoration_modal_add_style": "Agregar estilo",
+  "decoration_modal_name_label": "Nombre",
+  "decoration_modal_name_description": "Opcional. Se muestra al señalar una fecha decorada y en la lista de decoraciones.",
   "decoration_modal_mode_label": "Cuándo decorar",
   "decoration_modal_mode_option": [
     {
@@ -1355,7 +1453,8 @@
       "match": {
         "group=text": "Texto",
         "group=background": "Fondo",
-        "group=border": "Borde"
+        "group=border": "Borde",
+        "group=palette": "Paleta"
       }
     }
   ],
@@ -1389,6 +1488,14 @@
   "ui_theme_color_text_selection": "Fondo del texto seleccionado",
   "ui_theme_color_text_highlight_bg": "Fondo del texto resaltado",
   "ui_theme_color_caret_color": "Color del cursor",
+  "ui_theme_color_red": "Rojo",
+  "ui_theme_color_orange": "Naranja",
+  "ui_theme_color_yellow": "Amarillo",
+  "ui_theme_color_green": "Verde",
+  "ui_theme_color_cyan": "Cian",
+  "ui_theme_color_blue": "Azul",
+  "ui_theme_color_purple": "Morado",
+  "ui_theme_color_pink": "Rosa",
   "journal_add_modal_anchor_description": "Esta fecha se utiliza para contar los intervalos personalizados. No se puede cambiar después de crear el diario.",
   "common_label_today": "Hoy",
   "relative_date_yesterday": "Ayer",
@@ -1502,6 +1609,7 @@
   "settings_too_new_banner": "Esta configuración se guardó en otro dispositivo con una versión más reciente de Journals. Reinicia Obsidian o actualiza Journals aquí: los cambios que hagas hasta entonces se descartan.",
   "settings_too_new_boot": "Diario: tu configuración se guardó con una versión más reciente de Journals. Actualiza Journals en este dispositivo para usarla aquí.",
   "settings_reload_required_banner": "Recarga Obsidian para aplicar los cambios de configuración.",
+  "settings_section_failed": "No se pudo mostrar esta sección: {reason}. El resto de la configuración sigue funcionando.",
   "settings_tab_title": "Diarios",
   "startup_dashboard_section_title": "Inicio",
   "startup_open_note_title": "Abrir al iniciar",
@@ -1587,6 +1695,9 @@
   "view_reposition_modal_confirm": "Mover",
   "view_edit_blocks_title": "Bloques",
   "view_edit_blocks_empty": "Aún no hay bloques.",
+  "view_edit_css_title": "Fragmento CSS",
+  "view_edit_css_selector_label": "Selector",
+  "view_edit_css_selector_description": "Solo afecta a esta vista. Haz clic en la regla para copiarla y luego define variables CSS entre sus llaves en un fragmento CSS.",
   "view_block_unknown_label": "Bloque desconocido: {key}",
   "view_block_edit": "Editar bloque",
   "view_block_edit_title": "Editar bloque: {type}",
@@ -1699,7 +1810,7 @@
   "view_block_tasks_filter_status_default": "Sin condición de Estado propia, por lo que decide el filtro de listado de un diario donde nombre uno.",
   "view_toolbar_shelf_selector_label": "Selector de estantes",
   "view_toolbar_shelf_selector_description": "Cambia qué estante delimita los diarios de la vista.",
-  "view_toolbar_shelf_selector_tooltip": "Cambiar de estante",
+  "view_toolbar_shelf_selector_name": "{shelf} · Cambiar de estante",
   "view_toolbar_spacer_label": "Espaciador",
   "view_toolbar_spacer_description": "Espacio flexible que separa los elementos vecinos.",
   "view_toolbar_period_buttons_label": "Botones de período",
@@ -1921,6 +2032,9 @@
   "journal_colliding_heading": "Configuraciones de diario en conflicto",
   "journal_colliding_warning": "Los diarios {names} tienen configuraciones conflictivas, por lo que sus notas se sobrescribirán entre sí. Cambia la carpeta o la plantilla de nombre en uno de ellos.",
   "journal_note_name_empty_notice": "El diario «{journalName}» tiene una plantilla de nombre que da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Define una plantilla de nombre en los ajustes del diario.",
+  "journal_date_format_unrenderable_notice": "Diario «{journalName}»: el formato de fecha {format} no se puede representar en este dispositivo ({reason}). Cámbialo en los ajustes del diario o en sus notas de plantilla.",
+  "date_format_invalid_preview": "Formato no válido: {reason}",
+  "journal_dashboard_date_format_unrenderable": "El formato de fecha no se puede representar en este dispositivo.",
   "journal_note_path_claimed_notice": "El diario «{journalName}» pondría su nota en «{path}», pero esa nota ya pertenece al diario «{claimedBy}», así que no se cambió nada. Cambia la carpeta o la plantilla de nombre en uno de ellos.",
   "journal_note_path_notelet_notice": "El diario «{journalName}» no puede crear su nota en «{path}»: allí ya hay una de sus propias notas breves. Cambia la plantilla de nombre o la carpeta del diario, o mueve esa nota breve.",
   "journal_note_path_held_by_period_notice": "El diario «{journalName}» pondría su nota en «{path}», pero esa nota ya es su nota del periodo que empieza el {date}, así que no se cambió nada. Cambia la plantilla de nombre o la carpeta para que cada periodo tenga su propio nombre de nota.",
@@ -2138,6 +2252,7 @@
   "journal_edit_move_to_folder_apply_link": "Aplicar recomendación",
   "journal_edit_move_to_folder_recommendation_date_format": "El formato de fecha contiene un separador de ruta. ¿Mover las variables de fecha al campo Carpeta?",
   "journal_edit_move_to_folder_recommendation_name_template": "La plantilla de nombre de nota contiene un separador de ruta. ¿Mover el prefijo de ruta al campo Carpeta?",
+  "journal_edit_era_year_recommendation": "En moment, y es el año de la era, no el año del calendario. Se ve igual en la mayoría de los idiomas, pero las notas nombradas con él no se pueden volver a asociar con sus fechas. ¿Usar YYYY en su lugar?",
   "journal_edit_name_template_description": "Plantilla utilizada para generar nuevos nombres de notas.",
   "journal_edit_name_template_empty_warning": "Esta plantilla de nombre da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Agrega una variable o algo de texto.",
   "journal_edit_name_template_collision_warning": "Las entradas de {first} y {second} se resuelven ambas en {path}. Solo una de ellas puede tener nota; abrir la otra se rechaza.",
@@ -2169,6 +2284,7 @@
   "journal_edit_name_template_cyclic_top_warning": "El primer dígito de la numeración se reinicia, por lo que los números se repiten y no se pueden convertir de nuevo en una fecha. Agrega una variable de fecha a la plantilla de nombre o pon el primer dígito en «Continuo», para que las notas creadas fuera del complemento se puedan asociar a este diario.",
   "journal_edit_name_template_coarse_date_warning": "La variable de fecha de la plantilla de nombre no es lo bastante precisa para distinguir los periodos de este diario, por lo que varios periodos reciben el mismo nombre de nota. Usa un formato de fecha que cambie en cada periodo, o activa los números secuenciales y pon cada dígito en el nombre o en la carpeta, para que las notas creadas fuera del complemento se puedan asociar a este diario.",
   "journal_edit_name_template_unreadable_date_warning": "El complemento no puede volver a leer una fecha en las notas que crea este diario, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario. Un formato que además lleva una zona horaria — Z o ZZ — se escribe correctamente pero no se puede volver a leer: usa un formato construido con símbolos de fecha como YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "El complemento no puede volver a leer una fecha en las notas que crea este diario, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario. Estos símbolos no se pueden volver a leer: {tokens}. Usa un formato construido con símbolos de fecha como YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Las entradas de {first} y {second} se resuelven ambas en {path} porque una pregunta del nombre aún no tiene respuesta; una vez respondida, cada nota tendrá un nombre único.",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2205,7 +2321,7 @@
   "journal_edit_code_block_reference_link": "Bloques de código compatibles.",
   "journal_edit_code_block_reference_modal_title": "Bloques de código compatibles",
   "journal_edit_code_block_copy_hint": "Haz clic en un bloque de código para copiarlo al portapapeles.",
-  "journal_edit_code_block_copied": "Copiado al portapapeles.",
+  "common_copied_to_clipboard": "Copiado al portapapeles.",
   "journal_edit_code_block_nav_description": "El bloque de navegación te ayuda a desplazarte entre las notas adyacentes a la actual.",
   "journal_edit_code_block_nav_current": "Su configuración para el diario {name} se ve así:",
   "journal_edit_code_block_nav_aliases_lead": "Estos nombres de bloques más antiguos son alias que se comportan de forma idéntica:",
@@ -2346,6 +2462,16 @@
         "mode=keep": "Las notas breves permanecen en tu bóveda sin cambios.",
         "mode=clear": "Las notas breves permanecen en tu bóveda, pero todas las propiedades del diario y del tipo de nota breve se eliminan de su frontmatter.",
         "mode=delete": "Todas las notas breves de este tipo se eliminan de tu bóveda."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Se quitará 1 decoración:",
+        "count=*": "Se quitarán {count} decoraciones:"
       }
     }
   ],

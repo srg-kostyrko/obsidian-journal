@@ -6,8 +6,8 @@ import { AsyncResult, InvariantError } from "@/infrastructure/result";
 
 import { InternalObsidianAppToken } from "./tokens";
 
-import type { ParseCommands, TemplaterParser, TemplaterPlugin } from "./templater-plugin";
 import type { VaultPath } from "../types";
+import type { ParseCommands, TemplaterParser, TemplaterPlugin } from "./templater-plugin";
 
 const TEMPLATER_PLUGIN_ID = "templater-obsidian";
 const RUN_MODE_CREATE_NEW_FROM_TEMPLATE = 0;

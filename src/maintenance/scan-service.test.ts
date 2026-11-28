@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import type { JournalConfig } from "@/journals/config";
@@ -388,7 +389,11 @@ describe("ScanService", () => {
   describe("a note several journals would adopt", () => {
     const TWINS = {
       daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}" }),
-      diary: fixedJournal("diary", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" }),
+      diary: fixedJournal(
+        "diary",
+        { type: "day" },
+        { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("DD.MM.YYYY") },
+      ),
     };
 
     it("reports it with every journal that could take it", async () => {

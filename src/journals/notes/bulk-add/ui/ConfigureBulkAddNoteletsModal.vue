@@ -3,6 +3,7 @@ import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useFieldArray, useForm } from "vee-validate";
 
+import { userDateFormat } from "@/calendar";
 import type { FilterCondition } from "@/decorations/config";
 import { defaultCondition } from "@/decorations/defaults";
 import ConditionItem from "@/decorations/settings/ui/ConditionItem.vue";
@@ -11,10 +12,13 @@ import { useService } from "@/infrastructure/di";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
+import EraYearRecommendation from "@/journals/settings/ui/EraYearRecommendation.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
 import { JournalsViewModel } from "@/journals/view-model";
+import { hasEraYear, replaceEraYear } from "@/templates";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -60,6 +64,9 @@ const [folder] = defineField("folder");
 const [datePlace] = defineField("datePlace");
 const [propertyName] = defineField("propertyName");
 const [dateFormat] = defineField("dateFormat");
+function applyEraYear(): void {
+  if (dateFormat.value) dateFormat.value = userDateFormat(replaceEraYear(dateFormat.value));
+}
 const [filterCombinator] = defineField("filterCombinator");
 const [otherFolder] = defineField("otherFolder");
 const [otherName] = defineField("otherName");
@@ -112,9 +119,10 @@ const onSubmit = handleSubmit((parameters) => {
         <div>{{ m.bulk_add_date_format_omit_time() }}</div>
         <div v-if="values.datePlace === 'property'">{{ m.bulk_add_date_format_property_note() }}</div>
         <DateFormatPreview :format="values.dateFormat" />
+        <EraYearRecommendation :show="hasEraYear(values.dateFormat ?? '')" @apply="applyEraYear" />
         <span v-for="error of errorBag.dateFormat" :key="error" class="bulk-add-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
+      <UiDateFormatInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
     </UiSettingRow>
 
     <UiSettingRow>

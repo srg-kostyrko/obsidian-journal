@@ -34,6 +34,7 @@ export const manual = {
     blocks: "/views#blocks",
     notesByDate: "/views#notes-by-date",
     appearance: "/views#calendar-appearance",
+    cssSnippet: "/reference/css-variables#one-view-only",
   },
   startup: {
     openOnStartup: "/notes#opening-a-note-when-obsidian-starts",

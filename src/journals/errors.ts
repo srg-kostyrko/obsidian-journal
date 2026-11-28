@@ -6,7 +6,7 @@ export class JournalsError extends Error {
 }
 
 export class JournalNotFoundError extends JournalsError {
-  override name = "JournalNotFoundError";
+  override name = "JournalNotFoundError" as const;
 
   constructor(readonly journalName: string) {
     super(`Journal not found: ${journalName}`);
@@ -14,7 +14,7 @@ export class JournalNotFoundError extends JournalsError {
 }
 
 export class NoJournalsError extends JournalsError implements BenignFlowError {
-  override name = "NoJournalsError";
+  override name = "NoJournalsError" as const;
   readonly benign = true as const;
 
   constructor() {
@@ -23,7 +23,7 @@ export class NoJournalsError extends JournalsError implements BenignFlowError {
 }
 
 export class NoteletTypeNotFoundError extends JournalsError {
-  override name = "NoteletTypeNotFoundError";
+  override name = "NoteletTypeNotFoundError" as const;
 
   constructor(
     readonly journalName: string,
@@ -34,7 +34,7 @@ export class NoteletTypeNotFoundError extends JournalsError {
 }
 
 export class OutOfTimelineError extends JournalsError {
-  override name = "OutOfTimelineError";
+  override name = "OutOfTimelineError" as const;
 
   constructor(
     readonly journalName: string,

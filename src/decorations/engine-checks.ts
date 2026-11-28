@@ -13,10 +13,11 @@ import type {
   JournalDecorationHasNoteletCondition,
   JournalDecorationNoteSizeCondition,
   JournalDecorationOffsetCondition,
-  JournalDecorationPropertyCondition,
-  JournalDecorationTagCondition,
   JournalDecorationTitleCondition,
   JournalDecorationWeekdayCondition,
+  NoteletScope,
+  NotePropertyCondition,
+  NoteTagCondition,
 } from "./config";
 
 export function checkTitle(condition: JournalDecorationTitleCondition, metadata: NoteMetadata | null): boolean {
@@ -36,7 +37,7 @@ function bareTag(tag: string): string {
   return (tag.startsWith("#") ? tag.slice(1) : tag).toLowerCase();
 }
 
-export function checkTag(condition: JournalDecorationTagCondition, metadata: NoteMetadata | null): boolean {
+export function checkTag(condition: NoteTagCondition, metadata: NoteMetadata | null): boolean {
   if (!metadata) return false;
   const value = bareTag(condition.value);
   const tags = metadata.tags.map(bareTag);
@@ -47,7 +48,7 @@ export function checkTag(condition: JournalDecorationTagCondition, metadata: Not
     .exhaustive();
 }
 
-export function checkProperty(condition: JournalDecorationPropertyCondition, metadata: NoteMetadata | null): boolean {
+export function checkProperty(condition: NotePropertyCondition, metadata: NoteMetadata | null): boolean {
   if (!metadata) return false;
   const present = Object.hasOwn(metadata.properties, condition.name);
   if (condition.condition === "exists") return present;
@@ -68,10 +69,7 @@ export function checkProperty(condition: JournalDecorationPropertyCondition, met
     .exhaustive();
 }
 
-function checkTextProperty(
-  c: Extract<JournalDecorationPropertyCondition, { valueType: "text" }>,
-  raw: unknown,
-): boolean {
+function checkTextProperty(c: Extract<NotePropertyCondition, { valueType: "text" }>, raw: unknown): boolean {
   const matchOne = (value: string): boolean =>
     match(c.condition)
       .with("eq", () => value === c.value)
@@ -87,10 +85,7 @@ function checkTextProperty(
   return false;
 }
 
-function checkNumberProperty(
-  c: Extract<JournalDecorationPropertyCondition, { valueType: "number" }>,
-  raw: unknown,
-): boolean {
+function checkNumberProperty(c: Extract<NotePropertyCondition, { valueType: "number" }>, raw: unknown): boolean {
   if (typeof raw !== "number" || !Number.isFinite(raw)) return false;
   return match(c.condition)
     .with("eq", () => raw === c.value)
@@ -103,10 +98,7 @@ function checkNumberProperty(
     .exhaustive();
 }
 
-function checkBooleanProperty(
-  c: Extract<JournalDecorationPropertyCondition, { valueType: "checkbox" }>,
-  raw: unknown,
-): boolean {
+function checkBooleanProperty(c: Extract<NotePropertyCondition, { valueType: "checkbox" }>, raw: unknown): boolean {
   if (typeof raw !== "boolean") return false;
   return match(c.condition)
     .with("is-true", () => raw)
@@ -125,10 +117,7 @@ function dayOf(value: string): string | null {
   return ISO_DAY.exec(value)?.[1] ?? null;
 }
 
-function checkDateProperty(
-  c: Extract<JournalDecorationPropertyCondition, { valueType: "date" }>,
-  raw: unknown,
-): boolean {
+function checkDateProperty(c: Extract<NotePropertyCondition, { valueType: "date" }>, raw: unknown): boolean {
   // Obsidian stores date properties as ISO strings, and lexicographic order on those matches
   // chronological order — but only at equal granularity. The "Date & time" widget appends a
   // time while the condition's value is date-only by construction (<input type="date">), and a
@@ -190,4 +179,14 @@ export function checkHasNotelet(
 ): boolean {
   if (condition.typeIds.length === 0) return notelets.length > 0;
   return notelets.some((n) => n.typeId !== null && condition.typeIds.includes(n.typeId));
+}
+
+// An empty scope is false for every quantifier: "none" must not mark a cell that has nothing to inspect.
+export function quantify(quantifier: NoteletScope["quantifier"], results: readonly boolean[]): boolean {
+  if (results.length === 0) return false;
+  return match(quantifier)
+    .with("any", () => results.some(Boolean))
+    .with("all", () => results.every(Boolean))
+    .with("none", () => !results.some(Boolean))
+    .exhaustive();
 }

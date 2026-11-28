@@ -5,11 +5,13 @@ import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
 import type { NoteMetadata, NoteSize, VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
+import { CreationDateIndex, CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
+import { LinkReferenceIndex } from "@/journals/link-references";
 import { answerTaskQuestion, TaskIndex, TaskVisibility } from "@/tasks";
 import type { TaskQuestionDependencies } from "@/tasks";
 
+import { decorationName } from "./config";
 import {
   checkDate,
   checkHasNotelet,
@@ -17,6 +19,7 @@ import {
   checkOffset,
   checkProperty,
   checkTag,
+  quantify,
   checkTitle,
   checkWeekday,
 } from "./engine-checks";
@@ -27,6 +30,7 @@ import type {
   JournalDecoration,
   JournalDecorationCondition,
   JournalDecorationStyle,
+  NoteletScope,
 } from "./config";
 import type { CalendarDecorationOwner, DecorationOwner } from "./owner";
 
@@ -57,9 +61,15 @@ export function sourceOf(binding: DecorationBinding): DecorationSource {
     : { owner: binding.owner, index: binding.index };
 }
 
+export interface CellDecorationState {
+  readonly styles: readonly JournalDecorationStyle[];
+  readonly names: readonly string[];
+}
+
 export interface Contribution {
   readonly source: DecorationSource;
   readonly style: JournalDecorationStyle;
+  readonly name?: string;
 }
 
 export function periodMatchesWrite(kind: PeriodKind, writeType: JournalWrite["type"]): boolean {
@@ -100,6 +110,8 @@ export class DecorationEngine {
   readonly #tasks = inject(TaskIndex);
   readonly #visibility = inject(TaskVisibility);
   readonly #structure = inject(NoteStructureService);
+  readonly #links = inject(LinkReferenceIndex);
+  readonly #created = inject(CreationDateIndex);
 
   // One structure read per path per evaluation: a note's structure answers every cell and every
   // tasks condition that touches it, and the metadataCache walk behind it is not free.
@@ -126,12 +138,14 @@ export class DecorationEngine {
   #matches(
     decoration: JournalDecoration,
     period: Period,
+    canonical: AnchorString,
     journal: JournalConfig,
-    anchor: AnchorString,
     metadata: () => Option<NoteMetadata>,
+    hasNote: () => boolean,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
+    scopeFor: (scope: NoteletScope) => readonly NoteMetadata[],
   ): boolean {
     const { mode, conditions } = decoration;
     // An empty condition list matches nothing here — the inverse of the checkbox provider's
@@ -140,7 +154,7 @@ export class DecorationEngine {
     // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
     const test = (c: JournalDecorationCondition): boolean =>
-      this.#check(c, period, journal, anchor, metadata, size, path, taskDependencies);
+      this.#check(c, period, canonical, journal, metadata, hasNote, size, path, taskDependencies, scopeFor);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -158,12 +172,14 @@ export class DecorationEngine {
   #check(
     condition: JournalDecorationCondition,
     period: Period,
+    canonical: AnchorString,
     journal: JournalConfig,
-    anchor: AnchorString,
     metadata: () => Option<NoteMetadata>,
+    hasNote: () => boolean,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
     taskDependencies: TaskQuestionDependencies,
+    scopeFor: (scope: NoteletScope) => readonly NoteMetadata[],
   ): boolean {
     const meta = (): NoteMetadata | null => {
       const opt = metadata();
@@ -171,21 +187,44 @@ export class DecorationEngine {
     };
     return match(condition)
       .with({ type: "title" }, (c) => checkTitle(c, meta()))
-      .with({ type: "tag" }, (c) => checkTag(c, meta()))
-      .with({ type: "property" }, (c) => checkProperty(c, meta()))
+      .with({ type: "tag" }, (c) =>
+        quantify(
+          c.quantifier,
+          scopeFor(c).map((m) => checkTag(c, m)),
+        ),
+      )
+      .with({ type: "property" }, (c) =>
+        quantify(
+          c.quantifier,
+          scopeFor(c).map((m) => checkProperty(c, m)),
+        ),
+      )
       .with({ type: "date" }, (c) => checkDate(c, period))
       .with({ type: "weekday" }, (c) => checkWeekday(c, period))
       .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
-      .with({ type: "has-note" }, () => metadata().isSome())
+      .with({ type: "has-note" }, (c) => {
+        if (c.presence === "exists") return hasNote();
+        // Before the boot walk has indexed the vault no period has a note yet, so "missing"
+        // would paint the whole calendar until it finishes.
+        return this.#index.isReady() && !hasNote();
+      })
+      .with({ type: "linked" }, (c) => this.#links.count(journal.name, canonical) >= c.atLeast)
+      .with({ type: "created" }, (c) => {
+        if (!this.#created.isReady()) return false;
+        const start = this.#cycle.startOf(journal.name, canonical);
+        const end = this.#cycle.endOf(journal.name, canonical);
+        if (start.isNone() || end.isNone()) return false;
+        return this.#created.countBetween(start.value, end.value, { excludePeriodNotes: true }) >= c.atLeast;
+      })
       .with({ type: "tasks" }, (c) =>
         answerTaskQuestion(
           taskDependencies,
-          { journalName: journal.name, anchor, path: path().getOrUndefined() ?? null },
+          { journalName: journal.name, anchor: canonical, path: path().getOrUndefined() ?? null },
           c,
         ),
       )
       .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
-      .with({ type: "has-notelet" }, (c) => checkHasNotelet(c, this.#index.noteletsAt(journal.name, anchor)))
+      .with({ type: "has-notelet" }, (c) => checkHasNotelet(c, this.#index.noteletsAt(journal.name, canonical)))
       .exhaustive();
   }
 
@@ -212,16 +251,34 @@ export class DecorationEngine {
       if (opt.isSome()) configs.set(binding.journalName, opt.value);
     }
 
-    const metaCache = new Map<string, Option<NoteMetadata>>();
-    const metadataFor = (journalName: string, anchorString: AnchorString): Option<NoteMetadata> => {
-      const key = `${journalName}::${anchorString}`;
-      const hit = metaCache.get(key);
+    const pathMetaCache = new Map<VaultPath, Option<NoteMetadata>>();
+    const metadataAt = (path: VaultPath): Option<NoteMetadata> => {
+      const hit = pathMetaCache.get(path);
       if (hit !== undefined) return hit;
-      const value = this.#index
-        .entryByAnchor(journalName, anchorString)
-        .flatMap((entry) => this.#metadata.get(entry.path));
-      metaCache.set(key, value);
+      const value = this.#metadata.get(path);
+      pathMetaCache.set(path, value);
       return value;
+    };
+    const metadataFor = (journalName: string, anchorString: AnchorString): Option<NoteMetadata> =>
+      this.#index.entryByAnchor(journalName, anchorString).flatMap((entry) => metadataAt(entry.path));
+
+    // A note with no cached metadata is not in scope: on a cold boot "none" would otherwise mark
+    // every note-bearing cell before its metadata has resolved.
+    const scopeFor = (journalName: string, anchorString: AnchorString, scope: NoteletScope): NoteMetadata[] => {
+      const found: NoteMetadata[] = [];
+      if (scope.source !== "notelets") {
+        const own = metadataFor(journalName, anchorString);
+        if (own.isSome()) found.push(own.value);
+      }
+      if (scope.source !== "note") {
+        for (const notelet of this.#index.noteletsAt(journalName, anchorString)) {
+          if (scope.typeIds.length > 0 && (notelet.typeId === null || !scope.typeIds.includes(notelet.typeId)))
+            continue;
+          const own = metadataAt(notelet.path);
+          if (own.isSome()) found.push(own.value);
+        }
+      }
+      return found;
     };
 
     const sizeCache = new Map<string, Option<NoteSize>>();
@@ -250,15 +307,17 @@ export class DecorationEngine {
     // periods those are — outside it the calendar already refuses to open or create anything.
     // A custom journal decorates day cells, so the bound is judged against the interval owning
     // the day, not the day itself; for a fixed journal anchorOf is the period's own anchor.
-    const anchorCache = new Map<string, Option<AnchorString>>();
-    const anchorFor = (journalName: string, period: Period): Option<AnchorString> => {
+    // The owning anchor is resolved once per cell — anchorOf walks a custom cycle — and both the
+    // timeline bound and any condition keyed by the journal's period read the cached value.
+    const canonicalCache = new Map<string, AnchorString | null>();
+    const canonicalAnchor = (journalName: string, period: Period): AnchorString | null => {
       const key = `${journalName}::${period.anchor.toAnchor()}`;
-      const hit = anchorCache.get(key);
+      const hit = canonicalCache.get(key);
       if (hit !== undefined) return hit;
       const value = this.#cycle
         .anchorOf(journalName, period.anchor)
-        .filter((anchor) => this.#timeline.contains(journalName, anchor));
-      anchorCache.set(key, value);
+        .match({ none: () => null, some: (anchor) => (this.#timeline.contains(journalName, anchor) ? anchor : null) });
+      canonicalCache.set(key, value);
       return value;
     };
 
@@ -274,7 +333,8 @@ export class DecorationEngine {
         result.set(key, bucket);
       }
       const source = sourceOf(binding);
-      for (const style of styles) bucket.push({ source, style });
+      const name = decorationName(binding.decoration);
+      for (const style of styles) bucket.push({ source, style, name });
     };
 
     for (const binding of decorations) {
@@ -292,19 +352,22 @@ export class DecorationEngine {
       if (!config) continue;
       for (const period of uniquePeriods) {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
-        const anchor = anchorFor(binding.journalName, period);
-        if (anchor.isNone()) continue;
-        // Offset/date conditions use the displayed day; note data belongs to its interval.
-        const anchorString = anchor.value;
+        const canonical = canonicalAnchor(binding.journalName, period);
+        if (canonical === null) continue;
+        // Every data read is keyed by the owning period, not the cell: a custom journal's note sits
+        // at its interval's start, and the day grid asks about every day of the interval. Offset and
+        // date conditions read the displayed day from `period`.
         const matched = this.#matches(
           binding.decoration,
           period,
+          canonical,
           config,
-          anchorString,
-          () => metadataFor(binding.journalName, anchorString),
-          () => sizeFor(binding.journalName, anchorString),
-          () => pathFor(binding.journalName, anchorString),
+          () => metadataFor(binding.journalName, canonical),
+          () => metadataFor(binding.journalName, canonical).isSome(),
+          () => sizeFor(binding.journalName, canonical),
+          () => pathFor(binding.journalName, canonical),
           taskDependencies,
+          (scope) => scopeFor(binding.journalName, canonical, scope),
         );
         if (!matched) continue;
         push(period, binding);
@@ -316,13 +379,12 @@ export class DecorationEngine {
   evaluateRange(
     periods: readonly Period[],
     decorations: readonly DecorationBinding[],
-  ): Map<string, JournalDecorationStyle[]> {
-    const result = new Map<string, JournalDecorationStyle[]>();
+  ): Map<string, CellDecorationState> {
+    const result = new Map<string, CellDecorationState>();
     for (const [key, contributions] of this.explainRange(periods, decorations)) {
-      result.set(
-        key,
-        contributions.map((contribution) => contribution.style),
-      );
+      const names = new Set<string>();
+      for (const { name } of contributions) if (name !== undefined) names.add(name);
+      result.set(key, { styles: contributions.map((contribution) => contribution.style), names: [...names] });
     }
     return result;
   }

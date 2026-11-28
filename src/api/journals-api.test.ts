@@ -2,6 +2,7 @@ import { TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
 import {
@@ -2684,7 +2685,7 @@ describe("JournalsApiService answers", () => {
     type: "date",
     frontmatterKey: "due",
     required: false,
-    format: "DD.MM.YYYY",
+    format: userDateFormat("DD.MM.YYYY"),
   };
 
   it("creates a note named by its answers without asking", async () => {

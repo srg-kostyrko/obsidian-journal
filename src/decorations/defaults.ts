@@ -31,7 +31,7 @@ export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecor
     }))
     .with("shape", () => ({
       type: "shape",
-      size: 0.4,
+      size: 0.25,
       shape: "circle",
       color: accentInk(),
       placement_x: "center",
@@ -57,12 +57,30 @@ export function defaultCondition<T extends JournalDecorationCondition["type"]>(
 export function defaultCondition(type: JournalDecorationCondition["type"]): JournalDecorationCondition {
   return match<JournalDecorationCondition["type"], JournalDecorationCondition>(type)
     .with("title", () => ({ type: "title", condition: "contains", value: "" }))
-    .with("tag", () => ({ type: "tag", condition: "contains", value: "" }))
-    .with("property", () => ({ type: "property", name: "", valueType: "text", condition: "exists", value: "" }))
+    .with("tag", () => ({
+      type: "tag",
+      condition: "contains",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    }))
+    .with("property", () => ({
+      type: "property",
+      name: "",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    }))
     .with("date", () => ({ type: "date", day: DATE_CONDITION_ANY, month: DATE_CONDITION_ANY, year: null }))
     .with("weekday", () => ({ type: "weekday", weekdays: [] }))
     .with("offset", () => ({ type: "offset", offset: 1 }))
-    .with("has-note", () => ({ type: "has-note" }))
+    .with("has-note", () => ({ type: "has-note", presence: "exists" }))
+    .with("linked", () => ({ type: "linked", atLeast: 1 }))
+    .with("created", () => ({ type: "created", atLeast: 1 }))
     .with("tasks", () => ({
       type: "tasks",
       quantifier: "any",

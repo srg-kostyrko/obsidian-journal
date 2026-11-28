@@ -55,21 +55,29 @@ describe("ShelfSelectorItem", () => {
   });
 
   describe("assistive tech", () => {
-    it("announces the active shelf as its name rather than the action", async () => {
+    // Obsidian's tooltip is the aria-label, so the hint and the active shelf share one name: the shelf
+    // first, so a screen reader announces which shelf is active before what the button does.
+    it("announces the active shelf, then the switch-shelf hint", async () => {
       await mountItem(["work"], { shelf: ref("work") });
-      expect(screen.getByRole("button", { name: "work" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: m.view_toolbar_shelf_selector_name({ shelf: "work" }) })).toBeTruthy();
     });
 
-    it("keeps the switch-shelf hint as a tooltip", async () => {
-      await mountItem(["work"], { shelf: ref("work") });
-      expect(screen.getByRole("button", { name: "work" }).dataset.tooltip).toBe(
-        m.view_toolbar_shelf_selector_tooltip(),
-      );
+    it("names 'All journals' when no shelf is active", async () => {
+      await mountItem(["work"], { shelf: ref(null) });
+      expect(
+        screen.getByRole("button", {
+          name: m.view_toolbar_shelf_selector_name({ shelf: m.common_label_all_journals() }),
+        }),
+      ).toBeTruthy();
     });
 
     it("declares that it opens a menu", async () => {
       await mountItem(["work"], { shelf: ref("work") });
-      expect(screen.getByRole("button", { name: "work" }).getAttribute("aria-haspopup")).toBe("menu");
+      expect(
+        screen
+          .getByRole("button", { name: m.view_toolbar_shelf_selector_name({ shelf: "work" }) })
+          .getAttribute("aria-haspopup"),
+      ).toBe("menu");
     });
   });
 

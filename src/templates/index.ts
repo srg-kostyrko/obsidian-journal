@@ -2,10 +2,17 @@ export { TemplateEngine } from "./engine";
 export { TemplateContext } from "./context";
 export { tokenize, parseModifiers, variableNames } from "./grammar";
 export { applyModifiers } from "./modifiers";
-export { formatToRegexp } from "./format-regex";
+export { formatToRegexp, momentTokens, unsupportedTokens } from "./format-regex";
+export { hasEraYear, replaceEraYear, replaceEraYearInTemplate, templateHasEraYear } from "./era-year";
 export { FunctionHandlerToken, type FunctionHandler, type FunctionInput } from "./handlers";
 export { templatesModule } from "./module";
 
-export { TemplatesError, TemplateParseError, TemplateRenderError, type TemplateParseErrorDetail } from "./errors";
+export {
+  TemplatesError,
+  TemplateParseError,
+  TemplateRenderError,
+  UnrenderableDateFormatError,
+  type TemplateParseErrorDetail,
+} from "./errors";
 
 export type { Token, TokenStream, Modifier, VariableSpec, Bindings, BoundValue, ValidationProblem } from "./types";

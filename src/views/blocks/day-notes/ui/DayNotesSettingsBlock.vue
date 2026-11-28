@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
+import type { UserDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { dayNotesSlice } from "@/journals/creation-dates";
 import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
-
-import { dayNotesSlice } from "../slice";
 
 const settings = useService(SettingsService).getSlice(dayNotesSlice);
 const expanded = ref(false);
@@ -25,7 +26,7 @@ const property = computed({
 
 const format = computed({
   get: () => settings.state.format,
-  set: (format: string) => {
+  set: (format: UserDateFormat) => {
     settings.state = { ...settings.state, format };
   },
 });
@@ -42,7 +43,7 @@ const format = computed({
     </UiSettingRow>
     <UiSettingRow :name="m.day_notes_settings_format_label()">
       <template #description>{{ m.day_notes_settings_format_description() }}</template>
-      <UiTextInput v-model="format" />
+      <UiDateFormatInput v-model="format" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

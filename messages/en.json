@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Descending",
   "view_block_day_notes_show_heading_label": "Show period heading",
   "view_block_day_notes_show_navigation_label": "Show period navigation",
+  "view_block_day_notes_hide_period_notes_label": "Hide journal notes",
   "view_block_day_notes_last_modified": "Last modified: {date}",
   "view_block_day_notes_created": "Created: {date}",
   "view_block_day_notes_empty": "No notes were created in this period.",
@@ -961,7 +962,73 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "last day",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "1st {weekday}",
+        "nth=2,weekdayIndex=*": "2nd {weekday}",
+        "nth=3,weekdayIndex=*": "3rd {weekday}",
+        "nth=4,weekdayIndex=*": "4th {weekday}",
+        "nth=5,weekdayIndex=*": "5th {weekday}",
+        "nth=last,weekdayIndex=*": "last {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Last day",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1st",
+        "nth=2": "2nd",
+        "nth=3": "3rd",
+        "nth=4": "4th",
+        "nth=5": "5th",
+        "nth=last": "Last"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Weekday",
+  "decoration_condition_date_weekday_of_month_group": "Weekday of month",
   "decoration_condition_has_note_describe": "a note exists",
+  "decoration_condition_has_note_describe_missing": "no note exists",
+  "decoration_condition_has_note_presence_label": "Note",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Exists",
+        "presence=missing": "Missing"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "linked from at least {count} note",
+        "count=*": "linked from at least {count} notes"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Minimum number of linking notes",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "at least {count} note created",
+        "count=*": "at least {count} notes created"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Minimum number of created notes",
   "decoration_condition_has_notelet_describe_any": "a notelet exists",
   "decoration_condition_has_notelet_describe_types": "a notelet of type {types} exists",
   "decoration_condition_has_notelet_empty": "This journal has no notelet types yet.",
@@ -1029,6 +1096,30 @@
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "property {name} {op} {value}",
   "decoration_condition_property_value_label": "Value",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — not in the note",
+        "quantifier=any,source=notelets,typed=yes": "{base} — any notelet ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — any notelet",
+        "quantifier=all,source=notelets,typed=yes": "{base} — all notelets ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — all notelets",
+        "quantifier=none,source=notelets,typed=yes": "{base} — no notelet ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — no notelet",
+        "quantifier=any,source=both,typed=yes": "{base} — the note or any notelet ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — the note or any notelet",
+        "quantifier=all,source=both,typed=yes": "{base} — the note and all notelets ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — the note and all notelets",
+        "quantifier=none,source=both,typed=yes": "{base} — none of the note or its notelets ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — none of the note or its notelets",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Which notes",
+  "decoration_condition_scope_source_label": "Look in",
   "decoration_condition_tag_describe": "tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag value",
   "decoration_condition_tasks_quantifier_label": "Which tasks",
@@ -1110,6 +1201,8 @@
         "type=weekday": "Weekday",
         "type=offset": "Offset",
         "type=has-note": "Has note",
+        "type=linked": "Linked",
+        "type=created": "Created",
         "type=tasks": "Tasks",
         "type=note-size": "Note size",
         "type=has-notelet": "Has notelet"
@@ -1128,6 +1221,8 @@
         "type=weekday": "Check weekday",
         "type=offset": "Check interval offset",
         "type=has-note": "Check if note exists",
+        "type=linked": "Check links to this date",
+        "type=created": "Check notes created in this period",
         "type=tasks": "Check tasks",
         "type=note-size": "Check note size",
         "type=has-notelet": "Check if a notelet exists"
@@ -1165,9 +1260,12 @@
   "decoration_mark_limit_description": "How many shapes and icons a cell draws in each of its nine positions. Extra marks collapse into a badge you can hover to see them all. The cap applies to every calendar, navigation block, interval row and set of period buttons, and to every decoration regardless of owner — journal, shelf or vault-wide.",
   "decoration_mark_limit_label": "Marks shown per position",
   "decoration_mark_limit_unlimited": "Unlimited",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Add condition",
   "decoration_modal_add_style": "Add style",
+  "decoration_modal_name_label": "Name",
+  "decoration_modal_name_description": "Optional. Shown when you point at a decorated date, and in the decoration list.",
   "decoration_modal_mode_label": "When to decorate",
   "decoration_modal_mode_option": [
     {
@@ -1355,7 +1453,8 @@
       "match": {
         "group=text": "Text",
         "group=background": "Background",
-        "group=border": "Border"
+        "group=border": "Border",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1389,6 +1488,14 @@
   "ui_theme_color_text_selection": "Selected text background",
   "ui_theme_color_text_highlight_bg": "Highlighted text background",
   "ui_theme_color_caret_color": "Caret color",
+  "ui_theme_color_red": "Red",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Yellow",
+  "ui_theme_color_green": "Green",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Blue",
+  "ui_theme_color_purple": "Purple",
+  "ui_theme_color_pink": "Pink",
 
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
 
@@ -1507,6 +1614,7 @@
   "settings_too_new_banner": "These settings were saved by a newer version of Journals on another device. Restart Obsidian, or update Journals here — changes you make until then are discarded.",
   "settings_too_new_boot": "Journal: your settings were saved by a newer version of Journals. Update Journals on this device to use it here.",
   "settings_reload_required_banner": "Reload Obsidian to apply the changed settings.",
+  "settings_section_failed": "This section failed to display: {reason}. The rest of the settings still work.",
   "settings_tab_title": "Journals",
 
   "startup_dashboard_section_title": "Startup",
@@ -1595,6 +1703,9 @@
   "view_reposition_modal_confirm": "Move",
   "view_edit_blocks_title": "Blocks",
   "view_edit_blocks_empty": "No blocks yet.",
+  "view_edit_css_title": "CSS snippet",
+  "view_edit_css_selector_label": "Selector",
+  "view_edit_css_selector_description": "Matches this view and no other. Click the rule to copy it, then set CSS variables inside its braces in a CSS snippet.",
   "view_block_unknown_label": "Unknown block: {key}",
   "view_block_edit": "Edit block",
   "view_block_edit_title": "Edit block: {type}",
@@ -1710,7 +1821,7 @@
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
-  "view_toolbar_shelf_selector_tooltip": "Switch shelf",
+  "view_toolbar_shelf_selector_name": "{shelf} · Switch shelf",
   "view_toolbar_spacer_label": "Spacer",
   "view_toolbar_spacer_description": "Flexible gap that pushes neighboring items apart.",
   "view_toolbar_period_buttons_label": "Period buttons",
@@ -1936,6 +2047,9 @@
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_note_name_empty_notice": "Journal \"{journalName}\" has a name template that resolves to an empty note name, so no note can be created. Set a name template for it in journal settings.",
+  "journal_date_format_unrenderable_notice": "Journal \"{journalName}\": the date format {format} can't be rendered on this device ({reason}). Change it in the journal's settings or in its template notes.",
+  "date_format_invalid_preview": "Invalid format: {reason}",
+  "journal_dashboard_date_format_unrenderable": "The date format can't be rendered on this device.",
   "journal_note_path_claimed_notice": "Journal \"{journalName}\" would put its note at \"{path}\", but that note already belongs to journal \"{claimedBy}\", so nothing was changed. Change the folder or name template in one of them.",
   "journal_note_path_notelet_notice": "Journal \"{journalName}\" can't create its note at \"{path}\" — one of its own notelets is already there. Change the journal's note name or folder, or move that notelet.",
   "journal_note_path_held_by_period_notice": "Journal \"{journalName}\" would put its note at \"{path}\", but that note is already its note for the period starting {date}, so nothing was changed. Change the name template or folder so each period gets its own note name.",
@@ -2156,6 +2270,7 @@
   "journal_edit_move_to_folder_apply_link": "Apply recommendation",
   "journal_edit_move_to_folder_recommendation_date_format": "Date format contains a path separator. Move the date variables into the Folder field?",
   "journal_edit_move_to_folder_recommendation_name_template": "Note name template contains a path separator. Move the path prefix into the Folder field?",
+  "journal_edit_era_year_recommendation": "y is moment's era year, not the calendar year. It looks the same in most languages, but notes named with it cannot be matched back to their dates. Use YYYY instead?",
   "journal_edit_name_template_description": "Template used to generate new note names.",
   "journal_edit_name_template_empty_warning": "This name template resolves to an empty note name, so no note can be created. Add a variable or some text to it.",
   "journal_edit_name_template_collision_warning": "Entries for {first} and {second} both resolve to {path}. Only one of them can have a note; opening the other is refused.",
@@ -2187,6 +2302,7 @@
   "journal_edit_name_template_cyclic_top_warning": "The first numbering digit resets, so the numbers repeat and cannot be turned back into a date. Add a date variable to the name template, or set the first digit to continuous, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_coarse_date_warning": "The date variable in the name template is not precise enough to tell this journal's periods apart, so more than one period gets the same note name. Use a date format that changes every period, or turn on sequential numbers and put every digit in the name or folder, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_unreadable_date_warning": "The plugin cannot read a date back out of the notes this journal writes, so notes created outside the plugin cannot be matched to this journal. A format that also carries a time zone — Z or ZZ — is written correctly but cannot be read back: use a format built from date symbols such as YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "The plugin cannot read a date back out of the notes this journal writes, so notes created outside the plugin cannot be matched to this journal. These symbols cannot be read back: {tokens}. Use a format built from date symbols such as YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Entries for {first} and {second} both resolve to {path} because a question in the name hasn't been answered yet — once answered, each note's name will be unique.",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2223,7 +2339,7 @@
   "journal_edit_code_block_reference_link": "Supported code blocks.",
   "journal_edit_code_block_reference_modal_title": "Supported code blocks",
   "journal_edit_code_block_copy_hint": "Click a code block to copy it to your clipboard.",
-  "journal_edit_code_block_copied": "Copied to clipboard.",
+  "common_copied_to_clipboard": "Copied to clipboard.",
   "journal_edit_code_block_nav_description": "The navigation block helps you move between notes adjacent to the current one.",
   "journal_edit_code_block_nav_current": "Its configuration for the {name} journal looks like this:",
   "journal_edit_code_block_nav_aliases_lead": "These older block names are aliases that behave identically:",
@@ -2364,6 +2480,16 @@
         "mode=keep": "Notelets stay in your vault unchanged.",
         "mode=clear": "Notelets stay in your vault, but all journal and notelet type properties are removed from their frontmatter.",
         "mode=delete": "All notelets of this type are deleted from your vault."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 decoration will be removed:",
+        "count=*": "{count} decorations will be removed:"
       }
     }
   ],

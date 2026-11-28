@@ -10,6 +10,7 @@ import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiCopyableCode from "@/ui/UiCopyableCode.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -23,6 +24,7 @@ import { RepositionViewFlow } from "../flows/reposition-view.flow";
 import { ViewsService } from "../service";
 import { ViewHostService } from "../view-host";
 import { ViewsViewModel } from "../view-model";
+import { viewSelector } from "../view-selector";
 
 import BlocksList from "./BlocksList.vue";
 
@@ -95,6 +97,9 @@ const leafValue = computed<string>({
 });
 
 const blocksOpen = ref(true);
+const cssOpen = ref(false);
+
+const cssRule = computed(() => `${viewSelector(viewId)} {\n}`);
 
 function rename(): void {
   void flows.invoke(EditViewNameFlow, { viewId });
@@ -169,6 +174,16 @@ function addBlock(): void {
         <UiIconButton :icon="icons.action.add" :tooltip="m.view_add_block()" @click="addBlock" />
       </template>
       <BlocksList :view-id="viewId" />
+    </UiCollapsibleBlock>
+
+    <UiCollapsibleBlock v-model:expanded="cssOpen" :help="manual.view.cssSnippet">
+      <template #trigger>
+        <UiIconedRow :icon="icons.section.cssSnippet">{{ m.view_edit_css_title() }}</UiIconedRow>
+      </template>
+      <UiSettingRow stacked :name="m.view_edit_css_selector_label()">
+        <template #description>{{ m.view_edit_css_selector_description() }}</template>
+        <UiCopyableCode :text="cssRule" />
+      </UiSettingRow>
     </UiCollapsibleBlock>
   </div>
 </template>

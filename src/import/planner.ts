@@ -1,10 +1,19 @@
 import { normalizePath } from "obsidian";
 
-import { Calendar, CalendarDate, calendarSlice, periodOfKind, type CalendarSliceState } from "@/calendar";
+import {
+  Calendar,
+  CalendarDate,
+  calendarSlice,
+  periodOfKind,
+  type CalendarSliceState,
+  type DateFormatError,
+  type UserDateFormat,
+} from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import type { Result } from "@/infrastructure/result";
 import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
 import { freeName } from "@/journals/free-name";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -28,7 +37,10 @@ import {
 export type RowState =
   | { readonly kind: "new" }
   | { readonly kind: "set-up"; readonly journalName: string }
-  | { readonly kind: "superseded"; readonly by: SourceId };
+  | { readonly kind: "superseded"; readonly by: SourceId }
+  // The format cannot name a note on this device, so an existing journal writing the same notes cannot be
+  // recognized either: importing it could duplicate one. It cannot be switched on.
+  | { readonly kind: "unrenderable"; readonly reason: string };
 
 export type RowWarning =
   { readonly kind: "iso-week-under-custom-grid" } | { readonly kind: "missing-template"; readonly path: string };
@@ -38,7 +50,7 @@ export interface PlanRow {
   readonly journal: SourceJournal;
   readonly name: string;
   readonly folder: string;
-  readonly dateFormat: string;
+  readonly dateFormat: UserDateFormat;
   readonly shelf?: string;
   readonly state: RowState;
   readonly warnings: readonly RowWarning[];
@@ -73,9 +85,14 @@ export function hasAnythingToImport(plan: ImportPlan): boolean {
 const SOURCE_ORDER: readonly SourceId[] = ["periodic-notes", "calendar", "daily-notes"];
 const SUPERSEDED_BY_PERIODIC_NOTES: Partial<Record<SourceId, PeriodKind>> = { "daily-notes": "day", calendar: "week" };
 
-// A nested ternary reads ambiguously about where the parens go, so the three-way choice
-// (superseded / already set up / new) is spelled out as branches instead.
-function rowState(superseded: boolean, setUpBy: string | undefined): RowState {
+// A nested ternary reads ambiguously about where the parens go, so the choice is spelled out as
+// branches instead.
+function rowState(
+  unrenderable: DateFormatError | undefined,
+  superseded: boolean,
+  setUpBy: string | undefined,
+): RowState {
+  if (unrenderable !== undefined) return { kind: "unrenderable", reason: unrenderable.reason };
   if (superseded) return { kind: "superseded", by: "periodic-notes" };
   if (setUpBy !== undefined) return { kind: "set-up", journalName: setUpBy };
   return { kind: "new" };
@@ -90,9 +107,10 @@ const SHIFT_UNIT = { day: "d", week: "w", month: "m", quarter: "q", year: "y" } 
 // for them. `NotePathService.pathForDate` reaches the same value through
 // `CycleService.representativeOf`; `periodOfKind` is the same computation without needing an
 // existing journal to look a cycle up from.
-function sourcePath(journal: SourceJournal, date: CalendarDate): string {
-  const name = periodOfKind(journal.period, date).format(journal.format);
-  return normalizePath(journal.folder === "" ? `${name}.md` : `${journal.folder}/${name}.md`);
+function sourcePath(journal: SourceJournal, date: CalendarDate): Result<string, DateFormatError> {
+  return periodOfKind(journal.period, date)
+    .tryFormat(journal.format)
+    .map((name) => normalizePath(journal.folder === "" ? `${name}.md` : `${journal.folder}/${name}.md`));
 }
 
 // Boundary dates a today ± 2 periods sample can miss: two formats can render identically at every
@@ -159,7 +177,13 @@ export class ImportPlanner {
 
   #setUpBy(journal: SourceJournal, existing: readonly JournalConfig[]): string | undefined {
     const samples = sampleDates(journal.period);
-    const expected = samples.map((date) => sourcePath(journal, date));
+    const expected: string[] = [];
+    for (const date of samples) {
+      const path = sourcePath(journal, date);
+      // A format this device cannot render names no note an existing journal could share.
+      if (path.isErr()) return undefined;
+      expected.push(path.value);
+    }
     return existing
       .filter((config) => config.write.type === journal.period)
       .find((config) =>
@@ -202,7 +226,9 @@ export class ImportPlanner {
   }
 
   #startup(rows: readonly PlanRow[]): StartupProposal {
-    const flagged = rows.find((row) => row.state.kind !== "superseded" && row.journal.openAtStartup);
+    const flagged = rows.find(
+      (row) => row.state.kind !== "superseded" && row.state.kind !== "unrenderable" && row.journal.openAtStartup,
+    );
     if (flagged === undefined) return { kind: "none" };
     const { journalName } = this.#settings.getSlice(startupSlice).state;
     return journalName === "" ? { kind: "set", rowKey: flagged.key } : { kind: "kept", journalName };
@@ -256,8 +282,9 @@ export class ImportPlanner {
         const superseded =
           supersededPeriod === journal.period &&
           (periodicNotes?.journals.some((candidate) => candidate.period === journal.period) ?? false);
+        const rendered = sourcePath(journal, CalendarDate.today());
         const setUpBy = this.#setUpBy(journal, existing);
-        const state = rowState(superseded, setUpBy);
+        const state = rowState(rendered.isErr() ? rendered.error : undefined, superseded, setUpBy);
 
         const draft = {
           ...journalDefaultsFor({ type: journal.period }),

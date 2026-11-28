@@ -1,5 +1,10 @@
+import { moment } from "obsidian";
+
+import { AsyncResult } from "@/infrastructure/result";
+
 import { Calendar, CUSTOM_LOCALE, isLocaleDefined, type WeekConfig } from "./calendar";
 import { CalendarDate } from "./calendar-date";
+import { userDateFormat } from "./user-date-format";
 
 import type { AnchorString } from "./types";
 
@@ -48,4 +53,49 @@ export function date(s: string): CalendarDate {
     throw new Error(`fixture date(${JSON.stringify(s)}) failed to parse: ${result.error.message}`);
   }
   return result.value;
+}
+
+/** Moment's own reason for `pattern` failing to render today; call it inside `withoutEras`. */
+export function formatFailureReason(pattern: string): string {
+  const failure = CalendarDate.today().tryFormat(userDateFormat(pattern));
+  if (failure.isOk()) throw new Error(`formatFailureReason(${JSON.stringify(pattern)}): the pattern rendered`);
+  return failure.error.reason;
+}
+
+const pendingEraRestores = new Set<() => void>();
+
+/** Puts back eras a `withoutEras` run still holds — the shared setup calls it after every test. */
+export function restoreEras(): void {
+  for (const restore of pendingEraRestores) restore();
+}
+
+// Reproduces #663: a locale whose era data is missing makes moment throw on any `y` token.
+// An async `run`, or one returning an AsyncResult, keeps the eras removed until it settles, and
+// restores them before the awaiting caller resumes.
+export function withoutEras<T>(run: () => T): T {
+  const locales = ["en", CUSTOM_LOCALE].filter((name) => isLocaleDefined(name)).map((name) => moment.localeData(name));
+  const saved = locales.map((locale) => (locale as unknown as { _eras?: unknown })._eras);
+  for (const locale of locales) (locale as unknown as { _eras?: unknown })._eras = undefined;
+  const restore = (): void => {
+    if (!pendingEraRestores.delete(restore)) return;
+    for (const [i, locale] of locales.entries()) {
+      (locale as unknown as { _eras?: unknown })._eras = saved[i];
+    }
+  };
+  pendingEraRestores.add(restore);
+  let result: T;
+  try {
+    result = run();
+  } catch (error) {
+    restore();
+    throw error;
+  }
+  if (result instanceof Promise) return result.finally(restore) as T;
+  if (result instanceof AsyncResult) return result.tap(restore).tapErr(restore) as T;
+  if (typeof (result as { then?: unknown } | null)?.then === "function") {
+    restore();
+    throw new TypeError("withoutEras: only a Promise or an AsyncResult can keep the eras removed");
+  }
+  restore();
+  return result;
 }

@@ -15,9 +15,13 @@ import { buildCondition } from "../../testing";
 
 import ConditionItem from "./ConditionItem.vue";
 
-async function mount(initial: JournalDecorationCondition, harness?: TestHarness) {
+async function mount(
+  initial: JournalDecorationCondition,
+  harness?: TestHarness,
+  extra: { journalName?: string; withNoteletScope?: boolean } = {},
+) {
   const resolvedHarness = harness ?? (await testContainer());
-  const renderHost = () => h(ConditionItem, { name: "c", condition: initial });
+  const renderHost = () => h(ConditionItem, { name: "c", condition: initial, ...extra });
   const Host = defineComponent({
     setup() {
       useForm({
@@ -37,12 +41,21 @@ describe("ConditionItem", () => {
   });
 
   it("renders ConditionTag for a tag condition", async () => {
-    await mount({ type: "tag", condition: "contains", value: "" });
+    await mount({ type: "tag", condition: "contains", value: "", source: "note", quantifier: "any", typeIds: [] });
     expect(screen.getByText(m.decoration_string_op_label({ op: "contains" }))).toBeTruthy();
   });
 
   it("renders ConditionProperty for a property condition", async () => {
-    await mount({ type: "property", name: "x", valueType: "text", condition: "exists", value: "" });
+    await mount({
+      type: "property",
+      name: "x",
+      valueType: "text",
+      condition: "exists",
+      value: "",
+      source: "note",
+      quantifier: "any",
+      typeIds: [],
+    });
     expect(screen.getByText(m.decoration_string_op_label({ op: "exists" }))).toBeTruthy();
   });
 
@@ -66,9 +79,19 @@ describe("ConditionItem", () => {
     expect(screen.getByLabelText(m.decoration_condition_note_size_value_label())).toBeTruthy();
   });
 
-  it("renders ConditionTypeOnly for has-note", async () => {
-    await mount({ type: "has-note" });
-    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+  it("renders ConditionHasNote for has-note", async () => {
+    await mount({ type: "has-note", presence: "exists" });
+    expect(screen.getByRole("radiogroup", { name: m.decoration_condition_has_note_presence_label() })).toBeTruthy();
+  });
+
+  it("renders the linked editor for a linked condition", async () => {
+    await mount({ type: "linked", atLeast: 1 });
+    expect(screen.getByLabelText(m.decoration_condition_linked_value_label())).toBeTruthy();
+  });
+
+  it("renders the created editor for a created condition", async () => {
+    await mount({ type: "created", atLeast: 1 });
+    expect(screen.getByLabelText(m.decoration_condition_created_value_label())).toBeTruthy();
   });
 
   it("renders ConditionTasks for a tasks condition", async () => {
@@ -85,11 +108,59 @@ describe("ConditionItem", () => {
   it("derives a property condition's number value type from the vault's registered type", async () => {
     const harness = await testContainer();
     harness.host.setPropertyType("rating", "number");
-    await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" }, harness);
+    await mount(
+      {
+        type: "property",
+        name: "",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
+      harness,
+    );
 
     await userEvent.type(screen.getAllByRole("textbox")[0], "rating");
     await userEvent.selectOptions(screen.getByRole("combobox"), m.decoration_string_op_label({ op: "eq" }));
 
     expect(screen.getByRole("spinbutton")).toBeTruthy();
+  });
+
+  it("shows quantifier and source for a decoration tag condition", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    await mount(
+      { type: "tag", condition: "contains", value: "", source: "note", quantifier: "any", typeIds: [] },
+      harness,
+      { withNoteletScope: true },
+    );
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeTruthy();
+  });
+
+  it("shows no scope controls on a tag condition without the scope flag", async () => {
+    await mount({ type: "tag", condition: "contains", value: "", source: "note", quantifier: "any", typeIds: [] });
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeNull();
+  });
+
+  it("shows scope controls on a property condition", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    await mount(
+      {
+        type: "property",
+        name: "x",
+        valueType: "text",
+        condition: "exists",
+        value: "",
+        source: "note",
+        quantifier: "any",
+        typeIds: [],
+      },
+      harness,
+      { withNoteletScope: true },
+    );
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeTruthy();
   });
 });

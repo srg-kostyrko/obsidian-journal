@@ -2,11 +2,18 @@ import { match } from "ts-pattern";
 
 import type { Calendar } from "@/calendar";
 import type { JournalDecorationCondition } from "@/decorations";
-import { formatConjunction, formatDisjunction, m } from "@/i18n";
+import type { NoteletScope } from "@/decorations/config";
+import { formatConjunction, formatDisjunction, getLocale, m } from "@/i18n";
 import { blockedByUnreadable } from "@/tasks/conditions";
 import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
-import { DATE_CONDITION_ANY, storedMonthToDisplay } from "../../date-condition";
+import {
+  DATE_CONDITION_ANY,
+  DATE_CONDITION_LAST_DAY,
+  isWeekdayOfMonth,
+  storedMonthToDisplay,
+  type DateConditionDay,
+} from "../../date-condition";
 
 export function describeCondition(
   condition: JournalDecorationCondition,
@@ -21,31 +28,39 @@ export function describeCondition(
       }),
     )
     .with({ type: "tag" }, (c) =>
-      m.decoration_condition_tag_describe({
-        op: m.decoration_string_op_label({ op: c.condition }),
-        value: c.value,
-      }),
+      withScope(
+        m.decoration_condition_tag_describe({
+          op: m.decoration_string_op_label({ op: c.condition }),
+          value: c.value,
+        }),
+        c,
+        typeName,
+      ),
     )
     .with({ type: "property" }, (c) =>
-      m.decoration_condition_property_describe({
-        name: c.name,
-        op:
-          c.valueType === "date"
-            ? m.decoration_date_op_label({ op: c.condition })
-            : m.decoration_string_op_label({ op: c.condition }),
-        value: "value" in c ? String(c.value) : "",
-      }),
+      withScope(
+        m.decoration_condition_property_describe({
+          name: c.name,
+          op:
+            c.valueType === "date"
+              ? m.decoration_date_op_label({ op: c.condition })
+              : m.decoration_string_op_label({ op: c.condition }),
+          value: "value" in c ? String(c.value) : "",
+        }),
+        c,
+        typeName,
+      ),
     )
     .with({ type: "date" }, (c) =>
       m.decoration_condition_date_describe({
-        day: c.day === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(c.day),
+        day: describeDay(c.day, calendar),
         month:
           c.month === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(storedMonthToDisplay(c.month)),
         year: c.year === null ? m.decoration_condition_date_any() : String(c.year),
       }),
     )
     .with({ type: "weekday" }, (c) => {
-      const names = calendar.weekdays();
+      const names = summaryWeekdays(calendar);
       const list = c.weekdays
         .map((i) => names[i])
         .filter(Boolean)
@@ -58,7 +73,13 @@ export function describeCondition(
         day: Math.abs(c.offset),
       }),
     )
-    .with({ type: "has-note" }, () => m.decoration_condition_has_note_describe())
+    .with({ type: "has-note" }, (c) =>
+      c.presence === "missing"
+        ? m.decoration_condition_has_note_describe_missing()
+        : m.decoration_condition_has_note_describe(),
+    )
+    .with({ type: "linked" }, (c) => m.decoration_condition_linked_describe({ count: c.atLeast }))
+    .with({ type: "created" }, (c) => m.decoration_condition_created_describe({ count: c.atLeast }))
     .with({ type: "note-size" }, (c) =>
       m.decoration_condition_note_size_describe({
         unit: c.unit,
@@ -87,7 +108,40 @@ export function describeCondition(
     .with({ type: "has-notelet" }, (c) => {
       if (c.typeIds.length === 0) return m.decoration_condition_has_notelet_describe_any();
       const names = c.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());
-      return m.decoration_condition_has_notelet_describe_types({ types: names.join(", ") });
+      return m.decoration_condition_has_notelet_describe_types({ types: formatDisjunction(names) });
     })
     .exhaustive();
+}
+
+function withScope(base: string, scope: NoteletScope, typeName?: (id: string) => string | undefined): string {
+  if (scope.source === "note" && scope.quantifier !== "none") return base;
+  const names =
+    scope.source === "note"
+      ? []
+      : scope.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());
+  return m.decoration_condition_scope_describe({
+    base,
+    quantifier: scope.quantifier,
+    source: scope.source,
+    types: formatDisjunction(names),
+    typed: names.length > 0 ? "yes" : "no",
+  });
+}
+
+function describeDay(day: DateConditionDay, calendar: Calendar): string {
+  if (day === DATE_CONDITION_ANY) return m.decoration_condition_date_any();
+  if (day === DATE_CONDITION_LAST_DAY) return m.decoration_condition_date_describe_last_day();
+  if (!isWeekdayOfMonth(day)) return String(day);
+  // The weekday's index rides along so locales whose ordinal agrees in gender can pick the form.
+  return m.decoration_condition_date_describe_weekday_of_month({
+    nth: day.nth,
+    weekday: summaryWeekdays(calendar)[day.weekday] ?? "",
+    weekdayIndex: String(day.weekday),
+  });
+}
+
+// In the summary's own language, not Obsidian's: a language the plugin does not translate falls
+// back to English sentences, and a weekday named in Obsidian's language would sit inside one.
+function summaryWeekdays(calendar: Calendar): readonly string[] {
+  return calendar.weekdaysIn(getLocale());
 }

@@ -1,9 +1,10 @@
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { localMoment } from "./calendar";
-import { ParseError } from "./errors";
+import { DateFormatError, ParseError } from "./errors";
 
 import type { AnchorString } from "./types";
+import type { PlainFormatPattern, UserDateFormat } from "./user-date-format";
 
 const ANCHOR_FORMAT = "YYYY-MM-DD";
 
@@ -14,11 +15,15 @@ export class CalendarDate {
 
   static parse(input: string, format?: string): Result<CalendarDate, ParseError> {
     const effectiveFormat = format ?? ANCHOR_FORMAT;
-    const m = localMoment(input, effectiveFormat, true);
-    if (!m.isValid()) {
+    try {
+      const m = localMoment(input, effectiveFormat, true);
+      if (!m.isValid()) {
+        return new Err(new ParseError(input, format));
+      }
+      return new Ok(this._fromMoment(m.startOf("day")));
+    } catch {
       return new Err(new ParseError(input, format));
     }
-    return new Ok(this._fromMoment(m.startOf("day")));
   }
 
   static fromAnchor(s: AnchorString): CalendarDate {
@@ -59,8 +64,16 @@ export class CalendarDate {
     return localMoment(this.#anchor, ANCHOR_FORMAT, true).day();
   }
 
-  format(pattern: string): string {
+  format<P extends string>(pattern: PlainFormatPattern<P>): string {
     return localMoment(this.#anchor, ANCHOR_FORMAT, true).format(pattern);
+  }
+
+  tryFormat(pattern: UserDateFormat): Result<string, DateFormatError> {
+    try {
+      return new Ok(localMoment(this.#anchor, ANCHOR_FORMAT, true).format(pattern));
+    } catch (error) {
+      return new Err(new DateFormatError(pattern, error instanceof Error ? error.message : String(error)));
+    }
   }
 
   isBefore(other: CalendarDate): boolean {

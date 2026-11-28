@@ -7,15 +7,17 @@ import { date } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import { CreationDateIndex, JournalsIndex, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeCreationDateIndex } from "@/journals/creation-dates/testing";
+import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { tasksCoreModule } from "@/tasks/module";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { decorationsModule } from "../module";
 import { decorationsSettingsCoreModule } from "../settings/module";
@@ -43,7 +45,13 @@ interface MountOptions {
   shelf?: string | null;
 }
 
-async function mount(options: MountOptions): Promise<{ harness: TestHarness }> {
+async function mount(options: MountOptions): Promise<{
+  harness: TestHarness;
+  links: FakeLinkReferenceIndex;
+  created: FakeCreationDateIndex;
+}> {
+  const links = new FakeLinkReferenceIndex();
+  const created = new FakeCreationDateIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: {
@@ -51,6 +59,10 @@ async function mount(options: MountOptions): Promise<{ harness: TestHarness }> {
       shelves: options.shelves ?? {},
       decorations: { decorations: [...(options.globalDecorations ?? [])] },
     },
+    overrides: [
+      overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex),
+      overrideWith(CreationDateIndex, created as unknown as CreationDateIndex),
+    ],
   });
 
   const index = harness.resolve(JournalsIndex);
@@ -63,7 +75,7 @@ async function mount(options: MountOptions): Promise<{ harness: TestHarness }> {
 
   harness.render(DecorationCellModal, { props: { entry: options.entry, shelf: options.shelf } });
 
-  return { harness };
+  return { harness, links, created };
 }
 
 const anyDayDecoration: JournalDecoration = buildDecoration({
@@ -81,6 +93,18 @@ const hasNoteDecoration: JournalDecoration = buildDecoration({
 const noteSizeDecoration: JournalDecoration = buildDecoration({
   mode: "or",
   conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+  styles: [buildStyle("background")],
+});
+
+const createdDecoration: JournalDecoration = buildDecoration({
+  mode: "or",
+  conditions: [buildCondition("created", { atLeast: 1 })],
+  styles: [buildStyle("background")],
+});
+
+const linkedDecoration: JournalDecoration = buildDecoration({
+  mode: "or",
+  conditions: [buildCondition("linked", { atLeast: 1 })],
   styles: [buildStyle("background")],
 });
 
@@ -199,5 +223,31 @@ describe("DecorationCellModal", () => {
     // fill for any note-size condition in scope, so waiting the fill out is enough — no
     // FakeNoteSizeService or manual vault event is needed.
     await vi.waitFor(() => expect(screen.getByTestId("decoration-preview")).toBeTruthy());
+  });
+
+  it("updates the explanation when a link to the period lands after it opened", async () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    const { links } = await mount({
+      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [linkedDecoration] }) },
+      entry: { kind: "fixed", period: day },
+    });
+    expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
+
+    links.setCount("daily", "2026-05-25", 1);
+
+    expect(await screen.findByTestId("decoration-preview")).toBeTruthy();
+  });
+
+  it("updates the explanation when a note created in the period lands after it opened", async () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    const { created } = await mount({
+      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [createdDecoration] }) },
+      entry: { kind: "fixed", period: day },
+    });
+    expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
+
+    created.add("inbox/idea.md", "2026-05-25");
+
+    expect(await screen.findByTestId("decoration-preview")).toBeTruthy();
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defineComponent, ref, type ComputedRef } from "vue";
 
+import { userDateFormat } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -74,7 +75,7 @@ describe("useCollisionCheck", () => {
   it("flags a plain date variable when the journal's own date format is coarser than the period", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { daily: dayJournal({ nameTemplate: "{{date}}", dateFormat: "YYYY-MM" }) } },
+      data: { journals: { daily: dayJournal({ nameTemplate: "{{date}}", dateFormat: userDateFormat("YYYY-MM") }) } },
     });
 
     expect(probe(harness, "daily").value).toMatchObject({ path: "2026-01.md" });

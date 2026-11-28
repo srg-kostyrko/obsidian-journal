@@ -3,12 +3,11 @@ import { screen, within } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
+import { dayNotesSlice } from "@/journals/creation-dates";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer } from "@/testing";
 import { viewsCoreModule } from "@/views/module";
-
-import { dayNotesSlice } from "../slice";
 
 import DayNotesSettingsBlock from "./DayNotesSettingsBlock.vue";
 

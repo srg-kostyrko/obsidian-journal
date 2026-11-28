@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { themeColorGroupsFor, type ThemeColorFieldRole } from "./theme-colors";
+import { themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "./theme-colors";
 
 function namesFor(role: ThemeColorFieldRole): string[] {
   return themeColorGroupsFor(role).flatMap((group) => group.names);
@@ -20,8 +20,8 @@ describe("themeColorGroupsFor", () => {
       expect(namesFor("text")).not.toContain("background-modifier-border");
     });
 
-    it("returns a single group", () => {
-      expect(themeColorGroupsFor("text")).toHaveLength(1);
+    it("lists the text group before the palette group", () => {
+      expect(themeColorGroupsFor("text").map((group) => group.tag)).toEqual(["text", "palette"]);
     });
   });
 
@@ -34,8 +34,8 @@ describe("themeColorGroupsFor", () => {
       expect(namesFor("background")).not.toContain("text-faint");
     });
 
-    it("returns a single group", () => {
-      expect(themeColorGroupsFor("background")).toHaveLength(1);
+    it("lists the background group before the palette group", () => {
+      expect(themeColorGroupsFor("background").map((group) => group.tag)).toEqual(["background", "palette"]);
     });
   });
 
@@ -52,8 +52,8 @@ describe("themeColorGroupsFor", () => {
       expect(namesFor("border")).not.toContain("background-primary");
     });
 
-    it("lists the border group before the text group", () => {
-      expect(themeColorGroupsFor("border").map((group) => group.tag)).toEqual(["border", "text"]);
+    it("lists the border group, then the text group, then the palette group", () => {
+      expect(themeColorGroupsFor("border").map((group) => group.tag)).toEqual(["border", "text", "palette"]);
     });
   });
 
@@ -70,8 +70,8 @@ describe("themeColorGroupsFor", () => {
       expect(namesFor("fill")).not.toContain("background-modifier-border");
     });
 
-    it("lists the text group before the background group", () => {
-      expect(themeColorGroupsFor("fill").map((group) => group.tag)).toEqual(["text", "background"]);
+    it("lists the text group, then the background group, then the palette group", () => {
+      expect(themeColorGroupsFor("fill").map((group) => group.tag)).toEqual(["text", "background", "palette"]);
     });
   });
 
@@ -90,6 +90,28 @@ describe("themeColorGroupsFor", () => {
 
     it("withholds the border stroke from a background field", () => {
       expect(namesFor("background")).not.toContain("background-modifier-border-hover");
+    });
+  });
+
+  describe("theme palette", () => {
+    it.each<ThemeColorFieldRole>(["text", "background", "border", "fill"])(
+      "offers the palette to a %s field",
+      (role) => {
+        expect(themeColorGroupsFor(role).at(-1)?.names).toEqual([
+          "color-red",
+          "color-orange",
+          "color-yellow",
+          "color-green",
+          "color-cyan",
+          "color-blue",
+          "color-purple",
+          "color-pink",
+        ]);
+      },
+    );
+
+    it("labels a palette color by its hue", () => {
+      expect(themeColorLabel("color-red")).toBe("Red");
     });
   });
 

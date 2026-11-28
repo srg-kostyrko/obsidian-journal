@@ -12,8 +12,10 @@ import {
   type VaultPath,
 } from "@/infrastructure/host";
 import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
-import { JournalsIndex, JournalsRepository } from "@/journals";
+import { CreationDateIndex, JournalsIndex, JournalsRepository, LinkReferenceIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { FakeCreationDateIndex } from "@/journals/creation-dates/testing";
+import { FakeLinkReferenceIndex } from "@/journals/link-references/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { customJournal, fixedJournal } from "@/journals/testing";
@@ -35,7 +37,7 @@ import {
   CellDecorationMapKey,
   CellMarkLimitKey,
   CellPaddingKey,
-  type CellStyleRef,
+  type CellDecorationRef,
 } from "./ui/cell-decoration-map-key";
 import { useCellDecorations } from "./use-cell-decorations";
 
@@ -48,6 +50,8 @@ interface DecorationsHarness {
   harness: TestHarness;
   size: FakeNoteSizeService;
   structures: FakeNoteStructureService;
+  links: FakeLinkReferenceIndex;
+  created: FakeCreationDateIndex;
   store: DecorationsStore;
 }
 
@@ -59,15 +63,19 @@ interface DecorationsHarness {
 async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promise<DecorationsHarness> {
   const size = new FakeNoteSizeService();
   const structures = new FakeNoteStructureService();
+  const links = new FakeLinkReferenceIndex();
+  const created = new FakeCreationDateIndex();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
     overrides: [
       overrideWith(NoteSizeService, size as unknown as NoteSizeService),
       overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
+      overrideWith(LinkReferenceIndex, links as unknown as LinkReferenceIndex),
+      overrideWith(CreationDateIndex, created as unknown as CreationDateIndex),
     ],
   });
-  return { harness, size, structures, store: harness.resolve(DecorationsStore) };
+  return { harness, size, structures, links, created, store: harness.resolve(DecorationsStore) };
 }
 
 function buildHarness(decorations: JournalConfig["decorations"] = []): Promise<DecorationsHarness> {
@@ -81,7 +89,7 @@ function buildWeeklyHarness(weeklyDecorations: JournalConfig["decorations"]): Pr
   });
 }
 
-function makeChild(captured: { value: ReadonlyMap<string, CellStyleRef> | null }) {
+function makeChild(captured: { value: ReadonlyMap<string, CellDecorationRef> | null }) {
   return defineComponent({
     template: "<div />",
     setup() {
@@ -102,12 +110,12 @@ function makeHost(Child: ReturnType<typeof makeChild>, setup: () => unknown) {
 
 function mount(
   harness: TestHarness,
-  setup: () => ReadonlyMap<string, CellStyleRef>,
+  setup: () => ReadonlyMap<string, CellDecorationRef>,
 ): {
-  captured: { value: ReadonlyMap<string, CellStyleRef> | null };
+  captured: { value: ReadonlyMap<string, CellDecorationRef> | null };
   unmount: () => void;
 } {
-  const captured = { value: null as ReadonlyMap<string, CellStyleRef> | null };
+  const captured = { value: null as ReadonlyMap<string, CellDecorationRef> | null };
   const Child = makeChild(captured);
   const Host = makeHost(Child, setup);
   const utilities = harness.render(Host);
@@ -119,7 +127,7 @@ function mountCells(
   periods: readonly Period[],
   journalNames: readonly string[],
   calendarDecorations?: { shelf: string | null },
-): ReadonlyMap<string, CellStyleRef> {
+): ReadonlyMap<string, CellDecorationRef> {
   const { captured } = mount(harness, () =>
     useCellDecorations({
       periods: () => periods,
@@ -232,7 +240,7 @@ describe("useCellDecorations", () => {
 
       const slot = captured.value!.get(key(period));
       expect(slot).toBeDefined();
-      expect(slot!.value).toHaveLength(1);
+      expect(slot!.value.styles).toHaveLength(1);
     });
 
     it("gathers only decorations accepted by the filter", async () => {
@@ -261,7 +269,7 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       const slot = captured.value!.get(key(period));
-      expect(slot!.value.map((style) => style.type)).toEqual(["background"]);
+      expect(slot!.value.styles.map((style) => style.type)).toEqual(["background"]);
     });
 
     it("re-seeds when the periods input changes", async () => {
@@ -322,10 +330,10 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(evaluate).not.toHaveBeenCalled();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
     });
 
-    it("batches visible registrations into one evaluation per tick", async () => {
+    it("repaints offset days in each visible interval registered after mount", async () => {
       const decoration = buildDecoration({
         mode: "and",
         conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
@@ -334,22 +342,18 @@ describe("useCellDecorations", () => {
       const { harness } = await buildHarnessFrom({
         sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
       });
-      const evaluate = vi.spyOn(harness.resolve(DecorationEngine), "evaluateRange");
       const cells = mountCells(harness, periods, ["sprint"]);
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
-      evaluate.mockClear();
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
 
       for (const entryAnchor of [anchor, "2026-01-19" as AnchorString]) {
         const entryPath = `sprint/${entryAnchor}.md` as VaultPath;
         harness.host.putFile(entryPath);
         harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor: entryAnchor, path: entryPath });
       }
-      expect(evaluate).not.toHaveBeenCalled();
       await nextTick();
 
-      expect(evaluate).toHaveBeenCalledTimes(1);
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 0, 1]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([1, 0, 1]);
     });
 
     it.each(["removed", "cleared", "shortened"] as const)(
@@ -368,7 +372,7 @@ describe("useCellDecorations", () => {
         const laterPeriods = ["2026-02-01", "2026-02-03"].map((day) => DayPeriod.containing(date(day)));
         const cells = mountCells(harness, laterPeriods, ["sprint"]);
         await nextTick();
-        expect(laterPeriods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 1]);
+        expect(laterPeriods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 1]);
 
         if (change === "removed") index.unregister(path);
         else
@@ -380,7 +384,7 @@ describe("useCellDecorations", () => {
           });
         await nextTick();
 
-        expect(laterPeriods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 0]);
+        expect(laterPeriods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([1, 0]);
       },
     );
 
@@ -403,13 +407,13 @@ describe("useCellDecorations", () => {
       harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor, path });
       const cells = mountCells(harness, periods, ["sprint"]);
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
 
       if (event === "metadata") harness.host.emitMetadata(path, { frontmatter: { tags: ["ready"] } });
       else size.setSize(path, { words: 150, characters: 900 });
       await nextTick();
 
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 1, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([1, 1, 0]);
     });
 
     it.each(["note", "notelet"] as const)("tracks an interval %s added after mount", async (kind) => {
@@ -428,7 +432,7 @@ describe("useCellDecorations", () => {
       });
       const cells = mountCells(harness, periods, ["sprint"]);
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
 
       harness.host.putFile(path);
       const index = harness.resolve(JournalsIndex);
@@ -443,11 +447,11 @@ describe("useCellDecorations", () => {
           typeId: "nt_a" as TypeId,
         });
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 1, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([1, 1, 0]);
 
       index.unregister(path);
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
     });
 
     it("rebuilds offset ownership when an offscreen interval is extended", async () => {
@@ -464,12 +468,12 @@ describe("useCellDecorations", () => {
       index.register({ journalName: "sprint", anchor, path });
       const cells = mountCells(harness, periods, ["sprint"]);
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 1, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 1, 0]);
 
       index.register({ journalName: "sprint", anchor, path, endDate: "2026-01-20" as AnchorString });
       await nextTick();
 
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 1]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 1]);
     });
 
     it("repaints offset days after a newly added notelet's task heading changes", async () => {
@@ -509,13 +513,13 @@ describe("useCellDecorations", () => {
         typeId: "nt_a" as TypeId,
       });
       await nextTick();
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([0, 0, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
 
       structures.setStructure(path, structureUnder("Work"));
       harness.host.emitMetadata(path);
       await nextTick();
 
-      expect(periods.map((period) => cells.get(key(period))!.value.length)).toEqual([1, 1, 0]);
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([1, 1, 0]);
     });
   });
 
@@ -602,7 +606,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       const path = "journals/2026-05-25.standup.md" as VaultPath;
       harness.resolve(JournalsIndex).register({
@@ -615,7 +619,7 @@ describe("useCellDecorations", () => {
       });
       await nextTick();
 
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     it("repaints when the notelet is removed", async () => {
@@ -647,12 +651,12 @@ describe("useCellDecorations", () => {
         typeId: "nt_a" as TypeId,
       });
       await nextTick();
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
 
       index.unregister(path);
       await nextTick();
 
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
     });
 
     it("repaints a tasks cell when a provider publishes after mount", async () => {
@@ -676,12 +680,120 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       harness.resolve(TaskIndex).publish("test", { path }, [taskItem(path, "todo")]);
       await nextTick();
 
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
+    });
+
+    it("a missing-note cell lights when the journals index becomes ready after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value.styles).toHaveLength(0);
+
+      harness.resolve(JournalsIndex).markReady();
+      await nextTick();
+
+      expect(slot.value.styles).toHaveLength(1);
+    });
+
+    it("un-marks a missing-note day across its interval when the interval note is registered after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: -1 }), buildCondition("has-note", { presence: "missing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, "2026-01-05", { decorations: [decoration] }),
+      });
+      const index = harness.resolve(JournalsIndex);
+      index.markReady();
+      const lastDay = DayPeriod.containing(date("2026-01-18"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [lastDay],
+          journalNames: () => ["sprint"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(lastDay))!;
+      expect(slot.value.styles).toHaveLength(1);
+
+      const path = "sprint/2026-01-05.md" as VaultPath;
+      harness.host.putFile(path);
+      index.register({ journalName: "sprint", anchor: "2026-01-05" as AnchorString, path });
+      await nextTick();
+
+      expect(slot.value.styles).toHaveLength(0);
+    });
+
+    it("a cell lights when a link arrives after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("linked")],
+        styles: [buildStyle("background")],
+      });
+      const { harness, links } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      // Mount BEFORE the link arrives: a count raised first would pass with the version read deleted.
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value.styles).toHaveLength(0);
+
+      links.setCount("daily", "2026-05-25", 1);
+      await nextTick();
+
+      expect(slot.value.styles).toHaveLength(1);
+    });
+
+    it("a cell lights when a note created on it arrives after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("created")],
+        styles: [buildStyle("background")],
+      });
+      const { harness, created } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      // Mount BEFORE the note arrives: one seeded first would pass with the version read deleted.
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value.styles).toHaveLength(0);
+
+      created.add("inbox/idea.md", "2026-05-25");
+      await nextTick();
+
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     it("repaints a day with no note when a task note dated on it is published after mount", async () => {
@@ -702,7 +814,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       harness.resolve(TaskIndex).publish("note-property", { path }, [
         {
@@ -715,7 +827,7 @@ describe("useCellDecorations", () => {
       ]);
       await nextTick();
 
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     // A visibility edit that names no property changes neither index, so only the reactive
@@ -749,7 +861,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
       const versionBefore = tasks.version();
 
       const journals = harness.resolve(JournalsRepository);
@@ -763,7 +875,7 @@ describe("useCellDecorations", () => {
         },
       });
       await nextTick();
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       journals.update("daily", {
         tasks: {
@@ -772,7 +884,7 @@ describe("useCellDecorations", () => {
         },
       });
       await nextTick();
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
       expect(tasks.version()).toBe(versionBefore);
     });
 
@@ -807,7 +919,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
 
       const journals = harness.resolve(JournalsRepository);
       const journal = journals.get("daily");
@@ -820,11 +932,11 @@ describe("useCellDecorations", () => {
         },
       });
       await nextTick();
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       journals.update("daily", { tasks: { ...base, filter: { mode: "and", conditions: [] } } });
       await nextTick();
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     // An owned dated line answers to its owning journal's filter whichever journal's cell asks, so a
@@ -848,7 +960,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [week], ["weekly"]);
       await nextTick();
       const slot = cells.get(key(week))!;
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
 
       const journals = harness.resolve(JournalsRepository);
       const journal = journals.get("daily");
@@ -861,11 +973,11 @@ describe("useCellDecorations", () => {
         },
       });
       await nextTick();
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       journals.update("daily", { tasks: base });
       await nextTick();
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     it("repaints a none cell when a notelet appears and disappears on a day with no note", async () => {
@@ -886,7 +998,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       const index = harness.resolve(JournalsIndex);
       index.register({
@@ -898,11 +1010,11 @@ describe("useCellDecorations", () => {
         typeId: "nt_a" as TypeId,
       });
       await nextTick();
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
 
       index.unregister(path);
       await nextTick();
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
     });
 
     describe("a notelet's structure changes without its task items changing", () => {
@@ -960,12 +1072,12 @@ describe("useCellDecorations", () => {
         );
         await nextTick();
         const slot = captured.value!.get(key(period))!;
-        expect(slot.value).toHaveLength(0);
+        expect(slot.value.styles).toHaveLength(0);
 
         structures.setStructure(noteletPath, structureUnder("Home"));
         harness.host.emitMetadata(noteletPath);
         await nextTick();
-        expect(slot.value).toHaveLength(1);
+        expect(slot.value.styles).toHaveLength(1);
       });
 
       it("repaints when the notelet was added after mount and a reseed ran since", async () => {
@@ -982,13 +1094,44 @@ describe("useCellDecorations", () => {
         journals.update("daily", { tasks: { ...journal.value.tasks } });
         await nextTick();
         const slot = captured.value!.get(key(period))!;
-        expect(slot.value).toHaveLength(0);
+        expect(slot.value.styles).toHaveLength(0);
 
         structures.setStructure(noteletPath, structureUnder("Home"));
         harness.host.emitMetadata(noteletPath);
         await nextTick();
-        expect(slot.value).toHaveLength(1);
+        expect(slot.value.styles).toHaveLength(1);
       });
+    });
+
+    it("re-evaluates a notelet-scoped tag condition when a notelet's metadata changes", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("tag", { value: "decision", condition: "contains", source: "notelets" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const noteletPath = "Daily/2026-05-25.meeting.md" as VaultPath;
+      harness.host.putFile(noteletPath, "", { tags: ["other"] });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path: noteletPath,
+        typeName: "Meeting",
+        typeId: "nt_a" as TypeId,
+      });
+      const { captured } = mount(harness, () =>
+        useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value.styles).toHaveLength(0);
+
+      harness.host.putFile(noteletPath, "", { tags: ["decision"] });
+      harness.host.emitMetadata(noteletPath);
+      await nextTick();
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {
@@ -1013,17 +1156,17 @@ describe("useCellDecorations", () => {
       await nextTick();
       const weekSlot = captured.value!.get(cellKey("week", weekAnchor))!;
       const daySlot = captured.value!.get(key(collidingDay!))!;
-      expect(weekSlot.value).toHaveLength(0);
-      expect(daySlot.value).toHaveLength(0);
+      expect(weekSlot.value.styles).toHaveLength(0);
+      expect(daySlot.value.styles).toHaveLength(0);
 
       const path = "Weekly/2026-W24.md" as VaultPath;
       harness.host.putFile(path);
       harness.resolve(JournalsIndex).register({ journalName: "weekly", anchor: weekAnchor, path });
       await nextTick();
 
-      expect(weekSlot.value).toHaveLength(1);
+      expect(weekSlot.value.styles).toHaveLength(1);
       // The weekly decoration must not leak onto the day cell that shares the week's anchor.
-      expect(daySlot.value).toHaveLength(0);
+      expect(daySlot.value.styles).toHaveLength(0);
     });
 
     it("routes a metadata-changed repaint on the weekly note to the week cell despite the anchor collision", async () => {
@@ -1053,15 +1196,15 @@ describe("useCellDecorations", () => {
       await nextTick();
       const weekSlot = captured.value!.get(cellKey("week", weekAnchor))!;
       const daySlot = captured.value!.get(key(collidingDay!))!;
-      expect(weekSlot.value).toHaveLength(0);
-      expect(daySlot.value).toHaveLength(0);
+      expect(weekSlot.value.styles).toHaveLength(0);
+      expect(daySlot.value.styles).toHaveLength(0);
 
       harness.host.putFile(weeklyPath);
       harness.host.emitMetadata(weeklyPath);
       await nextTick();
 
-      expect(weekSlot.value).toHaveLength(1);
-      expect(daySlot.value).toHaveLength(0);
+      expect(weekSlot.value.styles).toHaveLength(1);
+      expect(daySlot.value.styles).toHaveLength(0);
     });
 
     it("recomputes a renamed cell on the next resolved when the rename re-keyed it before the cache caught up", async () => {
@@ -1096,14 +1239,14 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
       const slot = captured.value!.get(key(period))!;
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       // The rename re-keys the entry before the new path's metadata exists, so the
       // synchronous entryChanged re-eval reads nothing and the slot stays empty.
       const newPath = "Daily/renamed-match.md" as VaultPath;
       index.transferPath(oldPath, newPath);
       await nextTick();
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       // Cache catches up, then metadataCache "resolved" lands after the rename event.
       const renamed = harness.host.putFile(newPath);
@@ -1111,7 +1254,7 @@ describe("useCellDecorations", () => {
       for (const batch of resolvedBatches.splice(0)) batch();
       await nextTick();
 
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     it("updates the affected anchor when a note size lands", async () => {
@@ -1132,12 +1275,12 @@ describe("useCellDecorations", () => {
 
       const slot = captured.value!.get(key(period))!;
       // Absent on first paint by design: the size has not been read yet.
-      expect(slot.value).toHaveLength(0);
+      expect(slot.value.styles).toHaveLength(0);
 
       size.setSize(path, { words: 400, characters: 2200 });
       await nextTick();
 
-      expect(slot.value).toHaveLength(1);
+      expect(slot.value.styles).toHaveLength(1);
     });
 
     it("does not touch the slot when a size lands for an out-of-scope path", async () => {
@@ -1199,7 +1342,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], [], { shelf: null });
       await nextTick();
 
-      expect(cells.get(key(period))?.value).toEqual(decoration.styles);
+      expect(cells.get(key(period))?.value.styles).toEqual(decoration.styles);
     });
 
     it("ignores a shelf's decorations while another shelf is in scope", async () => {
@@ -1215,7 +1358,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], [], { shelf: "personal" });
       await nextTick();
 
-      expect(cells.get(key(period))?.value).toEqual([]);
+      expect(cells.get(key(period))?.value.styles).toEqual([]);
     });
 
     it("resolves a journal's background over a vault-wide decoration's", async () => {
@@ -1239,7 +1382,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], ["daily"], { shelf: null });
       await nextTick();
 
-      const styles = cells.get(key(period))?.value ?? [];
+      const styles = cells.get(key(period))?.value.styles ?? [];
       expect(styles).toHaveLength(2);
       expect(resolveCell(styles).background).toBe("#111111");
     });
@@ -1271,7 +1414,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], ["daily"], { shelf: null });
       await nextTick();
 
-      const styles = cells.get(key(period))?.value ?? [];
+      const styles = cells.get(key(period))?.value.styles ?? [];
       expect(styles).toHaveLength(2);
       expect(resolveCell(styles).border.top).toBe("2px solid #111111");
     });
@@ -1297,7 +1440,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], ["daily"], { shelf: "work" });
       await nextTick();
 
-      const styles = cells.get(key(period))?.value ?? [];
+      const styles = cells.get(key(period))?.value.styles ?? [];
       expect(styles).toHaveLength(2);
       expect(resolveCell(styles).background).toBe("#555555");
     });
@@ -1315,7 +1458,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], []); // no calendarDecorations option
       await nextTick();
 
-      expect(cells.get(key(period))?.value).toEqual([]);
+      expect(cells.get(key(period))?.value.styles).toEqual([]);
     });
 
     it("paints a day cell when a vault-wide decoration is saved while the surface is mounted", async () => {
@@ -1329,12 +1472,12 @@ describe("useCellDecorations", () => {
 
       const cells = mountCells(harness, [period], [], { shelf: null });
       await nextTick();
-      expect(cells.get(key(period))?.value).toEqual([]);
+      expect(cells.get(key(period))?.value.styles).toEqual([]);
 
       store.save({ kind: "global" }, [decoration]);
       await nextTick();
 
-      expect(cells.get(key(period))?.value).toEqual(decoration.styles);
+      expect(cells.get(key(period))?.value.styles).toEqual(decoration.styles);
     });
 
     it("resolves a shelf's background over a vault-wide decoration's", async () => {
@@ -1353,7 +1496,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(harness, [period], [], { shelf: "work" });
       await nextTick();
 
-      expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#333333");
+      expect(resolveCell(cells.get(key(period))?.value.styles ?? []).background).toBe("#333333");
     });
   });
 

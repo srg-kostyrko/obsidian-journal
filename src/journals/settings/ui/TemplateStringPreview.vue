@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
+import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { TemplateEngine, type TemplateContext } from "@/templates";
 
@@ -48,7 +49,10 @@ const resolved = computed(() => {
   if (!config) return "";
   const context = contextOf(config, md);
   if (!context) return "";
-  return renderForPreview(engine, props.value, context);
+  return renderForPreview(engine, props.value, context).match({
+    ok: (text) => text,
+    err: (error) => m.date_format_invalid_preview({ reason: error.reason }),
+  });
 });
 
 const wrongWeek = computed(() => templateHasWrongWeek(props.value));

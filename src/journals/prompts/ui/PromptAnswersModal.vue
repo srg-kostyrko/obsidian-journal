@@ -13,7 +13,7 @@ import { PlatformService } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import { OutOfTimelineError } from "@/journals/errors";
 import { NoteletPathService } from "@/journals/notelets/notelet-path";
-import { EmptyNoteNameError } from "@/journals/notes/errors";
+import { EmptyNoteNameError, JournalDateFormatError } from "@/journals/notes/errors";
 import { NotePathService } from "@/journals/notes/note-path";
 import { isNoteletMetadata } from "@/journals/types";
 import { JournalsViewModel } from "@/journals/view-model";
@@ -249,7 +249,7 @@ function pickRefusal(error: JournalNoteLinkError): string | undefined {
   if (error instanceof NamedByAnswersError) {
     return m.journal_prompt_journal_note_named_by_answers({ journal: error.journalName });
   }
-  if (error instanceof EmptyNoteNameError) return error.userNotice;
+  if (error instanceof EmptyNoteNameError || error instanceof JournalDateFormatError) return error.userNotice;
   return undefined;
 }
 

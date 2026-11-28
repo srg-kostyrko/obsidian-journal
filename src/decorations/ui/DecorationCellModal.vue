@@ -4,6 +4,8 @@ import { computed, ref, toRaw } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useNoteSizeVersion } from "@/infrastructure/host";
+import { useCreationDatesVersion } from "@/journals/creation-dates";
+import { useLinkReferencesVersion } from "@/journals/link-references";
 import { JournalsRepository } from "@/journals/repository";
 import { useIndexVersion } from "@/journals/use-index-version";
 import { ShelvesRepository } from "@/shelves/repository";
@@ -17,9 +19,9 @@ import { gatherFixedBindings, gatherIntervalBindings } from "../gather-bindings"
 
 import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
 
+import type { DecorationBinding } from "../engine";
 import type { BreakdownCell } from "./breakdown-cell";
 import type { BreakdownEntry } from "./breakdown-entry";
-import type { DecorationBinding } from "../engine";
 
 const props = defineProps<{ entry: BreakdownEntry; shelf?: string | null }>();
 
@@ -29,6 +31,8 @@ const store = useService(DecorationsStore);
 const engine = useService(DecorationEngine);
 const indexVersion = useIndexVersion();
 const sizeVersion = useNoteSizeVersion();
+const linksVersion = useLinkReferencesVersion();
+const createdVersion = useCreationDatesVersion();
 
 // A no-op in production (vue-modal-host.ts passes props to createApp un-proxied) but
 // load-bearing under @testing-library/vue, whose reactive props proxy would otherwise wrap
@@ -64,6 +68,8 @@ function bindingsFor(): readonly DecorationBinding[] {
 const cell = computed<BreakdownCell | null>(() => {
   void indexVersion.value;
   void sizeVersion.value;
+  void linksVersion.value;
+  void createdVersion.value;
   const contributions = engine
     .explainRange([period], bindingsFor())
     .get(cellKey(period.kind, period.anchor.toAnchor()));

@@ -1,5 +1,6 @@
 import * as v from "valibot";
 
+import { userDateFormat, userDateFormatSchema, type UserDateFormat } from "@/calendar";
 import { filterConditionSchema, type FilterCondition } from "@/decorations/config";
 import { m } from "@/i18n";
 
@@ -15,7 +16,7 @@ export interface BulkAddParameters {
   folder: string;
   datePlace: DatePlace;
   propertyName: string;
-  dateFormat: string;
+  dateFormat: UserDateFormat;
   filterCombinator: FilterCombinator;
   filters: FilterCondition[];
   existingNote: ExistingNoteParameter;
@@ -33,7 +34,7 @@ export const bulkAddParametersSchema = v.pipe(
     folder: v.string(),
     datePlace: v.picklist(["title", "property", "path"]),
     propertyName: v.string(),
-    dateFormat: v.string(),
+    dateFormat: userDateFormatSchema,
     filterCombinator: v.picklist(["no", "and", "or"]),
     filters: v.array(filterConditionSchema),
     existingNote: v.picklist(["skip", "override", "merge", "ask"]),
@@ -64,7 +65,7 @@ export const defaultBulkAddParameters = (): BulkAddParameters => ({
   folder: "",
   datePlace: "title",
   propertyName: "",
-  dateFormat: "YYYY-MM-DD",
+  dateFormat: userDateFormat("YYYY-MM-DD"),
   filterCombinator: "no",
   filters: [],
   existingNote: "skip",

@@ -1,4 +1,4 @@
-import type { LabelKind, StructureKey, WeekdayLabel } from "@/calendar";
+import { userDateFormat, type LabelKind, type StructureKey, type UserDateFormat, type WeekdayLabel } from "@/calendar";
 import type { ThemeColorFieldRole } from "@/ui/theme-colors";
 
 import type { AppearanceParts, HighlightStyle } from "./slice";
@@ -47,7 +47,7 @@ export interface StructureControl {
 
 export type OneLetter = Extract<WeekdayLabel, { type: "letter" }>;
 /** A string is always a moment pattern; one letter is an object so no typed pattern can mean it. */
-export type FormatValue = string | OneLetter;
+export type FormatValue = UserDateFormat | OneLetter;
 
 /** Writes the calendar display slice; a period's format has one value for every width, the weekday's has two. */
 export interface FormatControl {
@@ -80,8 +80,9 @@ function structure(setting: StructureKey, options: readonly string[]): Structure
   return { family: "visibility", setting, kind: "select", options };
 }
 
-function format(label: FormatControl["label"], suggestions: readonly FormatValue[]): FormatControl {
-  return { family: "label", kind: "format", label, suggestions };
+function format(label: FormatControl["label"], suggestions: readonly (string | OneLetter)[]): FormatControl {
+  const branded = suggestions.map((value) => (typeof value === "string" ? userDateFormat(value) : value));
+  return { family: "label", kind: "format", label, suggestions: branded };
 }
 
 type WithoutFamily = Omit<ValueControl, "family">;

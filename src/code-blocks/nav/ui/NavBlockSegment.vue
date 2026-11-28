@@ -4,8 +4,8 @@ import { computed, inject } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { useToday } from "@/calendar/ui";
-import { CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
-import { m } from "@/i18n";
+import { cellNamesIn, CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
+import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import {
@@ -33,9 +33,11 @@ import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
 import { navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { resolveLinkCandidates, type LinkTarget } from "../link-targets";
-import { buildNavRowContext } from "../nav-row-context";
+import { renderNavRow } from "../nav-row-context";
 import { resolveSegmentDecoration } from "../segment-decoration";
 import { resolveSegmentLink } from "../segment-link";
+
+import { NavBlockNamesKey } from "./nav-block-names";
 
 const props = defineProps<{
   journal: JournalConfig;
@@ -104,6 +106,18 @@ const decorationScope = computed(() =>
 // plain computed — inject() itself must run synchronously during setup, not lazily.
 const fixedCells = inject(navSegmentFixedScope.map, null);
 const intervalCells = inject(navSegmentIntervalScope.map, null);
+const blockNames = inject(
+  NavBlockNamesKey,
+  computed(() => []),
+);
+const names = computed(() => {
+  const cell = decorationCell.value;
+  const own =
+    props.segment.addDecorations && cell
+      ? cellNamesIn(cell.scopeKind === "interval" ? intervalCells : fixedCells, cell.period)
+      : [];
+  return [...new Set([...own, ...blockNames.value])];
+});
 const fixedDecorationItems = useDecorationMenuItems(fixedCells, () => props.shelf ?? null);
 const intervalDecorationItems = useDecorationMenuItems(intervalCells, () => props.shelf ?? null);
 
@@ -125,19 +139,27 @@ function contextMenuItems(): readonly MenuItemSpec[] {
 }
 
 const text = computed(() =>
-  engine.renderString(
-    props.segment.template,
-    buildNavRowContext({
-      journal: props.journal,
-      refDate: props.refDate,
-      entry: entry.value,
-      cycle,
-      numbering,
-      notePath,
-      today: todayAnchor.value,
-    }),
-  ),
+  renderNavRow(engine, props.segment.template, {
+    journal: props.journal,
+    refDate: props.refDate,
+    entry: entry.value,
+    cycle,
+    numbering,
+    notePath,
+    today: todayAnchor.value,
+  }).match({
+    ok: (rendered) => rendered,
+    err: (error) => m.date_format_invalid_preview({ reason: error.reason }),
+  }),
 );
+
+// Obsidian's tooltip is the aria-label, so the names join the segment's own text rather than replace it.
+const accessibleName = computed(() => {
+  if (props.editable) return text.value.length === 0 ? m.block_lines_empty_segment() : undefined;
+  return names.value.length === 0
+    ? undefined
+    : m.decoration_cell_label({ date: text.value, names: formatConjunction(names.value) });
+});
 
 const fontSize = computed(() => `${props.segment.fontSize}em`);
 const fontWeight = computed(() => (props.segment.bold ? "bold" : "normal"));
@@ -212,7 +234,7 @@ function onPointerEnter(event: PointerEvent): void {
     :class="{ 'nav-row--editable': editable }"
     :tabindex="editable ? 0 : undefined"
     :role="editable ? 'button' : undefined"
-    :aria-label="editable && text.length === 0 ? m.block_lines_empty_segment() : undefined"
+    :aria-label="accessibleName"
     :data-id="dragId"
     :data-default-color="defaultColor || null"
     :data-drag-handle="editable ? '' : undefined"

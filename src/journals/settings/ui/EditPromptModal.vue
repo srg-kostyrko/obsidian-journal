@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { useFieldArray, useForm } from "vee-validate";
 import { computed, ref, watch } from "vue";
 
+import { userDateFormat, userDateFormatSchema, type UserDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
@@ -11,8 +12,10 @@ import { displayTypeOf, fitsInPath, isRequired } from "@/journals/prompts/config
 import { promptsInPath } from "@/journals/prompts/prompts-in-path";
 import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-variables";
 import { JournalsViewModel } from "@/journals/view-model";
+import { hasEraYear, replaceEraYear } from "@/templates";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
+import UiDateFormatInput from "@/ui/UiDateFormatInput.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -22,6 +25,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { reservedFrontmatterKeys } from "../../config";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
+import EraYearRecommendation from "./EraYearRecommendation.vue";
 
 import type { Prompt, PromptDisplayType } from "../../prompts/config";
 
@@ -67,12 +71,12 @@ const PROMPT_TYPES = [
   "select",
   "note",
 ] as const satisfies readonly PromptDisplayType[];
-const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
+const DEFAULT_DATE_FORMAT = userDateFormat("YYYY-MM-DD");
 interface FormValues {
   variable: string;
   question: string;
   type: (typeof PROMPT_TYPES)[number];
-  format: string;
+  format: UserDateFormat;
   frontmatterKey: string;
   required: boolean;
   options: { label: string; value: string }[];
@@ -150,7 +154,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
         ),
         question: v.pipe(v.string(), v.nonEmpty(m.journal_prompt_question_required())),
         type: v.picklist(PROMPT_TYPES),
-        format: v.string(),
+        format: userDateFormatSchema,
         frontmatterKey: v.pipe(
           v.optional(v.string(), ""),
           v.check(
@@ -216,6 +220,9 @@ const [variable, variableAttrs] = defineField("variable");
 const [question, questionAttrs] = defineField("question");
 const [type] = defineField("type");
 const [format] = defineField("format");
+function applyEraYear(): void {
+  if (format.value) format.value = userDateFormat(replaceEraYear(format.value));
+}
 const [frontmatterKey, frontmatterKeyAttrs] = defineField("frontmatterKey");
 const [required] = defineField("required");
 
@@ -275,9 +282,10 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
           {{ m.common_moment_format_reference() }}
         </a>
         <DateFormatPreview :format="format" />
+        <EraYearRecommendation :show="hasEraYear(format ?? '')" @apply="applyEraYear" />
         <span v-for="error of errorBag.format" :key="error" class="prompt-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="format" />
+      <UiDateFormatInput v-model="format" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.journal_sequence_variable_label()">

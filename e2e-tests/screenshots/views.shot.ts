@@ -2,12 +2,14 @@ import { $, browser } from "@wdio/globals";
 
 import { note } from "../journeys/decorations.js";
 import { LIVE_LEAF, MONTH_VIEW, openCalendarView } from "../journeys/view.js";
+import { chooseFromList, openEditor, partsList } from "../support/appearance-editor.js";
 import { reloadObsidianOn } from "../support/clock.js";
+import { closeSettings } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
 import { activeNotePath, frontmatterOf, markdownLeafCount, noteExists, seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { captureThemed, recordOutcome, textsOf, widenRightSidebar } from "./capture.js";
+import { captureThemed, recordOutcome, sizeWindow, textsOf, widenRightSidebar } from "./capture.js";
 
 const VIEW_ROOT = `${LIVE_LEAF} .journal-view-root`;
 const DAY_NOTES = `${VIEW_ROOT} .journal-view-day-notes`;
@@ -15,6 +17,11 @@ const DAY_NOTES_CARD = `${DAY_NOTES} .journal-view-day-notes__card`;
 const DAY_NOTES_TITLE = `${DAY_NOTES} .journal-view-day-notes__title`;
 
 const WEEK_VIEW = `${LIVE_LEAF} .notes-week-view`;
+
+// The settings pane holding the appearance subpage, and the subpage itself without the modal's chrome.
+const SETTINGS_PANE = ".mod-settings .vertical-tab-content";
+const SUBPAGE = `${SETTINGS_PANE} > div`;
+const APPEARANCE_CONTROL = `${SETTINGS_PANE} .appearance-control`;
 const WEEK_NUMBER_CELL = `${WEEK_VIEW} [data-testid="week-number-cell"]`;
 
 // The day views.md quotes; commands.md quotes the next-week link a day earlier.
@@ -115,6 +122,9 @@ describe("views examples", () => {
       // The default right sidebar is narrower than this view's 7-column month grid needs (it
       // overflows and clips rather than shrinking below content minimums), which would make the
       // hero screenshot unreadable. Widen the sidebar split itself before capturing.
+      // The stock rows grow with the calendar's width, so the view no longer fits the default window and
+      // the capture would clip at the window's edge.
+      await sizeWindow(1200, 1400);
       await widenRightSidebar(540, VIEW_ROOT);
 
       // The grid stretches to the view's full width at any split width, so its rightmost column
@@ -180,6 +190,54 @@ describe("views examples", () => {
         dataActiveAfterOpen: dataActiveAfter,
         activeHighlighted: highlighted,
         backgroundColorParsed: backgroundColor.parsed,
+      });
+    });
+  });
+
+  describe("calendar appearance editor", () => {
+    before(async () => {
+      await reloadObsidianOn(TODAY, { vault: "./e2e-tests/fixtures/e2e-docs-views-sidebar", plugins: ["journals"] });
+    });
+
+    after(closeSettings);
+
+    it("shows the stock appearance at Wide with Today being edited", async () => {
+      await sizeWindow(1200, 1400);
+      await openEditor();
+      await chooseFromList("today");
+      await $(APPEARANCE_CONTROL).waitForDisplayed({ timeoutMsg: "Today showed no appearance controls" });
+      const previewWidth = await browser.execute(
+        () => document.querySelector<HTMLElement>(".appearance-preview")?.style.width ?? "",
+      );
+      // A pointer left over a control would read as a hover in the image, and the dropdown keeps focus.
+      await browser.execute(() => {
+        const focused = document.activeElement;
+        if (focused instanceof HTMLElement) focused.blur();
+        document.querySelector(".mod-settings .vertical-tab-content")?.scrollTo({ top: 0 });
+      });
+      await browser.action("pointer").move({ x: 2, y: 2 }).perform();
+      await waitForState(
+        () => countMatching(".tooltip"),
+        (open) => open === 0,
+        "waited for a tooltip left open by an earlier hover to close",
+      );
+
+      const fit = await browser.execute(
+        (pane: string, subpage: string) => {
+          const outer = document.querySelector(pane)?.getBoundingClientRect();
+          const inner = document.querySelector(subpage)?.getBoundingClientRect();
+          return { paneBottom: outer?.bottom, subpageBottom: inner?.bottom };
+        },
+        SETTINGS_PANE,
+        SUBPAGE,
+      );
+      await captureThemed(SUBPAGE, "views-appearance-editor", { padding: 12 });
+
+      await recordOutcome("views-appearance-editor", {
+        editedPart: await partsList().getValue(),
+        previewWidth,
+        fit,
+        controls: await textsOf(`${APPEARANCE_CONTROL} .setting-item-name`),
       });
     });
   });

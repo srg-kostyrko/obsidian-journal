@@ -8,14 +8,15 @@ import { TemplateEngine, type TemplateContext } from "@/templates";
 
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
-import { EmptyNoteNameError } from "../notes/errors";
-import { NotePathService, withNoteName } from "../notes/note-path";
+import { EmptyNoteNameError, JournalDateFormatError } from "../notes/errors";
+import { FormatFailureLog } from "../notes/format-failure-log";
+import { NotePathService, withNoteName, type NotePathError } from "../notes/note-path";
 import { renderBindingFor } from "../prompts/prompt-binding";
 
-import type { NoteletType } from "./config";
 import type { JournalConfig } from "../config";
 import type { JournalNotFoundError } from "../errors";
 import type { JournalMetadata, NoteletMetadata } from "../types";
+import type { NoteletType } from "./config";
 
 export class NoteletPathService {
   readonly #paths = inject(NotePathService);
@@ -23,12 +24,30 @@ export class NoteletPathService {
   readonly #index = inject(JournalsIndex);
   readonly #engine = inject(TemplateEngine);
   readonly #notes = inject(NotesService);
+  readonly #formatFailures = inject(FormatFailureLog);
 
   // The rendered note name feeds back into the folder as {{note_name}}/{{title}}, so a suffixed
   // name has to re-render the folder rather than being appended to a finished path.
-  #pathFrom(type: NoteletType, context: TemplateContext, noteName: string): VaultPath {
-    const folder = type.folder ? this.#engine.renderString(type.folder, withNoteName(context, noteName)) : "";
-    return normalizePath(folder ? `${folder}/${noteName}.md` : `${noteName}.md`) as VaultPath;
+  #pathFrom(
+    config: JournalConfig,
+    type: NoteletType,
+    context: TemplateContext,
+    noteName: string,
+  ): Result<VaultPath, JournalDateFormatError> {
+    const folder = type.folder
+      ? this.#render(config, type.folder, withNoteName(context, noteName))
+      : new Ok<string, JournalDateFormatError>("");
+    return folder.map(
+      (rendered) => normalizePath(rendered ? `${rendered}/${noteName}.md` : `${noteName}.md`) as VaultPath,
+    );
+  }
+
+  #render(config: JournalConfig, template: string, context: TemplateContext): Result<string, JournalDateFormatError> {
+    return this.#engine.renderString(template, context).mapErr((error) => {
+      const failure = JournalDateFormatError.from(config.name, error);
+      this.#formatFailures.warnOnce(config.name, failure);
+      return failure;
+    });
   }
 
   #contextFromPeriod(
@@ -59,9 +78,10 @@ export class NoteletPathService {
     config: JournalConfig,
     type: NoteletType,
     context: TemplateContext,
-  ): Result<string, EmptyNoteNameError> {
-    const name = this.#engine.renderString(type.nameTemplate, context);
-    return name.trim() === "" ? new Err(new EmptyNoteNameError(config.name)) : new Ok(name);
+  ): Result<string, EmptyNoteNameError | JournalDateFormatError> {
+    return this.#render(config, type.nameTemplate, context).flatMap((name) =>
+      name.trim() === "" ? new Err(new EmptyNoteNameError(config.name)) : new Ok(name),
+    );
   }
 
   /**
@@ -89,11 +109,7 @@ export class NoteletPathService {
       .map((period) => this.#contextFromPeriod(config, type, metadata, period));
   }
 
-  nameFor(
-    config: JournalConfig,
-    type: NoteletType,
-    metadata: NoteletMetadata,
-  ): Result<string, JournalNotFoundError | EmptyNoteNameError> {
+  nameFor(config: JournalConfig, type: NoteletType, metadata: NoteletMetadata): Result<string, NotePathError> {
     return this.contextFor(config, type, metadata).flatMap((context) => this.#renderedName(config, type, context));
   }
 
@@ -103,14 +119,10 @@ export class NoteletPathService {
    * `availablePathFor` steps past a taken path because it is about to create a file there.
    * Connect and bulk add only compare — a suffix would describe a name they will not write.
    */
-  pathFor(
-    config: JournalConfig,
-    type: NoteletType,
-    metadata: NoteletMetadata,
-  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+  pathFor(config: JournalConfig, type: NoteletType, metadata: NoteletMetadata): Result<VaultPath, NotePathError> {
     return this.#frontmatter.buildMetadata(config.name, metadata.anchor).flatMap((period) => {
       const context = this.#contextFromPeriod(config, type, metadata, period);
-      return this.#renderedName(config, type, context).map((name) => this.#pathFrom(type, context, name));
+      return this.#renderedName(config, type, context).flatMap((name) => this.#pathFrom(config, type, context, name));
     });
   }
 
@@ -143,7 +155,7 @@ export class NoteletPathService {
     config: JournalConfig,
     type: NoteletType,
     metadata: NoteletMetadata,
-  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+  ): Result<VaultPath, NotePathError> {
     return this.#frontmatter.buildMetadata(config.name, metadata.anchor).flatMap((period) => {
       const context = this.#contextFromPeriod(config, type, metadata, period);
       return this.#renderedName(config, type, context).flatMap((base) => {
@@ -151,11 +163,11 @@ export class NoteletPathService {
         const reserved = reservedResult.isOk() ? reservedResult.value : undefined;
         const taken = (candidate: VaultPath): boolean => candidate === reserved || this.#notes.find(candidate).isSome();
 
-        let candidate = this.#pathFrom(type, context, base);
-        for (let suffix = 1; taken(candidate); suffix++) {
-          candidate = this.#pathFrom(type, context, `${base} ${suffix}`);
+        let candidate = this.#pathFrom(config, type, context, base);
+        for (let suffix = 1; candidate.isOk() && taken(candidate.value); suffix++) {
+          candidate = this.#pathFrom(config, type, context, `${base} ${suffix}`);
         }
-        return new Ok(candidate);
+        return candidate;
       });
     });
   }

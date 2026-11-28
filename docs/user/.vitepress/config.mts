@@ -42,6 +42,7 @@ export default defineConfig({
         items: [
           { text: "Settings", link: "/settings" },
           { text: "Variables", link: "/reference/variables" },
+          { text: "CSS variables", link: "/reference/css-variables" },
           { text: "Code blocks", link: "/reference/code-blocks" },
           { text: "Links", link: "/reference/links" },
           { text: "Local REST API", link: "/reference/rest-api" },

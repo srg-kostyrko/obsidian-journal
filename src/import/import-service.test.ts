@@ -230,4 +230,24 @@ describe("ImportService", () => {
       row: { key: plan.rows.at(0)?.key, kind: "existing", journalName: "days", connect: true },
     });
   });
+
+  it("creates no journal for a row whose format cannot render, even when the selection includes it", async () => {
+    const { harness, plan } = await planned([buildCalendarSet("Default", { day: buildPeriodicConfig() })]);
+    const unrenderable: ImportPlan = {
+      ...plan,
+      rows: plan.rows.map((row) => ({ ...row, state: { kind: "unrenderable", reason: "eras are missing" } })),
+    };
+    const selection = everything(unrenderable);
+    const create = vi.spyOn(harness.resolve(JournalsRepository), "create");
+
+    const outcome = await harness.resolve(ImportService).apply(unrenderable, {
+      ...selection,
+      rows: selection.rows.map((row) => ({ ...row, include: true })),
+    });
+
+    expect({ created: create.mock.calls.length, row: outcome.rows.at(0) }).toEqual({
+      created: 0,
+      row: { key: plan.rows.at(0)?.key, kind: "skipped" },
+    });
+  });
 });

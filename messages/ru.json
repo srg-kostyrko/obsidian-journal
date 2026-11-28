@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "По убыванию",
   "view_block_day_notes_show_heading_label": "Показывать заголовок периода",
   "view_block_day_notes_show_navigation_label": "Показывать навигацию по периоду",
+  "view_block_day_notes_hide_period_notes_label": "Скрыть заметки журналов",
   "view_block_day_notes_last_modified": "Последнее изменение: {date}",
   "view_block_day_notes_created": "Создана: {date}",
   "view_block_day_notes_empty": "В этом периоде не было создано ни одной заметки.",
@@ -1031,7 +1032,101 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "последний день",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=0": "первое {weekday}",
+        "nth=1,weekdayIndex=3": "первая {weekday}",
+        "nth=1,weekdayIndex=5": "первая {weekday}",
+        "nth=1,weekdayIndex=6": "первая {weekday}",
+        "nth=1,weekdayIndex=*": "первый {weekday}",
+        "nth=2,weekdayIndex=0": "второе {weekday}",
+        "nth=2,weekdayIndex=3": "вторая {weekday}",
+        "nth=2,weekdayIndex=5": "вторая {weekday}",
+        "nth=2,weekdayIndex=6": "вторая {weekday}",
+        "nth=2,weekdayIndex=*": "второй {weekday}",
+        "nth=3,weekdayIndex=0": "третье {weekday}",
+        "nth=3,weekdayIndex=3": "третья {weekday}",
+        "nth=3,weekdayIndex=5": "третья {weekday}",
+        "nth=3,weekdayIndex=6": "третья {weekday}",
+        "nth=3,weekdayIndex=*": "третий {weekday}",
+        "nth=4,weekdayIndex=0": "четвёртое {weekday}",
+        "nth=4,weekdayIndex=3": "четвёртая {weekday}",
+        "nth=4,weekdayIndex=5": "четвёртая {weekday}",
+        "nth=4,weekdayIndex=6": "четвёртая {weekday}",
+        "nth=4,weekdayIndex=*": "четвёртый {weekday}",
+        "nth=5,weekdayIndex=0": "пятое {weekday}",
+        "nth=5,weekdayIndex=3": "пятая {weekday}",
+        "nth=5,weekdayIndex=5": "пятая {weekday}",
+        "nth=5,weekdayIndex=6": "пятая {weekday}",
+        "nth=5,weekdayIndex=*": "пятый {weekday}",
+        "nth=last,weekdayIndex=0": "последнее {weekday}",
+        "nth=last,weekdayIndex=3": "последняя {weekday}",
+        "nth=last,weekdayIndex=5": "последняя {weekday}",
+        "nth=last,weekdayIndex=6": "последняя {weekday}",
+        "nth=last,weekdayIndex=*": "последний {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Последний день",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1-й",
+        "nth=2": "2-й",
+        "nth=3": "3-й",
+        "nth=4": "4-й",
+        "nth=5": "5-й",
+        "nth=last": "Последний"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "День недели",
+  "decoration_condition_date_weekday_of_month_group": "День недели в месяце",
   "decoration_condition_has_note_describe": "заметка существует",
+  "decoration_condition_has_note_describe_missing": "заметка не существует",
+  "decoration_condition_has_note_presence_label": "Заметка",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Существует",
+        "presence=missing": "Отсутствует"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "есть ссылки как минимум из {count} заметки",
+        "countPlural=few": "есть ссылки как минимум из {count} заметок",
+        "countPlural=many": "есть ссылки как минимум из {count} заметок",
+        "countPlural=*": "есть ссылки как минимум из {count} заметок"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Минимальное число ссылающихся заметок",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "создана как минимум {count} заметка",
+        "countPlural=few": "созданы как минимум {count} заметки",
+        "countPlural=many": "создано как минимум {count} заметок",
+        "countPlural=*": "создано как минимум {count} заметок"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Минимальное число созданных заметок",
   "decoration_condition_has_notelet_describe_any": "подзаметка существует",
   "decoration_condition_has_notelet_describe_types": "существует подзаметка типа {types}",
   "decoration_condition_has_notelet_empty": "В этом журнале ещё нет типов подзаметок.",
@@ -1099,6 +1194,30 @@
   "decoration_condition_property_condition_label": "Условие",
   "decoration_condition_property_describe": "свойство {name} {op} {value}",
   "decoration_condition_property_value_label": "Значение",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — нет в заметке",
+        "quantifier=any,source=notelets,typed=yes": "{base} — любая подзаметка ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — любая подзаметка",
+        "quantifier=all,source=notelets,typed=yes": "{base} — все подзаметки ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — все подзаметки",
+        "quantifier=none,source=notelets,typed=yes": "{base} — ни одной подзаметки ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — ни одной подзаметки",
+        "quantifier=any,source=both,typed=yes": "{base} — заметка или любая подзаметка ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — заметка или любая подзаметка",
+        "quantifier=all,source=both,typed=yes": "{base} — заметка и все подзаметки ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — заметка и все подзаметки",
+        "quantifier=none,source=both,typed=yes": "{base} — ни заметка, ни её подзаметки ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — ни заметка, ни её подзаметки",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Какие заметки",
+  "decoration_condition_scope_source_label": "Где искать",
   "decoration_condition_tag_describe": "тег {op} {value}",
   "decoration_condition_tag_value_label": "Значение тега",
   "decoration_condition_tasks_quantifier_label": "Какие задачи",
@@ -1180,6 +1299,8 @@
         "type=weekday": "День недели",
         "type=offset": "Смещение",
         "type=has-note": "Есть заметка",
+        "type=linked": "Со ссылками",
+        "type=created": "Созданные",
         "type=tasks": "Задачи",
         "type=note-size": "Размер заметки",
         "type=has-notelet": "Есть подзаметка"
@@ -1198,6 +1319,8 @@
         "type=weekday": "Проверить день недели",
         "type=offset": "Проверить смещение в интервале",
         "type=has-note": "Проверить, существует ли заметка",
+        "type=linked": "Проверить ссылки на эту дату",
+        "type=created": "Проверить заметки, созданные в этом периоде",
         "type=tasks": "Проверить задачи",
         "type=note-size": "Проверить размер заметки",
         "type=has-notelet": "Проверить, существует ли подзаметка"
@@ -1235,9 +1358,12 @@
   "decoration_mark_limit_description": "Сколько фигур и значков ячейка рисует в каждой из девяти позиций. Лишние метки собираются в бейдж — наведите на него, чтобы показывать их все. Применяется ко всем календарям, блокам навигации, строкам интервалов и кнопкам периодов, а также к любому оформлению независимо от владельца — журнала, полки или всего хранилища.",
   "decoration_mark_limit_label": "Меток на позицию",
   "decoration_mark_limit_unlimited": "Без ограничений",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Добавить условие",
   "decoration_modal_add_style": "Добавить стиль",
+  "decoration_modal_name_label": "Название",
+  "decoration_modal_name_description": "Необязательно. Показывается при наведении на оформленную дату и в списке оформления.",
   "decoration_modal_mode_label": "Когда оформлять",
   "decoration_modal_mode_option": [
     {
@@ -1361,7 +1487,8 @@
       "match": {
         "group=text": "Текст",
         "group=background": "Фон",
-        "group=border": "Граница"
+        "group=border": "Граница",
+        "group=palette": "Палитра"
       }
     }
   ],
@@ -1395,6 +1522,14 @@
   "ui_theme_color_text_selection": "Фон выделенного текста",
   "ui_theme_color_text_highlight_bg": "Фон подсвеченного текста",
   "ui_theme_color_caret_color": "Цвет курсора",
+  "ui_theme_color_red": "Красный",
+  "ui_theme_color_orange": "Оранжевый",
+  "ui_theme_color_yellow": "Жёлтый",
+  "ui_theme_color_green": "Зелёный",
+  "ui_theme_color_cyan": "Голубой",
+  "ui_theme_color_blue": "Синий",
+  "ui_theme_color_purple": "Фиолетовый",
+  "ui_theme_color_pink": "Розовый",
   "journal_add_modal_anchor_description": "Эта дата используется для отсчёта пользовательских интервалов. Её нельзя изменить после создания журнала.",
   "common_label_today": "Сегодня",
   "relative_date_yesterday": "Вчера",
@@ -1534,6 +1669,7 @@
   "settings_too_new_banner": "Эти настройки были сохранены на другом устройстве более новой версией Journals. Перезапустите Obsidian или обновите Journals здесь — изменения, сделанные до этого, будут отброшены.",
   "settings_too_new_boot": "Журнал: настройки были сохранены более новой версией Journals. Обновите Journals на этом устройстве, чтобы использовать их здесь.",
   "settings_reload_required_banner": "Перезагрузите Obsidian, чтобы применить изменённые настройки.",
+  "settings_section_failed": "Не удалось показать этот раздел: {reason}. Остальные настройки по-прежнему работают.",
   "settings_tab_title": "Журналы",
   "startup_dashboard_section_title": "Запуск",
   "startup_open_note_title": "Открывать при запуске",
@@ -1619,6 +1755,9 @@
   "view_reposition_modal_confirm": "Переместить",
   "view_edit_blocks_title": "Блоки",
   "view_edit_blocks_empty": "Пока нет блоков.",
+  "view_edit_css_title": "CSS-фрагмент",
+  "view_edit_css_selector_label": "Селектор",
+  "view_edit_css_selector_description": "Выбирает только это представление. Щёлкните по правилу, чтобы скопировать его, затем задайте CSS-переменные внутри его фигурных скобок в CSS-фрагменте.",
   "view_block_unknown_label": "Неизвестный блок: {key}",
   "view_block_edit": "Редактировать блок",
   "view_block_edit_title": "Редактировать блок: {type}",
@@ -1737,7 +1876,7 @@
   "view_block_tasks_filter_status_default": "Нет собственного условия статуса, поэтому решает фильтр списка журнала, если он указывает статус.",
   "view_toolbar_shelf_selector_label": "Выбор полки",
   "view_toolbar_shelf_selector_description": "Определяет, какая полка ограничивает журналы представления.",
-  "view_toolbar_shelf_selector_tooltip": "Сменить полку",
+  "view_toolbar_shelf_selector_name": "{shelf} · Сменить полку",
   "view_toolbar_spacer_label": "Отступ",
   "view_toolbar_spacer_description": "Гибкий промежуток, раздвигающий соседние элементы.",
   "view_toolbar_period_buttons_label": "Кнопки периодов",
@@ -1967,6 +2106,9 @@
   "journal_colliding_heading": "Конфликт настроек журнала",
   "journal_colliding_warning": "У журналов {names} конфликтующие конфигурации, поэтому их заметки будут перезаписывать друг друга. Измените папку или шаблон названия в одном из них.",
   "journal_note_name_empty_notice": "В журнале «{journalName}» шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Задайте шаблон названия в настройках журнала.",
+  "journal_date_format_unrenderable_notice": "Журнал «{journalName}»: формат даты {format} не может быть отображён на этом устройстве ({reason}). Измените его в настройках журнала или в его шаблонных заметках.",
+  "date_format_invalid_preview": "Недопустимый формат: {reason}",
+  "journal_dashboard_date_format_unrenderable": "Формат даты не может быть отображён на этом устройстве.",
   "journal_note_path_claimed_notice": "Журнал «{journalName}» разместил бы свою заметку в «{path}», но эта заметка уже принадлежит журналу «{claimedBy}», поэтому ничего не изменено. Измените папку или шаблон названия в одном из них.",
   "journal_note_path_notelet_notice": "Журнал «{journalName}» не может создать заметку в «{path}»: там уже находится одна из его собственных подзаметок. Измените шаблон названия или папку журнала либо переместите эту подзаметку.",
   "journal_note_path_held_by_period_notice": "Журнал «{journalName}» разместил бы свою заметку в «{path}», но эта заметка уже принадлежит ему за период, начинающийся {date}, поэтому ничего не изменено. Измените шаблон названия или папку, чтобы у каждого периода было своё название заметки.",
@@ -2197,6 +2339,7 @@
   "journal_edit_move_to_folder_apply_link": "Применить рекомендацию",
   "journal_edit_move_to_folder_recommendation_date_format": "Формат даты содержит разделитель пути. Переместить переменные даты в поле «Папка»?",
   "journal_edit_move_to_folder_recommendation_name_template": "Шаблон названия заметки содержит разделитель пути. Переместить префикс пути в поле «Папка»?",
+  "journal_edit_era_year_recommendation": "В moment y — это год эры, а не календарный год. В большинстве языков он выглядит так же, но заметки, названные с ним, нельзя сопоставить обратно с их датами. Использовать YYYY вместо него?",
   "journal_edit_name_template_description": "Шаблон, по которому создаются названия новых заметок.",
   "journal_edit_name_template_empty_warning": "Этот шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Добавьте переменную или текст.",
   "journal_edit_name_template_collision_warning": "Периоды {first} и {second} дают один и тот же путь {path}. Заметка может быть только у одного из них; открытие второго отклоняется.",
@@ -2228,6 +2371,7 @@
   "journal_edit_name_template_cyclic_top_warning": "Первый разряд нумерации сбрасывается, поэтому номера повторяются и их нельзя преобразовать обратно в дату. Добавьте переменную даты в шаблон названия или задайте первому разряду значение «Непрерывный», чтобы заметки, созданные вне плагина, можно было сопоставить с этим журналом.",
   "journal_edit_name_template_coarse_date_warning": "Переменная даты в шаблоне названия недостаточно точна, чтобы различать периоды этого журнала, поэтому несколько периодов получают одинаковое название заметки. Используйте формат даты, который меняется каждый период, или включите последовательные номера и поместите каждый разряд в название или папку, чтобы заметки, созданные вне плагина, можно было сопоставить с этим журналом.",
   "journal_edit_name_template_unreadable_date_warning": "Плагин не может прочитать дату из заметок, которые создаёт этот журнал, поэтому заметки, созданные вне плагина, нельзя сопоставить с этим журналом. Формат, в котором есть и часовой пояс — Z или ZZ, — записывается правильно, но не читается обратно: используйте формат из символов даты, например YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "Плагин не может прочитать дату из заметок, которые создаёт этот журнал, поэтому заметки, созданные вне плагина, нельзя сопоставить с этим журналом. Эти символы не читаются обратно: {tokens}. Используйте формат из символов даты, например YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Периоды {first} и {second} дают один и тот же путь {path}, потому что вопрос в названии ещё не получил ответа — после ответа у каждой заметки будет уникальное имя.",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2264,7 +2408,7 @@
   "journal_edit_code_block_reference_link": "Поддерживаемые блоки кода.",
   "journal_edit_code_block_reference_modal_title": "Поддерживаемые блоки кода",
   "journal_edit_code_block_copy_hint": "Щёлкните по блоку кода, чтобы скопировать его в буфер обмена.",
-  "journal_edit_code_block_copied": "Скопировано в буфер обмена.",
+  "common_copied_to_clipboard": "Скопировано в буфер обмена.",
   "journal_edit_code_block_nav_description": "Блок навигации позволяет перемещаться между заметками, расположенными рядом с текущей.",
   "journal_edit_code_block_nav_current": "Его конфигурация для журнала {name} выглядит так:",
   "journal_edit_code_block_nav_aliases_lead": "Эти старые названия блоков — псевдонимы с тем же поведением:",
@@ -2407,6 +2551,18 @@
         "mode=keep": "Подзаметки остаются в вашем хранилище без изменений.",
         "mode=clear": "Подзаметки остаются в вашем хранилище, но свойства журнала и типа подзаметки удаляются из их frontmatter.",
         "mode=delete": "Все подзаметки этого типа удаляются из вашего хранилища."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=*,countPlural=one": "Будет удалено {count} оформление:",
+        "count=*,countPlural=few": "Будет удалено {count} оформления:",
+        "count=*,countPlural=many": "Будет удалено {count} оформлений:",
+        "count=*,countPlural=*": "Будет удалено {count} оформления:"
       }
     }
   ],

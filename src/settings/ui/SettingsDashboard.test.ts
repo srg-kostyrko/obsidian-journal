@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
@@ -22,6 +23,15 @@ function blockComponent(label: string) {
 
 function block(key: string, order: number, label = key): DashboardBlock {
   return defineDashboardBlock({ key, component: blockComponent(label), order });
+}
+
+function failing(state: { broken: boolean }, label: string) {
+  return defineComponent({
+    render() {
+      if (state.broken) throw new Error("boom");
+      return h("div", { "data-testid": `block-${label}` }, label);
+    },
+  });
 }
 
 function testUiModule(
@@ -198,6 +208,88 @@ describe("SettingsDashboard", () => {
 
       expect(screen.queryByTestId("second")).toBeNull();
       expect(screen.getByTestId("first")).toBeTruthy();
+    });
+  });
+
+  describe("render failure containment", () => {
+    it("a dashboard block that throws during render shows the failure message and the other blocks still render", async () => {
+      const state = { broken: true };
+      const { harness } = await buildHarness({
+        blocks: [
+          block("a", 10, "first"),
+          defineDashboardBlock({ key: "bad", component: failing(state, "bad"), order: 20 }),
+          block("c", 30, "third"),
+        ],
+      });
+
+      harness.render(SettingsDashboard);
+      await nextTick();
+
+      expect(screen.getByText(m.settings_section_failed({ reason: "boom" }))).toBeTruthy();
+      expect(screen.getAllByTestId(/^block-/).map((node) => node.textContent)).toEqual(["first", "third"]);
+    });
+
+    it("a subpage that throws shows the failure message, and back plus reopening after a fix renders normally", async () => {
+      const state = { broken: true };
+      const sub = defineSubpage({ key: "edit", component: failing(state, "subpage") });
+      const { harness, service } = await buildHarness({ blocks: [block("only", 0, "tile")], subpages: [sub] });
+      harness.render(SettingsDashboard);
+
+      service.push(sub, undefined);
+      await nextTick();
+      expect(screen.getByText(m.settings_section_failed({ reason: "boom" }))).toBeTruthy();
+
+      service.pop();
+      await nextTick();
+      expect(screen.getByTestId("block-tile")).toBeTruthy();
+
+      state.broken = false;
+      service.push(sub, undefined);
+      await nextTick();
+      expect(screen.getByTestId("block-subpage")).toBeTruthy();
+      expect(screen.queryByText(m.settings_section_failed({ reason: "boom" }))).toBeNull();
+    });
+
+    it("a failed subpage still offers Back to the dashboard", async () => {
+      const state = { broken: true };
+      const sub = defineSubpage({ key: "edit", component: failing(state, "subpage") });
+      const { harness, service } = await buildHarness({ blocks: [block("only", 0, "tile")], subpages: [sub] });
+      harness.render(SettingsDashboard);
+      service.push(sub, undefined);
+      await nextTick();
+
+      await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
+
+      expect(screen.getByTestId("block-tile")).toBeTruthy();
+    });
+
+    it("a healthy subpage pushed over a failed one renders normally", async () => {
+      const broken = defineSubpage({ key: "broken", component: failing({ broken: true }, "broken") });
+      const fine = defineSubpage({ key: "fine", component: failing({ broken: false }, "fine") });
+      const { harness, service } = await buildHarness({ subpages: [broken, fine] });
+      harness.render(SettingsDashboard);
+
+      service.push(broken, undefined);
+      await nextTick();
+      expect(screen.getByText(m.settings_section_failed({ reason: "boom" }))).toBeTruthy();
+
+      service.push(fine, undefined);
+      await nextTick();
+      expect(screen.getByTestId("block-fine")).toBeTruthy();
+      expect(screen.queryByText(m.settings_section_failed({ reason: "boom" }))).toBeNull();
+    });
+
+    it("the boundary logs the captured error", async () => {
+      const state = { broken: true };
+      const { harness } = await buildHarness({
+        blocks: [defineDashboardBlock({ key: "bad", component: failing(state, "bad"), order: 0 })],
+      });
+
+      harness.render(SettingsDashboard);
+      await nextTick();
+
+      const record = harness.logs.records.find((r) => r.level === "error" && r.name === "settings");
+      expect(record?.fields?.reason).toBe("boom");
     });
   });
 });

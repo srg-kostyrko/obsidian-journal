@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationStyleSchema, type JournalDecorationStyle } from "@/decorations";
+import { defaultStyle } from "@/decorations/defaults";
 import { m } from "@/i18n";
 
 import StyleShape from "./StyleShape.vue";
@@ -53,6 +54,16 @@ describe("StyleShape", () => {
     const shapeRow = rowFor(m.decoration_style_shape_shape_label());
     await userEvent.selectOptions(within(shapeRow).getByRole("combobox"), "circle");
     expect(host.values.s.shape).toBe("circle");
+  });
+
+  // The browser refuses to submit a form holding a value off the input's step, so a default the
+  // step cannot reach leaves Save doing nothing.
+  it("accepts the size a new shape starts at", () => {
+    mount({ ...initialShape, size: defaultStyle("shape").size });
+    const input = within(rowFor(m.common_label_size())).getByRole<HTMLInputElement>("spinbutton");
+    // Not input.validity: jsdom's step check has no floating-point tolerance, where Chromium's does.
+    const steps = (defaultStyle("shape").size - Number(input.min)) / Number(input.step);
+    expect(steps).toBeCloseTo(Math.round(steps), 6);
   });
 
   it("updates size as the user changes the number", async () => {

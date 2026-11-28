@@ -2,7 +2,7 @@ name: Stale
 
 on:
   schedule:
-    # Daily, offset from the nightly e2e run (07:00 UTC).
+    # Daily, offset from the nightly e2e run (20:37 UTC).
     - cron: "0 3 * * *"
   workflow_dispatch:
     inputs:

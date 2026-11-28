@@ -137,7 +137,11 @@ behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
   (`browser`, `$`, `expect`) over injected globals — needs `@wdio/globals/types` +
   service types in an e2e `tsconfig`.
 - **Reporters: `spec` + `junit`** — `spec` for console, `junit` so the
-  retry/quarantine visibility is a CI artifact, not just scrollback.
+  retry/quarantine visibility is a CI artifact, not just scrollback. A worker
+  whose session teardown fails leaves its junit file empty, and the results
+  check then reads green beside a red job; `onWorkerEnd` writes a one-case
+  failing report naming the spec file for any worker that exits non-zero
+  without one.
 - **Timeouts (starting points): `waitforTimeout` ~15s, `mochaOpts.timeout` ~60s**
   to absorb cold boots; tune down once real numbers exist.
 
@@ -334,9 +338,22 @@ e2e job runs exactly this single command before installing the fixture.
    rather than the service's helper — the page URL, `document.readyState`,
    whether `app` exists, the vault name, the loaded plugin ids, and whether
    `wdioObsidianService` is defined. That tells a vault that never opened from a
-   boot whose plugins did not load, which is the question a reload that times out
-   in a `before all` leaves. The trail still ships when the helper is gone: only
-   the plugin's half needs it.
+   boot whose plugins did not load. The trail still ships when the helper is gone:
+   only the plugin's half needs it.
+
+   None of that survives a hook or test that _hangs_ to mocha's timeout. wdio
+   rejects the body 3 ms before mocha's own timer fires, so the capture starts
+   just as mocha fails the runnable and the runner deletes the session; on CI the
+   worker exits about ten seconds later, while the capture is still waiting on a
+   renderer that will not answer, and nothing prints. So before anything else
+   both hooks print `--- commands: <title> ---`: every WebDriver command the
+   failing hook or test sent, recorded worker-side by `beforeCommand` /
+   `afterCommand` and reset at each `beforeHook` / `beforeTest`, each with its
+   arguments (a script's source, collapsed) and how it ended. It needs no browser
+   and prints before the first `await`, and the line reading `PENDING for <n> ms`
+   names the step that hung. Service commands such as `reloadObsidian` do not
+   fire the hooks; what they send — `reloadSession`, the `execute`s behind
+   `prepareApp` and `enablePlugin` — does.
 
    The browser process's own log goes to `e2e-tests/.reports/chromium-<cid>.log`,
    one file per spec file as the junit report is (`--enable-logging=file` with a

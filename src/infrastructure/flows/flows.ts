@@ -2,9 +2,9 @@ import { m } from "@/i18n";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
-import type { AsyncResult } from "@/infrastructure/result";
+import { AsyncResult, Err, type Result } from "@/infrastructure/result";
 
-import { isBenignFlowError, isUserFacingFlowError, UserAborted } from "./errors";
+import { isBenignFlowError, isUserFacingFlowError, UnexpectedFlowError, UserAborted } from "./errors";
 
 import type { Flow } from "./types";
 
@@ -23,17 +23,33 @@ export class Flows {
   readonly #injector = inject(InjectorToken);
   readonly #notices = inject(NoticeService);
 
-  invoke<R, E>(cls: new () => Flow<void, R, E>, options?: FlowInvokeOptions): AsyncResult<R, E>;
-  invoke<P, R, E>(cls: new () => Flow<P, R, E>, parameters: P, options?: FlowInvokeOptions): AsyncResult<R, E>;
-  invoke<P, R, E>(cls: new () => Flow<P, R, E>, parameters?: P, options?: FlowInvokeOptions): AsyncResult<R, E> {
+  invoke<R, E>(cls: new () => Flow<void, R, E>, options?: FlowInvokeOptions): AsyncResult<R, E | UnexpectedFlowError>;
+  invoke<P, R, E>(
+    cls: new () => Flow<P, R, E>,
+    parameters: P,
+    options?: FlowInvokeOptions,
+  ): AsyncResult<R, E | UnexpectedFlowError>;
+  invoke<P, R, E>(
+    cls: new () => Flow<P, R, E>,
+    parameters?: P,
+    options?: FlowInvokeOptions,
+  ): AsyncResult<R, E | UnexpectedFlowError> {
     const name = cls.name;
     const context = options?.context ?? {};
     const started = performance.now();
     this.#logger.debug("flow started", { flow: name, ...context });
 
-    return this.#injector
-      .resolve(cls)
-      .execute(parameters as P)
+    // An async wrapper turns a synchronous throw out of resolve/execute and a rejected
+    // result into the same Err path.
+    const settled = (async (): Promise<Result<R, E | UnexpectedFlowError>> => {
+      try {
+        return await this.#injector.resolve(cls).execute(parameters as P);
+      } catch (error) {
+        return new Err<R, E | UnexpectedFlowError>(new UnexpectedFlowError(error));
+      }
+    })();
+
+    return AsyncResult._fromPromiseOfResult(settled)
       .tap(() => {
         const ms = Math.round(performance.now() - started);
         this.#logger.info("flow completed", { flow: name, ms, ...context });

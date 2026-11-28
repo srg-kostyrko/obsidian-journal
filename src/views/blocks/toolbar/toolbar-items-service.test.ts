@@ -13,9 +13,9 @@ import { ToolbarItemDefinitionToken } from "../../tokens";
 
 import { ToolbarItemsService } from "./toolbar-items-service";
 
-import type { ToolbarItemInstance } from "./toolbar-config";
 import type { BlockInstanceId, View } from "../../config";
 import type { ToolbarItemDefinition } from "../../define-toolbar-item";
+import type { ToolbarItemInstance } from "./toolbar-config";
 
 const ID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const ID_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";

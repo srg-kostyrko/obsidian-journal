@@ -480,18 +480,11 @@ describe("the calendar's stock look", () => {
           return [...(host?.querySelectorAll(".notes-month-view") ?? [])].map((month) => {
             const grid = month.querySelector(".notes-month-view__grid");
             const day = month.querySelector<HTMLElement>('.notes-month-view__day[role="gridcell"]');
-            const row = day?.parentElement;
-            if (!grid || !day || !row) return null;
+            if (!grid || !day) return null;
             return {
               narrow: month.clientWidth < ems * Number.parseFloat(getComputedStyle(month).fontSize),
               minHeight: Math.round(Number.parseFloat(getComputedStyle(day).minHeight)),
               gap: Math.round(Number.parseFloat(getComputedStyle(grid).rowGap)),
-              dateSize:
-                Math.round(
-                  (Number.parseFloat(getComputedStyle(day).fontSize) /
-                    Number.parseFloat(getComputedStyle(row).fontSize)) *
-                    100,
-                ) / 100,
             };
           });
         },
@@ -502,11 +495,7 @@ describe("the calendar's stock look", () => {
       for (const month of months) {
         expect(month).not.toBeNull();
         expect(month?.narrow).toBe(true);
-        expect({ minHeight: month?.minHeight, gap: month?.gap, dateSize: month?.dateSize }).toEqual({
-          minHeight: 26,
-          gap: 1,
-          dateSize: 1,
-        });
+        expect({ minHeight: month?.minHeight, gap: month?.gap }).toEqual({ minHeight: 26, gap: 1 });
       }
     });
   });

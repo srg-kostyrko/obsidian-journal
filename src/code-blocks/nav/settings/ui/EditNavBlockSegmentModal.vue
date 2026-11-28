@@ -27,7 +27,7 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
-import { buildNavRowContext } from "../../nav-row-context";
+import { renderNavRow } from "../../nav-row-context";
 
 import { useShelfMateJournals } from "./use-shelf-mate-journals";
 
@@ -129,18 +129,18 @@ const wrongWeek = computed(() => templateHasWrongWeek(template.value ?? ""));
 const resolved = computed(() => {
   if (!config.value) return "";
   const today = Clock.now().format("YYYY-MM-DD") as AnchorString;
-  return engine.renderString(
-    template.value ?? "",
-    buildNavRowContext({
-      journal: config.value,
-      refDate: today,
-      entry: index.entryByAnchor(config.value.name, today),
-      cycle,
-      numbering,
-      notePath,
-      today,
-    }),
-  );
+  return renderNavRow(engine, template.value ?? "", {
+    journal: config.value,
+    refDate: today,
+    entry: index.entryByAnchor(config.value.name, today),
+    cycle,
+    numbering,
+    notePath,
+    today,
+  }).match({
+    ok: (text) => text,
+    err: (error) => m.date_format_invalid_preview({ reason: error.reason }),
+  });
 });
 
 // Named "shifts to", not "opens the note for": the target note's own anchor (a quarter note's

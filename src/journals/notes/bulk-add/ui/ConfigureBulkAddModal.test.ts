@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { userDateFormat } from "@/calendar";
 import { m } from "@/i18n";
 import { NotesService } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
@@ -105,7 +106,7 @@ describe("ConfigureBulkAddModal", () => {
   it("prefills the date format from the journal's configured format", async () => {
     const withNonDefaultFormat = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY-MM" }) } },
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("YYYY-MM") }) } },
     });
 
     withNonDefaultFormat.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
@@ -198,5 +199,32 @@ describe("ConfigureBulkAddModal", () => {
         m.journal_edit_folder_invertibility_warning({ reason: "unknown-variable", offending: "mystery" }),
       ),
     ).toBeTruthy();
+  });
+
+  it("renders no notelet scope controls on a tag or property filter", async () => {
+    harness.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_filter_combinator_label() }), "and");
+    await userEvent.click(screen.getByText(m.bulk_add_add_filter_tag()));
+    await userEvent.click(screen.getByText(m.bulk_add_add_filter_property()));
+    expect(screen.getByRole("textbox", { name: m.decoration_condition_tag_value_label() })).toBeTruthy();
+
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_quantifier_label() })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: m.decoration_condition_scope_source_label() })).toBeNull();
+  });
+
+  it("recommends replacing an era-year y in the date format", async () => {
+    const withEraYear = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: userDateFormat("yyyy-MM-DD") }) },
+      },
+    });
+    withEraYear.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
+
+    const input = screen.getByRole("textbox", { name: m.bulk_add_date_format_label() });
+    await waitFor(() => expect((input as HTMLInputElement).value).toBe("YYYY-MM-DD"));
+    expect(screen.queryByText(m.journal_edit_era_year_recommendation())).toBeNull();
   });
 });

@@ -11,8 +11,8 @@ import { buildNoteletType, fixedJournal, unwrap } from "../testing";
 
 import { NoteletPathService } from "./notelet-path";
 
-import type { NoteletType } from "./config";
 import type { NoteletMetadata } from "../types";
+import type { NoteletType } from "./config";
 
 const TYPE_ID = "nt_1" as never;
 

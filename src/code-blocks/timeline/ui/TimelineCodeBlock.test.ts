@@ -36,6 +36,10 @@ const MODULES = [
 const HOST_PATH = "host-note.md" as VaultPath;
 const HOST_ANCHOR_DATE = "2026-05-27";
 
+// Calendar mode mounts twelve month grids, and paging mounts twelve more: about 1s alone under
+// coverage, past the 5s default once the full suite's workers share the CPU.
+const CALENDAR_MODE = { timeout: 15_000 };
+
 interface TimelineScenario {
   readonly journals: Record<string, JournalConfig>;
   readonly shelves?: Record<string, ShelfConfig>;
@@ -177,7 +181,7 @@ describe("TimelineCodeBlock", () => {
       expect(container.querySelector(".timeline-quarter")).toBeTruthy();
     });
 
-    it("derives 'calendar' mode when host journal is year journal", async () => {
+    it("derives 'calendar' mode when host journal is year journal", CALENDAR_MODE, async () => {
       const { container } = await renderTimeline(
         {},
         {
@@ -462,7 +466,7 @@ describe("TimelineCodeBlock", () => {
         expect(monthHeader(container)?.dataset.flanked).toBeUndefined();
       });
 
-      it("keeps the label row in calendar mode", async () => {
+      it("keeps the label row in calendar mode", CALENDAR_MODE, async () => {
         const { container } = await renderDaily({ mode: "calendar", navigation: true });
 
         expect(labelRow(container)).toBeTruthy();
@@ -533,7 +537,7 @@ describe("TimelineCodeBlock", () => {
         expect(label(container)).toBe("Q3 2026");
       });
 
-      it("moves by a year in calendar mode", async () => {
+      it("moves by a year in calendar mode", CALENDAR_MODE, async () => {
         const { container } = await renderDaily({ mode: "calendar", navigation: true });
 
         await click(next(container));

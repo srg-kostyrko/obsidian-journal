@@ -30,6 +30,10 @@ describe("defaultStyle", () => {
     expect(marks.center_bottom.at(0)?.color).toEqual({ type: "theme", name: "text-accent" });
   });
 
+  it("starts a new shape at the small dot size", () => {
+    expect(defaultStyle("shape").size).toBe(0.25);
+  });
+
   it("resolves a new corner to a visible triangle", () => {
     const { corners } = resolveCell([defaultStyle("corner")]);
     expect(corners.at(0)?.color).toEqual({ type: "theme", name: "text-accent" });
@@ -52,6 +56,11 @@ describe("defaultStyle", () => {
 });
 
 describe("defaultCondition", () => {
+  it("seeds tag and property with period-note scope", () => {
+    expect(defaultCondition("tag")).toMatchObject({ source: "note", quantifier: "any", typeIds: [] });
+    expect(defaultCondition("property")).toMatchObject({ source: "note", quantifier: "any", typeIds: [] });
+  });
+
   it("points a new offset condition at the interval's first day", () => {
     expect(defaultCondition("offset")).toEqual({ type: "offset", offset: 1 });
   });

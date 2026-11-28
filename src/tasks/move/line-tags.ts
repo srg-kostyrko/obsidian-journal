@@ -8,9 +8,11 @@ const ALL_DIGITS = /^#\p{N}+$/u;
 const WHITESPACE = /\s/u;
 
 // Code, math, wikilinks, comments and HTML tags hide a `#` inside them, and each, like a link's
-// destination, is an element a tag may follow.
+// destination, is an element a tag may follow. No lookbehind: iOS before 16.4 cannot parse one, and a
+// regex literal it cannot parse stops the whole bundle loading. A closer's left neighbor is matched as
+// the span's last character instead.
 const OPAQUE =
-  /(`+)[\s\S]*?(?<!`)\1(?!`)|\]\((?:<[^>]*>|[^()\s]*)(?:\s+"[^"]*")?\)|\$(?!\s)[^$]*?(?<!\s)\$(?!\d)|\[\[[\s\S]*?\]\]|<!--[\s\S]*?-->|<\/?[A-Za-z][^>]*>|\\./uy;
+  /(`+)[\s\S]*?[^`]\1(?!`)|\]\((?:<[^>]*>|[^()\s]*)(?:\s+"[^"]*")?\)|\$(?:[^$\s](?:[^$]*[^$\s])?)?\$(?!\d)|\[\[[\s\S]*?\]\]|<!--[\s\S]*?-->|<\/?[A-Za-z][^>]*>|\\./uy;
 
 const DELIMITERS = new Set(["*", "_", "=", "~", "%", "[", "]"]);
 const PAIRED = ["**", "__", "~~", "==", "%%", "*", "_", "[", "]"] as const;

@@ -1,4 +1,4 @@
-import type { UserAborted } from "@/infrastructure/flows";
+import type { UnexpectedFlowError, UserAborted } from "@/infrastructure/flows";
 import type { NoteNotFoundError, NoteWriteError, VaultPath } from "@/infrastructure/host";
 import type { JournalNotFoundError } from "@/journals/errors";
 import type { NoteCreationError } from "@/journals/notes/note-creation";
@@ -42,6 +42,7 @@ export type RollError =
   | NoteNotFoundError
   | NoteWriteError
   | RolledMarkerUnreadableError
+  | UnexpectedFlowError
   | UnsavedEditError;
 
 export class SingleMoveRefusedError extends Error {
@@ -59,6 +60,7 @@ export type SingleMoveError =
   | NoteNotFoundError
   | NoteWriteError
   | SingleMoveRefusedError
+  | UnexpectedFlowError
   | UnsavedEditError
   | UserAborted;
 

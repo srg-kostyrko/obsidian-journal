@@ -25,9 +25,9 @@ import { useIndexVersion } from "../../use-index-version";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
 
-import type { ConnectNoteResult } from "./modals";
 import type { NoteletType, TypeId } from "../../notelets/config";
 import type { NoteletMetadata } from "../../types";
+import type { ConnectNoteResult } from "./modals";
 
 const props = defineProps<{ path: VaultPath }>();
 const api = useModal<ConnectNoteResult>();

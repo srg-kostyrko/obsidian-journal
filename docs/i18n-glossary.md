@@ -136,6 +136,10 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   it `fissare` both mean "to fix", and both are already correct elsewhere for "fixed interval"
   — so the checker bans them under pin keys only. ja uses the verb form ピン留め where the menu
   says ピン.
+- **es/pt `quarter`.** `cuarto` / `quarto` is banned because it reads as a quarter of a
+  year where the plugin means `trimestre`. The same word is also the ordinal "fourth",
+  which the date condition's "4th Thursday" needs, so the checker allows it under
+  `decoration_condition_date_describe_weekday_of_month` only.
 
 ## Literal tokens
 
@@ -389,6 +393,11 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   copy follows the matching `tasks_note_visibility_*` key for tone. `desc` and `summary_none`
   say the rule covers tasks reached **by their date**, because a checkbox always shows in the
   period note that holds it. Not native-verified.
+- The three `view_edit_css_*` keys — a view's **CSS snippet** section — were translated by an
+  agent working from this file, with each locale's canonical **view** term and its existing
+  `ui_color_theme_variable_label` wording for "CSS variable". `journal_edit_code_block_copied`
+  was renamed `common_copied_to_clipboard`, its values unchanged, when the copy box moved to a
+  shared component. Not native-verified.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

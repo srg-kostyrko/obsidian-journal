@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 
 import { Calendar } from "@/calendar";
 import {
+  decorationName,
   DecorationMatchService,
   DecorationPreview,
   DecorationsStore,
@@ -134,6 +135,7 @@ function remove(index: number): void {
 
     <UiSettingRow v-for="(decoration, index) of decorations" :key="index">
       <template #description>
+        <div v-if="decorationName(decoration)" class="row-name">{{ decorationName(decoration) }}</div>
         <div class="row-preview">
           <DecorationPreview :styles="decoration.styles">{{ previewDay }}</DecorationPreview>
         </div>
@@ -159,6 +161,11 @@ function remove(index: number): void {
   min-height: 2em;
   margin-right: var(--size-4-2);
   vertical-align: middle;
+}
+.row-name {
+  margin-bottom: var(--size-2-2);
+  color: var(--text-normal);
+  font-weight: var(--font-semibold);
 }
 .row-clauses {
   display: inline-flex;

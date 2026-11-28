@@ -201,6 +201,41 @@ const propertyCondition = v.union([
 export const filterConditionSchema = v.union([titleCondition, tagCondition, propertyCondition]);
 export type FilterCondition = v.InferOutput<typeof filterConditionSchema>;
 
+// Opaque ids, deliberately unbranded: journals/config.ts imports this module, so importing
+// typeIdSchema back would close a cycle. An empty list means "any type".
+const noteletScopeEntries = {
+  source: v.optional(
+    v.pipe(
+      v.union([v.literal("note"), v.literal("notelets"), v.literal("both")]),
+      climb("a different source marks different notes"),
+    ),
+    "note",
+  ),
+  quantifier: v.optional(
+    v.pipe(
+      v.union([v.literal("any"), v.literal("all"), v.literal("none")]),
+      climb("a different quantifier marks different days"),
+    ),
+    "any",
+  ),
+  typeIds: v.optional(v.pipe(v.array(v.string()), climb("empty means any type")), () => []),
+};
+export type NoteletScope = v.InferOutput<v.ObjectSchema<typeof noteletScopeEntries, undefined>>;
+
+const scoped = <const TEntries extends v.ObjectEntries>(arm: v.ObjectSchema<TEntries, undefined>) =>
+  v.object({ ...arm.entries, ...noteletScopeEntries });
+
+const scopedTagCondition = scoped(tagCondition);
+const scopedStringPropertyCondition = scoped(stringPropertyCondition);
+const scopedNumberPropertyCondition = scoped(numberPropertyCondition);
+const scopedBooleanPropertyCondition = scoped(booleanPropertyCondition);
+const scopedPropertyCondition = v.union([
+  scopedStringPropertyCondition,
+  scopedNumberPropertyCondition,
+  scopedBooleanPropertyCondition,
+  scoped(datePropertyCondition),
+]);
+
 const weekdayCondition = v.object({
   type: v.literal("weekday"),
   weekdays: v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))),
@@ -225,24 +260,40 @@ const noteSizeCondition = v.object({
   value: v.pipe(v.number(), v.integer(), v.minValue(0)),
 });
 
-const hasNoteCondition = v.object({ type: v.literal("has-note") });
+const hasNoteCondition = v.object({
+  type: v.literal("has-note"),
+  presence: v.optional(
+    v.pipe(v.union([v.literal("exists"), v.literal("missing")]), climb("missing marks the opposite days")),
+    "exists",
+  ),
+});
+const linkedCondition = v.object({
+  type: v.literal("linked"),
+  // Strict pipe is safe only because the editor is the sole writer and never lets a cleared value through.
+  atLeast: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+const createdCondition = v.object({
+  type: v.literal("created"),
+  // Strict pipe for the same reason as linked: the editor never lets a cleared value through.
+  atLeast: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
 const tasksCondition = v.object({ type: v.literal("tasks"), ...taskQuestionSchema.entries });
 
 const hasNoteletCondition = v.object({
   type: v.literal("has-notelet"),
-  // Opaque ids, deliberately unbranded: journals/config.ts imports this module, so importing
-  // typeIdSchema back would close a cycle. An empty list means "any type".
-  typeIds: v.optional(v.pipe(v.array(v.string()), climb("empty means any type")), () => []),
+  typeIds: noteletScopeEntries.typeIds,
 });
 
 export const decorationConditionSchema = v.union([
   titleCondition,
-  tagCondition,
-  propertyCondition,
+  scopedTagCondition,
+  scopedPropertyCondition,
   dateConditionSchema,
   weekdayCondition,
   offsetCondition,
   hasNoteCondition,
+  linkedCondition,
+  createdCondition,
   tasksCondition,
   noteSizeCondition,
   hasNoteletCondition,
@@ -261,15 +312,18 @@ export const calendarDecorationSchema = v.object({
     whole("a decoration missing one condition matches different days"),
   ),
   styles: v.optional(v.array(decorationStyleSchema), () => []),
+  name: v.optional(v.string()),
 });
 export type CalendarDecoration = v.InferOutput<typeof calendarDecorationSchema>;
 
 export type JournalDecorationTitleCondition = v.InferOutput<typeof titleCondition>;
-export type JournalDecorationTagCondition = v.InferOutput<typeof tagCondition>;
-export type JournalDecorationStringPropertyCondition = v.InferOutput<typeof stringPropertyCondition>;
-export type JournalDecorationNumberPropertyCondition = v.InferOutput<typeof numberPropertyCondition>;
-export type JournalDecorationBooleanPropertyCondition = v.InferOutput<typeof booleanPropertyCondition>;
-export type JournalDecorationPropertyCondition = v.InferOutput<typeof propertyCondition>;
+export type NoteTagCondition = v.InferOutput<typeof tagCondition>;
+export type NotePropertyCondition = v.InferOutput<typeof propertyCondition>;
+export type JournalDecorationTagCondition = v.InferOutput<typeof scopedTagCondition>;
+export type JournalDecorationStringPropertyCondition = v.InferOutput<typeof scopedStringPropertyCondition>;
+export type JournalDecorationNumberPropertyCondition = v.InferOutput<typeof scopedNumberPropertyCondition>;
+export type JournalDecorationBooleanPropertyCondition = v.InferOutput<typeof scopedBooleanPropertyCondition>;
+export type JournalDecorationPropertyCondition = v.InferOutput<typeof scopedPropertyCondition>;
 export type JournalDecorationDateCondition = v.InferOutput<typeof dateConditionSchema>;
 export type JournalDecorationWeekdayCondition = v.InferOutput<typeof weekdayCondition>;
 export type JournalDecorationOffsetCondition = v.InferOutput<typeof offsetCondition>;
@@ -284,5 +338,12 @@ export const decorationSchema = v.object({
     whole("a decoration missing one condition matches different days"),
   ),
   styles: v.optional(v.array(decorationStyleSchema), () => []),
+  name: v.optional(v.string()),
 });
 export type JournalDecoration = v.InferOutput<typeof decorationSchema>;
+
+/** A decoration's name for display, or undefined when it has none worth showing. */
+export function decorationName(decoration: { readonly name?: string }): string | undefined {
+  const name = decoration.name?.trim();
+  return name === undefined || name === "" ? undefined : name;
+}

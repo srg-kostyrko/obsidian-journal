@@ -26,6 +26,7 @@
   "view_block_day_notes_sort_descending": "Absteigend",
   "view_block_day_notes_show_heading_label": "Zeitraumüberschrift anzeigen",
   "view_block_day_notes_show_navigation_label": "Zeitraumnavigation anzeigen",
+  "view_block_day_notes_hide_period_notes_label": "Journal-Notizen ausblenden",
   "view_block_day_notes_last_modified": "Zuletzt geändert: {date}",
   "view_block_day_notes_created": "Erstellt: {date}",
   "view_block_day_notes_empty": "In diesem Zeitraum wurden keine Notizen erstellt.",
@@ -1025,7 +1026,73 @@
       }
     }
   ],
+  "decoration_condition_date_describe_last_day": "letzter Tag",
+  "decoration_condition_date_describe_weekday_of_month": [
+    {
+      "declarations": ["input nth", "input weekday", "input weekdayIndex"],
+      "selectors": ["nth", "weekdayIndex"],
+      "match": {
+        "nth=1,weekdayIndex=*": "1. {weekday}",
+        "nth=2,weekdayIndex=*": "2. {weekday}",
+        "nth=3,weekdayIndex=*": "3. {weekday}",
+        "nth=4,weekdayIndex=*": "4. {weekday}",
+        "nth=5,weekdayIndex=*": "5. {weekday}",
+        "nth=last,weekdayIndex=*": "letzter {weekday}"
+      }
+    }
+  ],
+  "decoration_condition_date_last_day": "Letzter Tag",
+  "decoration_condition_date_ordinal": [
+    {
+      "declarations": ["input nth"],
+      "selectors": ["nth"],
+      "match": {
+        "nth=1": "1.",
+        "nth=2": "2.",
+        "nth=3": "3.",
+        "nth=4": "4.",
+        "nth=5": "5.",
+        "nth=last": "Letzter"
+      }
+    }
+  ],
+  "decoration_condition_date_weekday_label": "Wochentag",
+  "decoration_condition_date_weekday_of_month_group": "Wochentag im Monat",
   "decoration_condition_has_note_describe": "eine Notiz existiert",
+  "decoration_condition_has_note_describe_missing": "keine Notiz existiert",
+  "decoration_condition_has_note_presence_label": "Notiz",
+  "decoration_condition_has_note_presence_option": [
+    {
+      "declarations": ["input presence"],
+      "selectors": ["presence"],
+      "match": {
+        "presence=exists": "Vorhanden",
+        "presence=missing": "Fehlend"
+      }
+    }
+  ],
+  "decoration_condition_linked_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "von mindestens {count} Notiz verlinkt",
+        "count=*": "von mindestens {count} Notizen verlinkt"
+      }
+    }
+  ],
+  "decoration_condition_linked_value_label": "Mindestanzahl verlinkender Notizen",
+  "decoration_condition_created_describe": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "mindestens {count} Notiz erstellt",
+        "count=*": "mindestens {count} Notizen erstellt"
+      }
+    }
+  ],
+  "decoration_condition_created_value_label": "Mindestanzahl erstellter Notizen",
   "decoration_condition_has_notelet_describe_any": "eine Kurznotiz existiert",
   "decoration_condition_has_notelet_describe_types": "eine Kurznotiz vom Typ {types} existiert",
   "decoration_condition_has_notelet_empty": "Dieses Journal hat noch keine Kurznotiz-Typen.",
@@ -1093,6 +1160,30 @@
   "decoration_condition_property_condition_label": "Bedingung",
   "decoration_condition_property_describe": "Eigenschaft {name} {op} {value}",
   "decoration_condition_property_value_label": "Wert",
+  "decoration_condition_scope_describe": [
+    {
+      "declarations": ["input base", "input quantifier", "input source", "input types", "input typed"],
+      "selectors": ["quantifier", "source", "typed"],
+      "match": {
+        "quantifier=none,source=note,typed=*": "{base} — nicht in der Notiz",
+        "quantifier=any,source=notelets,typed=yes": "{base} — irgendeine Kurznotiz ({types})",
+        "quantifier=any,source=notelets,typed=*": "{base} — irgendeine Kurznotiz",
+        "quantifier=all,source=notelets,typed=yes": "{base} — alle Kurznotizen ({types})",
+        "quantifier=all,source=notelets,typed=*": "{base} — alle Kurznotizen",
+        "quantifier=none,source=notelets,typed=yes": "{base} — keine Kurznotiz ({types})",
+        "quantifier=none,source=notelets,typed=*": "{base} — keine Kurznotiz",
+        "quantifier=any,source=both,typed=yes": "{base} — die Notiz oder irgendeine Kurznotiz ({types})",
+        "quantifier=any,source=both,typed=*": "{base} — die Notiz oder irgendeine Kurznotiz",
+        "quantifier=all,source=both,typed=yes": "{base} — die Notiz und alle Kurznotizen ({types})",
+        "quantifier=all,source=both,typed=*": "{base} — die Notiz und alle Kurznotizen",
+        "quantifier=none,source=both,typed=yes": "{base} — weder die Notiz noch ihre Kurznotizen ({types})",
+        "quantifier=none,source=both,typed=*": "{base} — weder die Notiz noch ihre Kurznotizen",
+        "quantifier=*,source=*,typed=*": "{base}"
+      }
+    }
+  ],
+  "decoration_condition_scope_quantifier_label": "Welche Notizen",
+  "decoration_condition_scope_source_label": "Suchen in",
   "decoration_condition_tag_describe": "Tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag-Wert",
   "decoration_condition_tasks_quantifier_label": "Welche Aufgaben",
@@ -1174,6 +1265,8 @@
         "type=weekday": "Wochentag",
         "type=offset": "Offset",
         "type=has-note": "Notiz vorhanden",
+        "type=linked": "Verlinkt",
+        "type=created": "Erstellt",
         "type=tasks": "Aufgaben",
         "type=note-size": "Notizgröße",
         "type=has-notelet": "Kurznotiz vorhanden"
@@ -1192,6 +1285,8 @@
         "type=weekday": "Wochentag prüfen",
         "type=offset": "Intervall-Offset prüfen",
         "type=has-note": "Prüfen, ob eine Notiz existiert",
+        "type=linked": "Verlinkungen auf dieses Datum prüfen",
+        "type=created": "In diesem Zeitraum erstellte Notizen prüfen",
         "type=tasks": "Aufgaben prüfen",
         "type=note-size": "Notizgröße prüfen",
         "type=has-notelet": "Prüfen, ob eine Kurznotiz existiert"
@@ -1229,9 +1324,12 @@
   "decoration_mark_limit_description": "Wie viele Formen und Symbole eine Zelle an jeder ihrer neun Positionen zeichnet. Zusätzliche Markierungen werden zu einer Plakette zusammengefasst, die beim Überfahren mit der Maus alle anzeigt. Gilt für jeden Kalender, jeden Navigationsblock, jede Intervallzeile und jede Gruppe von Zeitraum-Schaltflächen sowie für jede Dekoration unabhängig vom Besitzer – Journal, Regal oder vault-weit.",
   "decoration_mark_limit_label": "Markierungen pro Position",
   "decoration_mark_limit_unlimited": "Unbegrenzt",
+  "decoration_cell_label": "{date} · {names}",
   "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Bedingung hinzufügen",
   "decoration_modal_add_style": "Stil hinzufügen",
+  "decoration_modal_name_label": "Name",
+  "decoration_modal_name_description": "Optional. Wird angezeigt, wenn du auf ein dekoriertes Datum zeigst, und in der Liste der Dekorationen.",
   "decoration_modal_mode_label": "Wann dekoriert wird",
   "decoration_modal_mode_option": [
     {
@@ -1355,7 +1453,8 @@
       "match": {
         "group=text": "Text",
         "group=background": "Hintergrund",
-        "group=border": "Rahmen"
+        "group=border": "Rahmen",
+        "group=palette": "Palette"
       }
     }
   ],
@@ -1389,6 +1488,14 @@
   "ui_theme_color_text_selection": "Hintergrund für markierten Text",
   "ui_theme_color_text_highlight_bg": "Hintergrund für hervorgehobenen Text",
   "ui_theme_color_caret_color": "Farbe des Textcursors",
+  "ui_theme_color_red": "Rot",
+  "ui_theme_color_orange": "Orange",
+  "ui_theme_color_yellow": "Gelb",
+  "ui_theme_color_green": "Grün",
+  "ui_theme_color_cyan": "Cyan",
+  "ui_theme_color_blue": "Blau",
+  "ui_theme_color_purple": "Lila",
+  "ui_theme_color_pink": "Pink",
   "journal_add_modal_anchor_description": "Dieses Datum dient zur Berechnung benutzerdefinierter Intervalle. Es kann nach der Erstellung des Journals nicht mehr geändert werden.",
   "common_label_today": "Heute",
   "relative_date_yesterday": "Gestern",
@@ -1502,6 +1609,7 @@
   "settings_too_new_banner": "Diese Einstellungen wurden auf einem anderen Gerät von einer neueren Version von Journals gespeichert. Starte Obsidian neu oder aktualisiere Journals hier – Änderungen bis dahin werden verworfen.",
   "settings_too_new_boot": "Journal: Deine Einstellungen wurden von einer neueren Version von Journals gespeichert. Aktualisiere Journals auf diesem Gerät, um sie hier zu verwenden.",
   "settings_reload_required_banner": "Lade Obsidian neu, damit die geänderten Einstellungen wirksam werden.",
+  "settings_section_failed": "Dieser Abschnitt konnte nicht angezeigt werden: {reason}. Die übrigen Einstellungen funktionieren weiterhin.",
   "settings_tab_title": "Journale",
   "startup_dashboard_section_title": "Programmstart",
   "startup_open_note_title": "Beim Start öffnen",
@@ -1587,6 +1695,9 @@
   "view_reposition_modal_confirm": "Verschieben",
   "view_edit_blocks_title": "Blöcke",
   "view_edit_blocks_empty": "Noch keine Blöcke.",
+  "view_edit_css_title": "CSS-Snippet",
+  "view_edit_css_selector_label": "Selektor",
+  "view_edit_css_selector_description": "Trifft nur diese Ansicht. Klicke auf die Regel, um sie zu kopieren, und setze dann in einem CSS-Snippet CSS-Variablen zwischen ihre geschweiften Klammern.",
   "view_block_unknown_label": "Unbekannter Block: {key}",
   "view_block_edit": "Block bearbeiten",
   "view_block_edit_title": "Block bearbeiten: {type}",
@@ -1699,7 +1810,7 @@
   "view_block_tasks_filter_status_default": "Keine eigene Status-Bedingung, daher entscheidet der Anzeigefilter eines Journals, wo dieser einen Status nennt.",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
   "view_toolbar_shelf_selector_description": "Wechselt, welches Regal die Journale der Ansicht eingrenzt.",
-  "view_toolbar_shelf_selector_tooltip": "Regal wechseln",
+  "view_toolbar_shelf_selector_name": "{shelf} · Regal wechseln",
   "view_toolbar_spacer_label": "Abstand",
   "view_toolbar_spacer_description": "Flexibler Abstand, der benachbarte Elemente auseinanderschiebt.",
   "view_toolbar_period_buttons_label": "Zeitraum-Schaltflächen",
@@ -1931,6 +2042,9 @@
   "journal_colliding_heading": "Kollidierende Journal-Einstellungen",
   "journal_colliding_warning": "Die Journale {names} haben kollidierende Konfigurationen, sodass sich ihre Notizen gegenseitig überschreiben. Ändere in einem davon den Ordner oder die Namensvorlage.",
   "journal_note_name_empty_notice": "Das Journal „{journalName}“ hat eine Namensvorlage, die zu einem leeren Notiznamen führt, daher kann keine Notiz erstellt werden. Lege in den Journal-Einstellungen eine Namensvorlage dafür fest.",
+  "journal_date_format_unrenderable_notice": "Journal „{journalName}“: Das Datumsformat {format} kann auf diesem Gerät nicht dargestellt werden ({reason}). Ändere es in den Journal-Einstellungen oder in seinen Vorlagennotizen.",
+  "date_format_invalid_preview": "Ungültiges Format: {reason}",
+  "journal_dashboard_date_format_unrenderable": "Das Datumsformat kann auf diesem Gerät nicht dargestellt werden.",
   "journal_note_path_claimed_notice": "Das Journal „{journalName}“ würde seine Notiz unter „{path}“ ablegen, doch diese Notiz gehört bereits zum Journal „{claimedBy}“, daher wurde nichts geändert. Ändere in einem davon den Ordner oder die Namensvorlage.",
   "journal_note_path_notelet_notice": "Das Journal „{journalName}“ kann seine Notiz nicht unter „{path}“ ablegen, da sich dort bereits eine seiner eigenen Kurznotizen befindet. Ändere die Namensvorlage oder den Ordner des Journals, oder verschiebe diese Kurznotiz.",
   "journal_note_path_held_by_period_notice": "Das Journal „{journalName}“ würde seine Notiz unter „{path}“ ablegen, doch diese Notiz ist bereits seine Notiz für den Zeitraum ab {date}, daher wurde nichts geändert. Ändere die Namensvorlage oder den Ordner, damit jeder Zeitraum einen eigenen Notiznamen erhält.",
@@ -2151,6 +2265,7 @@
   "journal_edit_move_to_folder_apply_link": "Empfehlung anwenden",
   "journal_edit_move_to_folder_recommendation_date_format": "Das Datumsformat enthält einen Pfadtrenner. Sollen die Datumsvariablen in das Feld „Ordner“ verschoben werden?",
   "journal_edit_move_to_folder_recommendation_name_template": "Die Vorlage für den Notiznamen enthält ein Pfadtrennzeichen. Soll das Pfadpräfix in das Feld „Ordner“ verschoben werden?",
+  "journal_edit_era_year_recommendation": "y ist bei moment das Ära-Jahr, nicht das Kalenderjahr. In den meisten Sprachen sieht es gleich aus, aber damit benannte Notizen lassen sich ihren Daten nicht wieder zuordnen. Stattdessen YYYY verwenden?",
   "journal_edit_name_template_description": "Vorlage zur Generierung neuer Notiznamen.",
   "journal_edit_name_template_empty_warning": "Diese Namensvorlage führt zu einem leeren Notiznamen, daher kann keine Notiz erstellt werden. Füge eine Variable oder etwas Text hinzu.",
   "journal_edit_name_template_collision_warning": "Die Einträge für {first} und {second} ergeben beide {path}. Nur einer davon kann eine Notiz haben; das Öffnen des anderen wird abgelehnt.",
@@ -2182,6 +2297,7 @@
   "journal_edit_name_template_cyclic_top_warning": "Die erste Nummernstelle wird zurückgesetzt, daher wiederholen sich die Nummern und lassen sich nicht in ein Datum zurückrechnen. Füge der Namensvorlage eine Datumsvariable hinzu oder setze die erste Stelle auf „Fortlaufend“, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
   "journal_edit_name_template_coarse_date_warning": "Die Datumsvariable in der Namensvorlage ist nicht genau genug, um die Perioden dieses Journals zu unterscheiden, daher erhalten mehrere Perioden denselben Notiznamen. Verwende ein Datumsformat, das sich in jeder Periode ändert, oder aktiviere fortlaufende Nummern und setze jede Stelle in den Namen oder den Ordner, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
   "journal_edit_name_template_unreadable_date_warning": "Das Plugin kann aus den Notizen dieses Journals kein Datum zurücklesen, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden. Ein Format, das auch eine Zeitzone enthält — Z oder ZZ —, wird zwar korrekt geschrieben, lässt sich aber nicht zurücklesen: verwende ein Format aus Datumssymbolen wie YYYY-MM-DD.",
+  "journal_edit_name_template_unreadable_token_warning": "Das Plugin kann aus den Notizen dieses Journals kein Datum zurücklesen, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden. Diese Symbole lassen sich nicht zurücklesen: {tokens}. Verwende ein Format aus Datumssymbolen wie YYYY-MM-DD.",
   "journal_edit_name_template_collision_prompt_warning": "Die Einträge für {first} und {second} ergeben beide {path}, weil eine Frage im Namen noch nicht beantwortet ist — sobald sie beantwortet ist, hat jede Notiz einen eigenen Namen.",
   "journal_invertibility_prompt_in_path": [
     {
@@ -2218,7 +2334,7 @@
   "journal_edit_code_block_reference_link": "Unterstützte Codeblöcke.",
   "journal_edit_code_block_reference_modal_title": "Unterstützte Codeblöcke",
   "journal_edit_code_block_copy_hint": "Klicke auf einen Codeblock, um ihn in die Zwischenablage zu kopieren.",
-  "journal_edit_code_block_copied": "In die Zwischenablage kopiert.",
+  "common_copied_to_clipboard": "In die Zwischenablage kopiert.",
   "journal_edit_code_block_nav_description": "Der Navigationsblock hilft dir, zwischen den Notizen neben der aktuellen zu wechseln.",
   "journal_edit_code_block_nav_current": "Seine Konfiguration für das Journal {name} sieht so aus:",
   "journal_edit_code_block_nav_aliases_lead": "Diese älteren Blocknamen sind Aliase, die sich identisch verhalten:",
@@ -2359,6 +2475,16 @@
         "mode=keep": "Die Kurznotizen bleiben unverändert in deinem Vault.",
         "mode=clear": "Die Kurznotizen bleiben in deinem Vault, aber alle Eigenschaften des Journals und des Kurznotiz-Typs werden aus ihrem Frontmatter entfernt.",
         "mode=delete": "Alle Kurznotizen dieses Typs werden aus deinem Vault gelöscht."
+      }
+    }
+  ],
+  "journal_notelet_delete_removes_decorations": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Dekoration wird entfernt:",
+        "count=*": "{count} Dekorationen werden entfernt:"
       }
     }
   ],

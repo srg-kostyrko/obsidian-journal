@@ -12,6 +12,12 @@ const calendar = new Calendar();
 
 const resolveTypeName = (id: string): string | undefined => ({ nt_a: "Meeting", nt_b: "1o1" })[id];
 
+const tagCondition = (scope: {
+  source: "note" | "notelets" | "both";
+  quantifier: "any" | "all" | "none";
+  typeIds: string[];
+}) => ({ type: "tag", condition: "contains", value: "#work", ...scope }) as const;
+
 const source = (s: "note" | "notelets" | "both") => m.decoration_condition_tasks_source_phrase({ source: s });
 
 describe("describeCondition", () => {
@@ -26,7 +32,10 @@ describe("describeCondition", () => {
 
   describe("tag", () => {
     it("renders the localized tag clause", () => {
-      const out = describeCondition({ type: "tag", condition: "starts-with", value: "#work" }, calendar);
+      const out = describeCondition(
+        { type: "tag", condition: "starts-with", value: "#work", source: "note", quantifier: "any", typeIds: [] },
+        calendar,
+      );
       expect(out).toBe(
         m.decoration_condition_tag_describe({
           op: m.decoration_string_op_label({ op: "starts-with" }),
@@ -45,6 +54,9 @@ describe("describeCondition", () => {
           valueType: "text",
           condition: "contains",
           value: "good",
+          source: "note",
+          quantifier: "any",
+          typeIds: [],
         },
         calendar,
       );
@@ -78,6 +90,50 @@ describe("describeCondition", () => {
           day: m.decoration_condition_date_any(),
           month: m.decoration_condition_date_any(),
           year: m.decoration_condition_date_any(),
+        }),
+      );
+    });
+
+    it("renders the last day of the month", () => {
+      const out = describeCondition({ type: "date", day: "last", month: -1, year: null }, calendar);
+      expect(out).toBe(
+        m.decoration_condition_date_describe({
+          day: m.decoration_condition_date_describe_last_day(),
+          month: m.decoration_condition_date_any(),
+          year: m.decoration_condition_date_any(),
+        }),
+      );
+    });
+
+    it("renders the last weekday of the month with the weekday's full name", () => {
+      const out = describeCondition(
+        { type: "date", day: { nth: "last", weekday: 5 }, month: -1, year: null },
+        calendar,
+      );
+      expect(out).toBe(
+        m.decoration_condition_date_describe({
+          day: m.decoration_condition_date_describe_weekday_of_month({
+            nth: "last",
+            weekday: calendar.weekdays()[5],
+            weekdayIndex: "5",
+          }),
+          month: m.decoration_condition_date_any(),
+          year: m.decoration_condition_date_any(),
+        }),
+      );
+    });
+
+    it("renders a numbered weekday of a pinned month and year", () => {
+      const out = describeCondition({ type: "date", day: { nth: 4, weekday: 4 }, month: 10, year: 2026 }, calendar);
+      expect(out).toBe(
+        m.decoration_condition_date_describe({
+          day: m.decoration_condition_date_describe_weekday_of_month({
+            nth: "4",
+            weekday: calendar.weekdays()[4],
+            weekdayIndex: "4",
+          }),
+          month: "11",
+          year: "2026",
         }),
       );
     });
@@ -122,7 +178,39 @@ describe("describeCondition", () => {
 
   describe("has-note", () => {
     it("renders the localized has-note clause", () => {
-      expect(describeCondition({ type: "has-note" }, calendar)).toBe(m.decoration_condition_has_note_describe());
+      expect(describeCondition({ type: "has-note", presence: "exists" }, calendar)).toBe(
+        m.decoration_condition_has_note_describe(),
+      );
+    });
+  });
+
+  describe("has-note missing", () => {
+    it("describes missing", () => {
+      expect(describeCondition({ type: "has-note", presence: "missing" }, calendar)).toBe(
+        m.decoration_condition_has_note_describe_missing(),
+      );
+    });
+  });
+
+  describe("linked", () => {
+    it("describes linked with plural", () => {
+      expect(describeCondition({ type: "linked", atLeast: 1 }, calendar)).toBe(
+        m.decoration_condition_linked_describe({ count: 1 }),
+      );
+      expect(describeCondition({ type: "linked", atLeast: 2 }, calendar)).toBe(
+        m.decoration_condition_linked_describe({ count: 2 }),
+      );
+    });
+  });
+
+  describe("created", () => {
+    it("describes created with plural", () => {
+      expect(describeCondition({ type: "created", atLeast: 1 }, calendar)).toBe(
+        m.decoration_condition_created_describe({ count: 1 }),
+      );
+      expect(describeCondition({ type: "created", atLeast: 3 }, calendar)).toBe(
+        m.decoration_condition_created_describe({ count: 3 }),
+      );
     });
   });
 
@@ -235,6 +323,81 @@ describe("describeCondition", () => {
     });
   });
 
+  describe("notelet scope on tag and property", () => {
+    const base = m.decoration_condition_tag_describe({
+      op: m.decoration_string_op_label({ op: "contains" }),
+      value: "#work",
+    });
+
+    it("describes a default-scope tag condition exactly as before", () => {
+      expect(describeCondition(tagCondition({ source: "note", quantifier: "any", typeIds: [] }), calendar)).toBe(
+        "tag contains #work",
+      );
+    });
+
+    it("describes an all-notelets property condition with its types", () => {
+      const out = describeCondition(
+        {
+          type: "property",
+          name: "mood",
+          valueType: "text",
+          condition: "eq",
+          value: "calm",
+          source: "notelets",
+          quantifier: "all",
+          typeIds: ["nt_a", "nt_b"],
+        },
+        calendar,
+        resolveTypeName,
+      );
+      expect(out).toBe(
+        `${m.decoration_condition_property_describe({ name: "mood", op: m.decoration_string_op_label({ op: "eq" }), value: "calm" })} — all notelets (Meeting or 1o1)`,
+      );
+    });
+
+    it("describes none across the note and its notelets", () => {
+      expect(describeCondition(tagCondition({ source: "both", quantifier: "none", typeIds: [] }), calendar)).toBe(
+        `${base} — none of the note or its notelets`,
+      );
+    });
+
+    it("omits the parenthesis for an empty type list", () => {
+      expect(describeCondition(tagCondition({ source: "notelets", quantifier: "any", typeIds: [] }), calendar)).toBe(
+        `${base} — any notelet`,
+      );
+    });
+
+    it("reads all over the note alone as the plain condition", () => {
+      expect(
+        describeCondition(
+          tagCondition({ source: "note", quantifier: "all", typeIds: ["nt_a"] }),
+          calendar,
+          resolveTypeName,
+        ),
+      ).toBe(base);
+    });
+
+    it("ignores stored types while source is note", () => {
+      expect(
+        describeCondition(
+          tagCondition({ source: "note", quantifier: "none", typeIds: ["nt_a"] }),
+          calendar,
+          resolveTypeName,
+        ),
+      ).toBe(`${base} — not in the note`);
+    });
+
+    it("falls back for an unknown type id", () => {
+      expect(
+        describeCondition(
+          tagCondition({ source: "both", quantifier: "any", typeIds: ["nt_gone"] }),
+          calendar,
+          () => undefined,
+        ),
+      ).toBe(`${base} — the note or any notelet (unknown type)`);
+    });
+  });
+
   describe("has-notelet", () => {
     it("describes an any-type condition", () => {
       expect(describeCondition({ type: "has-notelet", typeIds: [] }, calendar)).toBe("a notelet exists");
@@ -242,7 +405,7 @@ describe("describeCondition", () => {
 
     it("names the configured types", () => {
       expect(describeCondition({ type: "has-notelet", typeIds: ["nt_a", "nt_b"] }, calendar, resolveTypeName)).toBe(
-        "a notelet of type Meeting, 1o1 exists",
+        "a notelet of type Meeting or 1o1 exists",
       );
     });
 

@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@testing-library/vue";
+import { render, screen, within } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
 import type { ColorSettings } from "@/decorations";
@@ -90,9 +90,19 @@ describe("UiColorSettingsPicker", () => {
         expect(option.value).toBe("background-primary");
       });
 
-      it("renders no group headings for a single-tag role", () => {
+      it("groups a text field's variables under a text heading and a palette heading", () => {
         mount({ type: "theme", name: "" }, "text");
-        expect(screen.queryAllByRole("group")).toHaveLength(0);
+        expect(screen.getAllByRole("group").map((group) => group.getAttribute("label"))).toEqual([
+          m.ui_theme_color_group_label({ group: "text" }),
+          m.ui_theme_color_group_label({ group: "palette" }),
+        ]);
+      });
+
+      it("offers a palette color under the palette heading", () => {
+        mount({ type: "theme", name: "" }, "background");
+        const palette = screen.getByRole("group", { name: m.ui_theme_color_group_label({ group: "palette" }) });
+        const option = within(palette).getByRole<HTMLOptionElement>("option", { name: m.ui_theme_color_red() });
+        expect(option.value).toBe("color-red");
       });
 
       it("renders a heading for the border tag of a two-tag role", () => {

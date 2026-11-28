@@ -29,6 +29,7 @@ in order.
 | **Calendar**                                                     | **Week configuration** — **Change**                                                                       | [Periods](/periods#weeks)                                                  |
 |                                                                  | **Apply week configuration to all dates in vault**                                                        | [Periods](/periods#weeks)                                                  |
 |                                                                  | **Default week numbers**                                                                                  | [Views](/views#month-calendar-and-week-calendar)                           |
+|                                                                  | **Weekend days** — **Locale's weekend**, **Custom**                                                       | [Periods](/periods#weeks)                                                  |
 |                                                                  | **Default timeline navigation**                                                                           | [Code blocks](/reference/code-blocks)                                      |
 | **Calendar decorations**                                         | **Marks shown per position**                                                                              | [Decorations](/decorations#marks-shown-per-position)                       |
 |                                                                  | vault-wide decorations                                                                                    | [Decorations](/decorations#where-decorations-live)                         |
@@ -92,22 +93,23 @@ Reached with **Configure** on a shelf's row, under **Journal shelves** on the ma
 
 Reached with **Configure** on a view's row, under **Views** on the main settings page.
 
-| Section           | Settings                                                                                                                                 | Explained in                      |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| _the view's name_ | **Rename view**                                                                                                                          | [Views](/views#a-view-s-settings) |
-|                   | **Icon**, **Default shelf**, **Show in ribbon**, **Open on startup**, **Remember last viewed date**, **Follow active note**, **Open in** | [Views](/views#a-view-s-settings) |
-| **Blocks**        | **Add block**; per block its own settings                                                                                                | [Views](/views#blocks)            |
+| Section           | Settings                                                                                                                                 | Explained in                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| _the view's name_ | **Rename view**                                                                                                                          | [Views](/views#a-view-s-settings)                       |
+|                   | **Icon**, **Default shelf**, **Show in ribbon**, **Open on startup**, **Remember last viewed date**, **Follow active note**, **Open in** | [Views](/views#a-view-s-settings)                       |
+| **Blocks**        | **Add block**; per block its own settings                                                                                                | [Views](/views#blocks)                                  |
+| **CSS snippet**   | **Selector**                                                                                                                             | [CSS variables](/reference/css-variables#one-view-only) |
 
 ## Calendar appearance page
 
 Reached with **Open** under **Calendar appearance**, on the main settings page.
 
-| Section                 | Settings                                                                                                                           | Explained in                                     |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| **Calendar appearance** | **Preview** — **Narrow**, **Wide**; the preview; **Editing**; **Also here**                                                        | [Views](/views#calendar-appearance)              |
-|                         | the chosen part's controls, under **Visibility**, **Text**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only** | [Views](/views#what-each-part-offers)            |
-|                         | **Visibility** — **Heading**, **Weekday header**, **Placement**, **Days outside the month**, **Rows**                              | [Views](/views#visibility)                       |
-|                         | beside the part's name: **Reset to default**, **Reset narrow overrides**                                                           | [Views](/views#narrow-only-values-and-resetting) |
+| Section                 | Settings                                                                                                                                                                                                                           | Explained in                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **Calendar appearance** | **Preview** — **Narrow**, **Wide**; the preview; **Editing**; **Also here**                                                                                                                                                        | [Views](/views#calendar-appearance)              |
+|                         | the chosen part's controls, under **Visibility**, **Label**, **Text**, **Divider**, **Highlight** or **Box**, most showing a CSS variable; **Narrow only**; under **Wide**, **Narrow has its own value** and **Use at narrow too** | [Views](/views#what-each-part-offers)            |
+|                         | **Visibility** — **Heading**, **Weekday header**, **Placement**, **Days outside the month**, **Rows**                                                                                                                              | [Views](/views#visibility)                       |
+|                         | beside the part's name: **Reset to default**, **Reset narrow overrides**                                                                                                                                                           | [Views](/views#narrow-only-values-and-resetting) |
 
 ## Maintenance page
 

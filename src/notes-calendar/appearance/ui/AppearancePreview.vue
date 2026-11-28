@@ -10,6 +10,7 @@ import {
   resolveOutsideDates,
   resolveWeekend,
   type PeriodKind,
+  type UserDateFormat,
   YearPeriod,
   type CalendarDisplaySliceState,
   type Period,
@@ -17,7 +18,7 @@ import {
 import { useToday } from "@/calendar/ui";
 import type { JournalDecorationStyle } from "@/decorations/config";
 import { cellKey } from "@/decorations/engine";
-import { CellDecorationMapKey, type CellStyleRef } from "@/decorations/ui/cell-decoration-map-key";
+import { CellDecorationMapKey, type CellDecorationRef } from "@/decorations/ui/cell-decoration-map-key";
 
 import { bandPlacement } from "../../band-placement";
 import { labelPattern, weekdayTexts } from "../../cell-format";
@@ -74,7 +75,7 @@ const rows = computed(() => {
     days: [...week.days()].map((day) => ({ period: DayPeriod.containing(day), outside: !month.value.contains(day) })),
   }));
 });
-const format = (kind: PeriodKind): string => labelPattern(props.display.labels, kind);
+const format = (kind: PeriodKind): UserDateFormat => labelPattern(props.display.labels, kind);
 // Unlike the views' column headers, these spans have no role to name, so the visible text is what is read;
 // the hidden width's text is `display: none`, out of the tree.
 const weekdays = computed(() => {
@@ -117,10 +118,11 @@ const inertCell: NotesCellApi = { ...cell, isActive: () => false, isActionable: 
 const isSelected = (period: Period): boolean => period.anchor.toAnchor() === sample.value.selected;
 
 // CellDecoration injects the map once, so the map itself stays and only its entries follow the day.
-const decorations = shallowReactive(new Map<string, CellStyleRef>());
+const decorations = shallowReactive(new Map<string, CellDecorationRef>());
 watchEffect(() => {
   decorations.clear();
-  for (const anchor of sample.value.decorated) decorations.set(cellKey("day", anchor), shallowRef(SAMPLE_DECORATION));
+  for (const anchor of sample.value.decorated)
+    decorations.set(cellKey("day", anchor), shallowRef({ styles: SAMPLE_DECORATION, names: [] }));
 });
 provide(CellDecorationMapKey, decorations);
 
@@ -458,7 +460,7 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
   text-transform: var(--_v-week-number-case);
 }
 .appearance-preview__day {
-  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, 1.1em));
+  --_v-date-size: var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit));
   --_v-date-weight: var(--journal-cell-date-weight, var(--journal-saved-cell-date-weight, inherit));
   --_v-date-italic: var(--journal-cell-date-italic, var(--journal-saved-cell-date-italic, inherit));
   --_v-date-color: var(--journal-cell-date-color, var(--journal-saved-cell-date-color, inherit));
@@ -667,7 +669,13 @@ function pickedClass(isPicked: boolean): Record<string, boolean> {
     );
   }
   .appearance-preview__day {
-    --_v-date-size: var(--journal-cell-date-size-narrow, var(--journal-saved-cell-date-size-narrow, 1em));
+    --_v-date-size: var(
+      --journal-cell-date-size-narrow,
+      var(
+        --journal-saved-cell-date-size-narrow,
+        var(--journal-cell-date-size, var(--journal-saved-cell-date-size, inherit))
+      )
+    );
     --_v-date-weight: var(
       --journal-cell-date-weight-narrow,
       var(

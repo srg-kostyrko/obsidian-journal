@@ -1,7 +1,9 @@
 import { $, browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { readRawSettings, writeRawSettings } from "../support/plugin-data.js";
 import { triggerExternalSettingsChange } from "../support/plugin.js";
+import { clickIcon, closeSettings, expandSection, openSettings } from "../support/settings.js";
 import { closePopoutWindows } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -10,7 +12,8 @@ import { openCalendarInPopout } from "./view.js";
 
 // The saved appearance values are CSS variables on each window's root, so a user's CSS snippet on
 // `body` or closer must win without !important. The fixture enables
-// .obsidian/snippets/journal-appearance.css through Obsidian's own loader.
+// .obsidian/snippets/journal-appearance.css and one-view.css through Obsidian's own loader; the
+// manual's one-view example is one-view.css verbatim.
 
 const DEFAULT_VIEW = "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c";
 const SNIPPET_TARGET_VIEW = "5a7e9c11-2b3d-4e5f-8a6b-7c8d9e0f1a2b";
@@ -153,6 +156,58 @@ describe("appearance variables and CSS snippets", () => {
         (rgb) => rgbToHex(rgb) === LIVE_MAGENTA,
         "the open popout's today cell did not turn the changed #ff00ff",
       );
+    });
+  });
+
+  // The rule a view's settings page copies must select that view's root and no other, or a snippet
+  // written from it styles nothing, or every view.
+  describe("the rule copied from a view's settings", () => {
+    type CopyWindow = Window & { __copiedText?: string };
+
+    // Stubbed in the page: both workers share one OS clipboard, so the real one would race.
+    before(async () => {
+      await browser.execute(() => {
+        const win = window as CopyWindow;
+        // An own property shadows Clipboard.prototype.writeText; deleting it restores the real one.
+        Object.defineProperty(navigator.clipboard, "writeText", {
+          configurable: true,
+          value: (text: string) => {
+            win.__copiedText = text;
+            return Promise.resolve();
+          },
+        });
+      });
+    });
+
+    after(async () => {
+      await browser.execute(() => {
+        Reflect.deleteProperty(navigator.clipboard, "writeText");
+        delete (window as CopyWindow).__copiedText;
+      });
+      await closeSettings();
+      await detachJournalViews();
+    });
+
+    it("selects that view and no other", async () => {
+      await openView(DEFAULT_VIEW);
+      await openView(SNIPPET_TARGET_VIEW);
+
+      await openSettings();
+      await expandSection(m.view_dashboard_section_title());
+      await clickIcon(m.view_dashboard_open({ name: "Snippet target" }));
+      await expandSection(m.view_edit_css_title());
+      await $(".copyable-code").click();
+
+      const copied = (): Promise<string | null> => browser.execute(() => (window as CopyWindow).__copiedText ?? null);
+      await waitForState(copied, (text) => text.length > 0, "clicking the rule copied nothing");
+      const rule = (await copied()) ?? "";
+      expect(rule.endsWith(" {\n}")).toBe(true);
+
+      const matched = await browser.execute(
+        (selector) => [...document.querySelectorAll(selector)].map((el) => (el as HTMLElement).dataset.journalView),
+        rule.slice(0, rule.indexOf(" {")),
+      );
+      expect(matched).toEqual([SNIPPET_TARGET_VIEW]);
     });
   });
 });

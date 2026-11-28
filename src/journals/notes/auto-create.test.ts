@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { userDateFormat } from "@/calendar";
+import { anchor, withoutEras } from "@/calendar/testing";
 import { PlatformService, type DeviceKind, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
@@ -11,6 +12,7 @@ import { journalsCoreModule } from "../module";
 import { fixedJournal } from "../testing";
 
 import { AutoCreateService } from "./auto-create";
+import { JournalDateFormatError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 
 import type { Prompt } from "../prompts/config";
@@ -387,5 +389,48 @@ describe("AutoCreateService", () => {
 
     expect(harness.host.files.has("2026-05-19.md")).toBe(true);
     expect(harness.modals.opens).toHaveLength(0);
+  });
+});
+
+describe("AutoCreateService — an unrenderable date format", () => {
+  it("startup auto-create logs one warning per journal and pattern across repeated runs", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal(
+            "weekly",
+            { type: "week" },
+            { autoCreate: true, dateFormat: userDateFormat("YYYYy-[W]w") },
+          ),
+        },
+      },
+    });
+    const service = harness.resolve(AutoCreateService);
+
+    await withoutEras(async () => {
+      await service.createCurrent("weekly");
+      await service.createCurrent("weekly");
+      await service.createCurrent("weekly");
+    });
+
+    const reported = harness.logs.records.filter((record) => record.level === "warn" || record.level === "error");
+    expect(reported.map((record) => [record.level, record.fields?.journalName, record.fields?.pattern])).toEqual([
+      ["warn", "weekly", "YYYYy-[W]w"],
+    ]);
+    expect(harness.notices.messages).toEqual([]);
+  });
+
+  it("returns the failure so a caller that started the write can report it", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: userDateFormat("YYYYy-[W]w") }) },
+      },
+    });
+
+    const result = await withoutEras(() => harness.resolve(AutoCreateService).createCurrent("weekly"));
+
+    expect(result.isErr() && result.error instanceof JournalDateFormatError).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { userDateFormat } from "@/calendar";
+import { anchor, withoutEras } from "@/calendar/testing";
 import { NoteMetadataService, NoteRenameError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult, None } from "@/infrastructure/result";
@@ -528,7 +529,7 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
           diary: fixedJournal(
             "diary",
             { type: "day" },
-            { timeline: TIMELINE_OPEN, nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" },
+            { timeline: TIMELINE_OPEN, nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: userDateFormat("DD.MM.YYYY") },
           ),
         },
         "2026-05-19.md",
@@ -563,3 +564,65 @@ async function createIn(journals: Record<string, JournalConfig>, path: string): 
   await settle();
   return harness;
 }
+
+describe("AutoAttachService — a template body with an unrenderable date format", () => {
+  it("warns once per journal and pattern across attach events, with no notice", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }, { timeline: TIMELINE_OPEN, templates: ["Templates/daily.md"] }),
+        },
+      },
+    });
+    harness.host.putFile("Templates/daily.md", "# {{date:YYYYy}}");
+    await harness.resolve(AutoAttachService).initialize();
+
+    await withoutEras(async () => {
+      for (const path of ["2026-05-19.md", "2026-05-20.md", "2026-05-21.md"]) {
+        await harness.resolve(NotesService).create(path as VaultPath, "");
+        harness.host.emitMetadata(path);
+        await settle();
+      }
+    });
+
+    const reported = harness.logs.records.filter((record) => record.level === "warn" || record.level === "error");
+    expect(reported.map((record) => [record.level, record.fields?.journalName, record.fields?.pattern])).toEqual([
+      ["warn", "daily", "YYYYy"],
+    ]);
+    expect(harness.notices.messages).toEqual([]);
+  });
+});
+
+describe("AutoAttachService — a journal whose date format cannot render", () => {
+  it("warns once across repeated matching events, with no notice and no attach", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal(
+            "weekly",
+            { type: "week" },
+            { timeline: TIMELINE_OPEN, dateFormat: userDateFormat("YYYYy-[W]w") },
+          ),
+        },
+      },
+    });
+    await harness.resolve(AutoAttachService).initialize();
+
+    await withoutEras(async () => {
+      for (const path of ["2026-W20.md", "2026-W21.md", "2026-W22.md"]) {
+        await harness.resolve(NotesService).create(path as VaultPath, "");
+        harness.host.emitMetadata(path);
+        await settle();
+      }
+    });
+
+    const reported = harness.logs.records.filter((record) => record.level === "warn" || record.level === "error");
+    expect(reported.map((record) => [record.level, record.fields?.journalName, record.fields?.pattern])).toEqual([
+      ["warn", "weekly", "YYYYy-[W]w"],
+    ]);
+    expect(harness.notices.messages).toEqual([]);
+    expect(harness.host.files.get("2026-W21.md")?.frontmatter).toEqual({});
+  });
+});
