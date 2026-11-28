@@ -58,6 +58,14 @@ them yourself if you want them in the new layout — a note keeps its connection
 [moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). A variable with its
 own format, like `{{date:DD.MM.YYYY}}`, ignores it.
 
+In moment, lowercase `y` is the era year, not the calendar year. It renders like `YYYY` in most
+languages, but a note whose name or folder uses it cannot be matched back to its date, so it does not
+[auto-attach](/notes#auto-attach). Where `y` appears — in **Default date format**, or in a date
+variable's own format in **Note name template** or **Folder** — a hint under the field explains this,
+and **Apply recommendation** replaces it with `YYYY`, or `yy` with `YY`. Text inside `[ ]` is left as
+it is. The same hint appears under a [question](/questions)'s **Date format** and under bulk add's
+**Date format**.
+
 On a weekly journal, `{{date}}` is not always the week's first day, and week numbers need `w` rather
 than `W` — see [Week numbers in names](/periods#week-numbers-in-names).
 
