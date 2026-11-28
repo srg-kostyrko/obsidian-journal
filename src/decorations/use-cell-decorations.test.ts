@@ -333,6 +333,36 @@ describe("useCellDecorations", () => {
       expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
     });
 
+    // With **End date** on, every custom note stores an end, most of them just the default one.
+    it("ignores offscreen registrations whose stored end is the default end", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: 2 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarnessFrom({
+        sprint: customJournal("sprint", "week", 2, anchor, { decorations: [decoration] }),
+      });
+      const evaluate = vi.spyOn(harness.resolve(DecorationEngine), "evaluateRange");
+      const cells = mountCells(harness, periods, ["sprint"]);
+      await nextTick();
+      evaluate.mockClear();
+      const index = harness.resolve(JournalsIndex);
+      let offscreen = WeekPeriod.containing(date("2027-01-04"));
+
+      for (let i = 0; i < 100; i++) {
+        const offscreenAnchor = offscreen.anchor.toAnchor();
+        const offscreenPath = `sprint/${offscreenAnchor}.md` as VaultPath;
+        const defaultEnd = offscreen.next().end.toAnchor();
+        index.register({ journalName: "sprint", anchor: offscreenAnchor, path: offscreenPath, endDate: defaultEnd });
+        offscreen = offscreen.next().next();
+      }
+      await nextTick();
+
+      expect(evaluate).not.toHaveBeenCalled();
+      expect(periods.map((period) => cells.get(key(period))!.value.styles.length)).toEqual([0, 0, 0]);
+    });
+
     it("repaints offset days in each visible interval registered after mount", async () => {
       const decoration = buildDecoration({
         mode: "and",
