@@ -206,6 +206,28 @@ describe("DecorationMatchService", () => {
       expect(badge.matched).toBe(1);
     });
 
+    it("finds an interval note anchored before an offset decoration's day window", async () => {
+      // The day window covers 90 days, but a custom note sits at its interval's start. A 26-week
+      // interval begun in December holds the whole window with its note outside it, and the
+      // calendar paints offset day 100 because has-note reads the interval's note.
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("offset", { offset: 100 }), buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const harness = await buildHarness({
+        sprint: customJournal("sprint", "week", 26, "2025-12-29", { decorations: [decoration] }),
+      });
+      const path = "sprint/2025-12-29.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor: date("2025-12-29").toAnchor(), path });
+      harness.host.putFile(path);
+      const service = harness.resolve(DecorationMatchService);
+
+      const badge = expectMatched(service.describe({ kind: "journal", journalName: "sprint" }, 0));
+      expect(badge.matched).toBe(1);
+      expect(badge.unit).toBe("day");
+    });
+
     it("reports silent rather than no notes for a date-only decoration over a note-free window", async () => {
       // The counterpart to the has-note tests above and the note-size tests below, which pin needsNotes
       // returning true: a decoration that never needs a note must report "silent" over a

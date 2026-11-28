@@ -1,0 +1,29 @@
+{
+  "version": 8,
+  "logging": { "level": "debug" },
+  "journals": {
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2026-01-05" },
+      "folder": "sprint",
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            { "type": "offset", "offset": 2 },
+            { "type": "tag", "condition": "contains", "value": "ready" }
+          ],
+          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            { "type": "offset", "offset": -1 },
+            { "type": "tag", "condition": "contains", "value": "ready" }
+          ],
+          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+        }
+      ]
+    }
+  }
+}

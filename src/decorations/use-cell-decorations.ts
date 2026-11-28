@@ -3,9 +3,10 @@ import { computed, onMounted, onUnmounted, provide, shallowRef, toRaw, toValue, 
 import { CalendarDate, type AnchorString, type Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
-import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, isNotelet, JournalsIndex, JournalsRepository, type JournalEntry } from "@/journals";
 import { useCreationDatesVersion } from "@/journals/creation-dates";
 import { useLinkReferencesVersion } from "@/journals/link-references";
+import type { EntryChangedEvent } from "@/journals/types";
 import { useTasksVersion } from "@/tasks/use-tasks-version";
 
 import { DecorationsStore } from "./decorations-store";
@@ -60,6 +61,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
   const tasksVersion = useTasksVersion();
+  const customIndexVersion = shallowRef(0);
   const linksVersion = useLinkReferencesVersion();
   const createdVersion = useCreationDatesVersion();
 
@@ -152,6 +154,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
     // Reading the version here registers it as a dependency.
     void tasksVersion.value;
+    void customIndexVersion.value;
     // Same for LinkReferenceIndex and CreationDateIndex, which build after boot and change on
     // linking edits and on note creates, renames and deletes.
     void linksVersion.value;
@@ -221,6 +224,29 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     if (keys !== undefined) repaintKeys(keys);
   }
 
+  // **End date** writes the default end into every note, so only a stored end that differs from it
+  // moves where the next interval starts.
+  function defaultEnd(note: JournalEntry): AnchorString | undefined {
+    return cycle.defaultEndOf(note.journalName, note.anchor).getOrUndefined()?.toAnchor();
+  }
+
+  function effectiveEnd(note: JournalEntry): AnchorString | undefined {
+    return note.endDate ?? defaultEnd(note);
+  }
+
+  function stretched(note: JournalEntry): boolean {
+    return note.endDate !== undefined && note.endDate !== defaultEnd(note);
+  }
+
+  function movesBoundary(event: EntryChangedEvent): boolean {
+    const { entry } = event;
+    if (isNotelet(entry)) return false;
+    const previous = event.kind === "added" ? event.previous : undefined;
+    if (previous === undefined || isNotelet(previous)) return stretched(entry);
+    if (previous.anchor === entry.anchor) return effectiveEnd(previous) !== effectiveEnd(entry);
+    return stretched(previous) || stretched(entry);
+  }
+
   watchEffect(reseed);
   provide(scope.map, cells);
 
@@ -238,8 +264,15 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     const offSize = size.events.on("size-changed", repaintCell);
     // Before readiness "missing" reads false everywhere, and becoming ready changes no entry.
     const offReady = index.events.on("ready", reseed);
-    const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
+    const offIndex = index.events.on("entryChanged", (event) => {
+      const { entry, kind } = event;
       if (!journalNamesInScope.has(entry.journalName)) return;
+      // A stored interval end moves every later interval boundary, even from an offscreen anchor,
+      // so the owner maps themselves go stale: rebuild them rather than repaint the old keys.
+      if (journals.get(entry.journalName).getOrUndefined()?.write.type === "custom" && movesBoundary(event)) {
+        customIndexVersion.value++;
+        return;
+      }
       const keys = keysByOwner.get(ownerKey(entry.journalName, entry.anchor));
       if (keys === undefined) return;
       if (kind === "added") keysByPath.set(entry.path, new Set(keys));

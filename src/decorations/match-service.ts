@@ -93,12 +93,19 @@ export class DecorationMatchService {
     // walk or fixedWindow's own periodOfKind call, so period.anchor is already the canonical
     // anchor the timeline expects, and re-resolving it through anchorOf is the identity walked
     // the expensive way.
-    const clipped = dayGranular
-      ? this.#clipDayGranular(journalName, rawWindow)
-      : rawWindow.filter((period) => this.#timeline.contains(journalName, period.anchor.toAnchor()));
+    let clipped: readonly Period[];
+    // A custom journal's note sits at its interval's start, which a day window can leave outside
+    // itself, so a day window asks for notes at the intervals owning its days.
+    let noteAnchors: readonly AnchorString[];
+    if (dayGranular) {
+      ({ days: clipped, owners: noteAnchors } = this.#clipDayGranular(journalName, rawWindow));
+    } else {
+      clipped = rawWindow.filter((period) => this.#timeline.contains(journalName, period.anchor.toAnchor()));
+      noteAnchors = clipped.map((period) => period.anchor.toAnchor());
+    }
     if (clipped.length === 0) return { kind: "no-history" };
 
-    if (needsNotes(decoration) && clipped.every((period) => !this.#index.has(journalName, period.anchor.toAnchor()))) {
+    if (needsNotes(decoration) && noteAnchors.every((anchor) => !this.#index.has(journalName, anchor))) {
       return { kind: "no-notes" };
     }
 
@@ -149,14 +156,16 @@ export class DecorationMatchService {
   // consecutive and ascending (fixedWindow's own guarantee), so the cursor only steps to the
   // next interval — via nextAnchor, a single step, not a re-derivation from the cycle anchor —
   // when a day crosses out of the interval currently in hand.
-  #clipDayGranular(journalName: string, days: readonly Period[]): Period[] {
-    if (days.length === 0) return [];
+  #clipDayGranular(journalName: string, days: readonly Period[]): { days: Period[]; owners: AnchorString[] } {
+    const none = { days: [], owners: [] };
+    if (days.length === 0) return none;
     const firstAnchorOpt = this.#cycle.anchorOf(journalName, days[0].anchor);
-    if (firstAnchorOpt.isNone()) return [];
+    if (firstAnchorOpt.isNone()) return none;
     let intervalAnchor = firstAnchorOpt.value;
     let intervalEnd = this.#cycle.endOf(journalName, intervalAnchor);
     let inTimeline = this.#timeline.contains(journalName, intervalAnchor);
     const out: Period[] = [];
+    const owners = new Set<AnchorString>();
     for (const day of days) {
       while (intervalEnd.isSome() && day.anchor.isAfter(intervalEnd.value)) {
         const nextOpt = this.#cycle.nextAnchor(journalName, intervalAnchor);
@@ -171,9 +180,11 @@ export class DecorationMatchService {
         intervalEnd = this.#cycle.endOf(journalName, intervalAnchor);
         inTimeline = this.#timeline.contains(journalName, intervalAnchor);
       }
-      if (inTimeline) out.push(day);
+      if (!inTimeline) continue;
+      out.push(day);
+      owners.add(intervalAnchor);
     }
-    return out;
+    return { days: out, owners: [...owners] };
   }
 
   #describeCalendar(owner: CalendarDecorationOwner, index: number, decoration: CalendarDecoration): MatchBadge {

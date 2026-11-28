@@ -219,14 +219,12 @@ export class DecorationEngine {
       .with({ type: "tasks" }, (c) =>
         answerTaskQuestion(
           taskDependencies,
-          { journalName: journal.name, anchor: period.anchor.toAnchor(), path: path().getOrUndefined() ?? null },
+          { journalName: journal.name, anchor: canonical, path: path().getOrUndefined() ?? null },
           c,
         ),
       )
       .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
-      .with({ type: "has-notelet" }, (c) =>
-        checkHasNotelet(c, this.#index.noteletsAt(journal.name, period.anchor.toAnchor())),
-      )
+      .with({ type: "has-notelet" }, (c) => checkHasNotelet(c, this.#index.noteletsAt(journal.name, canonical)))
       .exhaustive();
   }
 
@@ -356,20 +354,20 @@ export class DecorationEngine {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
         const canonical = canonicalAnchor(binding.journalName, period);
         if (canonical === null) continue;
-        const anchorString = period.anchor.toAnchor();
+        // Every data read is keyed by the owning period, not the cell: a custom journal's note sits
+        // at its interval's start, and the day grid asks about every day of the interval. Offset and
+        // date conditions read the displayed day from `period`.
         const matched = this.#matches(
           binding.decoration,
           period,
           canonical,
           config,
-          () => metadataFor(binding.journalName, anchorString),
-          // Keyed by the owning period, not the cell: a custom journal's note sits at its interval's
-          // start, and the day grid asks about every day of the interval.
+          () => metadataFor(binding.journalName, canonical),
           () => metadataFor(binding.journalName, canonical).isSome(),
-          () => sizeFor(binding.journalName, anchorString),
-          () => pathFor(binding.journalName, anchorString),
+          () => sizeFor(binding.journalName, canonical),
+          () => pathFor(binding.journalName, canonical),
           taskDependencies,
-          (scope) => scopeFor(binding.journalName, anchorString, scope),
+          (scope) => scopeFor(binding.journalName, canonical, scope),
         );
         if (!matched) continue;
         push(period, binding);
